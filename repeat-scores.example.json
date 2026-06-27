@@ -1,0 +1,17 @@
+{
+  "rubric": "Scores are out of 10",
+  "tasks": [
+    "example-task-a",
+    "example-task-b"
+  ],
+  "model-a": {
+    "run1": [7.5, 8.0],
+    "run2": [8.0, 7.5],
+    "run3": [7.0, 8.5]
+  },
+  "model-b": {
+    "run1": [6.5, 8.5],
+    "run2": [7.0, 8.0],
+    "run3": [7.5, 7.5]
+  }
+}

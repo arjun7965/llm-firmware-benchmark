@@ -1,0 +1,22 @@
+{
+  "models": [
+    {
+      "id": "model-a",
+      "provider": "ncode",
+      "model": "/path/to/model-a",
+      "options": {
+        "effort": "medium",
+        "timeoutMs": 300000
+      }
+    },
+    {
+      "id": "model-b",
+      "provider": "ncode",
+      "model": "provider/model-b",
+      "options": {
+        "effort": "medium",
+        "timeoutMs": 300000
+      }
+    }
+  ]
+}

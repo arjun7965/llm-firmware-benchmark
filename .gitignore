@@ -1,0 +1,31 @@
+# Local dependencies and tooling output
+node_modules/
+coverage/
+*.log
+.DS_Store
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.ncode/
+
+# Local benchmark outputs may contain session metadata or generated secrets.
+# Commit only reviewed, sanitized exports to a separate public directory.
+/results/
+/gpt55-results/
+/REPORT.md
+/REPEAT_REPORT.md
+/repeat-scores.json
+
+# Machine-local model configuration.
+/models.local.json
+
+# Never commit local model weights or checkpoints.
+models/
+*.safetensors
+*.gguf
+*.onnx
+*.ckpt
+*.pt
+*.pth

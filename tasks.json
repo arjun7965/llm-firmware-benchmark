@@ -1,0 +1,62 @@
+[
+  {
+    "id": "frontend-autocomplete",
+    "category": "frontend",
+    "prompt": "Implement a production-quality React 18 + TypeScript autocomplete component. Requirements: controlled query input; debounce requests by 250 ms; cancel obsolete requests with AbortController; stale responses must never replace newer results; full keyboard support (ArrowUp/Down, Enter, Escape); correct combobox/listbox ARIA; loading, empty, and error states; no external packages. The API is async function searchUsers(query: string, signal: AbortSignal): Promise<Array<{id:string,name:string}>>. Return one self-contained component and a short explanation. Keep the answer under 1400 words."
+  },
+  {
+    "id": "backend-idempotency",
+    "category": "backend",
+    "prompt": "Design and implement POST /orders in TypeScript using Express and PostgreSQL. Clients send an Idempotency-Key header. Concurrent requests with the same key and same authenticated user must create exactly one order and return the same response. Reusing a key with a different request body must return 409. The order and idempotency record must commit atomically. Do not use process-local locks. Include schema, transaction logic, handling for an in-progress duplicate, and the key failure modes. Assume pg is available. Keep the answer under 1600 words."
+  },
+  {
+    "id": "embedded-ring-buffer",
+    "category": "embedded",
+    "prompt": "Implement a bounded single-producer/single-consumer byte ring buffer in portable C11. The producer runs in an interrupt handler and the consumer runs in the main loop. Capacity must be a power of two, no dynamic allocation, and push/pop must be non-blocking. Define and justify overflow behavior and use C11 atomics with correct memory ordering. Avoid undefined behavior and preserve the full declared capacity. Include the code plus a concise explanation and a small deterministic test. Keep the answer under 1300 words."
+  },
+  {
+    "id": "firmware-state-machine",
+    "category": "firmware",
+    "prompt": "Write portable C for a non-blocking firmware state machine that polls an I2C temperature sensor every 1000 ms. The HAL exposes bool i2c_start_read(uint8_t addr,uint8_t reg,uint8_t *dst,size_t n), bool i2c_done(void), bool i2c_ok(void), and uint32_t millis(void). Requirements: never busy-wait; 25 ms transaction timeout; up to 3 attempts with 10 ms backoff; safe across uint32_t timer wraparound; never start overlapping transfers; expose latest valid sample and its timestamp. State assumptions about HAL completion semantics. Include testable code and key tests. Keep the answer under 1500 words."
+  },
+  {
+    "id": "binary-parser",
+    "category": "systems-security",
+    "prompt": "Implement a safe C function to parse an untrusted binary frame: magic bytes 0xA5 0x5A, version u8 (must be 1), payload_len little-endian u16, payload bytes, then CRC16-CCITT little-endian over version+length+payload. Input may be unaligned. Reject truncation, trailing bytes, oversized payloads above 1024, bad magic/version/CRC, and integer overflow. Return an enum error and a non-owning payload view on success. Do not cast the byte buffer to structs. Include code and focused tests. Keep the answer under 1400 words."
+  },
+  {
+    "id": "concurrency-debug",
+    "category": "debugging",
+    "prompt": "Review and repair this Python 3 worker pool:\n\nclass Pool:\n    def __init__(self, n):\n        self.q = queue.Queue()\n        self.stop = False\n        self.threads = [threading.Thread(target=self.worker) for _ in range(n)]\n        for t in self.threads: t.start()\n    def worker(self):\n        while not self.stop:\n            fn = self.q.get()\n            fn()\n            self.q.task_done()\n    def submit(self, fn): self.q.put(fn)\n    def shutdown(self):\n        self.stop = True\n        self.q.join()\n        for t in self.threads: t.join()\n\nRequirements: identify all shutdown/deadlock/task-accounting problems; implement a thread-safe pool with graceful shutdown that finishes accepted tasks; reject submissions once shutdown begins; survive task exceptions; make shutdown idempotent; define behavior for n <= 0 and shutdown called from a worker. Use only the standard library. Include tests for the critical races. Keep the answer under 1500 words."
+  },
+  {
+    "id": "postgres-pagination",
+    "category": "database",
+    "prompt": "A PostgreSQL endpoint runs: SELECT id, created_at, status, total FROM orders WHERE tenant_id=$1 AND status = ANY($2) ORDER BY created_at DESC, id DESC LIMIT 50 OFFSET $3. The table has 200M rows and OFFSET can exceed 1M. Replace this with stable keyset pagination while preserving ordering and tenant isolation. Handle equal timestamps, first/next page parameters, status filters, index design, and rows inserted between requests. Give SQL, API cursor contents/validation, indexes, and tradeoffs. Explain whether one index can efficiently serve arbitrary status arrays. Keep the answer under 1200 words."
+  },
+  {
+    "id": "testing-property-based",
+    "category": "testing",
+    "prompt": "Create a rigorous test strategy for a function normalize_path(path: str) -> str used for virtual POSIX paths. Contract: output is absolute; collapse repeated slashes and '.'; resolve '..' without escaping root; preserve ordinary Unicode code points exactly; reject NUL; idempotent; no filesystem access. Provide an executable Python pytest + Hypothesis test module, including a clear reference oracle that is independent enough to catch implementation mistakes, targeted examples, metamorphic properties, and shrinking-friendly generators. Do not implement normalize_path itself; import it from pathutil. Keep the answer under 1400 words."
+  },
+  {
+    "id": "go-graceful-shutdown",
+    "category": "backend-reliability",
+    "prompt": "Implement a production-quality Go HTTP server shutdown path. The server accepts POST /jobs, validates a JSON body, and enqueues work into a bounded in-memory queue serviced by 4 workers. Requirements: return 503 once shutdown starts; never panic from send-on-closed-channel; finish accepted jobs during graceful shutdown; stop accepting HTTP requests; enforce a 10-second shutdown deadline; propagate SIGINT/SIGTERM; survive handler and worker errors; and define what happens when the queue is full. Use only the standard library. Include complete runnable code, explain shutdown ordering, and provide focused tests for the submit/shutdown race and deadline behavior. Keep the answer under 1600 words."
+  },
+  {
+    "id": "rust-stream-decoder",
+    "category": "systems",
+    "prompt": "Implement an incremental binary frame decoder in stable Rust without external crates. Frames contain magic 0xCAFE (big-endian), payload length u32 big-endian, payload bytes, and a trailing XOR checksum over the payload. Input arrives in arbitrary chunks and may contain garbage before a valid frame. Requirements: cap payloads at 1 MiB; avoid panics and unbounded buffering; recover after bad magic, oversized lengths, bad checksums, and truncated chunks; emit zero or more owned frames per push; and preserve possible partial magic at chunk boundaries. Include idiomatic code, state the complexity and memory bounds, and provide focused unit tests. Keep the answer under 1500 words."
+  },
+  {
+    "id": "typescript-singleflight-cache",
+    "category": "concurrency",
+    "prompt": "Implement a generic TypeScript async cache get(key, loader) with per-key request coalescing. Requirements: a successful value has a configurable TTL; at most one loader runs per key; callers may cancel their own wait with AbortSignal without cancelling the shared load needed by other callers; failures are not cached; synchronous loader throws are handled; invalidate(key) prevents an older in-flight load from repopulating the cache; clear() has the same guarantee for every key; and timers must not be created per entry. Do not use external packages. Include production-quality code, explain race handling, and provide deterministic tests using a fake clock. Keep the answer under 1600 words."
+  },
+  {
+    "id": "webhook-replay-security",
+    "category": "application-security",
+    "prompt": "Design and implement a TypeScript Express webhook endpoint backed by PostgreSQL. The sender provides X-Webhook-Id, X-Webhook-Timestamp, and X-Webhook-Signature, where the signature is HMAC-SHA256 over timestamp + '.' + the exact raw request bytes. Requirements: authenticate before JSON parsing; use constant-time signature comparison; reject timestamps outside a 5-minute window; prevent replay across multiple application instances; atomically persist the event and enqueue an outbox action; return the same success response for a duplicate valid delivery; reject reuse of an ID with different authenticated content; and support secret rotation. Assume express and pg are available. Include schema, middleware/transaction code, and key security tests and failure modes. Keep the answer under 1700 words."
+  }
+]
