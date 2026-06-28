@@ -8,9 +8,11 @@
   "scripts": {
     "benchmark": "node run-benchmark.mjs",
     "benchmark:repeats": "node run-repeats.mjs",
+    "export:public": "node export-public-results.mjs",
+    "security:scan": "node scripts/scan-secrets.mjs --git",
     "summarize": "node summarize-repeats.mjs",
     "test": "node --test",
-    "check": "node --check run-benchmark.mjs && node --check run-repeats.mjs && node --check summarize-repeats.mjs && node --check src/harness.mjs && node --check src/models.mjs && node --check src/statistics.mjs && node --check src/providers/index.mjs && node --check src/providers/ncode.mjs"
+    "check": "node --check run-benchmark.mjs && node --check run-repeats.mjs && node --check export-public-results.mjs && node --check summarize-repeats.mjs && node --check scripts/scan-secrets.mjs && node --check src/harness.mjs && node --check src/models.mjs && node --check src/public-results.mjs && node --check src/statistics.mjs && node --check src/providers/index.mjs && node --check src/providers/ncode.mjs"
   },
   "engines": {
     "node": ">=22"

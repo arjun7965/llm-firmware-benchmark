@@ -25,6 +25,7 @@ node run-repeats.mjs         # Generate runs 2 and 3
 node summarize-repeats.mjs   # Print statistics from manual scores
 node --test                  # Run harness unit tests without models
 node --check run-benchmark.mjs
+npm run security:scan        # Detect credentials and personal paths
 ```
 
 Runs may take five minutes per job. Successful results are skipped. Preserve raw
@@ -36,13 +37,20 @@ Follow the existing JavaScript style: ESM imports, two-space indentation, semico
 
 ## Testing Guidelines
 
-Tests use Node's built-in `node:test`; name files `*.test.mjs`. Run `npm test` and `npm run check`. Run `npm run summarize` after aggregation changes. Validate edited JSON before review. For runner changes, use a constrained smoke test or explain why a model run was omitted.
+Tests use Node's built-in `node:test`; name files `*.test.mjs`. Run `npm test`,
+`npm run check`, and `npm run security:scan`. Run `npm run summarize` after
+aggregation changes. For runner changes, use a constrained smoke test or explain
+why a model run was omitted.
 
 ## Commit & Pull Request Guidelines
 
-No usable Git history is present in this checkout, so no repository-specific commit convention can be inferred. Use short, imperative subjects such as `Add retry metadata to benchmark results`. Pull requests should describe the benchmark behavior changed, list validation performed, identify generated artifacts, and disclose changes that affect model parity, scoring, concurrency, timeouts, or harness conditions. Do not mix regenerated result data with unrelated code edits.
+Use short, imperative subjects such as `Add retry metadata to benchmark
+results`. Pull requests should describe behavior changes and validation, and
+disclose changes affecting model parity, scoring, concurrency, or timeouts.
 
 ## Evaluation Integrity
 
 Keep prompts identical across compared models. Preserve raw outputs outside Git,
 publish only sanitized artifacts, and disclose provider or harness differences.
+Never publish `results/` directly. Use `npm run export:public`, inspect every
+file marked `reviewRequired`, and follow `docs/publishing-results.md`.

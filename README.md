@@ -60,6 +60,15 @@ Raw outputs are intentionally Git-ignored because generated text can contain
 credentials, session metadata, or local paths. Keep raw runs private and publish
 only reviewed, sanitized exports.
 
+Create a sanitized projection:
+
+```bash
+npm run export:public -- --input results --output public-results
+```
+
+Exports containing redactions require explicit review. See
+`docs/publishing-results.md` and `schemas/public-result.schema.json`.
+
 ## Repeated Runs and Scoring
 
 Generate two additional samples and summarize manually entered scores:
@@ -92,6 +101,15 @@ Implement an adapter under `src/providers/` that accepts a job and returns:
 Register it in `src/providers/index.mjs`, then reference its provider name in
 the local model configuration. Provider options are carried in
 `job.modelOptions`.
+
+## Security Checks
+
+```bash
+npm run security:scan
+```
+
+CI scans repository content for common credential formats and personal paths.
+The scanner reports only location and finding type, never the matched value.
 
 ## License
 

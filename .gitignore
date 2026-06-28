@@ -17,6 +17,7 @@ coverage/
 /REPORT.md
 /REPEAT_REPORT.md
 /repeat-scores.json
+/public-results/
 
 # Machine-local model configuration.
 /models.local.json

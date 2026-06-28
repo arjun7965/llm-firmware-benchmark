@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arjun7965/llm-coding-benchmark/schemas/public-result.schema.json",
+  "title": "Sanitized public benchmark result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "task",
+    "model",
+    "run",
+    "execution",
+    "answer",
+    "publication"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "category"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "minLength": 1 }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 }
+      }
+    },
+    "run": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "startedAt",
+        "finishedAt",
+        "exitCode",
+        "signal"
+      ],
+      "properties": {
+        "startedAt": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" },
+        "exitCode": {
+          "type": ["integer", "null"]
+        },
+        "signal": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "answer": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceSha256",
+        "reviewRequired",
+        "redactions"
+      ],
+      "properties": {
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reviewRequired": {
+          "type": "boolean"
+        },
+        "redactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "count"],
+            "properties": {
+              "type": { "type": "string", "minLength": 1 },
+              "count": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}
