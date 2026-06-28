@@ -19,6 +19,10 @@ export function validateTasks(tasks) {
     if (!task || typeof task !== "object" || Array.isArray(task)) {
       throw new TypeError(`task at index ${index} must be an object`);
     }
+    const keys = Object.keys(task).sort().join(",");
+    if (keys !== "category,id,prompt") {
+      throw new TypeError(`task at index ${index} has unexpected fields`);
+    }
     if (typeof task.id !== "string" || !taskIdPattern.test(task.id)) {
       throw new TypeError(`task at index ${index} has an invalid id`);
     }

@@ -35,4 +35,13 @@ test("task validation requires nonempty categories and prompts", () => {
     () => validateTasks([{ id: "missing-prompt", category: "test", prompt: "" }]),
     /must have a prompt/,
   );
+  assert.throws(
+    () => validateTasks([{
+      id: "extra-field",
+      category: "test",
+      prompt: "x",
+      answer: "not part of the task contract",
+    }]),
+    /unexpected fields/,
+  );
 });

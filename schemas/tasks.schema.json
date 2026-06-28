@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arjun7965/llm-coding-benchmark/schemas/tasks.schema.json",
+  "title": "Benchmark task definitions",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "category", "prompt"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "category": {
+        "type": "string",
+        "minLength": 1
+      },
+      "prompt": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

@@ -56,6 +56,22 @@ BENCHMARK_MODELS_FILE=/path/to/models.json npm run benchmark
 category, and prompt. The harness writes one record per task/model pair under
 `results/`.
 
+Select a subset or override execution controls without editing configuration:
+
+```bash
+npm run benchmark -- \
+  --models local-openai-compatible \
+  --tasks embedded-ring-buffer,firmware-state-machine \
+  --runs 1,2,3 \
+  --concurrency 2 \
+  --output results/firmware
+```
+
+`--models` and `--tasks` accept comma-separated or repeated exact IDs.
+`--models-file` and `--tasks-file` select alternate input documents. Run
+`npm run benchmark -- --help` or `npm run benchmark:repeats -- --help` for the
+complete interface.
+
 Raw outputs are intentionally Git-ignored because generated text can contain
 credentials, session metadata, or local paths. Keep raw runs private and publish
 only reviewed, sanitized exports.
@@ -83,6 +99,11 @@ The default rubric scores correctness, constraint compliance, edge cases,
 testing, maintainability, and technical reasoning out of 10. Blind model
 identities during initial scoring and disclose differences in provider settings,
 tools, context limits, or execution environments.
+
+Task-specific ten-point rubrics are under `docs/benchmarks/`. Machine-readable
+contracts are provided in `schemas/tasks.schema.json` and
+`schemas/repeat-scores.schema.json`; the summarizer also validates cross-field
+requirements such as score-array lengths.
 
 ## Adding a Provider
 
