@@ -17,8 +17,9 @@ const validModel = {
 test("example model configuration is valid", () => {
   const models = loadModels(new URL("../models.example.json", import.meta.url));
 
-  assert.equal(models.length, 2);
+  assert.equal(models.length, 3);
   assert.equal(models[0].provider, "ncode");
+  assert.equal(models[2].provider, "openai-compatible");
 });
 
 test("model validation rejects unsafe and duplicate IDs", () => {

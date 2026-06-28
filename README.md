@@ -7,7 +7,7 @@ execution is isolated behind adapters.
 ## Requirements
 
 - Node.js 22 or newer
-- A supported provider runtime; NCode is included
+- A supported provider runtime; NCode and OpenAI-compatible HTTP are included
 - Local access or credentials required by the configured models
 
 ## Quick Start
@@ -101,6 +101,11 @@ Implement an adapter under `src/providers/` that accepts a job and returns:
 Register it in `src/providers/index.mjs`, then reference its provider name in
 the local model configuration. Provider options are carried in
 `job.modelOptions`.
+
+The included `openai-compatible` provider sends non-streaming Chat Completions
+requests to a configured HTTP endpoint. It supports unauthenticated local
+servers and environment-based Bearer credentials. See
+`docs/providers/openai-compatible.md` for configuration and safety constraints.
 
 ## Security Checks
 

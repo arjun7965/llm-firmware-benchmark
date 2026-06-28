@@ -1,7 +1,9 @@
 import { executeNcodeJob } from "./ncode.mjs";
+import { executeOpenAICompatibleJob } from "./openai-compatible.mjs";
 
 const providers = new Map([
   ["ncode", executeNcodeJob],
+  ["openai-compatible", executeOpenAICompatibleJob],
 ]);
 
 export function getProvider(name) {

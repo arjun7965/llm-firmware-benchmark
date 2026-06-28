@@ -4,7 +4,8 @@
 
 - `tasks.json` is the source of truth for task IDs, categories, and prompts.
 - `models.example.json` documents the ignored local model configuration.
-- `src/` contains provider-neutral orchestration, provider adapters, model configuration, and statistics.
+- `src/` contains orchestration, model configuration,
+  statistics, and the NCode and OpenAI-compatible provider adapters.
 - `test/` contains `node:test` coverage; adapter tests such as `ncode.test.mjs` stay separate from generic harness tests.
 - `run-benchmark.mjs` runs every task against the configured local models and writes first-run records to `results/`.
 - `run-repeats.mjs` creates additional samples under `results/run-2/` and `results/run-3/`.
@@ -37,10 +38,11 @@ Follow the existing JavaScript style: ESM imports, two-space indentation, semico
 
 ## Testing Guidelines
 
-Tests use Node's built-in `node:test`; name files `*.test.mjs`. Run `npm test`,
-`npm run check`, and `npm run security:scan`. Run `npm run summarize` after
-aggregation changes. For runner changes, use a constrained smoke test or explain
-why a model run was omitted.
+Tests use Node's built-in `node:test`; name files `*.test.mjs`. Provider tests
+must mock CLI or HTTP boundaries and not require credentials or live
+models. Run `npm test`, `npm run check`, and `npm run security:scan`. Run
+`npm run summarize` after aggregation changes. For runner changes, use a
+constrained smoke test or explain why a model run was omitted.
 
 ## Commit & Pull Request Guidelines
 

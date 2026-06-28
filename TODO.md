@@ -9,7 +9,7 @@
 
 ## Benchmark Extensibility
 
-- [ ] Add an OpenAI-compatible HTTP provider adapter.
+- [x] Add an OpenAI-compatible HTTP provider adapter.
 - [ ] Add CLI filters for models, tasks, runs, concurrency, and output location.
 - [ ] Add task-specific documentation and scoring criteria under `docs/benchmarks/`.
 - [x] Define and validate a stable public result schema.
