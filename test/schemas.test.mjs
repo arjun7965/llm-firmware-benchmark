@@ -78,6 +78,12 @@ test("JSON Schema files declare the expected contracts", () => {
       "utf8",
     ),
   );
+  const fixtureSchema = JSON.parse(
+    readFileSync(
+      new URL("../schemas/fixture-manifest.schema.json", import.meta.url),
+      "utf8",
+    ),
+  );
 
   assert.equal(taskSchema.$schema, "https://json-schema.org/draft/2020-12/schema");
   assert.equal(taskSchema.items.additionalProperties, false);
@@ -95,4 +101,9 @@ test("JSON Schema files declare the expected contracts", () => {
     publicResultSchema.properties.task.properties.targetProfile.enum,
     [null, ...targetProfileIds],
   );
+  assert.deepEqual(
+    fixtureSchema.properties.targetProfile.enum,
+    [null, ...targetProfileIds],
+  );
+  assert.equal(fixtureSchema.additionalProperties, false);
 });

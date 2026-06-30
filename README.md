@@ -115,6 +115,19 @@ Embedded and firmware expansion is governed by
 `docs/embedded/target-assumptions.md`. Profiles are recorded as validation and
 result metadata; they do not inject hidden text into model prompts.
 
+## Fixture Scaffolds
+
+Profile-backed tasks have manifests under `fixtures/<task-id>/`. Manifests
+declare answer extraction, stable asset paths, required tools, argv-based build
+commands, and whether a fixture is an inactive scaffold or executable.
+
+```bash
+npm run fixtures:check
+```
+
+This validates fixture structure and task/profile references without compiling
+or executing model output. See `fixtures/README.md` for the directory contract.
+
 ## Adding a Provider
 
 Implement an adapter under `src/providers/` that accepts a job and returns:

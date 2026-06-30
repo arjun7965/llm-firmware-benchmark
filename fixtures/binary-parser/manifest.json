@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "binary-parser",
+  "targetProfile": "portable-c11",
+  "status": "scaffold",
+  "language": "c11",
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "c",
+    "output": "generated/answer.c"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "host-compile",
+      "phase": "compile",
+      "argv": [
+        "cc",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-Istarter",
+        "-Imocks",
+        "-c",
+        "generated/answer.c",
+        "-o",
+        "build/answer.o"
+      ],
+      "requiredTools": ["cc"],
+      "timeoutMs": 30000
+    }
+  ]
+}

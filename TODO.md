@@ -53,12 +53,14 @@
 - [x] Store embedded `targetProfile` metadata in `tasks.json`; validate profile
   references through the task schema and runtime validation instead of a
   test-local mapping.
+- [x] Define stable per-task fixture directories and a validated manifest/build
+  command contract.
 - [ ] Build deterministic host-side hardware mocks and simulators so core tasks
   require no physical board or proprietary SDK.
 - [ ] Add optional cross-compilation checks for representative ARM and RISC-V
   targets while keeping the default test suite dependency-free.
-- [ ] Store task fixtures, starter code, public tests, and build commands under
-  stable per-task directories.
+- [ ] Populate fixture starter code, public tests, mocks, extraction helpers,
+  and executable validation commands.
 - [ ] Add private or mutation-based tests for edge cases that prose-only scoring
   would miss.
 - [ ] Define firmware-specific scoring for correctness, bounded resource use,

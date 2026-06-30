@@ -18,6 +18,8 @@ coverage/
 /REPEAT_REPORT.md
 /repeat-scores.json
 /public-results/
+/fixtures/*/build/
+/fixtures/*/generated/
 
 # Machine-local model configuration.
 /models.local.json

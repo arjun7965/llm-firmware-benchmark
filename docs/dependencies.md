@@ -42,6 +42,10 @@ harness solely to score one task.
 Embedded task toolchains and runtime assumptions are defined separately in
 `docs/embedded/target-assumptions.md`.
 
+Fixture manifests declare required tools and commands. `npm run fixtures:check`
+validates those declarations but does not install tools or execute generated
+code.
+
 Useful version checks include:
 
 ```bash

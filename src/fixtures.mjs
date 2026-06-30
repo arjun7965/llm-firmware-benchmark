@@ -1,0 +1,277 @@
+import {
+  existsSync,
+  lstatSync,
+  readFileSync,
+  readdirSync,
+} from "node:fs";
+import { join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { loadTasks } from "./harness.mjs";
+
+const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const identifierPattern = /^[a-z][a-z0-9-]*$/;
+const languagePattern = /^[a-z][a-z0-9+._-]*$/;
+const toolPattern = /^[a-z0-9][a-z0-9+._-]*$/;
+const fixtureStatuses = new Set(["active", "scaffold"]);
+const commandPhases = new Set(["analyze", "compile", "test"]);
+const forbiddenCommandTools = new Set([
+  "bash",
+  "cmd",
+  "powershell",
+  "pwsh",
+  "sh",
+  "zsh",
+]);
+const manifestFields = [
+  "answer",
+  "commands",
+  "language",
+  "paths",
+  "schemaVersion",
+  "status",
+  "targetProfile",
+  "taskId",
+];
+const answerFields = ["format", "language", "output"];
+const pathFields = [
+  "build",
+  "generated",
+  "mocks",
+  "publicTests",
+  "scripts",
+  "starter",
+];
+const commandFields = [
+  "argv",
+  "id",
+  "phase",
+  "requiredTools",
+  "timeoutMs",
+];
+const trackedDirectoryFields = [
+  "mocks",
+  "publicTests",
+  "scripts",
+  "starter",
+];
+const requiredPaths = {
+  build: "build",
+  generated: "generated",
+  mocks: "mocks",
+  publicTests: "tests/public",
+  scripts: "scripts",
+  starter: "starter",
+};
+
+function requireObject(value, name) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError(`${name} must be an object`);
+  }
+}
+
+function requireExactFields(value, fields, name) {
+  requireObject(value, name);
+  if (Object.keys(value).sort().join(",") !== [...fields].sort().join(",")) {
+    throw new TypeError(`${name} has unexpected fields`);
+  }
+}
+
+function requireString(value, name, pattern) {
+  if (typeof value !== "string" || value.trim() === "" ||
+      (pattern && !pattern.test(value))) {
+    throw new TypeError(`${name} is invalid`);
+  }
+}
+
+function requireSafeRelativePath(value, name) {
+  requireString(value, name);
+  if (value.includes("\\") || value.startsWith("/") ||
+      value.split("/").some((segment) =>
+        segment === "" || segment === "." || segment === "..")) {
+    throw new TypeError(`${name} must be a safe relative path`);
+  }
+}
+
+export function validateFixtureManifest(manifest, task) {
+  requireExactFields(manifest, manifestFields, "fixture manifest");
+  requireObject(task, "fixture task");
+  if (manifest.schemaVersion !== "1.0") {
+    throw new TypeError("unsupported fixture schemaVersion");
+  }
+  requireString(manifest.taskId, "fixture taskId", taskIdPattern);
+  if (manifest.taskId !== task.id) {
+    throw new TypeError(
+      `fixture taskId ${manifest.taskId} does not match ${task.id}`,
+    );
+  }
+  if (manifest.targetProfile !== (task.targetProfile ?? null)) {
+    throw new TypeError(
+      `fixture ${task.id} targetProfile does not match tasks.json`,
+    );
+  }
+  if (!fixtureStatuses.has(manifest.status)) {
+    throw new TypeError(`fixture ${task.id} has an invalid status`);
+  }
+  requireString(manifest.language, "fixture language", languagePattern);
+
+  requireExactFields(manifest.answer, answerFields, "fixture answer");
+  if (manifest.answer.format !== "markdown-fenced-code") {
+    throw new TypeError(`fixture ${task.id} has an unsupported answer format`);
+  }
+  requireString(
+    manifest.answer.language,
+    "fixture answer language",
+    languagePattern,
+  );
+  requireSafeRelativePath(manifest.answer.output, "fixture answer output");
+
+  requireExactFields(manifest.paths, pathFields, "fixture paths");
+  for (const [name, path] of Object.entries(manifest.paths)) {
+    requireSafeRelativePath(path, `fixture paths.${name}`);
+    if (path !== requiredPaths[name]) {
+      throw new TypeError(
+        `fixture paths.${name} must be ${requiredPaths[name]}`,
+      );
+    }
+  }
+  if (new Set(Object.values(manifest.paths)).size !== pathFields.length) {
+    throw new TypeError(`fixture ${task.id} paths must be unique`);
+  }
+  if (!manifest.answer.output.startsWith(`${manifest.paths.generated}/`)) {
+    throw new TypeError(
+      `fixture ${task.id} answer output must be under generated/`,
+    );
+  }
+
+  if (!Array.isArray(manifest.commands) || manifest.commands.length === 0) {
+    throw new TypeError(`fixture ${task.id} must define commands`);
+  }
+  const commandIds = new Set();
+  for (const command of manifest.commands) {
+    requireExactFields(command, commandFields, "fixture command");
+    requireString(command.id, "fixture command id", identifierPattern);
+    if (commandIds.has(command.id)) {
+      throw new TypeError(`fixture ${task.id} has duplicate command IDs`);
+    }
+    if (!commandPhases.has(command.phase)) {
+      throw new TypeError(`fixture ${task.id} has an invalid command phase`);
+    }
+    if (!Array.isArray(command.argv) || command.argv.length === 0 ||
+        command.argv.some((value) =>
+          typeof value !== "string" || value.length === 0 ||
+          value.includes("\0"))) {
+      throw new TypeError(`fixture ${task.id} command argv is invalid`);
+    }
+    if (!Array.isArray(command.requiredTools) ||
+        command.requiredTools.length === 0 ||
+        command.requiredTools.some((tool) =>
+          typeof tool !== "string" || !toolPattern.test(tool))) {
+      throw new TypeError(
+        `fixture ${task.id} command requiredTools is invalid`,
+      );
+    }
+    if (new Set(command.requiredTools).size !== command.requiredTools.length) {
+      throw new TypeError(
+        `fixture ${task.id} command requiredTools must be unique`,
+      );
+    }
+    if (!toolPattern.test(command.argv[0]) ||
+        forbiddenCommandTools.has(command.argv[0]) ||
+        !command.requiredTools.includes(command.argv[0])) {
+      throw new TypeError(
+        `fixture ${task.id} command must invoke a declared non-shell tool`,
+      );
+    }
+    if (!Number.isSafeInteger(command.timeoutMs) || command.timeoutMs < 1) {
+      throw new TypeError(`fixture ${task.id} command timeoutMs is invalid`);
+    }
+    commandIds.add(command.id);
+  }
+  return manifest;
+}
+
+function rejectSymlinks(directory, taskId) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isSymbolicLink()) {
+      throw new TypeError(`fixture ${taskId} contains a symlink: ${path}`);
+    }
+    if (entry.isDirectory()) rejectSymlinks(path, taskId);
+  }
+}
+
+function validateTrackedDirectories(fixtureRoot, manifest) {
+  for (const field of trackedDirectoryFields) {
+    const path = resolve(fixtureRoot, manifest.paths[field]);
+    const relativePath = relative(fixtureRoot, path);
+    if (relativePath === ".." ||
+        relativePath.startsWith(`..${sep}`) ||
+        relativePath === "") {
+      throw new TypeError(
+        `fixture ${manifest.taskId} ${field} path escapes its directory`,
+      );
+    }
+    if (!existsSync(path) || !lstatSync(path).isDirectory()) {
+      throw new TypeError(
+        `fixture ${manifest.taskId} is missing ${manifest.paths[field]}`,
+      );
+    }
+    rejectSymlinks(path, manifest.taskId);
+  }
+}
+
+export function validateFixtureRepository({
+  fixturesRoot,
+  tasksPath,
+}) {
+  const root = resolve(
+    fixturesRoot instanceof URL ? fileURLToPath(fixturesRoot) : fixturesRoot,
+  );
+  const tasks = loadTasks(tasksPath);
+  const tasksById = new Map(tasks.map((task) => [task.id, task]));
+  const requiredTaskIds = new Set(
+    tasks.filter((task) => task.targetProfile).map((task) => task.id),
+  );
+  const fixtureTaskIds = new Set();
+  let commandCount = 0;
+  let activeCount = 0;
+  let scaffoldCount = 0;
+
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) {
+      throw new TypeError(`fixture symlinks are not allowed: ${entry.name}`);
+    }
+    if (!entry.isDirectory()) continue;
+    const task = tasksById.get(entry.name);
+    if (!task) {
+      throw new TypeError(`fixture directory has no task: ${entry.name}`);
+    }
+    const taskFixtureRoot = join(root, entry.name);
+    const manifestPath = join(taskFixtureRoot, "manifest.json");
+    if (!existsSync(manifestPath) || lstatSync(manifestPath).isSymbolicLink()) {
+      throw new TypeError(`fixture ${entry.name} is missing manifest.json`);
+    }
+    const manifest = validateFixtureManifest(
+      JSON.parse(readFileSync(manifestPath, "utf8")),
+      task,
+    );
+    validateTrackedDirectories(taskFixtureRoot, manifest);
+    fixtureTaskIds.add(entry.name);
+    commandCount += manifest.commands.length;
+    if (manifest.status === "active") activeCount++;
+    if (manifest.status === "scaffold") scaffoldCount++;
+  }
+
+  for (const taskId of requiredTaskIds) {
+    if (!fixtureTaskIds.has(taskId)) {
+      throw new TypeError(`task ${taskId} is missing a fixture directory`);
+    }
+  }
+
+  return {
+    fixtureCount: fixtureTaskIds.size,
+    activeCount,
+    scaffoldCount,
+    commandCount,
+  };
+}

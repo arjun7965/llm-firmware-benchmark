@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arjun7965/llm-coding-benchmark/schemas/fixture-manifest.schema.json",
+  "title": "Benchmark fixture manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "taskId",
+    "targetProfile",
+    "status",
+    "language",
+    "answer",
+    "paths",
+    "commands"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "taskId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "targetProfile": {
+      "type": ["string", "null"],
+      "enum": [
+        null,
+        "portable-c11",
+        "c11-lock-free-spsc",
+        "c11-mocked-hal",
+        "armv7m-bare-metal",
+        "rv32-bare-metal",
+        "generic-rtos",
+        "embedded-linux-posix"
+      ]
+    },
+    "status": {
+      "enum": ["active", "scaffold"]
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9+._-]*$"
+    },
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "language", "output"],
+      "properties": {
+        "format": {
+          "const": "markdown-fenced-code"
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9+._-]*$"
+        },
+        "output": {
+          "type": "string",
+          "pattern": "^generated/[A-Za-z0-9._/-]+$"
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "starter",
+        "mocks",
+        "publicTests",
+        "scripts",
+        "generated",
+        "build"
+      ],
+      "properties": {
+        "starter": { "const": "starter" },
+        "mocks": { "const": "mocks" },
+        "publicTests": { "const": "tests/public" },
+        "scripts": { "const": "scripts" },
+        "generated": { "const": "generated" },
+        "build": { "const": "build" }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phase",
+          "argv",
+          "requiredTools",
+          "timeoutMs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "phase": {
+            "enum": ["analyze", "compile", "test"]
+          },
+          "argv": {
+            "type": "array",
+            "minItems": 1,
+            "prefixItems": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9+._-]*$",
+                "not": {
+                  "enum": [
+                    "bash",
+                    "cmd",
+                    "powershell",
+                    "pwsh",
+                    "sh",
+                    "zsh"
+                  ]
+                }
+              }
+            ],
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "requiredTools": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9+._-]*$"
+            }
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

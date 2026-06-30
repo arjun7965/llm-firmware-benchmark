@@ -7,9 +7,9 @@
 - `src/` contains orchestration, statistics, configuration, and providers.
 - `test/` contains `node:test` coverage; keep provider tests separate from
   generic harness tests.
-- `docs/` contains task rubrics and dependency guidance; `schemas/` defines
-  JSON contracts.
-- `docs/embedded/` defines firmware coverage and reusable target profiles.
+- `docs/` contains rubrics, dependencies, and embedded plans; `schemas/`
+  defines JSON contracts.
+- `fixtures/<task-id>/` contains validated manifests and task assets.
 - Top-level runner scripts generate and summarize ignored records in `results/`.
 
 Generated files follow `<task-id>--<model-name>.json`; keep task IDs lowercase
@@ -27,13 +27,13 @@ node summarize-repeats.mjs   # Print statistics from manual scores
 node --test                  # Run harness unit tests without models
 node --check run-benchmark.mjs
 npm run security:scan        # Detect credentials and personal paths
+npm run fixtures:check       # Validate fixture manifests and paths
 ```
 
 Use `npm run benchmark -- --help` for model/task filters, run selection,
 concurrency, alternate input files, and output location.
 
-Runs may take five minutes per job. Successful results are skipped. Preserve raw
-JSON privately; it is ignored because generated output can contain sensitive data.
+Successful records are skipped; keep raw JSON private.
 
 ## Coding Style & Naming Conventions
 
@@ -43,14 +43,15 @@ task/model mappings explicit and format JSON with two-space indentation.
 
 ## Testing Guidelines
 
-Tests use Node's built-in `node:test`; name files `*.test.mjs`. Provider tests
-must mock CLI or HTTP boundaries and not require credentials or live
-models. Run `npm test`, `npm run check`, and `npm run security:scan`. Run
+Tests use `node:test`; name files `*.test.mjs`. Provider tests must mock CLI or
+HTTP boundaries without credentials or live models. Run `npm test`,
+`npm run check`, and `npm run security:scan`. Run
 `npm run summarize` after aggregation changes. Every task needs a matching
 ten-point rubric under `docs/benchmarks/`. For runner changes, use a constrained
 smoke test or explain why a model run was omitted. Document any new task
 toolchain in `docs/dependencies.md`; embedded profiles must be defined in
-`src/target-profiles.mjs` and documented under `docs/embedded/`.
+`src/target-profiles.mjs` and documented under `docs/embedded/`. Keep fixture
+commands as argv arrays; never invoke model output through a shell.
 
 ## Commit & Pull Request Guidelines
 
