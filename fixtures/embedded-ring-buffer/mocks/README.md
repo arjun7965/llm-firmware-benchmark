@@ -1,5 +1,5 @@
 # Mocks
 
-The initial host fixture will model the interrupt producer and main-loop
-consumer with deterministic interleavings. Host threads may supplement, but not
-replace, deterministic ordering tests.
+This task has no hardware dependencies. Public tests exercise deterministic
+producer/consumer handoffs directly; optional host-thread tests may supplement
+but must not replace those portable checks.

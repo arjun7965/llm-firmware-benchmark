@@ -1,7 +1,7 @@
 # LLM Coding Benchmark
 
 [![51 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=51%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
-[![6 C tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/firmware-c-tests.yml?branch=main&event=push&label=6%20C%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/firmware-c-tests.yml?query=branch%3Amain)
+[![12 C tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/c-tests.yml?branch=main&event=push&label=12%20C%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 
 A dependency-free Node.js harness for running the same coding tasks against
 multiple language models. Models are configured locally, and provider-specific
@@ -48,6 +48,7 @@ Run the benchmark and tests:
 ```bash
 npm run benchmark
 npm test
+npm run test:c
 npm run check
 ```
 

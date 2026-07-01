@@ -28,7 +28,7 @@ npm test                     # Run tests without models
 npm run check                # Syntax-check JavaScript
 npm run security:scan        # Detect credentials and personal paths
 npm run fixtures:check       # Validate fixture manifests and paths
-npm run fixture:firmware:self-test
+npm run test:c               # Run trusted C fixture tests
 ```
 
 Use `npm run benchmark -- --help` for model/task filters, run selection,

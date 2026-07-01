@@ -30,11 +30,10 @@
         "-Werror",
         "-pedantic",
         "-Istarter",
-        "-Imocks",
-        "-c",
         "generated/answer.c",
+        "tests/public/test_ring_buffer.c",
         "-o",
-        "build/answer.o"
+        "build/public-tests"
       ],
       "requiredTools": ["cc"],
       "timeoutMs": 30000

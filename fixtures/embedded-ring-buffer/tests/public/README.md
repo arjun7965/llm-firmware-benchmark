@@ -1,4 +1,5 @@
 # Public Tests
 
-Planned cases cover empty/full behavior, wraparound, full-capacity use,
-overflow policy, and producer/consumer ordering.
+`test_ring_buffer.c` covers invalid initialization, FIFO ordering, use of every
+declared slot, drop-new overflow, capacity one, repeated slot reuse, and
+unsigned atomic-counter wraparound.

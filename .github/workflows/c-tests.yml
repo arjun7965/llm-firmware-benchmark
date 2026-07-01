@@ -1,4 +1,4 @@
-name: Firmware C tests
+name: C tests
 
 on:
   pull_request:
@@ -17,4 +17,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm run fixture:firmware:self-test
+      - run: npm run test:c

@@ -52,6 +52,18 @@ The trusted firmware fixture self-test requires `cc`:
 npm run fixture:firmware:self-test
 ```
 
+The trusted ring-buffer fixture uses the same C11 compiler:
+
+```bash
+npm run fixture:ring-buffer:self-test
+```
+
+Run both trusted C fixture suites with:
+
+```bash
+npm run test:c
+```
+
 Useful version checks include:
 
 ```bash

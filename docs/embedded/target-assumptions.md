@@ -80,7 +80,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 
 | Task ID | Target profile | Task-specific assumptions |
 | --- | --- | --- |
-| `embedded-ring-buffer` | `c11-lock-free-spsc` | Power-of-two capacity; ISR producer; main-loop consumer |
+| `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields |
 
