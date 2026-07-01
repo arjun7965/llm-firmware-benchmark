@@ -1,5 +1,15 @@
 # Repository Publication TODO
 
+## Project Scope and Positioning
+
+- [ ] Decide whether to position the repository as a firmware-focused benchmark
+  with auxiliary general-coding tasks. If adopted, revisit the repository name,
+  README, task-suite metadata, CLI filtering, and separate score reporting
+  before changing existing benchmark semantics.
+  - [ ] If renamed, document the GitHub rename, update local remotes and
+    hardcoded badge/link URLs, and audit GitHub Pages, hosted Actions, and
+    external integrations that may not follow redirects.
+
 ## Security and Data Hygiene
 
 - [x] Implement a sanitized public-result exporter that retains answer text and reproducibility metadata while removing credentials, home paths, session IDs, UUIDs, and unnecessary execution details.
