@@ -1,4 +1,5 @@
 # Fixture Scripts
 
-Extraction and test execution helpers will be added when the fixture becomes
-active. Scripts must not execute model-generated code through a shell.
+`verify-reference.mjs` compiles and runs the public tests against the trusted
+reference implementation. Model-answer extraction and isolated execution are
+still required before this fixture can become active.

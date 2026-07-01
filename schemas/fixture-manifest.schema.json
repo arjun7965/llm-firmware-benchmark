@@ -67,6 +67,7 @@
         "starter",
         "mocks",
         "publicTests",
+        "reference",
         "scripts",
         "generated",
         "build"
@@ -75,6 +76,7 @@
         "starter": { "const": "starter" },
         "mocks": { "const": "mocks" },
         "publicTests": { "const": "tests/public" },
+        "reference": { "const": "reference" },
         "scripts": { "const": "scripts" },
         "generated": { "const": "generated" },
         "build": { "const": "build" }

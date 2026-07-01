@@ -13,6 +13,7 @@
     "starter": "starter",
     "mocks": "mocks",
     "publicTests": "tests/public",
+    "reference": "reference",
     "scripts": "scripts",
     "generated": "generated",
     "build": "build"
@@ -30,10 +31,11 @@
         "-pedantic",
         "-Istarter",
         "-Imocks",
-        "-c",
         "generated/answer.c",
+        "mocks/mock_hal.c",
+        "tests/public/test_firmware_state_machine.c",
         "-o",
-        "build/answer.o"
+        "build/public-tests"
       ],
       "requiredTools": ["cc"],
       "timeoutMs": 30000

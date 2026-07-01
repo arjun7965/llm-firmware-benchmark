@@ -13,6 +13,7 @@
     "starter": "starter",
     "mocks": "mocks",
     "publicTests": "tests/public",
+    "reference": "reference",
     "scripts": "scripts",
     "generated": "generated",
     "build": "build"

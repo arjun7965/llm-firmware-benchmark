@@ -46,6 +46,12 @@ Fixture manifests declare required tools and commands. `npm run fixtures:check`
 validates those declarations but does not install tools or execute generated
 code.
 
+The trusted firmware fixture self-test requires `cc`:
+
+```bash
+npm run fixture:firmware:self-test
+```
+
 Useful version checks include:
 
 ```bash

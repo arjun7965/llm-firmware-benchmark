@@ -38,6 +38,7 @@ const pathFields = [
   "generated",
   "mocks",
   "publicTests",
+  "reference",
   "scripts",
   "starter",
 ];
@@ -51,6 +52,7 @@ const commandFields = [
 const trackedDirectoryFields = [
   "mocks",
   "publicTests",
+  "reference",
   "scripts",
   "starter",
 ];
@@ -59,6 +61,7 @@ const requiredPaths = {
   generated: "generated",
   mocks: "mocks",
   publicTests: "tests/public",
+  reference: "reference",
   scripts: "scripts",
   starter: "starter",
 };

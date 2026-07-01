@@ -24,16 +24,15 @@ the runtime required by each provider.
 node run-benchmark.mjs       # Run the primary task/model matrix
 node run-repeats.mjs         # Generate runs 2 and 3
 node summarize-repeats.mjs   # Print statistics from manual scores
-node --test                  # Run harness unit tests without models
-node --check run-benchmark.mjs
+npm test                     # Run tests without models
+npm run check                # Syntax-check JavaScript
 npm run security:scan        # Detect credentials and personal paths
 npm run fixtures:check       # Validate fixture manifests and paths
+npm run fixture:firmware:self-test
 ```
 
 Use `npm run benchmark -- --help` for model/task filters, run selection,
 concurrency, alternate input files, and output location.
-
-Successful records are skipped; keep raw JSON private.
 
 ## Coding Style & Naming Conventions
 

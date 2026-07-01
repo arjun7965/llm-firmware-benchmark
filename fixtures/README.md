@@ -7,6 +7,7 @@ manifest.json
 starter/       # Supplied source or headers
 mocks/         # Deterministic hardware, HAL, clock, or OS fakes
 tests/public/  # Tests disclosed to benchmark participants
+reference/     # Trusted implementation used to verify fixture behavior
 scripts/       # Fixture-local validation helpers
 generated/     # Extracted model code; ignored
 build/         # Compiler and test output; ignored

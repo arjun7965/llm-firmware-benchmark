@@ -57,6 +57,8 @@
   command contract.
 - [ ] Build deterministic host-side hardware mocks and simulators so core tasks
   require no physical board or proprietary SDK.
+  - [x] Add a deterministic clock/I2C mock and trusted self-test for
+    `firmware-state-machine`.
 - [ ] Add optional cross-compilation checks for representative ARM and RISC-V
   targets while keeping the default test suite dependency-free.
 - [ ] Populate fixture starter code, public tests, mocks, extraction helpers,
