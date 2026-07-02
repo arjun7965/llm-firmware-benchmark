@@ -1,4 +1,5 @@
 # Starter Assets
 
-A stable parser function signature and error enum must be added before this
-fixture can compile model answers against shared tests.
+`binary_parser.h` defines the frame constants, result enum, non-owning payload
+view, and parser signature. Model implementations must include this header
+without redefining its public types.

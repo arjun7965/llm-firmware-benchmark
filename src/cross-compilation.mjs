@@ -22,6 +22,13 @@ const commonFlags = Object.freeze([
 
 const trustedSources = Object.freeze([
   Object.freeze({
+    id: "binary-parser",
+    source: "fixtures/binary-parser/reference/binary_parser.c",
+    includes: Object.freeze([
+      "fixtures/binary-parser/starter",
+    ]),
+  }),
+  Object.freeze({
     id: "embedded-ring-buffer",
     source: "fixtures/embedded-ring-buffer/reference/ring_buffer.c",
     includes: Object.freeze([

@@ -82,7 +82,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | --- | --- | --- |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
-| `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields |
+| `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields; CRC-16/CCITT-FALSE |
 
 Planned profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.

@@ -75,6 +75,8 @@
   targets while keeping the default test suite dependency-free.
 - [ ] Populate fixture starter code, public tests, mocks, extraction helpers,
   and executable validation commands.
+  - [x] Add a stable API, trusted reference, and deterministic public self-test
+    for `binary-parser`.
 - [ ] Add private or mutation-based tests for edge cases that prose-only scoring
   would miss.
 - [ ] Define firmware-specific scoring for correctness, bounded resource use,

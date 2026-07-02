@@ -1,4 +1,4 @@
 # Mocks
 
-No hardware mock is required. This directory is reserved for shared CRC or
-allocation instrumentation if the active fixture needs it.
+No mocks are required. The parser is allocation-free, and the public tests
+build frames with an independent CRC implementation.

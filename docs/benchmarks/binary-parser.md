@@ -4,6 +4,11 @@
 
 Assess defensive parsing of an untrusted byte frame in portable C.
 
+Implement the API declared by
+`fixtures/binary-parser/starter/binary_parser.h`. CRC validation uses
+CRC-16/CCITT-FALSE with polynomial `0x1021`, initial value `0xFFFF`, no
+reflection, and no final XOR.
+
 ## Target Assumptions
 
 Target profile: `portable-c11`. See `docs/embedded/target-assumptions.md`.

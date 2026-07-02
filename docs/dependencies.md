@@ -58,7 +58,13 @@ The trusted ring-buffer fixture uses the same C11 compiler:
 npm run fixture:ring-buffer:self-test
 ```
 
-Run both trusted C fixture suites with:
+The trusted binary-parser fixture also requires `cc`:
+
+```bash
+npm run fixture:parser:self-test
+```
+
+Run all trusted C fixture suites with:
 
 ```bash
 npm run test:c
