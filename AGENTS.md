@@ -9,15 +9,14 @@
 - `docs/` contains rubrics, dependencies, and embedded plans; `schemas/`
   defines JSON contracts.
 - `fixtures/<task-id>/` contains manifests and task assets.
-- Top-level runner scripts generate and summarize ignored records in `results/`.
+- Top-level scripts manage ignored records in `results/`.
 
-Generated files follow `<task-id>--<model-name>.json`; keep task IDs lowercase
-and hyphen-separated. Embedded and firmware tasks require `targetProfile`.
+Outputs follow `<task-id>--<model-name>.json`; task IDs use lowercase
+hyphenated words. Embedded and firmware tasks require `targetProfile`.
 
 ## Build, Test, and Development Commands
 
-Use Node.js 22+, copy `models.example.json` to `models.local.json`, and install
-the runtime required by each provider.
+Use Node.js 22+ and copy `models.example.json` to `models.local.json`.
 
 ```bash
 node run-benchmark.mjs       # Run the primary task/model matrix
@@ -27,6 +26,7 @@ npm test                     # Run tests without models
 npm run check                # Syntax-check JavaScript
 npm run security:scan        # Detect credentials and personal paths
 npm run fixtures:check       # Validate fixture manifests and paths
+npm run fixture:extract -- --result <result.json>
 npm run test:c               # Run trusted C fixture tests
 npm run cross:check          # Probe optional cross-compilers
 ```

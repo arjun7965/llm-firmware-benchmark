@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -92,10 +93,22 @@ export function resultFilePath(outputRoot, job) {
   return join(outputDir, `${job.task.id}--${job.modelName}.json`);
 }
 
-export function hasSuccessfulResult(path) {
+export function promptSha256(prompt) {
+  if (typeof prompt !== "string" || prompt.trim() === "") {
+    throw new TypeError("prompt must be a non-empty string");
+  }
+  return createHash("sha256").update(prompt).digest("hex");
+}
+
+export function hasSuccessfulResult(path, {
+  expectedPromptSha256,
+} = {}) {
   if (!existsSync(path)) return false;
   try {
-    return JSON.parse(readFileSync(path, "utf8")).exitCode === 0;
+    const result = JSON.parse(readFileSync(path, "utf8"));
+    return result.exitCode === 0 &&
+      (expectedPromptSha256 === undefined ||
+       result.promptSha256 === expectedPromptSha256);
   } catch {
     return false;
   }
@@ -134,7 +147,10 @@ export async function executeJob({
   }
 
   const path = resultFilePath(outputRoot, job);
-  if (hasSuccessfulResult(path)) {
+  const currentPromptSha256 = promptSha256(job.task.prompt);
+  if (hasSuccessfulResult(path, {
+    expectedPromptSha256: currentPromptSha256,
+  })) {
     return { status: "skipped", path };
   }
 
@@ -162,6 +178,7 @@ export async function executeJob({
     modelName: job.modelName,
     modelId: job.modelId,
     modelOptions: job.modelOptions,
+    promptSha256: currentPromptSha256,
     startedAt,
     finishedAt: now().toISOString(),
     exitCode: outcome.exitCode ?? null,

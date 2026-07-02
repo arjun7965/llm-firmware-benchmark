@@ -1,6 +1,6 @@
 # LLM Coding Benchmark
 
-[![55 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=55%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![60 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=60%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![20 C tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/c-tests.yml?branch=main&event=push&label=20%20C%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 
 A dependency-free Node.js harness for running the same coding tasks against
@@ -81,6 +81,9 @@ npm run benchmark -- \
 `npm run benchmark -- --help` or `npm run benchmark:repeats -- --help` for the
 complete interface.
 
+Raw records include a SHA-256 of the task prompt. A changed prompt invalidates
+result reuse and prevents stale answers from entering fixture extraction.
+
 Raw outputs are intentionally Git-ignored because generated text can contain
 credentials, session metadata, or local paths. Keep raw runs private and publish
 only reviewed, sanitized exports.
@@ -147,12 +150,18 @@ npm run fixtures:check
 This validates fixture structure and task/profile references without compiling
 or executing model output. See `fixtures/README.md` for the directory contract.
 
-The firmware state-machine scaffold includes a deterministic HAL mock and
-public tests. Verify them against the trusted reference implementation with:
+Extract the single expected fenced code block from a successful raw result:
 
 ```bash
-npm run fixture:firmware:self-test
+npm run fixture:extract -- \
+  --result results/binary-parser--my-model.json
 ```
+
+The output path comes from the validated fixture manifest and remains ignored
+by Git. Extraction rejects failed or stale-prompt results, ambiguous fences,
+unsafe paths, and existing output unless `--force` is explicit. It does not
+compile or execute the extracted code. Run `npm run test:c` to verify all public
+C fixtures against their trusted references.
 
 ## Adding a Provider
 

@@ -14,6 +14,7 @@ import {
   executeJob,
   hasSuccessfulResult,
   mapWithConcurrency,
+  promptSha256,
   resultFilePath,
 } from "../src/harness.mjs";
 
@@ -74,6 +75,9 @@ test("successful results are reusable while failures and malformed files are not
   writeFileSync(malformed, "{");
 
   assert.equal(hasSuccessfulResult(success), true);
+  assert.equal(hasSuccessfulResult(success, {
+    expectedPromptSha256: "different",
+  }), false);
   assert.equal(hasSuccessfulResult(failure), false);
   assert.equal(hasSuccessfulResult(malformed), false);
   assert.equal(hasSuccessfulResult(join(root, "missing.json")), false);
@@ -133,6 +137,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
   assert.equal(persisted.targetProfile, "portable-c11");
   assert.equal(persisted.provider, "fake");
   assert.equal(persisted.modelName, "alpha");
+  assert.equal(persisted.promptSha256, promptSha256(job.task.prompt));
   assert.deepEqual(persisted.modelOptions, {});
 });
 
@@ -141,7 +146,10 @@ test("executeJob skips an existing successful result without generating", async 
   const [job] = createJobs(tasks, [models[0]]);
   const path = resultFilePath(outputRoot, job);
   mkdirSync(outputRoot, { recursive: true });
-  writeFileSync(path, JSON.stringify({ exitCode: 0 }));
+  writeFileSync(path, JSON.stringify({
+    exitCode: 0,
+    promptSha256: promptSha256(job.task.prompt),
+  }));
 
   const result = await executeJob({
     job,
@@ -152,6 +160,24 @@ test("executeJob skips an existing successful result without generating", async 
   });
 
   assert.deepEqual(result, { status: "skipped", path });
+
+  writeFileSync(path, JSON.stringify({
+    exitCode: 0,
+    promptSha256: "0".repeat(64),
+  }));
+  const refreshed = await executeJob({
+    job,
+    outputRoot,
+    generate: async () => ({
+      exitCode: 0,
+      signal: null,
+      stdout: "refreshed",
+      stderr: "",
+      error: null,
+    }),
+  });
+  assert.equal(refreshed.status, "completed");
+  assert.equal(refreshed.record.stdout, "refreshed");
 });
 
 test("executeJob records rejected provider executions", async (t) => {

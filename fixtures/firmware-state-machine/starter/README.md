@@ -5,5 +5,4 @@
 
 The HAL mock guarantees that a read unfinished after 25 ms is no longer active.
 Completion remains observable through `i2c_done()` and `i2c_ok()` until the next
-start. These semantics must be included when the benchmark prompt adopts this
-fixture interface.
+start. These semantics are part of the benchmark prompt.

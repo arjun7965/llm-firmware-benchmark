@@ -5,6 +5,10 @@
 Assess non-blocking firmware control flow, wrap-safe timing, and recovery around
 an asynchronous I2C HAL.
 
+Implement the API declared by
+`fixtures/firmware-state-machine/starter/firmware_state_machine.h` against the
+supplied `fixture_hal.h` boundary.
+
 ## Target Assumptions
 
 Target profile: `c11-mocked-hal`. See `docs/embedded/target-assumptions.md`.

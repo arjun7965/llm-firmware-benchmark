@@ -21,3 +21,16 @@ for execution. An `active` manifest must have working assets and commands.
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
 metadata only; it does not execute compiler commands.
+
+Extract one successful raw result with:
+
+```bash
+npm run fixture:extract -- --result results/<task-id>--<model-id>.json
+```
+
+The extractor unwraps provider output, requires exactly one nonempty fence with
+the manifest language, and writes only its contents to the ignored
+`generated/` path. It rejects failed, mismatched, or stale-prompt results,
+malformed fences, oversized content, symlinked output paths, and existing
+output. Use `--force` only when intentionally replacing a previous extraction.
+Extraction never compiles or executes model output.

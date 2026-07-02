@@ -77,6 +77,8 @@
   and executable validation commands.
   - [x] Add a stable API, trusted reference, and deterministic public self-test
     for `binary-parser`.
+  - [x] Add strict provider-neutral fenced-code extraction with safe generated
+    output handling.
 - [ ] Add private or mutation-based tests for edge cases that prose-only scoring
   would miss.
 - [ ] Define firmware-specific scoring for correctness, bounded resource use,
