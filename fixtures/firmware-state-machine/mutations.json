@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "source": "reference/firmware_state_machine.c",
+  "mutations": [
+    {
+      "id": "short-poll-interval",
+      "description": "Start polling one millisecond before the documented interval.",
+      "find": "#define POLL_INTERVAL_MS UINT32_C(1000)",
+      "replace": "#define POLL_INTERVAL_MS UINT32_C(999)"
+    },
+    {
+      "id": "late-transfer-timeout",
+      "description": "Wait one millisecond too long before timing out a transfer.",
+      "find": "#define TRANSACTION_TIMEOUT_MS UINT32_C(25)",
+      "replace": "#define TRANSACTION_TIMEOUT_MS UINT32_C(26)"
+    },
+    {
+      "id": "short-retry-backoff",
+      "description": "Retry one millisecond before the required backoff expires.",
+      "find": "#define RETRY_BACKOFF_MS UINT32_C(10)",
+      "replace": "#define RETRY_BACKOFF_MS UINT32_C(9)"
+    },
+    {
+      "id": "reduce-attempt-limit",
+      "description": "Abandon a polling cycle after only two attempts.",
+      "find": "#define MAX_ATTEMPTS 3u",
+      "replace": "#define MAX_ATTEMPTS 2u"
+    },
+    {
+      "id": "naive-deadline-comparison",
+      "description": "Use a comparison that fails when the millisecond timer wraps.",
+      "find": "return (int32_t) (now - deadline) >= 0;",
+      "replace": "return now >= deadline;"
+    }
+  ]
+}

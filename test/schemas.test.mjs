@@ -84,6 +84,12 @@ test("JSON Schema files declare the expected contracts", () => {
       "utf8",
     ),
   );
+  const fixtureMutationsSchema = JSON.parse(
+    readFileSync(
+      new URL("../schemas/fixture-mutations.schema.json", import.meta.url),
+      "utf8",
+    ),
+  );
   const fixtureValidationSchema = JSON.parse(
     readFileSync(
       new URL(
@@ -128,6 +134,12 @@ test("JSON Schema files declare the expected contracts", () => {
   assert.equal(
     commandCondition.else.properties.requiredTools.minItems,
     1,
+  );
+  assert.equal(fixtureMutationsSchema.$schema, taskSchema.$schema);
+  assert.equal(fixtureMutationsSchema.additionalProperties, false);
+  assert.equal(
+    fixtureMutationsSchema.properties.mutations.items.additionalProperties,
+    false,
   );
   assert.deepEqual(
     fixtureValidationSchema.properties.targetProfile.enum,

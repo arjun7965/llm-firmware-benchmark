@@ -4,6 +4,7 @@ Each fixture lives at `fixtures/<task-id>/` and contains:
 
 ```text
 manifest.json
+mutations.json # Controlled defects the public tests must reject
 starter/       # Supplied source or headers
 mocks/         # Deterministic hardware, HAL, clock, or OS fakes
 tests/public/  # Tests disclosed to benchmark participants
@@ -21,6 +22,13 @@ extraction, compile, and test commands.
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
 metadata only; it does not execute compiler commands.
+
+`mutations.json` follows `schemas/fixture-mutations.schema.json`. Every active C
+fixture supplies exact, single-match source substitutions derived from its
+trusted reference. `npm run test:mutations` requires each mutant to compile
+and then fail the public tests; compilation failures are invalid mutations,
+not successful detections. `npm run test:c` runs trusted references and
+mutations. Mutation tests never use extracted model output.
 
 Extract one successful raw result with:
 

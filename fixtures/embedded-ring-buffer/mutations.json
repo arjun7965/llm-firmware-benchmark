@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "source": "reference/ring_buffer.c",
+  "mutations": [
+    {
+      "id": "accept-non-power-of-two",
+      "description": "Accept capacities that are incompatible with mask indexing.",
+      "find": "(capacity & (capacity - 1u)) != 0u",
+      "replace": "false"
+    },
+    {
+      "id": "allow-overflow-push",
+      "description": "Allow one push after the ring reaches full capacity.",
+      "find": "if (head - tail >= ring->capacity) return false;",
+      "replace": "if (head - tail > ring->capacity) return false;"
+    },
+    {
+      "id": "read-from-head",
+      "description": "Read the next producer slot instead of the oldest item.",
+      "find": "ring->storage[tail & (ring->capacity - 1u)]",
+      "replace": "ring->storage[head & (ring->capacity - 1u)]"
+    },
+    {
+      "id": "pop-empty-ring",
+      "description": "Treat an empty ring as readable.",
+      "find": "if (tail == head) return false;",
+      "replace": "if (tail > head) return false;"
+    },
+    {
+      "id": "skip-tail-position",
+      "description": "Advance the consumer counter by two positions.",
+      "find": "tail + 1u",
+      "replace": "tail + 2u"
+    }
+  ]
+}

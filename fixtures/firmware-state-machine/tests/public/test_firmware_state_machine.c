@@ -153,6 +153,8 @@ static bool test_timer_wraparound(void) {
   CHECK(plan(true, 0u, true, UINT8_C(0xFE), UINT8_C(0xDC)));
   temperature_task_init();
 
+  temperature_task_step();
+  CHECK(mock_hal_start_count() == 0u);
   mock_hal_advance(UINT32_C(999));
   temperature_task_step();
   CHECK(mock_hal_start_count() == 0u);

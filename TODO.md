@@ -81,8 +81,8 @@
     output handling.
   - [x] Add fail-closed Bubblewrap compilation and execution with resource
     limits and machine-readable reports.
-- [ ] Add private or mutation-based tests for edge cases that prose-only scoring
-  would miss.
+- [x] Add mutation-based tests for edge cases that prose-only scoring would
+  miss, with controlled catalogs for every active C fixture.
 - [ ] Define firmware-specific scoring for correctness, bounded resource use,
   timing behavior, concurrency safety, fault recovery, portability, and clarity.
 - [ ] Record toolchain versions, compile flags, target metadata, diagnostics,

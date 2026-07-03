@@ -61,6 +61,10 @@ Run `npm run fixture:validate -- --task <task-id>`. The command fails closed if
 isolation is unavailable. `npm run test:sandbox` validates the sandbox runner
 against trusted references only. See `docs/sandboxed-validation.md`.
 
+`npm run test:mutations` uses the same host C compiler to build controlled
+mutations of trusted references. Every mutation must compile and be rejected by
+the public tests. `npm run test:c` includes these mutation checks.
+
 The trusted firmware fixture self-test requires `cc`:
 
 ```bash

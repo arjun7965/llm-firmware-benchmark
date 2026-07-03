@@ -28,7 +28,7 @@ npm run security:scan        # Detect credentials and personal paths
 npm run fixtures:check       # Validate fixture manifests and paths
 npm run fixture:extract -- --result <result.json>
 npm run fixture:validate -- --task <task-id>
-npm run test:c               # Run trusted C fixture tests
+npm run test:c               # Run C fixtures and mutants
 npm run cross:check          # Probe optional cross-compilers
 ```
 

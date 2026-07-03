@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "source": "reference/binary_parser.c",
+  "mutations": [
+    {
+      "id": "require-both-magic-bytes",
+      "description": "Accept a frame when only one magic byte matches.",
+      "find": "input[0] != FRAME_MAGIC_FIRST ||\n    input[1] != FRAME_MAGIC_SECOND",
+      "replace": "input[0] != FRAME_MAGIC_FIRST &&\n    input[1] != FRAME_MAGIC_SECOND"
+    },
+    {
+      "id": "reject-maximum-payload",
+      "description": "Reject the documented maximum payload length.",
+      "find": "payloadLength > FRAME_MAX_PAYLOAD",
+      "replace": "payloadLength >= FRAME_MAX_PAYLOAD"
+    },
+    {
+      "id": "accept-trailing-data",
+      "description": "Return success when bytes follow a complete frame.",
+      "find": "if (inputLength > expectedLength) return FRAME_PARSE_TRAILING_DATA;",
+      "replace": "if (inputLength > expectedLength) return FRAME_PARSE_OK;"
+    },
+    {
+      "id": "invert-crc-check",
+      "description": "Reject valid CRCs and accept mismatched CRCs.",
+      "find": "if (encodedCrc != calculatedCrc) return FRAME_PARSE_BAD_CRC;",
+      "replace": "if (encodedCrc == calculatedCrc) return FRAME_PARSE_BAD_CRC;"
+    },
+    {
+      "id": "preserve-stale-length",
+      "description": "Fail to reset the output length before rejecting input.",
+      "find": "payload->length = 0u;",
+      "replace": "payload->length = inputLength;"
+    }
+  ]
+}
