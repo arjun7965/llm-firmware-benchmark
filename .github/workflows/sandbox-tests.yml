@@ -11,14 +11,23 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: sudo apt-get update
-      - run: >-
-          sudo apt-get install --yes --no-install-recommends
-          bubblewrap gcc libc6-dev util-linux
-      - run: npm run test:sandbox
+      - name: Install sandbox dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            apparmor-profiles bubblewrap gcc libc6-dev util-linux
+      - name: Enable the packaged Bubblewrap AppArmor profile
+        run: |
+          sudo install -m 0644 \
+            /usr/share/apparmor/extra-profiles/bwrap-userns-restrict \
+            /etc/apparmor.d/bwrap-userns-restrict
+          sudo apparmor_parser --replace \
+            /etc/apparmor.d/bwrap-userns-restrict
+      - name: Run sandbox fixture tests as the unprivileged runner
+        run: npm run test:sandbox

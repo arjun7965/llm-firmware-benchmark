@@ -12,6 +12,11 @@ root-owned, non-writable executables under `/usr`. It fails closed when any
 dependency or namespace feature is unavailable; it never falls back to host
 execution.
 
+Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor. The CI
+workflow installs `apparmor-profiles` and explicitly loads the distribution's
+`bwrap-userns-restrict` policy while leaving the Node validator unprivileged.
+Do not disable AppArmor globally to make validation pass.
+
 ## Isolation Boundary
 
 Compilation and testing run in separate Bubblewrap namespaces with:

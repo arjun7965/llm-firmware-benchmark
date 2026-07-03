@@ -53,6 +53,10 @@ Sandboxed model-answer validation is Linux-only and additionally requires:
 - the toolchain declared by the selected fixture.
 
 These executables must resolve to root-owned, non-writable files under `/usr`.
+Ubuntu 24.04 also requires an AppArmor policy that permits Bubblewrap to create
+its user namespace. CI installs `apparmor-profiles` and enables the packaged
+`bwrap-userns-restrict` policy; it does not disable AppArmor or run the
+validator as root.
 Run `npm run fixture:validate -- --task <task-id>`. The command fails closed if
 isolation is unavailable. `npm run test:sandbox` validates the sandbox runner
 against trusted references only. See `docs/sandboxed-validation.md`.
