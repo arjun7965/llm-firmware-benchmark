@@ -177,6 +177,7 @@ test("fixture extraction unwraps provider output and writes only code", (t) => {
   assert.equal(summary.language, "c");
   assert.equal(summary.outputPath, outputPath);
   assert.equal(summary.byteLength, 15);
+  assert.match(summary.sha256, /^[a-f0-9]{64}$/u);
   assert.equal(readFileSync(outputPath, "utf8"), "int value = 7;\n");
 });
 

@@ -166,7 +166,6 @@ export function validateFixtureManifest(manifest, task) {
       throw new TypeError(`fixture ${task.id} command argv is invalid`);
     }
     if (!Array.isArray(command.requiredTools) ||
-        command.requiredTools.length === 0 ||
         command.requiredTools.some((tool) =>
           typeof tool !== "string" || !toolPattern.test(tool))) {
       throw new TypeError(
@@ -178,9 +177,25 @@ export function validateFixtureManifest(manifest, task) {
         `fixture ${task.id} command requiredTools must be unique`,
       );
     }
-    if (!toolPattern.test(command.argv[0]) ||
-        forbiddenCommandTools.has(command.argv[0]) ||
-        !command.requiredTools.includes(command.argv[0])) {
+    if (command.argv[0].includes("/")) {
+      requireSafeRelativePath(
+        command.argv[0],
+        `fixture ${task.id} command executable`,
+      );
+      if (
+        command.phase !== "test" ||
+        !command.argv[0].startsWith(`${manifest.paths.build}/`) ||
+        command.requiredTools.length !== 0
+      ) {
+        throw new TypeError(
+          `fixture ${task.id} test executable must be under build/`,
+        );
+      }
+    } else if (
+      !toolPattern.test(command.argv[0]) ||
+      forbiddenCommandTools.has(command.argv[0]) ||
+      !command.requiredTools.includes(command.argv[0])
+    ) {
       throw new TypeError(
         `fixture ${task.id} command must invoke a declared non-shell tool`,
       );
@@ -189,6 +204,15 @@ export function validateFixtureManifest(manifest, task) {
       throw new TypeError(`fixture ${task.id} command timeoutMs is invalid`);
     }
     commandIds.add(command.id);
+  }
+  if (manifest.status === "active") {
+    for (const phase of ["compile", "test"]) {
+      if (!manifest.commands.some((command) => command.phase === phase)) {
+        throw new TypeError(
+          `active fixture ${task.id} must define a ${phase} command`,
+        );
+      }
+    }
   }
   return manifest;
 }

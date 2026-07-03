@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "taskId": "binary-parser",
   "targetProfile": "portable-c11",
-  "status": "scaffold",
+  "status": "active",
   "language": "c11",
   "answer": {
     "format": "markdown-fenced-code",
@@ -37,6 +37,13 @@
       ],
       "requiredTools": ["cc"],
       "timeoutMs": 30000
+    },
+    {
+      "id": "public-tests",
+      "phase": "test",
+      "argv": ["build/public-tests"],
+      "requiredTools": [],
+      "timeoutMs": 5000
     }
   ]
 }

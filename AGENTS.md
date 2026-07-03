@@ -19,7 +19,7 @@ hyphenated words. Embedded and firmware tasks require `targetProfile`.
 Use Node.js 22+ and copy `models.example.json` to `models.local.json`.
 
 ```bash
-node run-benchmark.mjs       # Run the primary task/model matrix
+node run-benchmark.mjs       # Run task/model matrix
 node run-repeats.mjs         # Generate runs 2 and 3
 node summarize-repeats.mjs   # Print statistics from manual scores
 npm test                     # Run tests without models
@@ -27,6 +27,7 @@ npm run check                # Syntax-check JavaScript
 npm run security:scan        # Detect credentials and personal paths
 npm run fixtures:check       # Validate fixture manifests and paths
 npm run fixture:extract -- --result <result.json>
+npm run fixture:validate -- --task <task-id>
 npm run test:c               # Run trusted C fixture tests
 npm run cross:check          # Probe optional cross-compilers
 ```

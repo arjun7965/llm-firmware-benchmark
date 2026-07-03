@@ -27,9 +27,9 @@ test("repository fixture scaffolds match task metadata", () => {
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
       fixtureCount: 3,
-      activeCount: 0,
-      scaffoldCount: 3,
-      commandCount: 3,
+      activeCount: 3,
+      scaffoldCount: 0,
+      commandCount: 6,
     },
   );
 });
@@ -84,5 +84,35 @@ test("fixture commands cannot invoke a shell", () => {
       }],
     }, task),
     /declared non-shell tool/,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      commands: [{
+        ...manifest.commands[0],
+        requiredTools: [],
+      }],
+    }, task),
+    /declared non-shell tool/,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      commands: [{
+        id: "unsafe-test",
+        phase: "test",
+        argv: ["../outside"],
+        requiredTools: [],
+        timeoutMs: 1000,
+      }],
+    }, task),
+    /safe relative path/,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      commands: [manifest.commands[1]],
+    }, task),
+    /must define a compile command/,
   );
 });

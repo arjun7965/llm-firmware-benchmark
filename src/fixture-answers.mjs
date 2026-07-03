@@ -1,4 +1,7 @@
-import { randomUUID } from "node:crypto";
+import {
+  createHash,
+  randomUUID,
+} from "node:crypto";
 import {
   existsSync,
   lstatSync,
@@ -300,5 +303,6 @@ export function extractFixtureAnswer({
     language: manifest.answer.language,
     outputPath,
     byteLength: byteLength(code),
+    sha256: createHash("sha256").update(code).digest("hex"),
   };
 }

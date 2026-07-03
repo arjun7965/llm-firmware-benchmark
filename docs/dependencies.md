@@ -46,6 +46,17 @@ Fixture manifests declare required tools and commands. `npm run fixtures:check`
 validates those declarations but does not install tools or execute generated
 code.
 
+Sandboxed model-answer validation is Linux-only and additionally requires:
+
+- Bubblewrap (`bwrap`);
+- `prlimit` from util-linux; and
+- the toolchain declared by the selected fixture.
+
+These executables must resolve to root-owned, non-writable files under `/usr`.
+Run `npm run fixture:validate -- --task <task-id>`. The command fails closed if
+isolation is unavailable. `npm run test:sandbox` validates the sandbox runner
+against trusted references only. See `docs/sandboxed-validation.md`.
+
 The trusted firmware fixture self-test requires `cc`:
 
 ```bash

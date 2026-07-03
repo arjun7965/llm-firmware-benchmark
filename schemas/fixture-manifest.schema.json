@@ -109,7 +109,7 @@
             "prefixItems": [
               {
                 "type": "string",
-                "pattern": "^[a-z0-9][a-z0-9+._-]*$",
+                "pattern": "^(?:[a-z0-9][a-z0-9+._-]*|build/[A-Za-z0-9._/-]+)$",
                 "not": {
                   "enum": [
                     "bash",
@@ -129,7 +129,6 @@
           },
           "requiredTools": {
             "type": "array",
-            "minItems": 1,
             "uniqueItems": true,
             "items": {
               "type": "string",
@@ -140,7 +139,40 @@
             "type": "integer",
             "minimum": 1
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "argv": {
+                  "prefixItems": [
+                    {
+                      "pattern": "^build/"
+                    }
+                  ]
+                }
+              },
+              "required": ["argv"]
+            },
+            "then": {
+              "properties": {
+                "phase": {
+                  "const": "test"
+                },
+                "requiredTools": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "requiredTools": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ]
       }
     }
   }

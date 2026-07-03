@@ -15,8 +15,8 @@ build/         # Compiler and test output; ignored
 
 `manifest.json` follows `schemas/fixture-manifest.schema.json`. Commands are
 stored as argv arrays and must be executed without a shell. A `scaffold`
-manifest defines the intended extraction and build interface but is not ready
-for execution. An `active` manifest must have working assets and commands.
+manifest defines an incomplete interface. An `active` manifest has verified
+extraction, compile, and test commands.
 
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
@@ -34,3 +34,14 @@ the manifest language, and writes only its contents to the ignored
 malformed fences, oversized content, symlinked output paths, and existing
 output. Use `--force` only when intentionally replacing a previous extraction.
 Extraction never compiles or executes model output.
+
+Validate the extracted answer in isolated compile and test sandboxes:
+
+```bash
+npm run fixture:validate -- --task <task-id>
+```
+
+This Linux-only command requires Bubblewrap, `prlimit`, and the manifest
+toolchain. It fails rather than running on the host when isolation is
+unavailable. Reports are written to the ignored `build/validation-report.json`;
+see `docs/sandboxed-validation.md`.

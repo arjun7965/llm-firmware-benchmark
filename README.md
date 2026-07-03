@@ -1,7 +1,8 @@
 # LLM Coding Benchmark
 
-[![60 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=60%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![64 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=64%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![20 C tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/c-tests.yml?branch=main&event=push&label=20%20C%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
+[![3 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/sandbox-tests.yml?branch=main&event=push&label=3%20sandbox%20fixtures)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
 A dependency-free Node.js harness for running the same coding tasks against
 multiple language models. Models are configured locally, and provider-specific
@@ -137,11 +138,11 @@ installs both toolchains and requires both target checks to pass. These checks
 compile trusted sources only; they do not link, execute, or validate generated
 model code.
 
-## Fixture Scaffolds
+## Fixture Validation
 
 Profile-backed tasks have manifests under `fixtures/<task-id>/`. Manifests
 declare answer extraction, stable asset paths, required tools, argv-based build
-commands, and whether a fixture is an inactive scaffold or executable.
+and test commands, and whether a fixture is an inactive scaffold or active.
 
 ```bash
 npm run fixtures:check
@@ -162,6 +163,17 @@ by Git. Extraction rejects failed or stale-prompt results, ambiguous fences,
 unsafe paths, and existing output unless `--force` is explicit. It does not
 compile or execute the extracted code. Run `npm run test:c` to verify all public
 C fixtures against their trusted references.
+
+On Linux, validate extracted code in separate compile and test sandboxes:
+
+```bash
+npm run fixture:validate -- --task binary-parser
+```
+
+This requires Bubblewrap, `prlimit`, and the fixture toolchain. It fails closed
+if isolation is unavailable and writes an ignored machine-readable report under
+the fixture’s `build/` directory. See
+`docs/sandboxed-validation.md` for the isolation boundary and limitations.
 
 ## Adding a Provider
 

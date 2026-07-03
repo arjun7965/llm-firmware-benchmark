@@ -84,6 +84,15 @@ test("JSON Schema files declare the expected contracts", () => {
       "utf8",
     ),
   );
+  const fixtureValidationSchema = JSON.parse(
+    readFileSync(
+      new URL(
+        "../schemas/fixture-validation-report.schema.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
 
   assert.equal(taskSchema.$schema, "https://json-schema.org/draft/2020-12/schema");
   assert.equal(taskSchema.items.additionalProperties, false);
@@ -106,4 +115,23 @@ test("JSON Schema files declare the expected contracts", () => {
     [null, ...targetProfileIds],
   );
   assert.equal(fixtureSchema.additionalProperties, false);
+  const commandCondition = fixtureSchema.properties.commands.items.allOf[0];
+  assert.equal(
+    commandCondition.if.properties.argv.prefixItems[0].pattern,
+    "^build/",
+  );
+  assert.equal(commandCondition.then.properties.phase.const, "test");
+  assert.equal(
+    commandCondition.then.properties.requiredTools.maxItems,
+    0,
+  );
+  assert.equal(
+    commandCondition.else.properties.requiredTools.minItems,
+    1,
+  );
+  assert.deepEqual(
+    fixtureValidationSchema.properties.targetProfile.enum,
+    [null, ...targetProfileIds],
+  );
+  assert.equal(fixtureValidationSchema.additionalProperties, false);
 });
