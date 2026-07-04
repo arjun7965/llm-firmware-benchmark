@@ -21,3 +21,5 @@ For comparable results:
 The rubric files are human-readable policy. `schemas/tasks.schema.json` and
 `schemas/repeat-scores.schema.json` define the machine-readable input formats.
 See `docs/dependencies.md` for optional compilation and execution toolchains.
+Tasks with a `targetProfile` also follow the versioned dimensions and scoring
+procedure in `firmware-scoring.md`.

@@ -1,6 +1,6 @@
 # LLM Coding Benchmark
 
-[![64 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=64%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![65 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=65%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![35 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/c-tests.yml?branch=main&event=push&label=35%20C%20checks)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![3 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/sandbox-tests.yml?branch=main&event=push&label=3%20sandbox%20fixtures)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -116,7 +116,9 @@ tools, context limits, or execution environments.
 Task-specific ten-point rubrics are under `docs/benchmarks/`. Machine-readable
 contracts are provided in `schemas/tasks.schema.json` and
 `schemas/repeat-scores.schema.json`; the summarizer also validates cross-field
-requirements such as score-array lengths.
+requirements such as score-array lengths. Profile-backed systems, embedded,
+and firmware tasks use the shared `firmware-v1` dimensions in
+`docs/benchmarks/firmware-scoring.md`.
 
 Embedded and firmware expansion is governed by
 `docs/embedded/capability-matrix.md` and reusable target profiles in

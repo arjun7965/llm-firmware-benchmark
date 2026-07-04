@@ -21,6 +21,16 @@ const capabilityIds = [
   "resource-optimization",
 ];
 
+const firmwareScoringDimensions = [
+  "Functional correctness",
+  "Bounded resource use",
+  "Timing behavior",
+  "Concurrency safety",
+  "Fault recovery",
+  "Portability",
+  "Clarity and validation",
+];
+
 test("embedded capability matrix covers every planned capability", () => {
   const matrix = readFileSync(
     new URL("../docs/embedded/capability-matrix.md", import.meta.url),
@@ -63,5 +73,40 @@ test("embedded task rubrics reference defined target profiles", () => {
       ),
       `${task.id} is missing from the target profile mapping table`,
     );
+  }
+});
+
+test("profile-backed task rubrics use every firmware scoring dimension", () => {
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+  const policy = readFileSync(
+    new URL("../docs/benchmarks/firmware-scoring.md", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(policy.includes("Profile ID: `firmware-v1`"));
+  for (const dimension of firmwareScoringDimensions) {
+    assert.ok(
+      policy.includes(`| ${dimension} |`),
+      `firmware scoring policy is missing ${dimension}`,
+    );
+  }
+
+  const profileBackedTasks = tasks.filter((task) => task.targetProfile);
+  assert.ok(profileBackedTasks.length > 0);
+  for (const task of profileBackedTasks) {
+    const rubric = readFileSync(
+      new URL(`../docs/benchmarks/${task.id}.md`, import.meta.url),
+      "utf8",
+    );
+    assert.ok(
+      rubric.includes("Scoring profile: `firmware-v1`."),
+      `${task.id} does not use firmware-v1`,
+    );
+    for (const dimension of firmwareScoringDimensions) {
+      assert.ok(
+        rubric.includes(`**${dimension}:**`),
+        `${task.id} is missing scoring dimension ${dimension}`,
+      );
+    }
   }
 });

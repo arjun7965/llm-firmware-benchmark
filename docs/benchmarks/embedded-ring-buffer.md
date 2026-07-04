@@ -16,11 +16,15 @@ Target profile: `c11-lock-free-spsc`. See
 
 ## Scoring
 
-- 3 points — Atomic ownership and acquire/release ordering correctly synchronize data.
-- 2 points — Index arithmetic preserves the full power-of-two capacity without ambiguity.
-- 2 points — Push and pop are non-blocking and implement the required drop-new behavior.
-- 2 points — The C11 implementation avoids data races, overflow mistakes, and undefined behavior.
-- 1 point — Deterministic tests exercise empty, full, wraparound, and ordering cases.
+Scoring profile: `firmware-v1`.
 
-Using `volatile` alone for inter-context synchronization receives no atomic
-correctness credit.
+- 2 points — **Functional correctness:** Valid initialization, use of every declared capacity slot, FIFO ordering, and successful push/pop results are correct.
+- 1 point — **Bounded resource use:** The implementation uses caller-owned storage and performs no dynamic allocation.
+- 1 point — **Timing behavior:** Push and pop use a lock-free atomic index type and return without waiting, busy-waiting, or a blocking primitive.
+- 3 points — **Concurrency safety:** Producer and consumer ownership plus C11 acquire/release ordering prevent data races and publish slot contents correctly.
+- 1 point — **Fault recovery:** Zero or non-power-of-two capacity is rejected, a full push leaves existing bytes intact, and an empty pop returns false.
+- 1 point — **Portability:** Unsigned counter wraparound and index masking avoid undefined behavior and unstated target-width assumptions.
+- 1 point — **Clarity and validation:** Assumptions are reviewable and deterministic tests cover empty, full, ordering, and counter wraparound.
+
+Using `volatile` alone for inter-context synchronization receives no
+concurrency-safety credit.

@@ -83,7 +83,7 @@
     limits and machine-readable reports.
 - [x] Add mutation-based tests for edge cases that prose-only scoring would
   miss, with controlled catalogs for every active C fixture.
-- [ ] Define firmware-specific scoring for correctness, bounded resource use,
+- [x] Define firmware-specific scoring for correctness, bounded resource use,
   timing behavior, concurrency safety, fault recovery, portability, and clarity.
 - [x] Record toolchain versions, compile flags, target metadata, diagnostics,
   binary size, and test outcomes in machine-readable validation reports.
