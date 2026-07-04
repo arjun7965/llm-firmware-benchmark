@@ -23,6 +23,10 @@ const temporaryFixtures = join(temporaryRoot, "fixtures");
 const temporaryTasks = join(temporaryRoot, "tasks.json");
 const references = [
   {
+    taskId: "bare-metal-timer",
+    source: "reference/fictional_timer.c",
+  },
+  {
     taskId: "binary-parser",
     source: "reference/binary_parser.c",
   },

@@ -19,6 +19,7 @@ code.
 | --- | --- |
 | `frontend-autocomplete` | Node.js, TypeScript, React 18 and its type declarations; a browser-like test environment for interaction tests |
 | `backend-idempotency` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
+| `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
@@ -67,6 +68,12 @@ See `docs/sandboxed-validation.md`.
 `npm run test:mutations` uses the same host C compiler to build controlled
 mutations of trusted references. Every mutation must compile and be rejected by
 the public tests. `npm run test:c` includes these mutation checks.
+
+The fictional bare-metal timer fixture uses `cc` for instrumented host MMIO:
+
+```bash
+npm run fixture:timer:self-test
+```
 
 The trusted firmware fixture self-test requires `cc`:
 

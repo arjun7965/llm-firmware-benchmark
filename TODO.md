@@ -33,6 +33,8 @@
   drivers, protocols, debugging, safety, security, and optimization.
 - [ ] Add bare-metal tasks for register access, startup code, linker behavior,
   memory maps, and interrupt-vector configuration.
+  - [x] Start with a fictional timer peripheral using a complete mock MMIO
+    register map and deterministic host-side validation.
 - [ ] Add peripheral-driver tasks for GPIO, UART, SPI, I2C, ADC, PWM, timers,
   DMA, and watchdogs using documented mock registers.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
@@ -71,6 +73,10 @@
     `firmware-state-machine`.
   - [x] Add deterministic full-capacity and counter-wrap tests for
     `embedded-ring-buffer`.
+- [ ] Add optional hardware-in-the-loop validation for representative STM32,
+  NXP, and TI boards after the mock-MMIO tasks stabilize. Keep host mocks as the
+  required scoring path, and document each board, debug probe, toolchain, SDK
+  dependency, and license separately.
 - [x] Add optional cross-compilation checks for representative ARM and RISC-V
   targets while keeping the default test suite dependency-free.
 - [x] Populate fixture starter code, public tests, mocks, extraction helpers,

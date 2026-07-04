@@ -1,8 +1,8 @@
 # LLM Coding Benchmark
 
 [![65 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=65%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
-[![35 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/c-tests.yml?branch=main&event=push&label=35%20C%20checks)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
-[![3 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/sandbox-tests.yml?branch=main&event=push&label=3%20sandbox%20fixtures)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
+[![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
+[![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
 A dependency-free Node.js harness for running the same coding tasks against
 multiple language models. Models are configured locally, and provider-specific
@@ -164,7 +164,7 @@ The output path comes from the validated fixture manifest and remains ignored
 by Git. Extraction rejects failed or stale-prompt results, ambiguous fences,
 unsafe paths, and existing output unless `--force` is explicit. It does not
 compile or execute the extracted code. Run `npm run test:c` to verify all
-public C fixtures against their trusted references and confirm that all 15
+public C fixtures against their trusted references and confirm that all 23
 controlled mutations are rejected. Use `npm run test:mutations` to run only
 the mutation checks.
 

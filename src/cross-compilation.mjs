@@ -22,6 +22,16 @@ const commonFlags = Object.freeze([
 
 const trustedSources = Object.freeze([
   Object.freeze({
+    id: "bare-metal-timer",
+    source: "fixtures/bare-metal-timer/reference/fictional_timer.c",
+    includes: Object.freeze([
+      "fixtures/bare-metal-timer/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "binary-parser",
     source: "fixtures/binary-parser/reference/binary_parser.c",
     includes: Object.freeze([
@@ -191,7 +201,8 @@ export function runCrossCompilation({
         join(tmpdir(), "llm-benchmark-cross-"),
       );
       log(`target - ${target.id}: ${version}`);
-      for (const source of trustedSources) {
+      for (const source of trustedSources.filter((item) =>
+        item.targetIds === undefined || item.targetIds.includes(target.id))) {
         const output = join(
           temporaryRoot,
           `${target.id}--${source.id}.o`,

@@ -74,12 +74,25 @@ test("cross-compilation uses fixed argv without linking or execution", () => {
     log: () => {},
   });
 
-  assert.equal(summary.objectCount, 3);
-  assert.equal(calls.length, 4);
+  assert.equal(summary.objectCount, 4);
+  assert.equal(calls.length, 5);
   for (const call of calls.slice(1)) {
     assert.equal(call.command, "arm-none-eabi-gcc");
     assert.ok(call.args.includes("-c"));
     assert.ok(!call.args.includes("-o") || call.args.at(-1).endsWith(".o"));
     assert.equal(call.options.cwd, process.cwd());
   }
+
+  calls.length = 0;
+  const rvSummary = runCrossCompilation({
+    targetIds: ["rv32-bare-metal"],
+    spawn: fakeCompiler,
+    log: () => {},
+  });
+  assert.equal(rvSummary.objectCount, 3);
+  assert.equal(calls.length, 4);
+  assert.ok(calls.slice(1).every((call) =>
+    !call.args.includes(
+      "fixtures/bare-metal-timer/reference/fictional_timer.c",
+    )));
 });

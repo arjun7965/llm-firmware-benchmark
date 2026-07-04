@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0",
+  "source": "reference/fictional_timer.c",
+  "mutations": [
+    {
+      "id": "accept-fractional-clock",
+      "description": "Accept a clock that cannot produce the required 1 MHz timer tick.",
+      "find": "peripheral_clock_hz % TIMER0_TICK_HZ != 0u",
+      "replace": "false"
+    },
+    {
+      "id": "accept-excessive-divider",
+      "description": "Accept a clock divider that exceeds the eight-bit prescaler.",
+      "find": "divider > TIMER0_PRESCALER_MAX + 1u",
+      "replace": "false"
+    },
+    {
+      "id": "reload-off-by-one",
+      "description": "Program the requested tick count instead of the zero-based reload value.",
+      "find": "timer0_write_reload(timer, period_us - 1u);",
+      "replace": "timer0_write_reload(timer, period_us);"
+    },
+    {
+      "id": "enable-before-clear",
+      "description": "Enable the timer before clearing a stale pending interrupt.",
+      "find": "  clear_pending_irq(timer);\n  enable_periodic_timer(timer);",
+      "replace": "  enable_periodic_timer(timer);\n  clear_pending_irq(timer);"
+    },
+    {
+      "id": "omit-interrupt-enable",
+      "description": "Configure periodic counting without enabling its interrupt.",
+      "find": "    TIMER0_CONTROL_IRQ_ENABLE",
+      "replace": "    UINT32_C(0)"
+    },
+    {
+      "id": "clear-wrong-interrupt-bit",
+      "description": "Write the wrong bit to the write-one-to-clear register.",
+      "find": "timer0_write_irq_clear(timer, TIMER0_STATUS_IRQ_PENDING);",
+      "replace": "timer0_write_irq_clear(timer, TIMER0_STATUS_IRQ_PENDING << 1);"
+    },
+    {
+      "id": "touch-mmio-before-null-rejection",
+      "description": "Access MMIO before returning false for a null configuration pointer.",
+      "find": "  if (\n    timer == NULL ||",
+      "replace": "  if (timer == NULL) {\n    timer0_write_control(timer, 0u);\n    return false;\n  }\n  if (\n    false ||"
+    },
+    {
+      "id": "pending-query-acknowledges-interrupt",
+      "description": "Consume a pending interrupt while answering the read-only query.",
+      "find": "bool timer0_irq_pending(const volatile timer0_registers_t *timer) {\n  return timer != NULL &&\n    (timer0_read_status(timer) & TIMER0_STATUS_IRQ_PENDING) != 0u;\n}",
+      "replace": "bool timer0_irq_pending(const volatile timer0_registers_t *timer) {\n  if (timer == NULL) return false;\n  const bool pending =\n    (timer0_read_status(timer) & TIMER0_STATUS_IRQ_PENDING) != 0u;\n  if (pending) {\n    clear_pending_irq((volatile timer0_registers_t *) timer);\n  }\n  return pending;\n}"
+    }
+  ]
+}

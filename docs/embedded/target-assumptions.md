@@ -48,14 +48,18 @@ Extends `portable-c11` with deterministic host-side HAL fakes and a modulo
 advancement. A task must define whether completion remains observable until
 acknowledged and whether failed operations require explicit reset.
 
-## Planned Profiles
-
 ### `armv7m-bare-metal`
 
 Little-endian ARMv7-M, AAPCS/EABI, single core, privileged bare-metal execution,
 no heap by default, and documented mock MMIO. Tasks must state interrupt
 priorities, FPU availability, memory map, and whether exclusive accesses are
 permitted. Vendor SDKs are unavailable unless a task supplies the required API.
+
+The active `bare-metal-timer` task selects Cortex-M3, disables interrupt nesting
+during its configuration boundary, and uses accessor-instrumented fictional
+MMIO for deterministic host validation.
+
+## Planned Profiles
 
 ### `rv32-bare-metal`
 
@@ -80,13 +84,14 @@ behavior, filesystem durability assumptions, and service resource limits.
 
 | Task ID | Target profile | Task-specific assumptions |
 | --- | --- | --- |
+| `bare-metal-timer` | `armv7m-bare-metal` | Cortex-M3; fictional TIMER0 MMIO; interrupts masked for configuration; no heap, cache, DMA, FPU, or RTOS |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields; CRC-16/CCITT-FALSE |
 
-Planned profiles become active only when a committed task supplies its fixtures,
+Profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.
 
-`npm run cross:check` compiles trusted portable references for the planned
-ARMv7-M and RV32 architectures. This is a compile-only portability probe, not
-evidence that a task satisfies either complete bare-metal profile.
+`npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
+and compiles the timer reference for its ARMv7-M target. This is a compile-only
+portability probe, not target execution.

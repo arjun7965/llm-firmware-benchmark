@@ -14,8 +14,8 @@ partial until deterministic fixtures and calibration are available.
 
 | Capability ID | Expected evidence | Current coverage | Next representative task |
 | --- | --- | --- | --- |
-| `bare-metal` | Register access, startup, vector tables, linker and memory-map reasoning | Gap | Configure a timer from documented mock registers and startup symbols |
-| `peripheral-drivers` | GPIO, UART, SPI, I2C, ADC, PWM, timers, DMA, watchdogs | Partial: `firmware-state-machine` | Implement an interrupt-driven UART driver over mock registers |
+| `bare-metal` | Register access, startup, vector tables, linker and memory-map reasoning | Partial: `bare-metal-timer` | Add startup, vector-table, and linker-symbol behavior |
+| `peripheral-drivers` | GPIO, UART, SPI, I2C, ADC, PWM, timers, DMA, watchdogs | Partial: `bare-metal-timer`, `firmware-state-machine` | Implement an interrupt-driven UART driver over mock registers |
 | `interrupt-concurrency` | ISR ownership, atomics, critical sections, deferred work | Partial: `embedded-ring-buffer` | Repair an ISR/main race with nested-interrupt assumptions |
 | `rtos` | Tasks, queues, mutexes, events, priority inversion, bounded latency | Gap | Diagnose and repair a priority-inversion scenario using a supplied RTOS API |
 | `embedded-linux` | POSIX devices, threads, processes, signals, and constrained services | Gap | Implement a resilient serial service with shutdown and reconnect behavior |
