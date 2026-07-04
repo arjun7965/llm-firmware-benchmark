@@ -120,6 +120,11 @@ test("JSON Schema files declare the expected contracts", () => {
     fixtureSchema.properties.targetProfile.enum,
     [null, ...targetProfileIds],
   );
+  assert.equal(fixtureSchema.properties.schemaVersion.const, "1.1");
+  assert.equal(
+    fixtureSchema.properties.toolVersionArgs.additionalProperties.minItems,
+    1,
+  );
   assert.equal(fixtureSchema.additionalProperties, false);
   const commandCondition = fixtureSchema.properties.commands.items.allOf[0];
   assert.equal(
@@ -144,6 +149,22 @@ test("JSON Schema files declare the expected contracts", () => {
   assert.deepEqual(
     fixtureValidationSchema.properties.targetProfile.enum,
     [null, ...targetProfileIds],
+  );
+  assert.equal(
+    fixtureValidationSchema.properties.schemaVersion.const,
+    "1.1",
+  );
+  assert.equal(
+    fixtureValidationSchema.$defs.toolchain.additionalProperties,
+    false,
+  );
+  assert.equal(
+    fixtureValidationSchema.$defs.artifact.properties.sizeBytes.minimum,
+    0,
+  );
+  assert.deepEqual(
+    fixtureValidationSchema.$defs.phase.properties.outcome.enum,
+    ["error", "failed", "passed", "timed-out"],
   );
   assert.equal(fixtureValidationSchema.additionalProperties, false);
 });

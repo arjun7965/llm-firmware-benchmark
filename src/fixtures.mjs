@@ -31,6 +31,7 @@ const manifestFields = [
   "status",
   "targetProfile",
   "taskId",
+  "toolVersionArgs",
 ];
 const answerFields = ["format", "language", "output"];
 const pathFields = [
@@ -98,7 +99,7 @@ function requireSafeRelativePath(value, name) {
 export function validateFixtureManifest(manifest, task) {
   requireExactFields(manifest, manifestFields, "fixture manifest");
   requireObject(task, "fixture task");
-  if (manifest.schemaVersion !== "1.0") {
+  if (manifest.schemaVersion !== "1.1") {
     throw new TypeError("unsupported fixture schemaVersion");
   }
   requireString(manifest.taskId, "fixture taskId", taskIdPattern);
@@ -146,10 +147,30 @@ export function validateFixtureManifest(manifest, task) {
     );
   }
 
+  requireObject(manifest.toolVersionArgs, "fixture toolVersionArgs");
+  const configuredTools = new Set();
+  for (const [tool, args] of Object.entries(manifest.toolVersionArgs)) {
+    if (
+      !toolPattern.test(tool) ||
+      !Array.isArray(args) ||
+      args.length === 0 ||
+      args.some((arg) =>
+        typeof arg !== "string" ||
+        arg.length === 0 ||
+        arg.includes("\0"))
+    ) {
+      throw new TypeError(
+        `fixture ${task.id} toolVersionArgs is invalid`,
+      );
+    }
+    configuredTools.add(tool);
+  }
+
   if (!Array.isArray(manifest.commands) || manifest.commands.length === 0) {
     throw new TypeError(`fixture ${task.id} must define commands`);
   }
   const commandIds = new Set();
+  const requiredTools = new Set();
   for (const command of manifest.commands) {
     requireExactFields(command, commandFields, "fixture command");
     requireString(command.id, "fixture command id", identifierPattern);
@@ -177,6 +198,7 @@ export function validateFixtureManifest(manifest, task) {
         `fixture ${task.id} command requiredTools must be unique`,
       );
     }
+    for (const tool of command.requiredTools) requiredTools.add(tool);
     if (command.argv[0].includes("/")) {
       requireSafeRelativePath(
         command.argv[0],
@@ -204,6 +226,14 @@ export function validateFixtureManifest(manifest, task) {
       throw new TypeError(`fixture ${task.id} command timeoutMs is invalid`);
     }
     commandIds.add(command.id);
+  }
+  if (
+    configuredTools.size !== requiredTools.size ||
+    [...configuredTools].some((tool) => !requiredTools.has(tool))
+  ) {
+    throw new TypeError(
+      `fixture ${task.id} toolVersionArgs must cover requiredTools exactly`,
+    );
   }
   if (manifest.status === "active") {
     for (const phase of ["compile", "test"]) {

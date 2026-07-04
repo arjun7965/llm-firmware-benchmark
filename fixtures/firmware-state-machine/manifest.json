@@ -1,9 +1,12 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "taskId": "firmware-state-machine",
   "targetProfile": "c11-mocked-hal",
   "status": "active",
   "language": "c11",
+  "toolVersionArgs": {
+    "cc": ["--version"]
+  },
   "answer": {
     "format": "markdown-fenced-code",
     "language": "c",

@@ -36,6 +36,7 @@ const maximumOutputBytes = 1024 * 1024;
 const sandboxRoot = "/workspace";
 const rootTmpfsBytes = 32 * 1024 * 1024;
 const temporaryDirectoryBytes = 16 * 1024 * 1024;
+const versionProbeTimeoutMs = 5_000;
 
 export const sandboxResourceLimits = Object.freeze({
   compile: Object.freeze({
@@ -84,6 +85,12 @@ function requirePositiveInteger(value, name) {
   }
 }
 
+function requireNonnegativeInteger(value, name) {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new TypeError(`${name} must be a nonnegative safe integer`);
+  }
+}
+
 function requireDirectory(path, name) {
   if (!existsSync(path)) throw new TypeError(`${name} does not exist`);
   const metadata = lstatSync(path);
@@ -98,6 +105,7 @@ function requireRegularFile(path, name) {
   if (metadata.isSymbolicLink() || !metadata.isFile()) {
     throw new TypeError(`${name} must be a non-symlink regular file`);
   }
+  return metadata;
 }
 
 function requireContained(root, path, name) {
@@ -157,6 +165,41 @@ export function resolveExecutable(name, {
     }
   }
   throw new TypeError(`required executable not found: ${name}`);
+}
+
+function inspectToolchain(name, executable, versionArgs, spawnTool) {
+  const result = spawnTool(executable, versionArgs, {
+    encoding: "utf8",
+    env: {
+      LANG: "C",
+      LC_ALL: "C",
+      PATH: "/usr/bin:/bin",
+    },
+    killSignal: "SIGKILL",
+    maxBuffer: maximumOutputBytes,
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: versionProbeTimeoutMs,
+  });
+  if (
+    result.error ||
+    result.signal !== null ||
+    result.status !== 0
+  ) {
+    throw new TypeError(`could not determine ${name} version`);
+  }
+  const version = `${result.stdout ?? ""}\n${result.stderr ?? ""}`
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .find((line) => line !== "");
+  if (!version || version.length > 1024 || version.includes("\0")) {
+    throw new TypeError(`${name} returned an invalid version`);
+  }
+  return {
+    name,
+    executable,
+    version,
+    versionArgv: [executable, ...versionArgs],
+  };
 }
 
 function existingSystemMounts(phase) {
@@ -312,11 +355,19 @@ export function buildSandboxInvocation({
   };
 }
 
+function resultOutcome(result) {
+  if (result.error?.code === "ETIMEDOUT") return "timed-out";
+  if (result.error) return "error";
+  if (result.status === 0 && result.signal === null) return "passed";
+  return "failed";
+}
+
 function phaseResult(command, result, startedAt, finishedAt) {
   return {
     id: command.id,
     phase: command.phase,
     argv: [...command.argv],
+    outcome: resultOutcome(result),
     timeoutMs: command.timeoutMs,
     startedAt: startedAt.toISOString(),
     finishedAt: finishedAt.toISOString(),
@@ -333,10 +384,7 @@ function phaseResult(command, result, startedAt, finishedAt) {
 }
 
 function phaseSucceeded(phase) {
-  return phase.exitCode === 0 &&
-    phase.signal === null &&
-    phase.error === null &&
-    !phase.timedOut;
+  return phase.outcome === "passed";
 }
 
 function validateTestExecutable(buildRoot, manifest, command) {
@@ -344,8 +392,15 @@ function validateTestExecutable(buildRoot, manifest, command) {
     .slice(`${manifest.paths.build}/`.length);
   const executablePath = resolve(buildRoot, relativeExecutable);
   requireContained(buildRoot, executablePath, "sandbox test executable");
-  requireRegularFile(executablePath, "sandbox test executable");
+  const metadata = requireRegularFile(
+    executablePath,
+    "sandbox test executable",
+  );
   accessSync(executablePath, constants.X_OK);
+  return {
+    path: command.argv[0],
+    sizeBytes: metadata.size,
+  };
 }
 
 function writeReport(path, report) {
@@ -376,9 +431,11 @@ function writeReport(path, report) {
 
 export function validateFixtureValidationReport(report) {
   const topLevelKeys = [
+    "artifacts",
     "finishedAt",
     "fixtureStatus",
     "answerSha256",
+    "language",
     "phases",
     "sandbox",
     "schemaVersion",
@@ -386,9 +443,10 @@ export function validateFixtureValidationReport(report) {
     "success",
     "targetProfile",
     "taskId",
+    "toolchains",
   ];
   requireExactKeys(report, topLevelKeys, "fixture validation report");
-  if (report.schemaVersion !== "1.0") {
+  if (report.schemaVersion !== "1.1") {
     throw new TypeError("unsupported fixture validation report version");
   }
   if (
@@ -411,6 +469,12 @@ export function validateFixtureValidationReport(report) {
   }
   if (!["active", "scaffold"].includes(report.fixtureStatus)) {
     throw new TypeError("fixture validation status is invalid");
+  }
+  if (
+    typeof report.language !== "string" ||
+    !/^[a-z][a-z0-9+._-]*$/u.test(report.language)
+  ) {
+    throw new TypeError("fixture validation language is invalid");
   }
   requireDateTime(report.startedAt, "fixture validation startedAt");
   requireDateTime(report.finishedAt, "fixture validation finishedAt");
@@ -450,6 +514,63 @@ export function validateFixtureValidationReport(report) {
       requirePositiveInteger(value, `${phase}.${name}`);
     }
   }
+  if (!Array.isArray(report.toolchains) || report.toolchains.length === 0) {
+    throw new TypeError("fixture validation toolchains must be non-empty");
+  }
+  const toolchainNames = new Set();
+  for (const toolchain of report.toolchains) {
+    requireExactKeys(
+      toolchain,
+      ["executable", "name", "version", "versionArgv"],
+      "fixture validation toolchain",
+    );
+    if (
+      typeof toolchain.name !== "string" ||
+      !/^[a-z0-9][a-z0-9+._-]*$/u.test(toolchain.name) ||
+      toolchainNames.has(toolchain.name) ||
+      typeof toolchain.executable !== "string" ||
+      !toolchain.executable.startsWith("/usr/") ||
+      typeof toolchain.version !== "string" ||
+      toolchain.version.trim() === "" ||
+      toolchain.version.length > 1024 ||
+      toolchain.version.includes("\0") ||
+      !Array.isArray(toolchain.versionArgv) ||
+      toolchain.versionArgv.length < 2 ||
+      toolchain.versionArgv[0] !== toolchain.executable ||
+      toolchain.versionArgv.slice(1).some((arg) =>
+        typeof arg !== "string" ||
+        arg.length === 0 ||
+        arg.includes("\0"))
+    ) {
+      throw new TypeError("fixture validation toolchain is invalid");
+    }
+    toolchainNames.add(toolchain.name);
+  }
+  if (!Array.isArray(report.artifacts)) {
+    throw new TypeError("fixture validation artifacts must be an array");
+  }
+  const artifactPaths = new Set();
+  for (const artifact of report.artifacts) {
+    requireExactKeys(
+      artifact,
+      ["path", "sizeBytes"],
+      "fixture validation artifact",
+    );
+    if (
+      typeof artifact.path !== "string" ||
+      !/^build\/[A-Za-z0-9._/-]+$/u.test(artifact.path) ||
+      artifact.path.split("/").some((segment) =>
+        segment === "" || segment === "." || segment === "..") ||
+      artifactPaths.has(artifact.path)
+    ) {
+      throw new TypeError("fixture validation artifact path is invalid");
+    }
+    requireNonnegativeInteger(
+      artifact.sizeBytes,
+      "fixture validation artifact sizeBytes",
+    );
+    artifactPaths.add(artifact.path);
+  }
   if (!Array.isArray(report.phases) || report.phases.length === 0) {
     throw new TypeError("fixture validation phases must be non-empty");
   }
@@ -463,6 +584,7 @@ export function validateFixtureValidationReport(report) {
         "exitCode",
         "finishedAt",
         "id",
+        "outcome",
         "phase",
         "signal",
         "startedAt",
@@ -477,6 +599,7 @@ export function validateFixtureValidationReport(report) {
       typeof phase.id !== "string" ||
       !/^[a-z][a-z0-9-]*$/u.test(phase.id) ||
       !["compile", "test"].includes(phase.phase) ||
+      !["error", "failed", "passed", "timed-out"].includes(phase.outcome) ||
       !Array.isArray(phase.argv) ||
       phase.argv.length === 0 ||
       phase.argv.some((value) =>
@@ -503,6 +626,18 @@ export function validateFixtureValidationReport(report) {
     ) {
       throw new TypeError("fixture validation phase outcome is invalid");
     }
+    const expectedOutcome = phase.timedOut
+      ? "timed-out"
+      : phase.error !== null
+        ? "error"
+        : phase.exitCode === 0 && phase.signal === null
+          ? "passed"
+          : "failed";
+    if (phase.outcome !== expectedOutcome) {
+      throw new TypeError(
+        "fixture validation phase outcome is inconsistent",
+      );
+    }
   }
   if (
     typeof report.success !== "boolean" ||
@@ -514,6 +649,9 @@ export function validateFixtureValidationReport(report) {
   ) {
     throw new TypeError("fixture validation success is inconsistent");
   }
+  if (report.success && report.artifacts.length === 0) {
+    throw new TypeError("successful validation must record an artifact");
+  }
   return report;
 }
 
@@ -522,6 +660,7 @@ export function runFixtureValidation({
   fixturesRoot,
   tasksPath,
   spawn = spawnSync,
+  spawnTool = spawnSync,
   now = () => new Date(),
   pathValue = process.env.PATH ?? "",
   resolveExecutableImpl = resolveExecutable,
@@ -559,10 +698,21 @@ export function runFixtureValidation({
       toolPaths.set(tool, resolveExecutableImpl(tool, { pathValue }));
     }
   }
+  const toolchains = [...toolPaths.entries()]
+    .sort(([left], [right]) =>
+      left < right ? -1 : left > right ? 1 : 0)
+    .map(([name, executable]) =>
+      inspectToolchain(
+        name,
+        executable,
+        manifest.toolVersionArgs[name],
+        spawnTool,
+      ));
 
   const buildRoot = mkdtempSync(join(tmpdir(), `${taskId}-sandbox-build-`));
   const reportStartedAt = now();
   const phases = [];
+  const artifacts = [];
   try {
     const commands = [
       ...manifest.commands.filter((command) => command.phase === "compile"),
@@ -573,7 +723,14 @@ export function runFixtureValidation({
       if (command.phase === "test") {
         const startedAt = now();
         try {
-          validateTestExecutable(buildRoot, manifest, command);
+          const artifact = validateTestExecutable(
+            buildRoot,
+            manifest,
+            command,
+          );
+          if (!artifacts.some((item) => item.path === artifact.path)) {
+            artifacts.push(artifact);
+          }
         } catch (error) {
           const finishedAt = now();
           phases.push(phaseResult(command, {
@@ -608,11 +765,12 @@ export function runFixtureValidation({
     }
 
     const report = {
-      schemaVersion: "1.0",
+      schemaVersion: "1.1",
       taskId,
       answerSha256,
       targetProfile: manifest.targetProfile,
       fixtureStatus: manifest.status,
+      language: manifest.language,
       startedAt: reportStartedAt.toISOString(),
       finishedAt: now().toISOString(),
       sandbox: {
@@ -621,6 +779,8 @@ export function runFixtureValidation({
         filesystem: "isolated",
         resourceLimits: sandboxResourceLimits,
       },
+      toolchains,
+      artifacts,
       phases,
       success: phases.some((phase) => phase.phase === "compile") &&
         phases.some((phase) => phase.phase === "test") &&

@@ -176,6 +176,8 @@ This requires Bubblewrap, `prlimit`, and the fixture toolchain. It fails closed
 if isolation is unavailable and writes an ignored machine-readable report under
 the fixture’s `build/` directory. See
 `docs/sandboxed-validation.md` for the isolation boundary and limitations.
+Reports include target/language metadata, compiler versions, exact argv,
+binary sizes, normalized outcomes, and diagnostics.
 
 ## Adding a Provider
 

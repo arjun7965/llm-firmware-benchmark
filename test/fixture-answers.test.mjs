@@ -47,11 +47,14 @@ function fixtureRepository(t) {
     prompt: examplePrompt,
   }]));
   writeFileSync(join(fixtureRoot, "manifest.json"), JSON.stringify({
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     taskId: "example-task",
     targetProfile: "portable-c11",
     status: "scaffold",
     language: "c11",
+    toolVersionArgs: {
+      cc: ["--version"],
+    },
     answer: {
       format: "markdown-fenced-code",
       language: "c",

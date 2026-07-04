@@ -73,7 +73,22 @@ test("fixture commands cannot invoke a shell", () => {
   const task = loadTasks(tasksPath)
     .find((item) => item.id === "embedded-ring-buffer");
   const manifest = ringBufferFixture();
+  const goManifest = {
+    ...manifest,
+    toolVersionArgs: {
+      go: ["version"],
+    },
+    commands: [
+      {
+        ...manifest.commands[0],
+        argv: ["go", "build"],
+        requiredTools: ["go"],
+      },
+      manifest.commands[1],
+    ],
+  };
 
+  assert.equal(validateFixtureManifest(goManifest, task), goManifest);
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
@@ -84,6 +99,32 @@ test("fixture commands cannot invoke a shell", () => {
       }],
     }, task),
     /declared non-shell tool/,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      toolVersionArgs: {},
+    }, task),
+    /must cover requiredTools exactly/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      toolVersionArgs: {
+        cc: ["--version"],
+        go: ["version"],
+      },
+    }, task),
+    /must cover requiredTools exactly/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      toolVersionArgs: {
+        cc: ["--version\0"],
+      },
+    }, task),
+    /toolVersionArgs is invalid/u,
   );
   assert.throws(
     () => validateFixtureManifest({
@@ -111,6 +152,7 @@ test("fixture commands cannot invoke a shell", () => {
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
+      toolVersionArgs: {},
       commands: [manifest.commands[1]],
     }, task),
     /must define a compile command/,

@@ -9,7 +9,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import {
+  basename,
+  join,
+} from "node:path";
 import test from "node:test";
 import {
   buildSandboxInvocation,
@@ -50,11 +53,14 @@ function sandboxFixture(t) {
     prompt: "Return code.",
   }]));
   const manifest = {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     taskId: "example-task",
     targetProfile: "portable-c11",
     status: "active",
     language: "c11",
+    toolVersionArgs: {
+      cc: ["version"],
+    },
     answer: {
       format: "markdown-fenced-code",
       language: "c",
@@ -101,6 +107,16 @@ function sandboxFixture(t) {
 
 function fakeExecutable(name) {
   return `/usr/bin/${name}`;
+}
+
+function fakeToolVersion(command, args) {
+  assert.deepEqual(args, ["version"]);
+  return {
+    status: 0,
+    signal: null,
+    stdout: `${basename(command)} test-version\n`,
+    stderr: "",
+  };
 }
 
 function deterministicNow() {
@@ -182,6 +198,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
     fixturesRoot: fixture.fixturesRoot,
     tasksPath: fixture.tasksPath,
     resolveExecutableImpl: fakeExecutable,
+    spawnTool: fakeToolVersion,
     now: deterministicNow(),
     spawn: (command, args, options) => {
       calls.push({ command, args, options });
@@ -205,13 +222,46 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
+  assert.equal(report.schemaVersion, "1.1");
+  assert.equal(report.language, "c11");
   assert.match(report.answerSha256, /^[a-f0-9]{64}$/u);
+  assert.deepEqual(report.toolchains, [{
+    name: "cc",
+    executable: "/usr/bin/cc",
+    version: "cc test-version",
+    versionArgv: ["/usr/bin/cc", "version"],
+  }]);
+  assert.deepEqual(report.artifacts, [{
+    path: "build/tests",
+    sizeBytes: 0,
+  }]);
   assert.deepEqual(
     report.phases.map((phase) => phase.phase),
     ["compile", "test"],
   );
+  assert.deepEqual(
+    report.phases.map((phase) => phase.outcome),
+    ["passed", "passed"],
+  );
+  assert.deepEqual(
+    report.phases[0].argv,
+    ["cc", "-c", "generated/answer.c", "-o", "build/tests"],
+  );
   assert.equal(calls.length, 2);
   assert.equal(validateFixtureValidationReport(report), report);
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      phases: [
+        {
+          ...report.phases[0],
+          outcome: "failed",
+        },
+        report.phases[1],
+      ],
+    }),
+    /phase outcome is inconsistent/u,
+  );
   assert.deepEqual(
     JSON.parse(readFileSync(reportPath, "utf8")),
     report,
@@ -226,6 +276,7 @@ test("sandbox validation stops after compilation failure", (t) => {
     fixturesRoot: fixture.fixturesRoot,
     tasksPath: fixture.tasksPath,
     resolveExecutableImpl: fakeExecutable,
+    spawnTool: fakeToolVersion,
     now: deterministicNow(),
     spawn: () => {
       calls++;
@@ -240,8 +291,32 @@ test("sandbox validation stops after compilation failure", (t) => {
 
   assert.equal(calls, 1);
   assert.equal(report.success, false);
+  assert.deepEqual(report.artifacts, []);
   assert.equal(report.phases.length, 1);
+  assert.equal(report.phases[0].outcome, "failed");
   assert.equal(report.phases[0].stderr, "compile failed");
+
+  const timedOutFixture = sandboxFixture(t);
+  const { report: timedOutReport } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: timedOutFixture.fixturesRoot,
+    tasksPath: timedOutFixture.tasksPath,
+    resolveExecutableImpl: fakeExecutable,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    spawn: () => ({
+      status: null,
+      signal: "SIGKILL",
+      stdout: "",
+      stderr: "",
+      error: Object.assign(new Error("timed out"), {
+        code: "ETIMEDOUT",
+      }),
+    }),
+  });
+  assert.equal(timedOutReport.success, false);
+  assert.equal(timedOutReport.phases[0].outcome, "timed-out");
+  assert.equal(timedOutReport.phases[0].timedOut, true);
 });
 
 test("sandbox validation rejects missing or symlinked answers", (t) => {

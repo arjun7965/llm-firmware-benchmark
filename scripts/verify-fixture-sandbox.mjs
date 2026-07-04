@@ -69,6 +69,21 @@ try {
         JSON.stringify(report.phases),
       );
     }
+    if (
+      report.schemaVersion !== "1.1" ||
+      report.toolchains.length !== 1 ||
+      report.toolchains[0].name !== "cc" ||
+      report.toolchains[0].version === "" ||
+      report.toolchains[0].versionArgv.join(" ") !==
+        `${report.toolchains[0].executable} --version` ||
+      report.artifacts.length !== 1 ||
+      report.artifacts[0].sizeBytes < 1 ||
+      report.phases.some((phase) => phase.outcome !== "passed")
+    ) {
+      throw new Error(
+        `${reference.taskId} reproducibility metadata is incomplete`,
+      );
+    }
     console.log(`ok - ${reference.taskId}`);
   }
 

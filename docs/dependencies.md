@@ -59,7 +59,10 @@ its user namespace. CI installs `apparmor-profiles` and enables the packaged
 validator as root.
 Run `npm run fixture:validate -- --task <task-id>`. The command fails closed if
 isolation is unavailable. `npm run test:sandbox` validates the sandbox runner
-against trusted references only. See `docs/sandboxed-validation.md`.
+against trusted references only. Validation reports automatically capture the
+resolved toolchain version using each manifest's fixed `toolVersionArgs`,
+compile/test argv, target metadata, artifact size, outcomes, and diagnostics.
+See `docs/sandboxed-validation.md`.
 
 `npm run test:mutations` uses the same host C compiler to build controlled
 mutations of trusted references. Every mutation must compile and be rejected by

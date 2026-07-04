@@ -85,8 +85,8 @@
   miss, with controlled catalogs for every active C fixture.
 - [ ] Define firmware-specific scoring for correctness, bounded resource use,
   timing behavior, concurrency safety, fault recovery, portability, and clarity.
-- [ ] Record toolchain versions, compile flags, target metadata, diagnostics,
-  binary size, and test outcomes in machine-readable results.
+- [x] Record toolchain versions, compile flags, target metadata, diagnostics,
+  binary size, and test outcomes in machine-readable validation reports.
 - [ ] Document when vendor specifications are summarized, and avoid embedding
   confidential SDK content or restrictively licensed source.
 - [ ] Pilot and calibrate each task across several model families before adding
