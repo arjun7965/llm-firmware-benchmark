@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/arjun7965/llm-coding-benchmark/schemas/public-result.schema.json",
+  "$id": "https://github.com/arjun7965/llm-firmware-benchmark/schemas/public-result.schema.json",
   "title": "Sanitized public benchmark result",
   "type": "object",
   "additionalProperties": false,

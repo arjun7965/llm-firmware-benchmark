@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/arjun7965/llm-coding-benchmark/schemas/repeat-scores.schema.json",
+  "$id": "https://github.com/arjun7965/llm-firmware-benchmark/schemas/repeat-scores.schema.json",
   "title": "Repeated benchmark scores",
   "type": "object",
   "required": ["rubric", "tasks"],

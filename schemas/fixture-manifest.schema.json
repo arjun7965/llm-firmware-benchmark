@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/arjun7965/llm-coding-benchmark/schemas/fixture-manifest.schema.json",
+  "$id": "https://github.com/arjun7965/llm-firmware-benchmark/schemas/fixture-manifest.schema.json",
   "title": "Benchmark fixture manifest",
   "type": "object",
   "additionalProperties": false,

@@ -1,12 +1,13 @@
-# LLM Coding Benchmark
+# LLM Firmware Benchmark
 
-[![65 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/ci.yml?branch=main&event=push&label=65%20tests)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
-[![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
-[![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-coding-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-coding-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
+[![65 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=65%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
+[![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
-A dependency-free Node.js harness for running the same coding tasks against
-multiple language models. Models are configured locally, and provider-specific
-execution is isolated behind adapters.
+A dependency-free Node.js harness for evaluating language models on firmware
+and embedded coding tasks. Deterministic host fixtures, mutation tests,
+sandboxed execution, and optional cross-compilation support reproducible
+validation. General coding tasks remain as an auxiliary comparison suite.
 
 ## Requirements
 
@@ -65,6 +66,9 @@ BENCHMARK_MODELS_FILE=/path/to/models.json npm run benchmark
 category, prompt, and optional `targetProfile`. Embedded and firmware categories
 require a recognized profile. The harness writes one record per task/model pair
 under `results/`.
+
+Profile-backed firmware and embedded tasks are the primary suite. Tasks without
+a target profile are auxiliary and may rely on manual or external validation.
 
 Select a subset or override execution controls without editing configuration:
 

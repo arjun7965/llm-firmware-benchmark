@@ -1,8 +1,8 @@
 {
-  "name": "llm-coding-benchmark",
+  "name": "llm-firmware-benchmark",
   "version": "0.1.0",
   "private": true,
-  "description": "A dependency-free harness for comparing coding-model responses.",
+  "description": "A dependency-free harness for comparing coding models on firmware and embedded tasks.",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {

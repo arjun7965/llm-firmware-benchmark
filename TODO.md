@@ -2,13 +2,15 @@
 
 ## Project Scope and Positioning
 
-- [ ] Decide whether to position the repository as a firmware-focused benchmark
-  with auxiliary general-coding tasks. If adopted, revisit the repository name,
-  README, task-suite metadata, CLI filtering, and separate score reporting
-  before changing existing benchmark semantics.
-  - [ ] If renamed, document the GitHub rename, update local remotes and
-    hardcoded badge/link URLs, and audit GitHub Pages, hosted Actions, and
-    external integrations that may not follow redirects.
+- [x] Position the repository as a firmware-focused benchmark with auxiliary
+  general-coding tasks.
+- [x] Rename the repository to `llm-firmware-benchmark`; update package and
+  schema identifiers, badges, the local remote, and migration documentation.
+- [ ] Add explicit primary/auxiliary suite metadata and CLI suite filtering.
+- [ ] Report firmware and auxiliary scores separately without changing existing
+  task IDs or historical score interpretation.
+- [ ] Audit external integrations that may still rely on the old repository URL
+  instead of GitHub's redirect.
 
 ## Security and Data Hygiene
 
