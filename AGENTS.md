@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-- `tasks.json` defines task IDs, categories, and prompts;
+- `tasks.json` defines task IDs, suites, categories, and prompts;
   `models.example.json` documents model configuration.
 - `src/` contains harness modules and providers.
 - `test/` contains `node:test` coverage, including isolated provider tests.

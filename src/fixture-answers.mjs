@@ -27,6 +27,7 @@ import {
   loadTasks,
   promptSha256,
 } from "./harness.mjs";
+import { resultSuite } from "./suites.mjs";
 
 const maximumResultBytes = 5 * 1024 * 1024;
 const maximumAnswerBytes = 1024 * 1024;
@@ -267,6 +268,7 @@ export function extractFixtureAnswer({
   if (!task) throw new TypeError(`result task is unknown: ${result.task}`);
   if (
     result.category !== task.category ||
+    resultSuite(result) !== task.suite ||
     result.targetProfile !== (task.targetProfile ?? null)
   ) {
     throw new TypeError("result task metadata does not match tasks.json");

@@ -9,6 +9,7 @@ import {
 } from "./harness.mjs";
 import { loadModels } from "./models.mjs";
 import { generateWithProvider } from "./providers/index.mjs";
+import { suiteSet } from "./suites.mjs";
 
 const repositoryTasksPath = fileURLToPath(
   new URL("../tasks.json", import.meta.url),
@@ -51,6 +52,16 @@ function parseRuns(values, defaults) {
   return entries.map((value) => parsePositiveInteger(value, "runs"));
 }
 
+function parseSuites(values) {
+  const suites = parseList(values, "suites");
+  if (suites === null) return null;
+  const unknown = suites.filter((suite) => !suiteSet.has(suite));
+  if (unknown.length > 0) {
+    throw new TypeError(`unknown suites: ${unknown.join(", ")}`);
+  }
+  return suites;
+}
+
 export function parseBenchmarkArgs(args, {
   cwd = process.cwd(),
   defaultRuns = [1],
@@ -72,6 +83,7 @@ export function parseBenchmarkArgs(args, {
       "models-file": { type: "string" },
       output: { type: "string", short: "o" },
       runs: { type: "string", short: "r", multiple: true },
+      suites: { type: "string", short: "s", multiple: true },
       tasks: { type: "string", short: "t", multiple: true },
       "tasks-file": { type: "string" },
     },
@@ -90,6 +102,7 @@ export function parseBenchmarkArgs(args, {
     modelsFile: resolve(cwd, modelsFile),
     outputRoot: resolve(cwd, output),
     runs: parseRuns(values.runs, defaultRuns),
+    suiteIds: parseSuites(values.suites),
     taskIds: parseList(values.tasks, "tasks"),
     tasksFile: resolve(cwd, tasksFile),
   };
@@ -105,12 +118,22 @@ export function filterByIds(items, ids, label) {
   return ids.map((id) => byId.get(id));
 }
 
+export function filterBySuites(tasks, suites) {
+  if (suites === null) return tasks;
+  const selected = tasks.filter((task) => suites.includes(task.suite));
+  if (selected.length === 0) {
+    throw new TypeError(`no tasks matched suites: ${suites.join(", ")}`);
+  }
+  return selected;
+}
+
 export function benchmarkHelp(defaultRuns = [1], commandName = "benchmark") {
   return [
     `Usage: npm run ${commandName} -- [options]`,
     "",
     "Options:",
     "  -m, --models <ids>       Model IDs, comma-separated or repeated",
+    "  -s, --suites <names>     Suites: firmware, auxiliary",
     "  -t, --tasks <ids>        Task IDs, comma-separated or repeated",
     `  -r, --runs <numbers>     Run numbers (default: ${defaultRuns.join(",")})`,
     "  -j, --concurrency <n>    Maximum concurrent jobs (default: 4)",
@@ -137,11 +160,12 @@ export async function runBenchmarkCli({
     return { status: "help", jobCount: 0 };
   }
 
-  const tasks = filterByIds(
+  const selectedTasks = filterByIds(
     loadTasks(configuration.tasksFile),
     configuration.taskIds,
     "task IDs",
   );
+  const tasks = filterBySuites(selectedTasks, configuration.suiteIds);
   const models = filterByIds(
     loadModels(configuration.modelsFile),
     configuration.modelIds,

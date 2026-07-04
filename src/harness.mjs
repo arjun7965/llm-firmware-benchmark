@@ -11,12 +11,14 @@ import {
   targetProfileRequiredCategories,
   targetProfileSet,
 } from "./target-profiles.mjs";
+import { requireSuite } from "./suites.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const taskFields = new Set([
   "category",
   "id",
   "prompt",
+  "suite",
   "targetProfile",
 ]);
 
@@ -45,6 +47,7 @@ export function validateTasks(tasks) {
     if (typeof task.prompt !== "string" || task.prompt.trim() === "") {
       throw new TypeError(`task ${task.id} must have a prompt`);
     }
+    requireSuite(task.suite, `task ${task.id} suite`);
     if (task.targetProfile !== undefined &&
         (typeof task.targetProfile !== "string" ||
          !targetProfileSet.has(task.targetProfile))) {
@@ -53,6 +56,22 @@ export function validateTasks(tasks) {
     if (targetProfileRequiredCategories.has(task.category) &&
         task.targetProfile === undefined) {
       throw new TypeError(`task ${task.id} must have a targetProfile`);
+    }
+    if (targetProfileRequiredCategories.has(task.category) &&
+        task.suite !== "firmware") {
+      throw new TypeError(
+        `task ${task.id} category must use the firmware suite`,
+      );
+    }
+    if (task.suite === "firmware" && task.targetProfile === undefined) {
+      throw new TypeError(
+        `firmware task ${task.id} must have a targetProfile`,
+      );
+    }
+    if (task.suite === "auxiliary" && task.targetProfile !== undefined) {
+      throw new TypeError(
+        `auxiliary task ${task.id} cannot have a targetProfile`,
+      );
     }
     ids.add(task.id);
   }
@@ -173,6 +192,7 @@ export async function executeJob({
     run: job.run,
     task: job.task.id,
     category: job.task.category,
+    suite: job.task.suite,
     targetProfile: job.task.targetProfile ?? null,
     provider: job.provider,
     modelName: job.modelName,

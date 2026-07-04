@@ -9,6 +9,10 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { extractAnswer } from "./answers.mjs";
+import {
+  requireSuite,
+  resultSuite,
+} from "./suites.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
 
 export { extractAnswer } from "./answers.mjs";
@@ -161,10 +165,11 @@ export function toPublicResult(rawResult, source = JSON.stringify(rawResult)) {
 
   const answer = sanitizeText(extractAnswer(rawResult.stdout));
   const publicResult = {
-    schemaVersion: "1.1",
+    schemaVersion: "1.2",
     task: {
       id: requireString(rawResult.task, "task"),
       category: requireString(rawResult.category, "category"),
+      suite: resultSuite(rawResult),
       targetProfile: rawResult.targetProfile ?? null,
     },
     model: {
@@ -201,12 +206,12 @@ export function validatePublicResult(result) {
     "task",
   ];
   requireExactKeys(result, topLevelKeys, "public result");
-  if (result.schemaVersion !== "1.1") {
+  if (result.schemaVersion !== "1.2") {
     throw new TypeError("unsupported public result schemaVersion");
   }
   requireExactKeys(
     result.task,
-    ["category", "id", "targetProfile"],
+    ["category", "id", "suite", "targetProfile"],
     "task",
   );
   requireExactKeys(result.model, ["id", "provider"], "model");
@@ -222,10 +227,19 @@ export function validatePublicResult(result) {
   );
   requireString(result.task?.id, "task.id");
   requireString(result.task?.category, "task.category");
+  requireSuite(result.task.suite, "task.suite");
   if (result.task.targetProfile !== null &&
       (typeof result.task.targetProfile !== "string" ||
        !targetProfileSet.has(result.task.targetProfile))) {
     throw new TypeError("task.targetProfile is invalid");
+  }
+  if (result.task.suite === "firmware" &&
+      result.task.targetProfile === null) {
+    throw new TypeError("firmware task requires a targetProfile");
+  }
+  if (result.task.suite === "auxiliary" &&
+      result.task.targetProfile !== null) {
+    throw new TypeError("auxiliary task cannot have a targetProfile");
   }
   requireString(result.model?.id, "model.id");
   requireString(result.model?.provider, "model.provider");

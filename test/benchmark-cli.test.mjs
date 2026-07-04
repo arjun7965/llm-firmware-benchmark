@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   benchmarkHelp,
   filterByIds,
+  filterBySuites,
   parseBenchmarkArgs,
 } from "../src/benchmark-cli.mjs";
 
@@ -11,6 +12,7 @@ test("benchmark CLI parses filters and execution controls", () => {
     "--models", "alpha,beta",
     "--tasks", "task-one",
     "--tasks", "task-two",
+    "--suites", "firmware",
     "--runs", "1,3",
     "--concurrency", "2",
     "--output", "artifacts",
@@ -28,6 +30,7 @@ test("benchmark CLI parses filters and execution controls", () => {
     modelsFile: "/workspace/models.test.json",
     outputRoot: "/workspace/artifacts",
     runs: [1, 3],
+    suiteIds: ["firmware"],
     taskIds: ["task-one", "task-two"],
     tasksFile: "/workspace/tasks.test.json",
   });
@@ -46,6 +49,7 @@ test("benchmark CLI preserves mode defaults and environment model path", () => {
   assert.deepEqual(configuration.runs, [2, 3]);
   assert.equal(configuration.modelsFile, "/workspace/private-models.json");
   assert.equal(configuration.modelIds, null);
+  assert.equal(configuration.suiteIds, null);
   assert.equal(configuration.taskIds, null);
 });
 
@@ -65,6 +69,32 @@ test("benchmark CLI rejects invalid and duplicate values", () => {
   assert.throws(
     () => parseBenchmarkArgs(["--runs", "999999999999999999999"]),
     /safe positive integer/,
+  );
+  assert.throws(
+    () => parseBenchmarkArgs(["--suites", "unknown"]),
+    /unknown suites/,
+  );
+  assert.throws(
+    () => parseBenchmarkArgs(["--suites", "firmware,firmware"]),
+    /duplicates/,
+  );
+});
+
+test("suite filters preserve task order and require a match", () => {
+  const tasks = [
+    { id: "firmware-one", suite: "firmware" },
+    { id: "auxiliary-one", suite: "auxiliary" },
+    { id: "firmware-two", suite: "firmware" },
+  ];
+
+  assert.deepEqual(
+    filterBySuites(tasks, ["firmware"]),
+    [tasks[0], tasks[2]],
+  );
+  assert.deepEqual(filterBySuites(tasks, null), tasks);
+  assert.throws(
+    () => filterBySuites(tasks, ["missing"]),
+    /no tasks matched suites/,
   );
 });
 
@@ -86,6 +116,7 @@ test("benchmark help documents all extensibility controls", () => {
 
   for (const option of [
     "--models",
+    "--suites",
     "--tasks",
     "--runs",
     "--concurrency",

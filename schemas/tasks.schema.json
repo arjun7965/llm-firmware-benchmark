@@ -7,8 +7,29 @@
   "items": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "category", "prompt"],
+    "required": ["id", "category", "suite", "prompt"],
     "allOf": [
+      {
+        "if": {
+          "properties": {
+            "suite": { "const": "firmware" }
+          },
+          "required": ["suite"]
+        },
+        "then": {
+          "required": ["targetProfile"]
+        }
+      },
+      {
+        "if": {
+          "required": ["targetProfile"]
+        },
+        "then": {
+          "properties": {
+            "suite": { "const": "firmware" }
+          }
+        }
+      },
       {
         "if": {
           "properties": {
@@ -19,7 +40,9 @@
           "required": ["category"]
         },
         "then": {
-          "required": ["targetProfile"]
+          "properties": {
+            "suite": { "const": "firmware" }
+          }
         }
       }
     ],
@@ -31,6 +54,9 @@
       "category": {
         "type": "string",
         "minLength": 1
+      },
+      "suite": {
+        "enum": ["firmware", "auxiliary"]
       },
       "prompt": {
         "type": "string",

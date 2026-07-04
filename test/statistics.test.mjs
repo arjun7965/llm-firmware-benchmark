@@ -21,7 +21,12 @@ test("model summaries include totals and per-task variation", () => {
     },
   };
 
-  assert.deepEqual(summarizeModelScores(scores, "model"), {
+  assert.deepEqual(summarizeModelScores(scores, "model", {
+    suiteByTask: new Map([
+      ["a", "firmware"],
+      ["b", "auxiliary"],
+    ]),
+  }), {
     model: "model",
     totals: [4, 8, 12],
     totalMean: 8,
@@ -43,6 +48,24 @@ test("model summaries include totals and per-task variation", () => {
         range: 4,
       },
     ],
+    suites: [
+      {
+        suite: "firmware",
+        tasks: ["a"],
+        totals: [1, 3, 5],
+        totalMean: 3,
+        totalSd: Math.sqrt(8 / 3),
+        totalRange: 4,
+      },
+      {
+        suite: "auxiliary",
+        tasks: ["b"],
+        totals: [3, 5, 7],
+        totalMean: 5,
+        totalSd: Math.sqrt(8 / 3),
+        totalRange: 4,
+      },
+    ],
   });
 });
 
@@ -57,5 +80,14 @@ test("summaries reject missing and inconsistent score arrays", () => {
       model: { run1: [1] },
     }, "model"),
     /invalid scores/,
+  );
+  assert.throws(
+    () => summarizeModelScores({
+      tasks: ["a"],
+      model: { run1: [1] },
+    }, "model", {
+      suiteByTask: new Map(),
+    }),
+    /missing suite/,
   );
 });

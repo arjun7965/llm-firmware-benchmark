@@ -1,3 +1,8 @@
+import {
+  requireSuite,
+  suiteIds,
+} from "./suites.mjs";
+
 export function mean(values) {
   if (!Array.isArray(values) || values.length === 0 ||
       values.some((value) => !Number.isFinite(value))) {
@@ -11,7 +16,50 @@ export function populationSd(values) {
   return Math.sqrt(mean(values.map((value) => (value - average) ** 2)));
 }
 
-export function summarizeModelScores(scores, model) {
+function suiteForTask(suiteByTask, task) {
+  let suite;
+  if (suiteByTask instanceof Map) {
+    suite = suiteByTask.get(task);
+  } else if (
+    suiteByTask &&
+    typeof suiteByTask === "object" &&
+    Object.hasOwn(suiteByTask, task)
+  ) {
+    suite = suiteByTask[task];
+  }
+  if (suite === undefined) {
+    throw new TypeError(`missing suite for scored task: ${task}`);
+  }
+  return requireSuite(suite, `suite for scored task ${task}`);
+}
+
+function summarizeSuites(scores, runs, suiteByTask) {
+  const indicesBySuite = new Map(
+    suiteIds.map((suite) => [suite, []]),
+  );
+  for (const [index, task] of scores.tasks.entries()) {
+    indicesBySuite.get(suiteForTask(suiteByTask, task)).push(index);
+  }
+
+  return suiteIds.flatMap((suite) => {
+    const indices = indicesBySuite.get(suite);
+    if (indices.length === 0) return [];
+    const totals = runs.map((run) =>
+      indices.reduce((sum, index) => sum + run[index], 0));
+    return [{
+      suite,
+      tasks: indices.map((index) => scores.tasks[index]),
+      totals,
+      totalMean: mean(totals),
+      totalSd: populationSd(totals),
+      totalRange: Math.max(...totals) - Math.min(...totals),
+    }];
+  });
+}
+
+export function summarizeModelScores(scores, model, {
+  suiteByTask,
+} = {}) {
   if (!Array.isArray(scores.tasks) || scores.tasks.length === 0) {
     throw new TypeError("scores.tasks must be a non-empty array");
   }
@@ -33,7 +81,7 @@ export function summarizeModelScores(scores, model) {
 
   const runs = runEntries.map(([, values]) => values);
   const totals = runs.map((run) => run.reduce((sum, value) => sum + value, 0));
-  return {
+  const summary = {
     model,
     totals,
     totalMean: mean(totals),
@@ -50,4 +98,8 @@ export function summarizeModelScores(scores, model) {
       };
     }),
   };
+  if (suiteByTask !== undefined) {
+    summary.suites = summarizeSuites(scores, runs, suiteByTask);
+  }
+  return summary;
 }

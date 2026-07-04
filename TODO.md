@@ -6,9 +6,6 @@
   general-coding tasks.
 - [x] Rename the repository to `llm-firmware-benchmark`; update package and
   schema identifiers, badges, the local remote, and migration documentation.
-- [ ] Add explicit primary/auxiliary suite metadata and CLI suite filtering.
-- [ ] Report firmware and auxiliary scores separately without changing existing
-  task IDs or historical score interpretation.
 - [ ] Audit external integrations that may still rely on the old repository URL
   instead of GitHub's redirect.
 
@@ -26,6 +23,58 @@
 - [x] Add task-specific documentation and scoring criteria under `docs/benchmarks/`.
 - [x] Define and validate a stable public result schema.
 - [x] Add machine-readable task and score schemas.
+
+## Auxiliary Task Validation Roadmap
+
+The suite boundary is established. Define hosted validation profiles next, then
+add auxiliary fixtures after the vendor-specification policy and current
+firmware validation work.
+
+### Priority 1 — Suite and Validation Metadata
+
+- [x] Add explicit `suite` metadata (`firmware` or `auxiliary`) to tasks,
+  schemas, runtime validation, results, and public exports, with a documented
+  backward-compatible default for historical records.
+- [x] Add CLI suite filtering and report firmware and auxiliary scores
+  separately without changing task IDs or historical score interpretation.
+- [ ] Add a `validationProfile` field for hosted runtime/toolchain assumptions;
+  keep `targetProfile` for architecture, ABI, and hardware assumptions.
+- [ ] Define hosted profiles such as `stable-rust`, `python3-stdlib`,
+  `node-typescript`, and `go-std`, including tool versions, dependencies,
+  resource limits, and sandbox requirements.
+- [x] Make scoring-profile selection explicit so hosted auxiliary tasks never
+  inherit `firmware-v1` merely because validation metadata is present.
+- [ ] Decide whether each task returns one source file or uses a validated
+  multi-file answer contract before changing prompts or extraction behavior.
+- [ ] Generalize mutation execution beyond C while retaining exact,
+  compile-valid mutations and task-declared argv commands.
+
+### Priority 2 — Dependency-Light Auxiliary Fixtures
+
+For each task below, add starter assets, a trusted reference, public tests,
+controlled mutations, sandbox commands, dependency documentation, and
+calibration before marking the fixture active:
+
+1. [ ] `rust-stream-decoder`
+2. [ ] `concurrency-debug`
+3. [ ] `typescript-singleflight-cache`
+4. [ ] `go-graceful-shutdown`
+
+Keep validator-only toolchains outside the dependency-free root harness and
+record exact versions in validation reports.
+
+### Priority 3 — Specialized Validation Environments
+
+- [ ] Validate `testing-property-based` with isolated pytest/Hypothesis
+  dependencies and a controlled set of defective implementations.
+- [ ] Design browser-based React/TypeScript validation for
+  `frontend-autocomplete`, including deterministic timers, accessibility, and
+  interaction checks.
+- [ ] Design isolated PostgreSQL validation for `backend-idempotency`,
+  `postgres-pagination`, and `webhook-replay-security`, including migrations,
+  concurrency, cleanup, and fixed server versions.
+- [ ] Keep tasks rubric-only when deterministic execution would require
+  undocumented services or introduce environment-dependent scoring.
 
 ## Embedded and Firmware Benchmark Expansion
 

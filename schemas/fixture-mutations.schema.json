@@ -10,7 +10,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1.0"
+      "const": "1.2"
     },
     "source": {
       "type": "string",

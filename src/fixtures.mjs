@@ -99,7 +99,7 @@ function requireSafeRelativePath(value, name) {
 export function validateFixtureManifest(manifest, task) {
   requireExactFields(manifest, manifestFields, "fixture manifest");
   requireObject(task, "fixture task");
-  if (manifest.schemaVersion !== "1.1") {
+  if (manifest.schemaVersion !== "1.2") {
     throw new TypeError("unsupported fixture schemaVersion");
   }
   requireString(manifest.taskId, "fixture taskId", taskIdPattern);

@@ -102,6 +102,11 @@ test("JSON Schema files declare the expected contracts", () => {
 
   assert.equal(taskSchema.$schema, "https://json-schema.org/draft/2020-12/schema");
   assert.equal(taskSchema.items.additionalProperties, false);
+  assert.ok(taskSchema.items.required.includes("suite"));
+  assert.deepEqual(
+    taskSchema.items.properties.suite.enum,
+    ["firmware", "auxiliary"],
+  );
   assert.deepEqual(
     taskSchema.items.properties.targetProfile.enum,
     targetProfileIds,
@@ -110,17 +115,35 @@ test("JSON Schema files declare the expected contracts", () => {
     taskSchema.items.allOf[0].then.required,
     ["targetProfile"],
   );
+  assert.equal(
+    taskSchema.items.allOf[1].then.properties.suite.const,
+    "firmware",
+  );
+  assert.equal(
+    taskSchema.items.allOf[2].then.properties.suite.const,
+    "firmware",
+  );
   assert.equal(scoreSchema.$schema, taskSchema.$schema);
   assert.equal(scoreSchema.additionalProperties, false);
   assert.deepEqual(
     publicResultSchema.properties.task.properties.targetProfile.enum,
     [null, ...targetProfileIds],
   );
+  assert.equal(publicResultSchema.properties.schemaVersion.const, "1.2");
+  assert.deepEqual(
+    publicResultSchema.properties.task.properties.suite.enum,
+    ["firmware", "auxiliary"],
+  );
+  assert.equal(
+    publicResultSchema.properties.task.allOf[1]
+      .then.properties.targetProfile.const,
+    null,
+  );
   assert.deepEqual(
     fixtureSchema.properties.targetProfile.enum,
     [null, ...targetProfileIds],
   );
-  assert.equal(fixtureSchema.properties.schemaVersion.const, "1.1");
+  assert.equal(fixtureSchema.properties.schemaVersion.const, "1.2");
   assert.equal(
     fixtureSchema.properties.toolVersionArgs.additionalProperties.minItems,
     1,
@@ -141,6 +164,10 @@ test("JSON Schema files declare the expected contracts", () => {
     1,
   );
   assert.equal(fixtureMutationsSchema.$schema, taskSchema.$schema);
+  assert.equal(
+    fixtureMutationsSchema.properties.schemaVersion.const,
+    "1.2",
+  );
   assert.equal(fixtureMutationsSchema.additionalProperties, false);
   assert.equal(
     fixtureMutationsSchema.properties.mutations.items.additionalProperties,
@@ -152,7 +179,15 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(
     fixtureValidationSchema.properties.schemaVersion.const,
-    "1.1",
+    "1.2",
+  );
+  assert.deepEqual(
+    fixtureValidationSchema.properties.suite.enum,
+    ["firmware", "auxiliary"],
+  );
+  assert.equal(
+    fixtureValidationSchema.allOf[1].then.properties.targetProfile.const,
+    null,
   );
   assert.equal(
     fixtureValidationSchema.$defs.toolchain.additionalProperties,

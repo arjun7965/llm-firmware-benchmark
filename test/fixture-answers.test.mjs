@@ -43,11 +43,12 @@ function fixtureRepository(t) {
   writeFileSync(tasksPath, JSON.stringify([{
     id: "example-task",
     category: "systems-security",
+    suite: "firmware",
     targetProfile: "portable-c11",
     prompt: examplePrompt,
   }]));
   writeFileSync(join(fixtureRoot, "manifest.json"), JSON.stringify({
-    schemaVersion: "1.1",
+    schemaVersion: "1.2",
     taskId: "example-task",
     targetProfile: "portable-c11",
     status: "scaffold",
@@ -90,6 +91,7 @@ function writeResult(root, overrides = {}) {
   writeFileSync(path, JSON.stringify({
     task: "example-task",
     category: "systems-security",
+    suite: "firmware",
     targetProfile: "portable-c11",
     exitCode: 0,
     signal: null,
@@ -197,6 +199,14 @@ test("fixture extraction requires matching success and explicit overwrite", (t) 
   assert.throws(
     () => extractFixtureAnswer({
       resultPath: writeResult(repository.root, { category: "wrong" }),
+      fixturesRoot: repository.fixturesRoot,
+      tasksPath: repository.tasksPath,
+    }),
+    /metadata does not match/u,
+  );
+  assert.throws(
+    () => extractFixtureAnswer({
+      resultPath: writeResult(repository.root, { suite: "auxiliary" }),
       fixturesRoot: repository.fixturesRoot,
       tasksPath: repository.tasksPath,
     }),

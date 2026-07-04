@@ -15,15 +15,46 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1.1"
+      "const": "1.2"
     },
     "task": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "category", "targetProfile"],
+      "required": ["id", "category", "suite", "targetProfile"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "suite": { "const": "firmware" }
+            },
+            "required": ["suite"]
+          },
+          "then": {
+            "properties": {
+              "targetProfile": { "type": "string" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "suite": { "const": "auxiliary" }
+            },
+            "required": ["suite"]
+          },
+          "then": {
+            "properties": {
+              "targetProfile": { "const": null }
+            }
+          }
+        }
+      ],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "category": { "type": "string", "minLength": 1 },
+        "suite": {
+          "enum": ["firmware", "auxiliary"]
+        },
         "targetProfile": {
           "type": ["string", "null"],
           "enum": [

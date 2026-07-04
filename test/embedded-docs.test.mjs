@@ -76,7 +76,7 @@ test("embedded task rubrics reference defined target profiles", () => {
   }
 });
 
-test("profile-backed task rubrics use every firmware scoring dimension", () => {
+test("firmware task rubrics use every firmware scoring dimension", () => {
   const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
   const policy = readFileSync(
     new URL("../docs/benchmarks/firmware-scoring.md", import.meta.url),
@@ -91,9 +91,9 @@ test("profile-backed task rubrics use every firmware scoring dimension", () => {
     );
   }
 
-  const profileBackedTasks = tasks.filter((task) => task.targetProfile);
-  assert.ok(profileBackedTasks.length > 0);
-  for (const task of profileBackedTasks) {
+  const firmwareTasks = tasks.filter((task) => task.suite === "firmware");
+  assert.ok(firmwareTasks.length > 0);
+  for (const task of firmwareTasks) {
     const rubric = readFileSync(
       new URL(`../docs/benchmarks/${task.id}.md`, import.meta.url),
       "utf8",

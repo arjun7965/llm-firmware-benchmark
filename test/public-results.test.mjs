@@ -24,6 +24,7 @@ function rawResult(stdout) {
     run: 1,
     task: "example-task",
     category: "testing",
+    suite: "firmware",
     targetProfile: "portable-c11",
     provider: "ncode",
     modelName: "example-model",
@@ -96,8 +97,9 @@ test("public result allowlists fields and extracts NCode answer text", () => {
   const result = toPublicResult(raw);
   const serialized = JSON.stringify(result);
 
-  assert.equal(result.schemaVersion, "1.1");
+  assert.equal(result.schemaVersion, "1.2");
   assert.equal(result.answer, "A legitimate answer.");
+  assert.equal(result.task.suite, "firmware");
   assert.equal(result.task.targetProfile, "portable-c11");
   assert.equal(result.publication.reviewRequired, false);
   assert.equal(serialized.includes(uuid), false);
@@ -168,6 +170,10 @@ test("public result validation rejects extra fields", () => {
   const result = toPublicResult(rawResult("Safe answer."));
 
   assert.throws(
+    () => validatePublicResult({ ...result, schemaVersion: "1.1" }),
+    /schemaVersion/,
+  );
+  assert.throws(
     () => validatePublicResult({ ...result, stdout: "raw" }),
     /unexpected fields/,
   );
@@ -201,16 +207,43 @@ test("public result validation rejects extra fields", () => {
     }),
     /targetProfile/,
   );
+  assert.throws(
+    () => validatePublicResult({
+      ...result,
+      task: {
+        ...result.task,
+        suite: "unknown",
+      },
+    }),
+    /task.suite/,
+  );
+  assert.throws(
+    () => validatePublicResult({
+      ...result,
+      task: {
+        ...result.task,
+        suite: "auxiliary",
+      },
+    }),
+    /auxiliary task.*targetProfile/,
+  );
 });
 
-test("legacy results without provider metadata export safely", () => {
+test("legacy results infer suite metadata and export safely", () => {
   const raw = rawResult("Legacy answer.");
   delete raw.provider;
+  delete raw.suite;
   delete raw.targetProfile;
 
   const result = toPublicResult(raw);
 
   assert.equal(result.model.provider, "unknown");
+  assert.equal(result.task.suite, "auxiliary");
   assert.equal(result.task.targetProfile, null);
   assert.equal(result.answer, "Legacy answer.");
+
+  const profileBackedRaw = rawResult("Legacy firmware answer.");
+  delete profileBackedRaw.suite;
+  const profileBackedResult = toPublicResult(profileBackedRaw);
+  assert.equal(profileBackedResult.task.suite, "firmware");
 });

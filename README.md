@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![65 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=65%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![66 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=66%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -63,28 +63,29 @@ BENCHMARK_MODELS_FILE=/path/to/models.json npm run benchmark
 ## Tasks and Results
 
 `tasks.json` defines the shared prompts. Each task has a stable lowercase ID,
-category, prompt, and optional `targetProfile`. Embedded and firmware categories
-require a recognized profile. The harness writes one record per task/model pair
-under `results/`.
+category, explicit `firmware` or `auxiliary` suite, prompt, and optional
+`targetProfile`. Firmware-suite tasks require a recognized profile. The harness
+writes one record per task/model pair under `results/`.
 
-Profile-backed firmware and embedded tasks are the primary suite. Tasks without
-a target profile are auxiliary and may rely on manual or external validation.
+Firmware tasks are the primary suite. Auxiliary tasks may rely on manual or
+external validation.
 
 Select a subset or override execution controls without editing configuration:
 
 ```bash
 npm run benchmark -- \
   --models local-openai-compatible \
+  --suites firmware \
   --tasks embedded-ring-buffer,firmware-state-machine \
   --runs 1,2,3 \
   --concurrency 2 \
   --output results/firmware
 ```
 
-`--models` and `--tasks` accept comma-separated or repeated exact IDs.
-`--models-file` and `--tasks-file` select alternate input documents. Run
-`npm run benchmark -- --help` or `npm run benchmark:repeats -- --help` for the
-complete interface.
+`--models`, `--suites`, and `--tasks` accept comma-separated or repeated exact
+values. Suite and task filters intersect. `--models-file` and `--tasks-file`
+select alternate input documents. Run `npm run benchmark -- --help` or
+`npm run benchmark:repeats -- --help` for the complete interface.
 
 Raw records include a SHA-256 of the task prompt. A changed prompt invalidates
 result reuse and prevents stale answers from entering fixture extraction.
@@ -120,9 +121,10 @@ tools, context limits, or execution environments.
 Task-specific ten-point rubrics are under `docs/benchmarks/`. Machine-readable
 contracts are provided in `schemas/tasks.schema.json` and
 `schemas/repeat-scores.schema.json`; the summarizer also validates cross-field
-requirements such as score-array lengths. Profile-backed systems, embedded,
-and firmware tasks use the shared `firmware-v1` dimensions in
-`docs/benchmarks/firmware-scoring.md`.
+requirements such as score-array lengths. Firmware-suite tasks use the shared
+`firmware-v1` dimensions in `docs/benchmarks/firmware-scoring.md`. Summaries
+report combined totals and separate firmware and auxiliary totals using the
+task registry; set `BENCHMARK_TASKS_FILE` when scoring an alternate task file.
 
 Embedded and firmware expansion is governed by
 `docs/embedded/capability-matrix.md` and reusable target profiles in
@@ -182,7 +184,7 @@ This requires Bubblewrap, `prlimit`, and the fixture toolchain. It fails closed
 if isolation is unavailable and writes an ignored machine-readable report under
 the fixture’s `build/` directory. See
 `docs/sandboxed-validation.md` for the isolation boundary and limitations.
-Reports include target/language metadata, compiler versions, exact argv,
+Reports include suite/target/language metadata, compiler versions, exact argv,
 binary sizes, normalized outcomes, and diagnostics.
 
 ## Adding a Provider

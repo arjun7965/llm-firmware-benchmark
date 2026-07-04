@@ -74,7 +74,8 @@ try {
       );
     }
     if (
-      report.schemaVersion !== "1.1" ||
+      report.schemaVersion !== "1.2" ||
+      report.suite !== "firmware" ||
       report.toolchains.length !== 1 ||
       report.toolchains[0].name !== "cc" ||
       report.toolchains[0].version === "" ||

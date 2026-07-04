@@ -21,6 +21,9 @@ without a shell. Version arguments must cover exactly the tools named by
 for Go. A `scaffold` manifest defines an incomplete interface. An `active`
 manifest has verified extraction, compile, and test commands.
 
+Fixture manifests, mutation catalogs, validation reports, and public result
+records use schema version 1.2.
+
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
 metadata only; it does not execute compiler commands.
@@ -54,5 +57,5 @@ npm run fixture:validate -- --task <task-id>
 This Linux-only command requires Bubblewrap, `prlimit`, and the manifest
 toolchain. It fails rather than running on the host when isolation is
 unavailable. Reports are written to the ignored `build/validation-report.json`;
-they include toolchain versions, target metadata, exact argv, artifact sizes,
-outcomes, and diagnostics. See `docs/sandboxed-validation.md`.
+they include toolchain versions, suite and target metadata, exact argv,
+artifact sizes, outcomes, and diagnostics. See `docs/sandboxed-validation.md`.

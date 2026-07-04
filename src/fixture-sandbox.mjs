@@ -29,6 +29,7 @@ import {
 import { fileURLToPath } from "node:url";
 import { validateFixtureManifest } from "./fixtures.mjs";
 import { loadTasks } from "./harness.mjs";
+import { requireSuite } from "./suites.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -439,6 +440,7 @@ export function validateFixtureValidationReport(report) {
     "phases",
     "sandbox",
     "schemaVersion",
+    "suite",
     "startedAt",
     "success",
     "targetProfile",
@@ -446,7 +448,7 @@ export function validateFixtureValidationReport(report) {
     "toolchains",
   ];
   requireExactKeys(report, topLevelKeys, "fixture validation report");
-  if (report.schemaVersion !== "1.1") {
+  if (report.schemaVersion !== "1.2") {
     throw new TypeError("unsupported fixture validation report version");
   }
   if (
@@ -466,6 +468,17 @@ export function validateFixtureValidationReport(report) {
     !targetProfileSet.has(report.targetProfile)
   ) {
     throw new TypeError("fixture validation targetProfile is invalid");
+  }
+  requireSuite(report.suite, "fixture validation suite");
+  if (report.suite === "firmware" && report.targetProfile === null) {
+    throw new TypeError(
+      "firmware fixture validation requires a targetProfile",
+    );
+  }
+  if (report.suite === "auxiliary" && report.targetProfile !== null) {
+    throw new TypeError(
+      "auxiliary fixture validation cannot have a targetProfile",
+    );
   }
   if (!["active", "scaffold"].includes(report.fixtureStatus)) {
     throw new TypeError("fixture validation status is invalid");
@@ -765,9 +778,10 @@ export function runFixtureValidation({
     }
 
     const report = {
-      schemaVersion: "1.1",
+      schemaVersion: "1.2",
       taskId,
       answerSha256,
+      suite: task.suite,
       targetProfile: manifest.targetProfile,
       fixtureStatus: manifest.status,
       language: manifest.language,

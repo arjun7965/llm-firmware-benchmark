@@ -2,13 +2,12 @@
 
 Profile ID: `firmware-v1`
 
-Use this profile for every task with a `targetProfile`, including embedded,
-firmware, and firmware-relevant auxiliary tasks. Choose weights before
-collecting model outputs and keep them unchanged across compared runs. Each
-task rubric must list all seven dimensions below and total 10 points. A
-dimension that is genuinely out of scope may receive 0 points, but the rubric
-must explain why; do not invent requirements solely to give every dimension a
-positive weight.
+Use this profile for every task in the `firmware` suite. Choose weights before
+collecting model outputs and keep them unchanged across compared runs. Each task
+rubric must list all seven dimensions below and total 10 points. A dimension
+that is genuinely out of scope may receive 0 points, but the rubric must explain
+why; do not invent requirements solely to give every dimension a positive
+weight.
 
 ## Dimensions
 

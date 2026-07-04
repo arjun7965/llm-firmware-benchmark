@@ -81,7 +81,7 @@ function loadMutationCatalog(fixtureRoot, manifest) {
     ["mutations", "schemaVersion", "source"],
     `${manifest.taskId} mutation catalog`,
   );
-  if (catalog.schemaVersion !== "1.0") {
+  if (catalog.schemaVersion !== "1.2") {
     throw new TypeError(`${manifest.taskId} mutation schema is unsupported`);
   }
   requireSafeRelativePath(

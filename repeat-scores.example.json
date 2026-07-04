@@ -1,8 +1,8 @@
 {
   "rubric": "Scores are out of 10",
   "tasks": [
-    "example-task-a",
-    "example-task-b"
+    "bare-metal-timer",
+    "frontend-autocomplete"
   ],
   "model-a": {
     "run1": [7.5, 8.0],

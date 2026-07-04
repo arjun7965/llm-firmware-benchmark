@@ -49,11 +49,12 @@ function sandboxFixture(t) {
   writeFileSync(tasksPath, JSON.stringify([{
     id: "example-task",
     category: "systems-security",
+    suite: "firmware",
     targetProfile: "portable-c11",
     prompt: "Return code.",
   }]));
   const manifest = {
-    schemaVersion: "1.1",
+    schemaVersion: "1.2",
     taskId: "example-task",
     targetProfile: "portable-c11",
     status: "active",
@@ -222,7 +223,8 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.1");
+  assert.equal(report.schemaVersion, "1.2");
+  assert.equal(report.suite, "firmware");
   assert.equal(report.language, "c11");
   assert.match(report.answerSha256, /^[a-f0-9]{64}$/u);
   assert.deepEqual(report.toolchains, [{
@@ -249,6 +251,13 @@ test("sandbox validation records successful compile and test phases", (t) => {
   );
   assert.equal(calls.length, 2);
   assert.equal(validateFixtureValidationReport(report), report);
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      suite: "auxiliary",
+    }),
+    /auxiliary fixture validation.*targetProfile/u,
+  );
   assert.throws(
     () => validateFixtureValidationReport({
       ...report,

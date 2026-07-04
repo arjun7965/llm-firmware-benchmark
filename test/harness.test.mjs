@@ -19,8 +19,18 @@ import {
 } from "../src/harness.mjs";
 
 const tasks = [
-  { id: "task-one", category: "test", prompt: "First prompt" },
-  { id: "task-two", category: "test", prompt: "Second prompt" },
+  {
+    id: "task-one",
+    category: "test",
+    suite: "auxiliary",
+    prompt: "First prompt",
+  },
+  {
+    id: "task-two",
+    category: "test",
+    suite: "auxiliary",
+    prompt: "Second prompt",
+  },
 ];
 const models = [
   { id: "alpha", provider: "fake", model: "model-a" },
@@ -105,6 +115,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
   const [job] = createJobs([
     {
       ...tasks[0],
+      suite: "firmware",
       targetProfile: "portable-c11",
     },
   ], [models[0]]);
@@ -134,6 +145,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
   assert.equal(persisted.stdout, "generated answer");
   assert.equal(persisted.stderr, "diagnostic");
   assert.equal(persisted.task, "task-one");
+  assert.equal(persisted.suite, "firmware");
   assert.equal(persisted.targetProfile, "portable-c11");
   assert.equal(persisted.provider, "fake");
   assert.equal(persisted.modelName, "alpha");
