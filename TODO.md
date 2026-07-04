@@ -6,7 +6,7 @@
   general-coding tasks.
 - [x] Rename the repository to `llm-firmware-benchmark`; update package and
   schema identifiers, badges, the local remote, and migration documentation.
-- [ ] Audit external integrations that may still rely on the old repository URL
+- [x] Audit external integrations that may still rely on the old repository URL
   instead of GitHub's redirect.
 
 ## Security and Data Hygiene
