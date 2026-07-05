@@ -41,6 +41,7 @@
     "validationProfile",
     "validationProfileRevision",
     "validationProfileSha256",
+    "validationEnvironment",
     "fixtureStatus",
     "language",
     "startedAt",
@@ -52,7 +53,7 @@
     "success"
   ],
   "properties": {
-    "schemaVersion": { "const": "1.4" },
+    "schemaVersion": { "const": "1.5" },
     "taskId": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
@@ -97,6 +98,74 @@
     "validationProfileSha256": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
+    },
+    "validationEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "sha256",
+        "host",
+        "execution"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operatingSystem", "release", "architecture"],
+          "properties": {
+            "operatingSystem": {
+              "type": "string",
+              "pattern": "^[a-z0-9._-]+$"
+            },
+            "release": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]+$"
+            },
+            "architecture": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._-]+$"
+            }
+          }
+        },
+        "execution": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind"],
+              "properties": {
+                "kind": { "const": "host" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "image"],
+              "properties": {
+                "kind": { "const": "oci" },
+                "image": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9./_-]+(?::[A-Za-z0-9._-]+)?@sha256:[a-f0-9]{64}$"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
     "fixtureStatus": {
       "enum": ["active", "scaffold"]

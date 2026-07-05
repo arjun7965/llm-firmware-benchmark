@@ -98,6 +98,9 @@ export function summarizeModelScores(scores, model, {
       };
     }),
   };
+  if (scores.validationContracts !== undefined) {
+    summary.validationContracts = scores.validationContracts;
+  }
   if (suiteByTask !== undefined) {
     summary.suites = summarizeSuites(scores, runs, suiteByTask);
   }

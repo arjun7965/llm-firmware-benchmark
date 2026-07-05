@@ -6,12 +6,17 @@ import { summarizeModelScores } from "./src/statistics.mjs";
 const scoresPath = process.env.BENCHMARK_SCORES_FILE
   ? resolve(process.env.BENCHMARK_SCORES_FILE)
   : new URL("./repeat-scores.json", import.meta.url);
-const scores = loadScores(scoresPath);
 const tasksPath = process.env.BENCHMARK_TASKS_FILE
   ? resolve(process.env.BENCHMARK_TASKS_FILE)
   : new URL("./tasks.json", import.meta.url);
+const tasks = loadTasks(tasksPath);
+const scores = loadScores(scoresPath, {
+  validationProfileByTask: new Map(
+    tasks.map((task) => [task.id, task.validationProfile]),
+  ),
+});
 const suiteByTask = new Map(
-  loadTasks(tasksPath).map((task) => [task.id, task.suite]),
+  tasks.map((task) => [task.id, task.suite]),
 );
 
 for (const model of scoreModelIds(scores)) {

@@ -19,10 +19,13 @@ build/         # Compiler and test output; ignored
 per-tool `toolVersionArgs` are stored as argv arrays and must be executed
 without a shell. Version arguments must cover exactly the tools named by
 `requiredTools`; for example, use `["--version"]` for `cc` and `["version"]`
-for Go. Every tool and version probe must match the pinned profile contract in
-`validation-profiles.json`. A `scaffold` manifest defines an incomplete
-interface. An `active` manifest has verified extraction, compile, and test
-commands.
+for Go. Every tool must be required by the logical profile, and each version
+probe must match every concrete environment supported by that profile in
+`validation-profiles.json`. `requiredTools` and `toolVersionArgs` must cover
+the profile's complete toolchain set so validation reports attest every tool
+included in the environment fingerprint. A `scaffold` manifest defines an
+incomplete interface. An `active` manifest has verified extraction, compile,
+and test commands.
 
 The current sandbox runner accepts active fixtures only for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
@@ -30,7 +33,7 @@ interpreter, and service fixtures must remain scaffolds until their exact
 packages and test runtimes can be verified and mounted in the test namespace.
 
 Fixture manifests and public result records use schema version 1.3. Validation
-reports use version 1.4, and mutation catalogs remain at version 1.2.
+reports use version 1.5, and mutation catalogs remain at version 1.2.
 
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
@@ -66,5 +69,6 @@ This Linux-only command requires Bubblewrap, `prlimit`, and the manifest
 toolchain. It fails rather than running on the host when isolation is
 unavailable. Reports are written to the ignored `build/validation-report.json`;
 they include toolchain versions, suite and target metadata, exact argv,
-profile revision and fingerprint, artifact sizes, outcomes, and diagnostics.
+logical-profile and concrete-environment revisions and fingerprints, artifact
+sizes, outcomes, and diagnostics.
 See `docs/sandboxed-validation.md`.

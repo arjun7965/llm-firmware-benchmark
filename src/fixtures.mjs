@@ -8,6 +8,7 @@ import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadTasks } from "./harness.mjs";
 import {
+  getValidationEnvironmentRevision,
   getValidationProfile,
   requireValidationProfile,
   sandboxProfileBlockReason,
@@ -174,9 +175,13 @@ export function validateFixtureManifest(manifest, task) {
 
   requireObject(manifest.toolVersionArgs, "fixture toolVersionArgs");
   const profileToolchains = new Map(
-    validationProfile.toolchains.map((toolchain) => [
-      toolchain.name,
-      toolchain,
+    validationProfile.toolchains.map((tool) => [
+      tool,
+      validationProfile.environments.map((reference) =>
+        getValidationEnvironmentRevision(
+          reference.id,
+          reference.revision,
+        ).toolchains.find((toolchain) => toolchain.name === tool)),
     ]),
   );
   const configuredTools = new Set();
@@ -194,16 +199,17 @@ export function validateFixtureManifest(manifest, task) {
         `fixture ${task.id} toolVersionArgs is invalid`,
       );
     }
-    const profileToolchain = profileToolchains.get(tool);
-    if (!profileToolchain) {
+    const environmentToolchains = profileToolchains.get(tool);
+    if (!environmentToolchains) {
       throw new TypeError(
         `fixture ${task.id} tool ${tool} is not in its validation profile`,
       );
     }
     if (
-      args.length !== profileToolchain.versionArgs.length ||
-      args.some((argument, index) =>
-        argument !== profileToolchain.versionArgs[index])
+      environmentToolchains.some((profileToolchain) =>
+        args.length !== profileToolchain.versionArgs.length ||
+        args.some((argument, index) =>
+          argument !== profileToolchain.versionArgs[index]))
     ) {
       throw new TypeError(
         `fixture ${task.id} tool ${tool} versionArgs do not match its ` +
@@ -280,6 +286,15 @@ export function validateFixtureManifest(manifest, task) {
   ) {
     throw new TypeError(
       `fixture ${task.id} toolVersionArgs must cover requiredTools exactly`,
+    );
+  }
+  if (
+    requiredTools.size !== validationProfile.toolchains.length ||
+    validationProfile.toolchains.some((tool) => !requiredTools.has(tool))
+  ) {
+    throw new TypeError(
+      `fixture ${task.id} requiredTools must cover its validation profile ` +
+      "toolchains exactly",
     );
   }
   if (manifest.status === "active") {

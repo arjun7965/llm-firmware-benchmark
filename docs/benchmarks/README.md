@@ -17,6 +17,7 @@ For comparable results:
 3. Record concise reasons for deductions.
 4. Resolve ambiguous rubric interpretations before unblinding.
 5. Disclose any automated compilation, testing, or static-analysis checks.
+6. Use one concrete validation-environment revision for every compared run.
 
 The rubric files are human-readable policy. `schemas/tasks.schema.json` and
 `schemas/repeat-scores.schema.json` define the machine-readable input formats.

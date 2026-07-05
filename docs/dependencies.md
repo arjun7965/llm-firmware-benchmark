@@ -33,10 +33,14 @@ code. Each task references a pinned hosted runtime contract from
 | `webhook-replay-security` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
 
 These tools are optional because automated answer extraction and compilation
-are not yet part of the harness. The profile registry fixes tool versions,
-package versions, sandbox policy, and resource limits. Validation reports
-record resolved versions, compile flags, and commands. Use the same profile
-revision for all models in a comparison.
+are not yet part of the harness. The profile registry separates logical
+requirements from concrete execution environments. Together they fix tool
+versions, package versions, sandbox policy, and resource limits. Validation
+reports record both contract fingerprints, resolved versions, compile flags,
+and commands. Use the same exact profile and environment IDs, revisions, and
+SHA-256 values for all models in a comparison. The repeat-score contract pins
+one compatible profile/environment pair per scored task and verifies the
+profile ID against the task registry.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free

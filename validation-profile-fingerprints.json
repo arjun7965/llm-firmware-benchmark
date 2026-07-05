@@ -1,32 +1,70 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "2.0",
+  "environments": {
+    "ubuntu-24-04-x86-64-c11-host": {
+      "1": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
+    },
+    "ubuntu-24-04-x86-64-go-std": {
+      "1": "4b82ad86f7b31f2cdeabbe8444304c1c89cd81e634de42a668c089ab933f522c"
+    },
+    "ubuntu-24-04-x86-64-node-typescript": {
+      "1": "f78a6e723f5843da44b25eb96bf3b17dd6f97465eb5a0c3b48f2cb9e98cd9475"
+    },
+    "ubuntu-24-04-x86-64-node-typescript-postgresql": {
+      "1": "d35c7793a84f27e4b8a361b088f45862f8c86e608470ca912b70243be6e6bba0"
+    },
+    "ubuntu-24-04-x86-64-postgresql": {
+      "1": "a0dbbc2586507b2f2378373fc5f83cc3a15b4eef31f9d8af0336960e54c03d5e"
+    },
+    "ubuntu-24-04-x86-64-python3-pytest-hypothesis": {
+      "1": "8d9b86529bbef0fcbc9c4e37e29dd6426b14b58be86ecfc75adf279a3700651c"
+    },
+    "ubuntu-24-04-x86-64-python3-stdlib": {
+      "1": "54eacf2bc9f2fbd7bea637bf41bd2d6052988c99ed96424306adaefef3851f80"
+    },
+    "ubuntu-24-04-x86-64-react18-typescript": {
+      "1": "b640bcbc9b52d1ae8e4fde12b2582b755d7ed24b32edb172c9255fe1ec3eaf90"
+    },
+    "ubuntu-24-04-x86-64-stable-rust": {
+      "1": "bf2fe8027d3e2b0d8ecff7bb4dbabb770fd6196ed61dbabab0d69244801ec2d0"
+    }
+  },
   "profiles": {
     "c11-host": {
-      "1": "7a33e3e653f7f16869cfc2f1cfed032062eb18e725a715a3cc90c7e7b8b78d83"
+      "1": "7a33e3e653f7f16869cfc2f1cfed032062eb18e725a715a3cc90c7e7b8b78d83",
+      "2": "ee0bdc2b27369a73c7533888bb6362da4e15aebdb7be2024b0f0d578eebdb3fd"
     },
     "go-std": {
-      "1": "95243b4f7888708ede743d6578eee833055b38d5556cf096f39f4abd6bfd99bf"
+      "1": "95243b4f7888708ede743d6578eee833055b38d5556cf096f39f4abd6bfd99bf",
+      "2": "88211969cf5721756e4226b59bb4bf32f4fe81f159c499c8bbab2c7069694474"
     },
     "node-typescript": {
-      "1": "2c7d22458c5a5b90369237b3875cac9bd97c5886f8ac720521fadc86410274f1"
+      "1": "2c7d22458c5a5b90369237b3875cac9bd97c5886f8ac720521fadc86410274f1",
+      "2": "655fd393ce4fab119f635d474bc3b735e1243a855a8a0d63c19ae4fe1df166c8"
     },
     "node-typescript-postgresql": {
-      "1": "57e91a3f981e9fc00b018343d672a032520580ded9d6c143b5e0cb5ed3f65b7b"
+      "1": "57e91a3f981e9fc00b018343d672a032520580ded9d6c143b5e0cb5ed3f65b7b",
+      "2": "24b12e5e490a957482acfec5389b2867aadd089aec4d0debc2ecaeedbf406617"
     },
     "postgresql": {
-      "1": "b119b04ef8173f2671dbe26126fe590737597734c88333c5ea7e9cafe03379ac"
+      "1": "b119b04ef8173f2671dbe26126fe590737597734c88333c5ea7e9cafe03379ac",
+      "2": "a5f49a3198a2a4c4a223c07578d0d97fe27e0d3b8db998fe5d5a2f3a137c116c"
     },
     "python3-pytest-hypothesis": {
-      "1": "374dcbf18d79fca3623a8ce4c22f2aec4b475632ee798df92d031370a1ba5a75"
+      "1": "374dcbf18d79fca3623a8ce4c22f2aec4b475632ee798df92d031370a1ba5a75",
+      "2": "608745aa50a3e8736bafc2b5553ad637f29517e991f4891cd6071b4a86e929a3"
     },
     "python3-stdlib": {
-      "1": "44780975a921637636a5545d4e8b76f7da9e56264beaa078ed2192a7a1c2b9b2"
+      "1": "44780975a921637636a5545d4e8b76f7da9e56264beaa078ed2192a7a1c2b9b2",
+      "2": "8028cd817145436e35a64cc587b81e3fcf32572418ce48352ef410b4bde67517"
     },
     "react18-typescript": {
-      "1": "aed1489d9e1d8211b47742ce8e6a24f905633d0a952ec110da81e71862942225"
+      "1": "aed1489d9e1d8211b47742ce8e6a24f905633d0a952ec110da81e71862942225",
+      "2": "6aa16c7fd305e7ef2d475ed42b6582ca6c17f58f2abf564d876da73769ee4c8a"
     },
     "stable-rust": {
-      "1": "1de183a0892100343bddd9961868b765d231dac8f5fe279e64a59a8d33666ce1"
+      "1": "1de183a0892100343bddd9961868b765d231dac8f5fe279e64a59a8d33666ce1",
+      "2": "c5b7c0eceb4298d65e8ee8ba01a7878e95dd887d186be8f6a3797a4b3940d84d"
     }
   }
 }

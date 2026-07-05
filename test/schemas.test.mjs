@@ -3,7 +3,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTasks } from "../src/harness.mjs";
 import { targetProfileIds } from "../src/target-profiles.mjs";
-import { validationProfileIds } from "../src/validation-profiles.mjs";
+import {
+  getValidationEnvironmentRevision,
+  getValidationProfile,
+  validationEnvironmentReference,
+  validationProfileReference,
+  validationProfileIds,
+} from "../src/validation-profiles.mjs";
 import {
   loadScores,
   scoreModelIds,
@@ -14,6 +20,11 @@ test("repository task and score documents match runtime contracts", () => {
   const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
   const scores = loadScores(
     new URL("../repeat-scores.example.json", import.meta.url),
+    {
+      validationProfileByTask: new Map(
+        tasks.map((task) => [task.id, task.validationProfile]),
+      ),
+    },
   );
 
   assert.ok(tasks.length > 0);
@@ -22,41 +33,121 @@ test("repository task and score documents match runtime contracts", () => {
 
 test("score validation rejects malformed runs and out-of-range values", () => {
   const valid = {
+    schemaVersion: "1.0",
     rubric: "Scores are out of 10",
+    validationContracts: {
+      "task-one": {
+        profile: validationProfileReference(
+          getValidationProfile("c11-host"),
+        ),
+        environment: validationEnvironmentReference(
+          getValidationEnvironmentRevision(
+            "ubuntu-24-04-x86-64-c11-host",
+            1,
+          ),
+        ),
+      },
+    },
     tasks: ["task-one"],
     model: {
       run1: [8],
     },
   };
+  const options = {
+    validationProfileByTask: new Map([["task-one", "c11-host"]]),
+  };
+  const validate = (scores) => validateScores(scores, options);
 
-  assert.equal(validateScores(valid), valid);
+  assert.equal(validate(valid), valid);
   assert.throws(
-    () => validateScores({
+    () => validate({
       ...valid,
       tasks: ["task-one", "task-one"],
     }),
     /duplicates/,
   );
   assert.throws(
-    () => validateScores({
+    () => validate({
       ...valid,
       model: { first: [8] },
     }),
     /invalid run name/,
   );
   assert.throws(
-    () => validateScores({
+    () => validate({
       ...valid,
       model: { run1: [11] },
     }),
     /invalid scores/,
   );
   assert.throws(
-    () => validateScores({
+    () => validate({
       ...valid,
       model: { run1: [] },
     }),
     /invalid scores/,
+  );
+  assert.throws(
+    () => validate({
+      ...valid,
+      validationContracts: {
+        "task-one": {
+          ...valid.validationContracts["task-one"],
+          environment: {
+            ...valid.validationContracts["task-one"].environment,
+            sha256: "0".repeat(64),
+          },
+        },
+      },
+    }),
+    /environmentSha256/u,
+  );
+  assert.throws(
+    () => validate({
+      ...valid,
+      tasks: ["task-one", "task-two"],
+    }),
+    /must cover exactly/u,
+  );
+  assert.throws(
+    () => validate({
+      ...valid,
+      validationContracts: {
+        "task-one": {
+          ...valid.validationContracts["task-one"],
+          environment: validationEnvironmentReference(
+            getValidationEnvironmentRevision(
+              "ubuntu-24-04-x86-64-react18-typescript",
+              1,
+            ),
+          ),
+        },
+      },
+    }),
+    /environment is unsupported/u,
+  );
+  assert.throws(
+    () => validateScores(valid, {
+      validationProfileByTask: new Map([
+        ["task-one", "stable-rust"],
+      ]),
+    }),
+    /profile does not match task/u,
+  );
+  assert.throws(
+    () => validate({
+      ...valid,
+      validationContracts: {
+        "task-one": {
+          ...valid.validationContracts["task-one"],
+          profile: {
+            ...valid.validationContracts["task-one"].profile,
+            sha256: "0".repeat(64),
+          },
+        },
+      },
+    }),
+    /profileSha256/u,
   );
 });
 
@@ -140,6 +231,8 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(scoreSchema.$schema, taskSchema.$schema);
   assert.equal(scoreSchema.additionalProperties, false);
+  assert.equal(scoreSchema.properties.schemaVersion.const, "1.0");
+  assert.ok(scoreSchema.required.includes("validationContracts"));
   assert.deepEqual(
     publicResultSchema.properties.task.properties.targetProfile.enum,
     [null, ...targetProfileIds],
@@ -206,7 +299,7 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(
     fixtureValidationSchema.properties.schemaVersion.const,
-    "1.4",
+    "1.5",
   );
   assert.equal(
     fixtureValidationSchema.properties.validationProfileRevision.minimum,
@@ -237,18 +330,15 @@ test("JSON Schema files declare the expected contracts", () => {
     ["error", "failed", "passed", "timed-out"],
   );
   assert.equal(fixtureValidationSchema.additionalProperties, false);
-  assert.equal(
-    validationProfilesSchema.properties.schemaVersion.const,
-    "1.0",
-  );
+  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.0");
   assert.equal(validationProfilesSchema.additionalProperties, false);
   assert.equal(
-    validationProfilesSchema.properties.profiles.items
-      .properties.host.properties.release.const,
-    "24.04",
+    validationProfilesSchema.$defs.environment
+      .properties.execution.$ref,
+    "#/$defs/execution",
   );
   assert.equal(
-    validationProfilesSchema.$defs.sandbox
+    validationProfilesSchema.$defs.sandboxPolicyFields
       .properties.network.const,
     "none",
   );

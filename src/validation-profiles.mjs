@@ -1,11 +1,13 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const profileIdPattern = /^[a-z][a-z0-9-]*$/u;
+const identifierPattern = /^[a-z][a-z0-9-]*$/u;
 const packageNamePattern = /^(?:@[a-z0-9._-]+\/)?[a-z0-9][a-z0-9._-]*$/u;
 const toolNamePattern = /^[a-z0-9][a-z0-9+._-]*$/u;
 const versionPattern =
   /^\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?$/u;
+const imagePattern =
+  /^[a-z0-9./_-]+(?::[A-Za-z0-9._-]+)?@sha256:[a-f0-9]{64}$/u;
 const fingerprintPattern = /^[a-f0-9]{64}$/u;
 const resourceLimitFields = [
   "addressSpaceBytes",
@@ -50,73 +52,62 @@ function requireSortedUnique(values, name, key) {
   }
 }
 
-function validateProfileRevisionHistory(profiles) {
+function validateRevisionHistory(values, name) {
   let previous = null;
-  for (const profile of profiles) {
+  for (const value of values) {
     if (
       previous &&
       (
-        profile.id < previous.id ||
+        value.id < previous.id ||
         (
-          profile.id === previous.id &&
-          profile.revision !== previous.revision + 1
+          value.id === previous.id &&
+          value.revision !== previous.revision + 1
         )
       )
     ) {
-      throw new TypeError(
-        "validation profile revisions must be sorted and contiguous",
-      );
+      throw new TypeError(`${name} revisions must be sorted and contiguous`);
     }
-    if (
-      (!previous || profile.id !== previous.id) &&
-      profile.revision !== 1
-    ) {
-      throw new TypeError(
-        `validation profile ${profile.id} revisions must start at 1`,
-      );
+    if ((!previous || value.id !== previous.id) && value.revision !== 1) {
+      throw new TypeError(`${name} ${value.id} revisions must start at 1`);
     }
-    previous = profile;
+    previous = value;
   }
 }
 
-function validateToolchains(toolchains, profileId) {
+function validateVersionArgs(versionArgs, name) {
+  if (
+    !Array.isArray(versionArgs) ||
+    versionArgs.length === 0 ||
+    versionArgs.some((argument) =>
+      typeof argument !== "string" ||
+      argument.length === 0 ||
+      argument.includes("\0"))
+  ) {
+    throw new TypeError(`${name} versionArgs is invalid`);
+  }
+}
+
+function validateToolchains(toolchains, name) {
   if (!Array.isArray(toolchains) || toolchains.length === 0) {
-    throw new TypeError(
-      `validation profile ${profileId} toolchains must be non-empty`,
-    );
+    throw new TypeError(`${name} toolchains must be non-empty`);
   }
   for (const toolchain of toolchains) {
     requireExactFields(
       toolchain,
       ["name", "version", "versionArgs"],
-      `validation profile ${profileId} toolchain`,
+      `${name} toolchain`,
     );
-    requireString(
-      toolchain.name,
-      `validation profile ${profileId} toolchain name`,
-      toolNamePattern,
-    );
+    requireString(toolchain.name, `${name} toolchain name`, toolNamePattern);
     requireString(
       toolchain.version,
-      `validation profile ${profileId} toolchain version`,
+      `${name} toolchain version`,
       versionPattern,
     );
-    if (
-      !Array.isArray(toolchain.versionArgs) ||
-      toolchain.versionArgs.length === 0 ||
-      toolchain.versionArgs.some((argument) =>
-        typeof argument !== "string" ||
-        argument.length === 0 ||
-        argument.includes("\0"))
-    ) {
-      throw new TypeError(
-        `validation profile ${profileId} versionArgs is invalid`,
-      );
-    }
+    validateVersionArgs(toolchain.versionArgs, name);
   }
   requireSortedUnique(
     toolchains,
-    `validation profile ${profileId} toolchains`,
+    `${name} toolchains`,
     (toolchain) => toolchain.name,
   );
 }
@@ -156,20 +147,22 @@ function validateDependencies(dependencies, profileId) {
   );
 }
 
-function validateSandbox(sandbox, profileId) {
+function validateResourcePolicy(sandbox, profileId, {
+  legacy,
+} = {}) {
+  const fields = [
+    "filesystem",
+    "limiter",
+    "network",
+    "resourceLimits",
+    "rootTmpfsBytes",
+    "runtime",
+    "temporaryDirectoryBytes",
+  ];
+  if (legacy) fields.push("limiterVersion", "runtimeVersion");
   requireExactFields(
     sandbox,
-    [
-      "filesystem",
-      "limiter",
-      "limiterVersion",
-      "network",
-      "resourceLimits",
-      "rootTmpfsBytes",
-      "runtime",
-      "runtimeVersion",
-      "temporaryDirectoryBytes",
-    ],
+    fields,
     `validation profile ${profileId} sandbox`,
   );
   if (
@@ -182,16 +175,18 @@ function validateSandbox(sandbox, profileId) {
       `validation profile ${profileId} sandbox policy is invalid`,
     );
   }
-  requireString(
-    sandbox.runtimeVersion,
-    `validation profile ${profileId} sandbox runtimeVersion`,
-    versionPattern,
-  );
-  requireString(
-    sandbox.limiterVersion,
-    `validation profile ${profileId} sandbox limiterVersion`,
-    versionPattern,
-  );
+  if (legacy) {
+    requireString(
+      sandbox.runtimeVersion,
+      `validation profile ${profileId} sandbox runtimeVersion`,
+      versionPattern,
+    );
+    requireString(
+      sandbox.limiterVersion,
+      `validation profile ${profileId} sandbox limiterVersion`,
+      versionPattern,
+    );
+  }
   requirePositiveInteger(
     sandbox.rootTmpfsBytes,
     `validation profile ${profileId} sandbox rootTmpfsBytes`,
@@ -212,64 +207,291 @@ function validateSandbox(sandbox, profileId) {
       resourceLimitFields,
       `validation profile ${profileId} ${phase} limits`,
     );
-    for (const [name, value] of Object.entries(limits)) {
+    for (const [limitName, value] of Object.entries(limits)) {
       requirePositiveInteger(
         value,
-        `validation profile ${profileId} ${phase}.${name}`,
+        `validation profile ${profileId} ${phase}.${limitName}`,
       );
     }
   }
 }
 
+function validateHost(host, name) {
+  requireExactFields(
+    host,
+    ["architecture", "operatingSystem", "release"],
+    name,
+  );
+  requireString(
+    host.operatingSystem,
+    `${name} operatingSystem`,
+    /^[a-z0-9._-]+$/u,
+  );
+  requireString(host.release, `${name} release`, /^[A-Za-z0-9._-]+$/u);
+  requireString(
+    host.architecture,
+    `${name} architecture`,
+    /^[A-Za-z0-9._-]+$/u,
+  );
+}
+
+function validateSandboxTool(tool, role, environmentId) {
+  requireExactFields(
+    tool,
+    ["executable", "name", "version", "versionArgs"],
+    `validation environment ${environmentId} ${role}`,
+  );
+  const expected = role === "runtime"
+    ? { executable: "bwrap", name: "bubblewrap" }
+    : { executable: "prlimit", name: "prlimit" };
+  if (tool.executable !== expected.executable || tool.name !== expected.name) {
+    throw new TypeError(
+      `validation environment ${environmentId} ${role} is invalid`,
+    );
+  }
+  requireString(
+    tool.version,
+    `validation environment ${environmentId} ${role} version`,
+    versionPattern,
+  );
+  validateVersionArgs(
+    tool.versionArgs,
+    `validation environment ${environmentId} ${role}`,
+  );
+}
+
+function validateEnvironment(environment) {
+  requireExactFields(
+    environment,
+    [
+      "execution",
+      "host",
+      "id",
+      "revision",
+      "sandbox",
+      "toolchains",
+    ],
+    "validation environment",
+  );
+  requireString(
+    environment.id,
+    "validation environment id",
+    identifierPattern,
+  );
+  requirePositiveInteger(
+    environment.revision,
+    `validation environment ${environment.id} revision`,
+  );
+  validateHost(
+    environment.host,
+    `validation environment ${environment.id} host`,
+  );
+  requireObject(
+    environment.execution,
+    `validation environment ${environment.id} execution`,
+  );
+  if (environment.execution.kind === "host") {
+    requireExactFields(
+      environment.execution,
+      ["kind"],
+      `validation environment ${environment.id} execution`,
+    );
+  } else if (environment.execution.kind === "oci") {
+    requireExactFields(
+      environment.execution,
+      ["image", "kind"],
+      `validation environment ${environment.id} execution`,
+    );
+    requireString(
+      environment.execution.image,
+      `validation environment ${environment.id} image`,
+      imagePattern,
+    );
+  } else {
+    throw new TypeError(
+      `validation environment ${environment.id} execution kind is invalid`,
+    );
+  }
+  requireExactFields(
+    environment.sandbox,
+    ["limiter", "runtime"],
+    `validation environment ${environment.id} sandbox`,
+  );
+  validateSandboxTool(
+    environment.sandbox.runtime,
+    "runtime",
+    environment.id,
+  );
+  validateSandboxTool(
+    environment.sandbox.limiter,
+    "limiter",
+    environment.id,
+  );
+  validateToolchains(
+    environment.toolchains,
+    `validation environment ${environment.id}`,
+  );
+}
+
+function validateLegacyProfile(profile) {
+  requireExactFields(
+    profile,
+    [
+      "dependencies",
+      "host",
+      "id",
+      "revision",
+      "sandbox",
+      "toolchains",
+    ],
+    "validation profile",
+  );
+  validateHost(profile.host, `validation profile ${profile.id} host`);
+  validateToolchains(
+    profile.toolchains,
+    `validation profile ${profile.id}`,
+  );
+  validateResourcePolicy(profile.sandbox, profile.id, { legacy: true });
+}
+
+function validateLogicalProfile(profile, environmentRevisionMap) {
+  requireExactFields(
+    profile,
+    [
+      "dependencies",
+      "environments",
+      "id",
+      "revision",
+      "sandbox",
+      "toolchains",
+    ],
+    "validation profile",
+  );
+  if (!Array.isArray(profile.environments) ||
+      profile.environments.length === 0) {
+    throw new TypeError(
+      `validation profile ${profile.id} environments must be non-empty`,
+    );
+  }
+  for (const reference of profile.environments) {
+    requireExactFields(
+      reference,
+      ["id", "revision"],
+      `validation profile ${profile.id} environment`,
+    );
+    requireString(
+      reference.id,
+      `validation profile ${profile.id} environment id`,
+      identifierPattern,
+    );
+    requirePositiveInteger(
+      reference.revision,
+      `validation profile ${profile.id} environment revision`,
+    );
+    if (!environmentRevisionMap.has(
+      `${reference.id}@${reference.revision}`,
+    )) {
+      throw new TypeError(
+        `validation profile ${profile.id} environment is unknown`,
+      );
+    }
+  }
+  requireSortedUnique(
+    profile.environments,
+    `validation profile ${profile.id} environments`,
+    (reference) => `${reference.id}@${reference.revision}`,
+  );
+  if (
+    !Array.isArray(profile.toolchains) ||
+    profile.toolchains.length === 0 ||
+    profile.toolchains.some((name) =>
+      typeof name !== "string" || !toolNamePattern.test(name))
+  ) {
+    throw new TypeError(
+      `validation profile ${profile.id} toolchains are invalid`,
+    );
+  }
+  requireSortedUnique(
+    profile.toolchains,
+    `validation profile ${profile.id} toolchains`,
+    (name) => name,
+  );
+  for (const reference of profile.environments) {
+    const environment = environmentRevisionMap.get(
+      `${reference.id}@${reference.revision}`,
+    );
+    const available = environment.toolchains
+      .map((toolchain) => toolchain.name);
+    if (
+      available.length !== profile.toolchains.length ||
+      available.some((name, index) => name !== profile.toolchains[index])
+    ) {
+      throw new TypeError(
+        `validation profile ${profile.id} toolchains must exactly match ` +
+        `environment ${reference.id}@${reference.revision}`,
+      );
+    }
+  }
+  validateResourcePolicy(profile.sandbox, profile.id);
+}
+
 export function validateValidationProfiles(document) {
   requireExactFields(
     document,
-    ["profiles", "schemaVersion"],
+    ["environments", "profiles", "schemaVersion"],
     "validation profiles document",
   );
-  if (document.schemaVersion !== "1.0") {
+  if (document.schemaVersion !== "2.0") {
     throw new TypeError("unsupported validation profiles schemaVersion");
   }
+  if (
+    !Array.isArray(document.environments) ||
+    document.environments.length === 0
+  ) {
+    throw new TypeError("validation environments must be a non-empty array");
+  }
+  for (const environment of document.environments) {
+    validateEnvironment(environment);
+  }
+  validateRevisionHistory(
+    document.environments,
+    "validation environment",
+  );
+  const environmentRevisionMap = new Map(
+    document.environments.map((environment) => [
+      `${environment.id}@${environment.revision}`,
+      environment,
+    ]),
+  );
   if (!Array.isArray(document.profiles) || document.profiles.length === 0) {
     throw new TypeError("validation profiles must be a non-empty array");
   }
   for (const profile of document.profiles) {
-    requireExactFields(
-      profile,
-      [
-        "dependencies",
-        "host",
-        "id",
-        "revision",
-        "sandbox",
-        "toolchains",
-      ],
-      "validation profile",
-    );
-    requireString(profile.id, "validation profile id", profileIdPattern);
+    requireString(profile.id, "validation profile id", identifierPattern);
     requirePositiveInteger(
       profile.revision,
       `validation profile ${profile.id} revision`,
     );
-    requireExactFields(
-      profile.host,
-      ["architecture", "operatingSystem", "release"],
-      `validation profile ${profile.id} host`,
-    );
-    if (
-      profile.host.operatingSystem !== "ubuntu" ||
-      profile.host.release !== "24.04" ||
-      profile.host.architecture !== "x86_64"
-    ) {
+    validateDependencies(profile.dependencies, profile.id);
+    if (Object.hasOwn(profile, "host")) {
+      validateLegacyProfile(profile);
+    } else {
+      validateLogicalProfile(profile, environmentRevisionMap);
+    }
+  }
+  validateRevisionHistory(document.profiles, "validation profile");
+  const currentProfiles = new Map();
+  for (const profile of document.profiles) {
+    currentProfiles.set(profile.id, profile);
+  }
+  for (const profile of currentProfiles.values()) {
+    if (Object.hasOwn(profile, "host")) {
       throw new TypeError(
-        `validation profile ${profile.id} host is invalid`,
+        `current validation profile ${profile.id}@${profile.revision} ` +
+        "must use the logical environment shape",
       );
     }
-    validateToolchains(profile.toolchains, profile.id);
-    validateDependencies(profile.dependencies, profile.id);
-    validateSandbox(profile.sandbox, profile.id);
   }
-  validateProfileRevisionHistory(document.profiles);
   return document;
 }
 
@@ -293,10 +515,46 @@ function canonicalize(value) {
   return value;
 }
 
-export function profileFingerprint(profile) {
+function contractFingerprint(contract) {
   return createHash("sha256")
-    .update(JSON.stringify(canonicalize(profile)))
+    .update(JSON.stringify(canonicalize(contract)))
     .digest("hex");
+}
+
+export function profileFingerprint(profile) {
+  return contractFingerprint(profile);
+}
+
+export function environmentFingerprint(environment) {
+  return contractFingerprint(environment);
+}
+
+function validateFingerprintGroup(values, fingerprints, name, fingerprint) {
+  const ids = [...new Set(values.map((value) => value.id))];
+  requireExactFields(fingerprints, ids, `${name} fingerprints`);
+  for (const id of ids) {
+    const revisions = values
+      .filter((value) => value.id === id)
+      .map((value) => String(value.revision));
+    const revisionFingerprints = fingerprints[id];
+    requireExactFields(
+      revisionFingerprints,
+      revisions,
+      `${name} ${id} fingerprints`,
+    );
+    for (const value of values.filter((item) => item.id === id)) {
+      const expected = revisionFingerprints[String(value.revision)];
+      if (
+        typeof expected !== "string" ||
+        !fingerprintPattern.test(expected) ||
+        expected !== fingerprint(value)
+      ) {
+        throw new TypeError(
+          `${name} ${id}@${value.revision} fingerprint is invalid`,
+        );
+      }
+    }
+  }
 }
 
 export function validateValidationProfileFingerprints(
@@ -306,50 +564,26 @@ export function validateValidationProfileFingerprints(
   validateValidationProfiles(profilesDocument);
   requireExactFields(
     fingerprintsDocument,
-    ["profiles", "schemaVersion"],
+    ["environments", "profiles", "schemaVersion"],
     "validation profile fingerprints document",
   );
-  if (fingerprintsDocument.schemaVersion !== "1.0") {
+  if (fingerprintsDocument.schemaVersion !== "2.0") {
     throw new TypeError(
       "unsupported validation profile fingerprints schemaVersion",
     );
   }
-  requireObject(
-    fingerprintsDocument.profiles,
-    "validation profile fingerprints",
+  validateFingerprintGroup(
+    profilesDocument.environments,
+    fingerprintsDocument.environments,
+    "validation environment",
+    environmentFingerprint,
   );
-  const profileIds = [
-    ...new Set(profilesDocument.profiles.map((profile) => profile.id)),
-  ];
-  requireExactFields(
+  validateFingerprintGroup(
+    profilesDocument.profiles,
     fingerprintsDocument.profiles,
-    profileIds,
-    "validation profile fingerprints",
+    "validation profile",
+    profileFingerprint,
   );
-  for (const profileId of profileIds) {
-    const profiles = profilesDocument.profiles
-      .filter((profile) => profile.id === profileId);
-    const revisions = profiles.map((profile) => String(profile.revision));
-    const fingerprints = fingerprintsDocument.profiles[profileId];
-    requireExactFields(
-      fingerprints,
-      revisions,
-      `validation profile ${profileId} fingerprints`,
-    );
-    for (const profile of profiles) {
-      const fingerprint = fingerprints[String(profile.revision)];
-      if (
-        typeof fingerprint !== "string" ||
-        !fingerprintPattern.test(fingerprint) ||
-        fingerprint !== profileFingerprint(profile)
-      ) {
-        throw new TypeError(
-          `validation profile ${profileId}@${profile.revision} ` +
-          "fingerprint is invalid",
-        );
-      }
-    }
-  }
   return fingerprintsDocument;
 }
 
@@ -368,10 +602,16 @@ export function loadValidationProfiles(
 
 export const validationProfilesDocument = loadValidationProfiles();
 export const validationProfiles = validationProfilesDocument.profiles;
+export const validationEnvironments =
+  validationProfilesDocument.environments;
 export const validationProfileIds = Object.freeze(
   [...new Set(validationProfiles.map((profile) => profile.id))],
 );
+export const validationEnvironmentIds = Object.freeze(
+  [...new Set(validationEnvironments.map((environment) => environment.id))],
+);
 export const validationProfileSet = new Set(validationProfileIds);
+export const validationEnvironmentSet = new Set(validationEnvironmentIds);
 export const sandboxRunnableValidationProfileIds = Object.freeze([
   "c11-host",
   "go-std",
@@ -381,15 +621,18 @@ const sandboxRunnableValidationProfileSet = new Set(
   sandboxRunnableValidationProfileIds,
 );
 
-const validationProfileMap = new Map();
-const validationProfileRevisionMap = new Map();
-for (const profile of validationProfiles) {
-  validationProfileMap.set(profile.id, profile);
-  validationProfileRevisionMap.set(
-    `${profile.id}@${profile.revision}`,
-    profile,
-  );
+function revisionMaps(values) {
+  const current = new Map();
+  const revisions = new Map();
+  for (const value of values) {
+    current.set(value.id, value);
+    revisions.set(`${value.id}@${value.revision}`, value);
+  }
+  return { current, revisions };
 }
+
+const profileMaps = revisionMaps(validationProfiles);
+const environmentMaps = revisionMaps(validationEnvironments);
 
 export function requireValidationProfile(
   value,
@@ -402,7 +645,7 @@ export function requireValidationProfile(
 }
 
 export function getValidationProfile(value, name = "validationProfile") {
-  return validationProfileMap.get(requireValidationProfile(value, name));
+  return profileMaps.current.get(requireValidationProfile(value, name));
 }
 
 export function getValidationProfileRevision(
@@ -412,11 +655,135 @@ export function getValidationProfileRevision(
 ) {
   requireValidationProfile(value, name);
   requirePositiveInteger(revision, `${name}Revision`);
-  const profile = validationProfileRevisionMap.get(`${value}@${revision}`);
-  if (!profile) {
-    throw new TypeError(`${name}Revision is unknown`);
+  const profile = profileMaps.revisions.get(`${value}@${revision}`);
+  if (!profile) throw new TypeError(`${name}Revision is unknown`);
+  return profile;
+}
+
+export function getValidationEnvironmentRevision(
+  value,
+  revision,
+  name = "validationEnvironment",
+) {
+  if (typeof value !== "string" || !validationEnvironmentSet.has(value)) {
+    throw new TypeError(`${name} is invalid`);
+  }
+  requirePositiveInteger(revision, `${name}Revision`);
+  const environment = environmentMaps.revisions.get(`${value}@${revision}`);
+  if (!environment) throw new TypeError(`${name}Revision is unknown`);
+  return environment;
+}
+
+function hostsMatch(left, right) {
+  return ["operatingSystem", "release", "architecture"]
+    .every((field) => left[field] === right[field]);
+}
+
+export function selectValidationEnvironment(profile, actualHost) {
+  if (!Array.isArray(profile.environments)) {
+    throw new TypeError(
+      `validation profile ${profile.id}@${profile.revision} is legacy-only`,
+    );
+  }
+  validateHost(actualHost, "validation host");
+  const matches = profile.environments
+    .map((reference) => getValidationEnvironmentRevision(
+      reference.id,
+      reference.revision,
+    ))
+    .filter((environment) =>
+      environment.execution.kind === "host" &&
+      hostsMatch(environment.host, actualHost));
+  if (matches.length !== 1) {
+    const supported = profile.environments
+      .map((reference) => `${reference.id}@${reference.revision}`)
+      .join(", ");
+    throw new TypeError(
+      `validation host does not match exactly one supported environment: ` +
+      supported,
+    );
+  }
+  return matches[0];
+}
+
+export function resolveValidationProfile(profile, environment) {
+  if (
+    !profile.environments?.some((reference) =>
+      reference.id === environment.id &&
+      reference.revision === environment.revision)
+  ) {
+    throw new TypeError(
+      `validation environment is not supported by profile ` +
+      `${profile.id}@${profile.revision}`,
+    );
+  }
+  const tools = new Map(
+    environment.toolchains.map((toolchain) => [toolchain.name, toolchain]),
+  );
+  return {
+    ...profile,
+    environment,
+    toolchains: profile.toolchains.map((name) => tools.get(name)),
+    sandbox: {
+      ...profile.sandbox,
+      runtimeVersion: environment.sandbox.runtime.version,
+      limiterVersion: environment.sandbox.limiter.version,
+    },
+  };
+}
+
+export function validationEnvironmentReference(environment) {
+  return {
+    id: environment.id,
+    revision: environment.revision,
+    sha256: environmentFingerprint(environment),
+  };
+}
+
+export function validationProfileReference(profile) {
+  return {
+    id: profile.id,
+    revision: profile.revision,
+    sha256: profileFingerprint(profile),
+  };
+}
+
+export function validateValidationProfileReference(
+  reference,
+  name = "validationProfile",
+) {
+  requireExactFields(reference, ["id", "revision", "sha256"], name);
+  const profile = getValidationProfileRevision(
+    reference.id,
+    reference.revision,
+    name,
+  );
+  if (
+    typeof reference.sha256 !== "string" ||
+    reference.sha256 !== profileFingerprint(profile)
+  ) {
+    throw new TypeError(`${name}Sha256 is invalid`);
   }
   return profile;
+}
+
+export function validateValidationEnvironmentReference(
+  reference,
+  name = "validationEnvironment",
+) {
+  requireExactFields(reference, ["id", "revision", "sha256"], name);
+  const environment = getValidationEnvironmentRevision(
+    reference.id,
+    reference.revision,
+    name,
+  );
+  if (
+    typeof reference.sha256 !== "string" ||
+    reference.sha256 !== environmentFingerprint(environment)
+  ) {
+    throw new TypeError(`${name}Sha256 is invalid`);
+  }
+  return environment;
 }
 
 export function sandboxProfileBlockReason(profile) {
