@@ -31,6 +31,7 @@ import { validateFixtureManifest } from "./fixtures.mjs";
 import { loadTasks } from "./harness.mjs";
 import { requireSuite } from "./suites.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
+import { requireValidationProfile } from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const maximumOutputBytes = 1024 * 1024;
@@ -446,9 +447,10 @@ export function validateFixtureValidationReport(report) {
     "targetProfile",
     "taskId",
     "toolchains",
+    "validationProfile",
   ];
   requireExactKeys(report, topLevelKeys, "fixture validation report");
-  if (report.schemaVersion !== "1.2") {
+  if (report.schemaVersion !== "1.3") {
     throw new TypeError("unsupported fixture validation report version");
   }
   if (
@@ -470,6 +472,10 @@ export function validateFixtureValidationReport(report) {
     throw new TypeError("fixture validation targetProfile is invalid");
   }
   requireSuite(report.suite, "fixture validation suite");
+  requireValidationProfile(
+    report.validationProfile,
+    "fixture validation validationProfile",
+  );
   if (report.suite === "firmware" && report.targetProfile === null) {
     throw new TypeError(
       "firmware fixture validation requires a targetProfile",
@@ -778,11 +784,12 @@ export function runFixtureValidation({
     }
 
     const report = {
-      schemaVersion: "1.2",
+      schemaVersion: "1.3",
       taskId,
       answerSha256,
       suite: task.suite,
       targetProfile: manifest.targetProfile,
+      validationProfile: manifest.validationProfile,
       fixtureStatus: manifest.status,
       language: manifest.language,
       startedAt: reportStartedAt.toISOString(),

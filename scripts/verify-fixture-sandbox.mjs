@@ -74,8 +74,9 @@ try {
       );
     }
     if (
-      report.schemaVersion !== "1.2" ||
+      report.schemaVersion !== "1.3" ||
       report.suite !== "firmware" ||
+      report.validationProfile !== "c11-host" ||
       report.toolchains.length !== 1 ||
       report.toolchains[0].name !== "cc" ||
       report.toolchains[0].version === "" ||

@@ -50,6 +50,13 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
+      validationProfile: "stable-rust",
+    }, task),
+    /validationProfile does not match/,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
       paths: {
         ...manifest.paths,
         starter: "../outside",

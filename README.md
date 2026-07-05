@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![66 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=66%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![68 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=68%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -17,7 +17,8 @@ validation. General coding tasks remain as an auxiliary comparison suite.
 
 Language toolchains such as `rustc`, a C11 compiler, Go, Python, or PostgreSQL
 are needed only when compiling or executing answers for the corresponding task.
-See `docs/dependencies.md` for the complete validation matrix.
+See `docs/dependencies.md` for the validation matrix and
+`docs/validation-profiles.md` for reusable runtime assumptions.
 
 ## Quick Start
 
@@ -63,9 +64,9 @@ BENCHMARK_MODELS_FILE=/path/to/models.json npm run benchmark
 ## Tasks and Results
 
 `tasks.json` defines the shared prompts. Each task has a stable lowercase ID,
-category, explicit `firmware` or `auxiliary` suite, prompt, and optional
-`targetProfile`. Firmware-suite tasks require a recognized profile. The harness
-writes one record per task/model pair under `results/`.
+category, explicit `firmware` or `auxiliary` suite, `validationProfile`, prompt,
+and optional `targetProfile`. Firmware-suite tasks require a recognized target
+profile. The harness writes one record per task/model pair under `results/`.
 
 Firmware tasks are the primary suite. Auxiliary tasks may rely on manual or
 external validation.
@@ -87,8 +88,9 @@ values. Suite and task filters intersect. `--models-file` and `--tasks-file`
 select alternate input documents. Run `npm run benchmark -- --help` or
 `npm run benchmark:repeats -- --help` for the complete interface.
 
-Raw records include a SHA-256 of the task prompt. A changed prompt invalidates
-result reuse and prevents stale answers from entering fixture extraction.
+Raw records include the validation and target profiles plus a SHA-256 of the
+task prompt. A changed prompt or validation profile invalidates result reuse
+and prevents stale answers from entering fixture extraction.
 
 Raw outputs are intentionally Git-ignored because generated text can contain
 credentials, session metadata, or local paths. Keep raw runs private and publish
@@ -184,8 +186,9 @@ This requires Bubblewrap, `prlimit`, and the fixture toolchain. It fails closed
 if isolation is unavailable and writes an ignored machine-readable report under
 the fixture’s `build/` directory. See
 `docs/sandboxed-validation.md` for the isolation boundary and limitations.
-Reports include suite/target/language metadata, compiler versions, exact argv,
-binary sizes, normalized outcomes, and diagnostics.
+Reports include suite, validation-profile, target, and language metadata,
+compiler versions, exact argv, binary sizes, normalized outcomes, and
+diagnostics.
 
 ## Adding a Provider
 

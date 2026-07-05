@@ -49,12 +49,12 @@ Each run writes ignored machine-readable output to:
 fixtures/<task-id>/build/validation-report.json
 ```
 
-The report follows `schemas/fixture-validation-report.schema.json` version 1.1.
-It records the extracted-code SHA-256, target profile, language, resolved
-toolchain executable and version, and produced binary size. Each phase preserves
-the exact compiler or test argv—including compile flags—and records a normalized
-`passed`, `failed`, `timed-out`, or `error` outcome alongside timing, limits,
-diagnostics, exit status, and signals.
+The report follows `schemas/fixture-validation-report.schema.json` version 1.3.
+It records the extracted-code SHA-256, validation and target profiles, language,
+resolved toolchain executable and version, and produced binary size. Each phase
+preserves the exact compiler or test argv—including compile flags—and records a
+normalized `passed`, `failed`, `timed-out`, or `error` outcome alongside timing,
+limits, diagnostics, exit status, and signals.
 
 Toolchain version probes execute only root-owned, non-writable programs already
 approved by the manifest. Each manifest provides fixed `toolVersionArgs`, so

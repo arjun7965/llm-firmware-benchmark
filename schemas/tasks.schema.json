@@ -7,7 +7,13 @@
   "items": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "category", "suite", "prompt"],
+    "required": [
+      "id",
+      "category",
+      "suite",
+      "validationProfile",
+      "prompt"
+    ],
     "allOf": [
       {
         "if": {
@@ -57,6 +63,19 @@
       },
       "suite": {
         "enum": ["firmware", "auxiliary"]
+      },
+      "validationProfile": {
+        "enum": [
+          "c11-host",
+          "go-std",
+          "node-typescript",
+          "node-typescript-postgresql",
+          "postgresql",
+          "python3-pytest-hypothesis",
+          "python3-stdlib",
+          "react18-typescript",
+          "stable-rust"
+        ]
       },
       "prompt": {
         "type": "string",

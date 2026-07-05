@@ -38,6 +38,7 @@
     "answerSha256",
     "suite",
     "targetProfile",
+    "validationProfile",
     "fixtureStatus",
     "language",
     "startedAt",
@@ -49,7 +50,7 @@
     "success"
   ],
   "properties": {
-    "schemaVersion": { "const": "1.2" },
+    "schemaVersion": { "const": "1.3" },
     "taskId": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
@@ -72,6 +73,19 @@
         "rv32-bare-metal",
         "generic-rtos",
         "embedded-linux-posix"
+      ]
+    },
+    "validationProfile": {
+      "enum": [
+        "c11-host",
+        "go-std",
+        "node-typescript",
+        "node-typescript-postgresql",
+        "postgresql",
+        "python3-pytest-hypothesis",
+        "python3-stdlib",
+        "react18-typescript",
+        "stable-rust"
       ]
     },
     "fixtureStatus": {

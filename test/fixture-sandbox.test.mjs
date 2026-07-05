@@ -51,12 +51,14 @@ function sandboxFixture(t) {
     category: "systems-security",
     suite: "firmware",
     targetProfile: "portable-c11",
+    validationProfile: "c11-host",
     prompt: "Return code.",
   }]));
   const manifest = {
-    schemaVersion: "1.2",
+    schemaVersion: "1.3",
     taskId: "example-task",
     targetProfile: "portable-c11",
+    validationProfile: "c11-host",
     status: "active",
     language: "c11",
     toolVersionArgs: {
@@ -223,8 +225,9 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.2");
+  assert.equal(report.schemaVersion, "1.3");
   assert.equal(report.suite, "firmware");
+  assert.equal(report.validationProfile, "c11-host");
   assert.equal(report.language, "c11");
   assert.match(report.answerSha256, /^[a-f0-9]{64}$/u);
   assert.deepEqual(report.toolchains, [{
@@ -251,6 +254,13 @@ test("sandbox validation records successful compile and test phases", (t) => {
   );
   assert.equal(calls.length, 2);
   assert.equal(validateFixtureValidationReport(report), report);
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      validationProfile: "unknown-profile",
+    }),
+    /validationProfile/u,
+  );
   assert.throws(
     () => validateFixtureValidationReport({
       ...report,

@@ -3,18 +3,21 @@
     "id": "frontend-autocomplete",
     "category": "frontend",
     "suite": "auxiliary",
+    "validationProfile": "react18-typescript",
     "prompt": "Implement a production-quality React 18 + TypeScript autocomplete component. Requirements: controlled query input; debounce requests by 250 ms; cancel obsolete requests with AbortController; stale responses must never replace newer results; full keyboard support (ArrowUp/Down, Enter, Escape); correct combobox/listbox ARIA; loading, empty, and error states; no external packages. The API is async function searchUsers(query: string, signal: AbortSignal): Promise<Array<{id:string,name:string}>>. Return one self-contained component and a short explanation. Keep the answer under 1400 words."
   },
   {
     "id": "backend-idempotency",
     "category": "backend",
     "suite": "auxiliary",
+    "validationProfile": "node-typescript-postgresql",
     "prompt": "Design and implement POST /orders in TypeScript using Express and PostgreSQL. Clients send an Idempotency-Key header. Concurrent requests with the same key and same authenticated user must create exactly one order and return the same response. Reusing a key with a different request body must return 409. The order and idempotency record must commit atomically. Do not use process-local locks. Include schema, transaction logic, handling for an in-progress duplicate, and the key failure modes. Assume pg is available. Keep the answer under 1600 words."
   },
   {
     "id": "embedded-ring-buffer",
     "category": "embedded",
     "suite": "firmware",
+    "validationProfile": "c11-host",
     "targetProfile": "c11-lock-free-spsc",
     "prompt": "Implement a bounded single-producer/single-consumer byte ring buffer in portable C11. The producer runs in an interrupt handler and the consumer runs in the main loop. Use the supplied ring_buffer.h, which defines typedef struct { uint8_t *storage; size_t capacity; atomic_size_t head; atomic_size_t tail; } ring_buffer_t. Implement bool ring_buffer_init(ring_buffer_t *, uint8_t *, size_t), bool ring_buffer_push(ring_buffer_t *, uint8_t), and bool ring_buffer_pop(ring_buffer_t *, uint8_t *). Storage is caller-owned; capacity must be a nonzero power of two; no dynamic allocation is allowed; and push/pop must be non-blocking. A full queue must reject the new byte by returning false without changing existing data; an empty pop returns false. Use C11 atomics with correct memory ordering, avoid undefined behavior, preserve the full declared capacity, and handle unsigned counter wraparound. The selected atomic index type must be lock-free. Return one fenced C implementation that includes ring_buffer.h and does not define main, followed by a concise explanation describing deterministic test cases. Keep the answer under 1300 words."
   },
@@ -22,6 +25,7 @@
     "id": "firmware-state-machine",
     "category": "firmware",
     "suite": "firmware",
+    "validationProfile": "c11-host",
     "targetProfile": "c11-mocked-hal",
     "prompt": "Implement the portable C11 API declared by firmware_state_machine.h for a non-blocking I2C temperature task. The header defines sensor address 0x48, register 0x00, a two-byte temperature_sample_t containing bytes, uint32_t timestamp_ms, and bool valid, plus void temperature_task_init(void), void temperature_task_step(void), and bool temperature_task_latest(temperature_sample_t *). Include firmware_state_machine.h and use the supplied HAL: bool i2c_start_read(uint8_t,uint8_t,uint8_t *,size_t), bool i2c_done(void), bool i2c_ok(void), and uint32_t millis(void). The first poll starts 1000 ms after initialization; subsequent cycles start 1000 ms after the previous cycle completes or exhausts retries. Never busy-wait or overlap transfers. Use a 25 ms transaction timeout and at most 3 attempts with 10 ms backoff. Timing must remain correct across uint32_t wraparound. A read unfinished after 25 ms is no longer active; completion and success remain observable until the next start. Preserve the latest valid sample across later failures and timestamp successful completion. Return one fenced C implementation that does not define main, followed by a concise explanation describing key tests. Keep the answer under 1500 words."
   },
@@ -29,6 +33,7 @@
     "id": "bare-metal-timer",
     "category": "embedded",
     "suite": "firmware",
+    "validationProfile": "c11-host",
     "targetProfile": "armv7m-bare-metal",
     "prompt": "Implement the freestanding C11 API declared by fictional_timer.h for the fictional TIMER0 peripheral on a single-core little-endian Cortex-M3 (ARMv7-M, AAPCS/EABI); no vendor SDK or hardware is used. TIMER0 is at 0x40010000. timer0_registers_t contains volatile uint32_t control, prescaler, reload, count, status, and irq_clear at offsets 0x00 through 0x14 in that order. Control bits are ENABLE=1<<0, PERIODIC=1<<1, and IRQ_ENABLE=1<<2; STATUS IRQ_PENDING is 1<<0; the prescaler maximum is 0xFF and reload maximum is 0x00FFFFFF. The header supplies timer0_read_status(const volatile timer0_registers_t *) plus timer0_write_control, timer0_write_prescaler, timer0_write_reload, and timer0_write_irq_clear, each taking a volatile timer pointer and uint32_t value. Use only these accessors; they provide the required volatile MMIO behavior and no extra barrier or exclusive access is required. Configuration and stop run in privileged thread mode with interrupts masked. Pending and acknowledge may run in the non-nested TIMER0 ISR; there is no DMA, cache, FPU, heap, RTOS, or mutable software state shared between calls. Implement bool timer0_configure_periodic(volatile timer0_registers_t *, uint32_t peripheral_clock_hz, uint32_t period_us), void timer0_stop(volatile timer0_registers_t *), bool timer0_irq_pending(const volatile timer0_registers_t *), and void timer0_acknowledge_irq(volatile timer0_registers_t *). A valid clock is an exact multiple of 1 MHz with divider 1 through 256; period_us is 1 through 16777216. Program prescaler=divider-1 and reload=period_us-1. Validate all arguments before writing, then write exactly: control=0, prescaler, reload, IRQ_PENDING to the write-one-to-clear irq_clear register, and control=ENABLE|PERIODIC|IRQ_ENABLE. Invalid configuration returns false with no MMIO writes. Stop writes only control=0. Null stop/acknowledge are no-ops and a null pending query returns false. Use no allocation, unbounded loop, or mutable global state. Return one fenced C implementation that includes fictional_timer.h and does not define main, followed by a concise explanation describing calculations, ordering, and tests. Keep the answer under 1400 words."
   },
@@ -36,6 +41,7 @@
     "id": "binary-parser",
     "category": "systems-security",
     "suite": "firmware",
+    "validationProfile": "c11-host",
     "targetProfile": "portable-c11",
     "prompt": "Implement the portable C11 API declared by binary_parser.h to parse an untrusted binary frame: magic bytes 0xA5 0x5A, version u8 (must be 1), payload_len little-endian u16, payload bytes, then a little-endian CRC over version+length+payload. The CRC is CRC-16/CCITT-FALSE: polynomial 0x1021, initial value 0xFFFF, no reflection, and xorout 0. The header defines FRAME_MAX_PAYLOAD as 1024, frame_payload_view_t as { const uint8_t *data; size_t length; }, and frame_parse_result_t frame_parse(const uint8_t *, size_t, frame_payload_view_t *). It also defines FRAME_PARSE_OK, FRAME_PARSE_NULL_ARGUMENT, FRAME_PARSE_TRUNCATED, FRAME_PARSE_BAD_MAGIC, FRAME_PARSE_UNSUPPORTED_VERSION, FRAME_PARSE_PAYLOAD_TOO_LARGE, FRAME_PARSE_LENGTH_OVERFLOW, FRAME_PARSE_TRAILING_DATA, and FRAME_PARSE_BAD_CRC. Clear the output view before returning any error when it is non-null. Validate in this order: null arguments, five-byte prefix availability, magic, version, maximum payload, overflow-safe exact total length (short is truncated; long is trailing data), then CRC. Input may be unaligned. Do not allocate or cast the byte buffer to a struct. Return one fenced C implementation that includes binary_parser.h and does not define main, followed by a concise explanation describing focused test cases. Keep the answer under 1400 words."
   },
@@ -43,42 +49,49 @@
     "id": "concurrency-debug",
     "category": "debugging",
     "suite": "auxiliary",
+    "validationProfile": "python3-stdlib",
     "prompt": "Review and repair this Python 3 worker pool:\n\nclass Pool:\n    def __init__(self, n):\n        self.q = queue.Queue()\n        self.stop = False\n        self.threads = [threading.Thread(target=self.worker) for _ in range(n)]\n        for t in self.threads: t.start()\n    def worker(self):\n        while not self.stop:\n            fn = self.q.get()\n            fn()\n            self.q.task_done()\n    def submit(self, fn): self.q.put(fn)\n    def shutdown(self):\n        self.stop = True\n        self.q.join()\n        for t in self.threads: t.join()\n\nRequirements: identify all shutdown/deadlock/task-accounting problems; implement a thread-safe pool with graceful shutdown that finishes accepted tasks; reject submissions once shutdown begins; survive task exceptions; make shutdown idempotent; define behavior for n <= 0 and shutdown called from a worker. Use only the standard library. Include tests for the critical races. Keep the answer under 1500 words."
   },
   {
     "id": "postgres-pagination",
     "category": "database",
     "suite": "auxiliary",
+    "validationProfile": "postgresql",
     "prompt": "A PostgreSQL endpoint runs: SELECT id, created_at, status, total FROM orders WHERE tenant_id=$1 AND status = ANY($2) ORDER BY created_at DESC, id DESC LIMIT 50 OFFSET $3. The table has 200M rows and OFFSET can exceed 1M. Replace this with stable keyset pagination while preserving ordering and tenant isolation. Handle equal timestamps, first/next page parameters, status filters, index design, and rows inserted between requests. Give SQL, API cursor contents/validation, indexes, and tradeoffs. Explain whether one index can efficiently serve arbitrary status arrays. Keep the answer under 1200 words."
   },
   {
     "id": "testing-property-based",
     "category": "testing",
     "suite": "auxiliary",
+    "validationProfile": "python3-pytest-hypothesis",
     "prompt": "Create a rigorous test strategy for a function normalize_path(path: str) -> str used for virtual POSIX paths. Contract: output is absolute; collapse repeated slashes and '.'; resolve '..' without escaping root; preserve ordinary Unicode code points exactly; reject NUL; idempotent; no filesystem access. Provide an executable Python pytest + Hypothesis test module, including a clear reference oracle that is independent enough to catch implementation mistakes, targeted examples, metamorphic properties, and shrinking-friendly generators. Do not implement normalize_path itself; import it from pathutil. Keep the answer under 1400 words."
   },
   {
     "id": "go-graceful-shutdown",
     "category": "backend-reliability",
     "suite": "auxiliary",
+    "validationProfile": "go-std",
     "prompt": "Implement a production-quality Go HTTP server shutdown path. The server accepts POST /jobs, validates a JSON body, and enqueues work into a bounded in-memory queue serviced by 4 workers. Requirements: return 503 once shutdown starts; never panic from send-on-closed-channel; finish accepted jobs during graceful shutdown; stop accepting HTTP requests; enforce a 10-second shutdown deadline; propagate SIGINT/SIGTERM; survive handler and worker errors; and define what happens when the queue is full. Use only the standard library. Include complete runnable code, explain shutdown ordering, and provide focused tests for the submit/shutdown race and deadline behavior. Keep the answer under 1600 words."
   },
   {
     "id": "rust-stream-decoder",
     "category": "systems",
     "suite": "auxiliary",
+    "validationProfile": "stable-rust",
     "prompt": "Implement an incremental binary frame decoder in stable Rust without external crates. Frames contain magic 0xCAFE (big-endian), payload length u32 big-endian, payload bytes, and a trailing XOR checksum over the payload. Input arrives in arbitrary chunks and may contain garbage before a valid frame. Requirements: cap payloads at 1 MiB; avoid panics and unbounded buffering; recover after bad magic, oversized lengths, bad checksums, and truncated chunks; emit zero or more owned frames per push; and preserve possible partial magic at chunk boundaries. Include idiomatic code, state the complexity and memory bounds, and provide focused unit tests. Keep the answer under 1500 words."
   },
   {
     "id": "typescript-singleflight-cache",
     "category": "concurrency",
     "suite": "auxiliary",
+    "validationProfile": "node-typescript",
     "prompt": "Implement a generic TypeScript async cache get(key, loader) with per-key request coalescing. Requirements: a successful value has a configurable TTL; at most one loader runs per key; callers may cancel their own wait with AbortSignal without cancelling the shared load needed by other callers; failures are not cached; synchronous loader throws are handled; invalidate(key) prevents an older in-flight load from repopulating the cache; clear() has the same guarantee for every key; and timers must not be created per entry. Do not use external packages. Include production-quality code, explain race handling, and provide deterministic tests using a fake clock. Keep the answer under 1600 words."
   },
   {
     "id": "webhook-replay-security",
     "category": "application-security",
     "suite": "auxiliary",
+    "validationProfile": "node-typescript-postgresql",
     "prompt": "Design and implement a TypeScript Express webhook endpoint backed by PostgreSQL. The sender provides X-Webhook-Id, X-Webhook-Timestamp, and X-Webhook-Signature, where the signature is HMAC-SHA256 over timestamp + '.' + the exact raw request bytes. Requirements: authenticate before JSON parsing; use constant-time signature comparison; reject timestamps outside a 5-minute window; prevent replay across multiple application instances; atomically persist the event and enqueue an outbox action; return the same success response for a duplicate valid delivery; reject reuse of an ID with different authenticated content; and support secret rotation. Assume express and pg are available. Include schema, middleware/transaction code, and key security tests and failure modes. Keep the answer under 1700 words."
   }
 ]

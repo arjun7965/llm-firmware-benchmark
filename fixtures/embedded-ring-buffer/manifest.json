@@ -1,7 +1,8 @@
 {
-  "schemaVersion": "1.2",
+  "schemaVersion": "1.3",
   "taskId": "embedded-ring-buffer",
   "targetProfile": "c11-lock-free-spsc",
+  "validationProfile": "c11-host",
   "status": "active",
   "language": "c11",
   "toolVersionArgs": {

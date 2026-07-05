@@ -12,6 +12,7 @@ import {
   targetProfileSet,
 } from "./target-profiles.mjs";
 import { requireSuite } from "./suites.mjs";
+import { requireValidationProfile } from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const taskFields = new Set([
@@ -20,6 +21,7 @@ const taskFields = new Set([
   "prompt",
   "suite",
   "targetProfile",
+  "validationProfile",
 ]);
 
 export function validateTasks(tasks) {
@@ -48,6 +50,10 @@ export function validateTasks(tasks) {
       throw new TypeError(`task ${task.id} must have a prompt`);
     }
     requireSuite(task.suite, `task ${task.id} suite`);
+    requireValidationProfile(
+      task.validationProfile,
+      `task ${task.id} validationProfile`,
+    );
     if (task.targetProfile !== undefined &&
         (typeof task.targetProfile !== "string" ||
          !targetProfileSet.has(task.targetProfile))) {
@@ -121,13 +127,16 @@ export function promptSha256(prompt) {
 
 export function hasSuccessfulResult(path, {
   expectedPromptSha256,
+  expectedValidationProfile,
 } = {}) {
   if (!existsSync(path)) return false;
   try {
     const result = JSON.parse(readFileSync(path, "utf8"));
     return result.exitCode === 0 &&
       (expectedPromptSha256 === undefined ||
-       result.promptSha256 === expectedPromptSha256);
+       result.promptSha256 === expectedPromptSha256) &&
+      (expectedValidationProfile === undefined ||
+       result.validationProfile === expectedValidationProfile);
   } catch {
     return false;
   }
@@ -169,6 +178,7 @@ export async function executeJob({
   const currentPromptSha256 = promptSha256(job.task.prompt);
   if (hasSuccessfulResult(path, {
     expectedPromptSha256: currentPromptSha256,
+    expectedValidationProfile: job.task.validationProfile,
   })) {
     return { status: "skipped", path };
   }
@@ -194,6 +204,7 @@ export async function executeJob({
     category: job.task.category,
     suite: job.task.suite,
     targetProfile: job.task.targetProfile ?? null,
+    validationProfile: job.task.validationProfile,
     provider: job.provider,
     modelName: job.modelName,
     modelId: job.modelId,

@@ -14,6 +14,7 @@ import {
   resultSuite,
 } from "./suites.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
+import { requireValidationProfile } from "./validation-profiles.mjs";
 
 export { extractAnswer } from "./answers.mjs";
 
@@ -165,12 +166,16 @@ export function toPublicResult(rawResult, source = JSON.stringify(rawResult)) {
 
   const answer = sanitizeText(extractAnswer(rawResult.stdout));
   const publicResult = {
-    schemaVersion: "1.2",
+    schemaVersion: "1.3",
     task: {
       id: requireString(rawResult.task, "task"),
       category: requireString(rawResult.category, "category"),
       suite: resultSuite(rawResult),
       targetProfile: rawResult.targetProfile ?? null,
+      validationProfile: requireValidationProfile(
+        rawResult.validationProfile,
+        "validationProfile",
+      ),
     },
     model: {
       id: requireString(rawResult.modelName, "modelName"),
@@ -206,12 +211,18 @@ export function validatePublicResult(result) {
     "task",
   ];
   requireExactKeys(result, topLevelKeys, "public result");
-  if (result.schemaVersion !== "1.2") {
+  if (result.schemaVersion !== "1.3") {
     throw new TypeError("unsupported public result schemaVersion");
   }
   requireExactKeys(
     result.task,
-    ["category", "id", "suite", "targetProfile"],
+    [
+      "category",
+      "id",
+      "suite",
+      "targetProfile",
+      "validationProfile",
+    ],
     "task",
   );
   requireExactKeys(result.model, ["id", "provider"], "model");
@@ -233,6 +244,10 @@ export function validatePublicResult(result) {
        !targetProfileSet.has(result.task.targetProfile))) {
     throw new TypeError("task.targetProfile is invalid");
   }
+  requireValidationProfile(
+    result.task.validationProfile,
+    "task.validationProfile",
+  );
   if (result.task.suite === "firmware" &&
       result.task.targetProfile === null) {
     throw new TypeError("firmware task requires a targetProfile");

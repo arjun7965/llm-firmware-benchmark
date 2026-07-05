@@ -37,9 +37,9 @@ firmware validation work.
   backward-compatible default for historical records.
 - [x] Add CLI suite filtering and report firmware and auxiliary scores
   separately without changing task IDs or historical score interpretation.
-- [ ] Add a `validationProfile` field for hosted runtime/toolchain assumptions;
+- [x] Add a `validationProfile` field for hosted runtime/toolchain assumptions;
   keep `targetProfile` for architecture, ABI, and hardware assumptions.
-- [ ] Define hosted profiles such as `stable-rust`, `python3-stdlib`,
+- [ ] Pin hosted profiles such as `stable-rust`, `python3-stdlib`,
   `node-typescript`, and `go-std`, including tool versions, dependencies,
   resource limits, and sandbox requirements.
 - [x] Make scoring-profile selection explicit so hosted auxiliary tasks never

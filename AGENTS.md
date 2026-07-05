@@ -2,17 +2,18 @@
 
 ## Project Structure & Module Organization
 
-- `tasks.json` defines task IDs, suites, categories, and prompts;
+- `tasks.json` defines task IDs, suites, profiles, and prompts;
   `models.example.json` documents model configuration.
 - `src/` contains harness modules and providers.
 - `test/` contains `node:test` coverage, including isolated provider tests.
 - `docs/` contains rubrics, dependencies, and embedded plans; `schemas/`
   defines JSON contracts.
 - `fixtures/<task-id>/` contains manifests and task assets.
-- Top-level scripts manage ignored records in `results/`.
+- Scripts manage ignored records in `results/`.
 
 Outputs follow `<task-id>--<model-name>.json`; task IDs use lowercase
-hyphenated words. Embedded and firmware tasks require `targetProfile`.
+hyphenated words. `validationProfile` is required; firmware tasks require
+`targetProfile`.
 
 ## Build, Test, and Development Commands
 

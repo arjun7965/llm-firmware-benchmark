@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTasks } from "../src/harness.mjs";
 import { targetProfileIds } from "../src/target-profiles.mjs";
+import { validationProfileIds } from "../src/validation-profiles.mjs";
 import {
   loadScores,
   scoreModelIds,
@@ -111,6 +112,11 @@ test("JSON Schema files declare the expected contracts", () => {
     taskSchema.items.properties.targetProfile.enum,
     targetProfileIds,
   );
+  assert.ok(taskSchema.items.required.includes("validationProfile"));
+  assert.deepEqual(
+    taskSchema.items.properties.validationProfile.enum,
+    validationProfileIds,
+  );
   assert.deepEqual(
     taskSchema.items.allOf[0].then.required,
     ["targetProfile"],
@@ -129,7 +135,11 @@ test("JSON Schema files declare the expected contracts", () => {
     publicResultSchema.properties.task.properties.targetProfile.enum,
     [null, ...targetProfileIds],
   );
-  assert.equal(publicResultSchema.properties.schemaVersion.const, "1.2");
+  assert.deepEqual(
+    publicResultSchema.properties.task.properties.validationProfile.enum,
+    validationProfileIds,
+  );
+  assert.equal(publicResultSchema.properties.schemaVersion.const, "1.3");
   assert.deepEqual(
     publicResultSchema.properties.task.properties.suite.enum,
     ["firmware", "auxiliary"],
@@ -143,7 +153,11 @@ test("JSON Schema files declare the expected contracts", () => {
     fixtureSchema.properties.targetProfile.enum,
     [null, ...targetProfileIds],
   );
-  assert.equal(fixtureSchema.properties.schemaVersion.const, "1.2");
+  assert.deepEqual(
+    fixtureSchema.properties.validationProfile.enum,
+    validationProfileIds,
+  );
+  assert.equal(fixtureSchema.properties.schemaVersion.const, "1.3");
   assert.equal(
     fixtureSchema.properties.toolVersionArgs.additionalProperties.minItems,
     1,
@@ -177,9 +191,13 @@ test("JSON Schema files declare the expected contracts", () => {
     fixtureValidationSchema.properties.targetProfile.enum,
     [null, ...targetProfileIds],
   );
+  assert.deepEqual(
+    fixtureValidationSchema.properties.validationProfile.enum,
+    validationProfileIds,
+  );
   assert.equal(
     fixtureValidationSchema.properties.schemaVersion.const,
-    "1.2",
+    "1.3",
   );
   assert.deepEqual(
     fixtureValidationSchema.properties.suite.enum,

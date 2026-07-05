@@ -17,7 +17,8 @@ The exporter:
 - extracts answer text from supported provider envelopes;
 - omits raw model paths, provider options, stderr, errors, usage, cost, UUIDs,
   session IDs, and tool metadata;
-- retains the task's suite and public target-profile identifier when available;
+- retains the task's suite, validation profile, and public target-profile
+  identifier when available;
 - redacts recognized credentials, private keys, home-directory usernames, and
   identifiers inside answer text;
 - validates each output against the public result contract; and
@@ -32,11 +33,14 @@ Raw records created before target profiles were introduced export with
 `task.targetProfile: null`. Do not infer a current profile for historical
 records; rerun the task if profile-bearing provenance is required.
 
+Raw records without `validationProfile` cannot be exported under the v1.3
+contract. Rerun them to establish hosted-environment provenance.
+
 Raw records created before suite metadata was introduced infer `firmware` only
 when their recorded target profile is non-null; all others infer `auxiliary`.
 New raw records store the suite explicitly.
 
-The canonical public-result schema and all new exports use v1.2.
+The canonical public-result schema and all new exports use v1.3.
 
 ## Review Checklist
 

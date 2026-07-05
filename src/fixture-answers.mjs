@@ -269,7 +269,8 @@ export function extractFixtureAnswer({
   if (
     result.category !== task.category ||
     resultSuite(result) !== task.suite ||
-    result.targetProfile !== (task.targetProfile ?? null)
+    result.targetProfile !== (task.targetProfile ?? null) ||
+    result.validationProfile !== task.validationProfile
   ) {
     throw new TypeError("result task metadata does not match tasks.json");
   }

@@ -26,6 +26,7 @@ function rawResult(stdout) {
     category: "testing",
     suite: "firmware",
     targetProfile: "portable-c11",
+    validationProfile: "c11-host",
     provider: "ncode",
     modelName: "example-model",
     modelId: "/private/models/example-model",
@@ -97,10 +98,11 @@ test("public result allowlists fields and extracts NCode answer text", () => {
   const result = toPublicResult(raw);
   const serialized = JSON.stringify(result);
 
-  assert.equal(result.schemaVersion, "1.2");
+  assert.equal(result.schemaVersion, "1.3");
   assert.equal(result.answer, "A legitimate answer.");
   assert.equal(result.task.suite, "firmware");
   assert.equal(result.task.targetProfile, "portable-c11");
+  assert.equal(result.task.validationProfile, "c11-host");
   assert.equal(result.publication.reviewRequired, false);
   assert.equal(serialized.includes(uuid), false);
   assert.equal(serialized.includes("modelId"), false);
@@ -170,7 +172,7 @@ test("public result validation rejects extra fields", () => {
   const result = toPublicResult(rawResult("Safe answer."));
 
   assert.throws(
-    () => validatePublicResult({ ...result, schemaVersion: "1.1" }),
+    () => validatePublicResult({ ...result, schemaVersion: "1.2" }),
     /schemaVersion/,
   );
   assert.throws(
@@ -212,6 +214,16 @@ test("public result validation rejects extra fields", () => {
       ...result,
       task: {
         ...result.task,
+        validationProfile: "unknown-profile",
+      },
+    }),
+    /validationProfile/,
+  );
+  assert.throws(
+    () => validatePublicResult({
+      ...result,
+      task: {
+        ...result.task,
         suite: "unknown",
       },
     }),
@@ -240,7 +252,16 @@ test("legacy results infer suite metadata and export safely", () => {
   assert.equal(result.model.provider, "unknown");
   assert.equal(result.task.suite, "auxiliary");
   assert.equal(result.task.targetProfile, null);
+  assert.equal(result.task.validationProfile, "c11-host");
   assert.equal(result.answer, "Legacy answer.");
+
+  assert.throws(
+    () => toPublicResult({
+      ...raw,
+      validationProfile: undefined,
+    }),
+    /validationProfile/,
+  );
 
   const profileBackedRaw = rawResult("Legacy firmware answer.");
   delete profileBackedRaw.suite;

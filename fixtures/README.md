@@ -14,15 +14,17 @@ generated/     # Extracted model code; ignored
 build/         # Compiler and test output; ignored
 ```
 
-`manifest.json` follows `schemas/fixture-manifest.schema.json`. Commands and
+`manifest.json` follows `schemas/fixture-manifest.schema.json` and its
+`validationProfile` and `targetProfile` must match `tasks.json`. Commands and
 per-tool `toolVersionArgs` are stored as argv arrays and must be executed
 without a shell. Version arguments must cover exactly the tools named by
 `requiredTools`; for example, use `["--version"]` for `cc` and `["version"]`
 for Go. A `scaffold` manifest defines an incomplete interface. An `active`
 manifest has verified extraction, compile, and test commands.
 
-Fixture manifests, mutation catalogs, validation reports, and public result
-records use schema version 1.2.
+Fixture manifests, validation reports, and public result records use schema
+version 1.3. Mutation catalogs remain at version 1.2 because their contract did
+not change.
 
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture

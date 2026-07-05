@@ -7,6 +7,7 @@ import {
 import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadTasks } from "./harness.mjs";
+import { requireValidationProfile } from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const identifierPattern = /^[a-z][a-z0-9-]*$/;
@@ -32,6 +33,7 @@ const manifestFields = [
   "targetProfile",
   "taskId",
   "toolVersionArgs",
+  "validationProfile",
 ];
 const answerFields = ["format", "language", "output"];
 const pathFields = [
@@ -99,7 +101,7 @@ function requireSafeRelativePath(value, name) {
 export function validateFixtureManifest(manifest, task) {
   requireExactFields(manifest, manifestFields, "fixture manifest");
   requireObject(task, "fixture task");
-  if (manifest.schemaVersion !== "1.2") {
+  if (manifest.schemaVersion !== "1.3") {
     throw new TypeError("unsupported fixture schemaVersion");
   }
   requireString(manifest.taskId, "fixture taskId", taskIdPattern);
@@ -111,6 +113,15 @@ export function validateFixtureManifest(manifest, task) {
   if (manifest.targetProfile !== (task.targetProfile ?? null)) {
     throw new TypeError(
       `fixture ${task.id} targetProfile does not match tasks.json`,
+    );
+  }
+  requireValidationProfile(
+    manifest.validationProfile,
+    `fixture ${task.id} validationProfile`,
+  );
+  if (manifest.validationProfile !== task.validationProfile) {
+    throw new TypeError(
+      `fixture ${task.id} validationProfile does not match tasks.json`,
     );
   }
   if (!fixtureStatuses.has(manifest.status)) {

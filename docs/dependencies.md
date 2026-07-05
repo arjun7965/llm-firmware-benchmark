@@ -11,7 +11,8 @@ tests, exports, and summaries requires:
 
 Task-language toolchains are not required when the harness only collects model
 responses. They are required when an evaluator compiles or executes generated
-code.
+code. Each task references a reusable hosted runtime contract from
+`docs/validation-profiles.md`.
 
 ## Optional Task Validation
 
@@ -43,9 +44,9 @@ harness solely to score one task.
 Embedded task toolchains and runtime assumptions are defined separately in
 `docs/embedded/target-assumptions.md`.
 
-Fixture manifests declare required tools and commands. `npm run fixtures:check`
-validates those declarations but does not install tools or execute generated
-code.
+Fixture manifests declare a matching validation profile, required tools, and
+commands. `npm run fixtures:check` validates those declarations but does not
+install tools or execute generated code.
 
 Sandboxed model-answer validation is Linux-only and additionally requires:
 

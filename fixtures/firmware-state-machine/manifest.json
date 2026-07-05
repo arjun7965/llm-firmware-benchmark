@@ -1,7 +1,8 @@
 {
-  "schemaVersion": "1.2",
+  "schemaVersion": "1.3",
   "taskId": "firmware-state-machine",
   "targetProfile": "c11-mocked-hal",
+  "validationProfile": "c11-host",
   "status": "active",
   "language": "c11",
   "toolVersionArgs": {

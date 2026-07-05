@@ -23,12 +23,14 @@ const tasks = [
     id: "task-one",
     category: "test",
     suite: "auxiliary",
+    validationProfile: "python3-stdlib",
     prompt: "First prompt",
   },
   {
     id: "task-two",
     category: "test",
     suite: "auxiliary",
+    validationProfile: "python3-stdlib",
     prompt: "Second prompt",
   },
 ];
@@ -88,6 +90,9 @@ test("successful results are reusable while failures and malformed files are not
   assert.equal(hasSuccessfulResult(success, {
     expectedPromptSha256: "different",
   }), false);
+  assert.equal(hasSuccessfulResult(success, {
+    expectedValidationProfile: "python3-stdlib",
+  }), false);
   assert.equal(hasSuccessfulResult(failure), false);
   assert.equal(hasSuccessfulResult(malformed), false);
   assert.equal(hasSuccessfulResult(join(root, "missing.json")), false);
@@ -116,6 +121,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
     {
       ...tasks[0],
       suite: "firmware",
+      validationProfile: "c11-host",
       targetProfile: "portable-c11",
     },
   ], [models[0]]);
@@ -147,6 +153,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
   assert.equal(persisted.task, "task-one");
   assert.equal(persisted.suite, "firmware");
   assert.equal(persisted.targetProfile, "portable-c11");
+  assert.equal(persisted.validationProfile, "c11-host");
   assert.equal(persisted.provider, "fake");
   assert.equal(persisted.modelName, "alpha");
   assert.equal(persisted.promptSha256, promptSha256(job.task.prompt));
@@ -161,6 +168,7 @@ test("executeJob skips an existing successful result without generating", async 
   writeFileSync(path, JSON.stringify({
     exitCode: 0,
     promptSha256: promptSha256(job.task.prompt),
+    validationProfile: job.task.validationProfile,
   }));
 
   const result = await executeJob({
@@ -176,6 +184,7 @@ test("executeJob skips an existing successful result without generating", async 
   writeFileSync(path, JSON.stringify({
     exitCode: 0,
     promptSha256: "0".repeat(64),
+    validationProfile: job.task.validationProfile,
   }));
   const refreshed = await executeJob({
     job,

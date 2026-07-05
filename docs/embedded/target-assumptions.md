@@ -23,6 +23,8 @@ text overrides a profile, but every override must be explicit.
 `targetProfile` is metadata consumed by validation and result reporting.
 Provider adapters send only the task's `prompt`, so any assumption the model
 must know also belongs in the prompt; profiles do not create hidden context.
+Hosted runtime and toolchain assumptions use `validationProfile`; see
+`docs/validation-profiles.md`.
 
 ## Current Profiles
 
