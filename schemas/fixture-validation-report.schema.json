@@ -39,6 +39,8 @@
     "suite",
     "targetProfile",
     "validationProfile",
+    "validationProfileRevision",
+    "validationProfileSha256",
     "fixtureStatus",
     "language",
     "startedAt",
@@ -50,7 +52,7 @@
     "success"
   ],
   "properties": {
-    "schemaVersion": { "const": "1.3" },
+    "schemaVersion": { "const": "1.4" },
     "taskId": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
@@ -88,6 +90,14 @@
         "stable-rust"
       ]
     },
+    "validationProfileRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "validationProfileSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
     "fixtureStatus": {
       "enum": ["active", "scaffold"]
     },
@@ -108,12 +118,26 @@
       "additionalProperties": false,
       "required": [
         "runtime",
+        "runtimeVersion",
+        "limiter",
+        "limiterVersion",
         "network",
         "filesystem",
         "resourceLimits"
       ],
       "properties": {
         "runtime": { "const": "bubblewrap" },
+        "runtimeVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "limiter": { "const": "prlimit" },
+        "limiterVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
         "network": { "const": "none" },
         "filesystem": { "const": "isolated" },
         "resourceLimits": {

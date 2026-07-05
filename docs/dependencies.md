@@ -11,8 +11,8 @@ tests, exports, and summaries requires:
 
 Task-language toolchains are not required when the harness only collects model
 responses. They are required when an evaluator compiles or executes generated
-code. Each task references a reusable hosted runtime contract from
-`docs/validation-profiles.md`.
+code. Each task references a pinned hosted runtime contract from
+`validation-profiles.json`; see `docs/validation-profiles.md`.
 
 ## Optional Task Validation
 
@@ -32,10 +32,11 @@ code. Each task references a reusable hosted runtime contract from
 | `typescript-singleflight-cache` | Node.js and the TypeScript compiler |
 | `webhook-replay-security` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
 
-These tools are optional because automated answer extraction and compilation are
-not yet part of the harness. When validation is performed, record tool versions,
-compile flags, package versions, and commands. Use the same environment for all
-models in a comparison.
+These tools are optional because automated answer extraction and compilation
+are not yet part of the harness. The profile registry fixes tool versions,
+package versions, sandbox policy, and resource limits. Validation reports
+record resolved versions, compile flags, and commands. Use the same profile
+revision for all models in a comparison.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free

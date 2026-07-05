@@ -100,6 +100,15 @@ test("JSON Schema files declare the expected contracts", () => {
       "utf8",
     ),
   );
+  const validationProfilesSchema = JSON.parse(
+    readFileSync(
+      new URL(
+        "../schemas/validation-profiles.schema.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
 
   assert.equal(taskSchema.$schema, "https://json-schema.org/draft/2020-12/schema");
   assert.equal(taskSchema.items.additionalProperties, false);
@@ -197,7 +206,15 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(
     fixtureValidationSchema.properties.schemaVersion.const,
-    "1.3",
+    "1.4",
+  );
+  assert.equal(
+    fixtureValidationSchema.properties.validationProfileRevision.minimum,
+    1,
+  );
+  assert.equal(
+    fixtureValidationSchema.properties.validationProfileSha256.pattern,
+    "^[a-f0-9]{64}$",
   );
   assert.deepEqual(
     fixtureValidationSchema.properties.suite.enum,
@@ -220,4 +237,19 @@ test("JSON Schema files declare the expected contracts", () => {
     ["error", "failed", "passed", "timed-out"],
   );
   assert.equal(fixtureValidationSchema.additionalProperties, false);
+  assert.equal(
+    validationProfilesSchema.properties.schemaVersion.const,
+    "1.0",
+  );
+  assert.equal(validationProfilesSchema.additionalProperties, false);
+  assert.equal(
+    validationProfilesSchema.properties.profiles.items
+      .properties.host.properties.release.const,
+    "24.04",
+  );
+  assert.equal(
+    validationProfilesSchema.$defs.sandbox
+      .properties.network.const,
+    "none",
+  );
 });

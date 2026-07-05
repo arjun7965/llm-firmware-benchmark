@@ -1,0 +1,523 @@
+{
+  "schemaVersion": "1.0",
+  "profiles": [
+    {
+      "id": "c11-host",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "cc",
+          "version": "13.3.0",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 15,
+            "fileBytes": 16777216,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 134217728,
+            "cpuSeconds": 3,
+            "fileBytes": 1048576,
+            "openFiles": 32
+          }
+        }
+      }
+    },
+    {
+      "id": "go-std",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "go",
+          "version": "1.24.4",
+          "versionArgs": ["version"]
+        }
+      ],
+      "dependencies": [],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      }
+    },
+    {
+      "id": "node-typescript",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "node",
+          "version": "22.16.0",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "tsc",
+          "version": "5.8.3",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        }
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 30,
+            "fileBytes": 33554432,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      }
+    },
+    {
+      "id": "node-typescript-postgresql",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "node",
+          "version": "22.16.0",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "postgres",
+          "version": "16.9",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "psql",
+          "version": "16.9",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "tsc",
+          "version": "5.8.3",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@types/express",
+          "version": "5.0.2"
+        },
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "@types/pg",
+          "version": "8.15.4"
+        },
+        {
+          "source": "npm",
+          "name": "express",
+          "version": "5.1.0"
+        },
+        {
+          "source": "npm",
+          "name": "pg",
+          "version": "8.16.0"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        }
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 67108864,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 60,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          }
+        }
+      }
+    },
+    {
+      "id": "postgresql",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "postgres",
+          "version": "16.9",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "psql",
+          "version": "16.9",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 67108864,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 30,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          }
+        }
+      }
+    },
+    {
+      "id": "python3-pytest-hypothesis",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "pytest",
+          "version": "8.4.0",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "python3",
+          "version": "3.12.11",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [
+        {
+          "source": "pypi",
+          "name": "hypothesis",
+          "version": "6.135.9"
+        },
+        {
+          "source": "pypi",
+          "name": "pytest",
+          "version": "8.4.0"
+        }
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 15,
+            "fileBytes": 16777216,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 20,
+            "fileBytes": 16777216,
+            "openFiles": 128
+          }
+        }
+      }
+    },
+    {
+      "id": "python3-stdlib",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "python3",
+          "version": "3.12.11",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      }
+    },
+    {
+      "id": "react18-typescript",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "node",
+          "version": "22.16.0",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "tsc",
+          "version": "5.8.3",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@testing-library/dom",
+          "version": "10.4.0"
+        },
+        {
+          "source": "npm",
+          "name": "@testing-library/react",
+          "version": "16.3.0"
+        },
+        {
+          "source": "npm",
+          "name": "@testing-library/user-event",
+          "version": "14.6.1"
+        },
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "@types/react",
+          "version": "18.3.23"
+        },
+        {
+          "source": "npm",
+          "name": "@types/react-dom",
+          "version": "18.3.7"
+        },
+        {
+          "source": "npm",
+          "name": "jsdom",
+          "version": "26.1.0"
+        },
+        {
+          "source": "npm",
+          "name": "react",
+          "version": "18.3.1"
+        },
+        {
+          "source": "npm",
+          "name": "react-dom",
+          "version": "18.3.1"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        },
+        {
+          "source": "npm",
+          "name": "vitest",
+          "version": "3.2.1"
+        }
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 33554432,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 60,
+            "fileBytes": 67108864,
+            "openFiles": 256
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 33554432,
+            "openFiles": 256
+          }
+        }
+      }
+    },
+    {
+      "id": "stable-rust",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "toolchains": [
+        {
+          "name": "cargo",
+          "version": "1.87.0",
+          "versionArgs": ["--version"]
+        },
+        {
+          "name": "rustc",
+          "version": "1.87.0",
+          "versionArgs": ["--version"]
+        }
+      ],
+      "dependencies": [],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "runtimeVersion": "0.9.0",
+        "limiter": "prlimit",
+        "limiterVersion": "2.39.3",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 60,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      }
+    }
+  ]
+}

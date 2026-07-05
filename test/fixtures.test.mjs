@@ -57,6 +57,26 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
+      validationProfile: "node-typescript",
+    }, {
+      ...task,
+      validationProfile: "node-typescript",
+    }),
+    /must remain a scaffold.*dependencies are unverifiable/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      validationProfile: "python3-stdlib",
+    }, {
+      ...task,
+      validationProfile: "python3-stdlib",
+    }),
+    /must remain a scaffold.*unavailable test runtime/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
       paths: {
         ...manifest.paths,
         starter: "../outside",
@@ -95,7 +115,10 @@ test("fixture commands cannot invoke a shell", () => {
     ],
   };
 
-  assert.equal(validateFixtureManifest(goManifest, task), goManifest);
+  assert.throws(
+    () => validateFixtureManifest(goManifest, task),
+    /tool go is not in its validation profile/u,
+  );
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
@@ -122,7 +145,7 @@ test("fixture commands cannot invoke a shell", () => {
         go: ["version"],
       },
     }, task),
-    /must cover requiredTools exactly/u,
+    /tool go is not in its validation profile/u,
   );
   assert.throws(
     () => validateFixtureManifest({

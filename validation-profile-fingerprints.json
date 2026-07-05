@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "profiles": {
+    "c11-host": {
+      "1": "7a33e3e653f7f16869cfc2f1cfed032062eb18e725a715a3cc90c7e7b8b78d83"
+    },
+    "go-std": {
+      "1": "95243b4f7888708ede743d6578eee833055b38d5556cf096f39f4abd6bfd99bf"
+    },
+    "node-typescript": {
+      "1": "2c7d22458c5a5b90369237b3875cac9bd97c5886f8ac720521fadc86410274f1"
+    },
+    "node-typescript-postgresql": {
+      "1": "57e91a3f981e9fc00b018343d672a032520580ded9d6c143b5e0cb5ed3f65b7b"
+    },
+    "postgresql": {
+      "1": "b119b04ef8173f2671dbe26126fe590737597734c88333c5ea7e9cafe03379ac"
+    },
+    "python3-pytest-hypothesis": {
+      "1": "374dcbf18d79fca3623a8ce4c22f2aec4b475632ee798df92d031370a1ba5a75"
+    },
+    "python3-stdlib": {
+      "1": "44780975a921637636a5545d4e8b76f7da9e56264beaa078ed2192a7a1c2b9b2"
+    },
+    "react18-typescript": {
+      "1": "aed1489d9e1d8211b47742ce8e6a24f905633d0a952ec110da81e71862942225"
+    },
+    "stable-rust": {
+      "1": "1de183a0892100343bddd9961868b765d231dac8f5fe279e64a59a8d33666ce1"
+    }
+  }
+}

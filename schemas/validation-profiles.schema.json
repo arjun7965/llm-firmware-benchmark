@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arjun7965/llm-firmware-benchmark/schemas/validation-profiles.schema.json",
+  "title": "Hosted validation profile registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "profiles"],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "revision",
+          "host",
+          "toolchains",
+          "dependencies",
+          "sandbox"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "host": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["operatingSystem", "release", "architecture"],
+            "properties": {
+              "operatingSystem": { "const": "ubuntu" },
+              "release": { "const": "24.04" },
+              "architecture": { "const": "x86_64" }
+            }
+          },
+          "toolchains": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/toolchain" }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/dependency" }
+          },
+          "sandbox": { "$ref": "#/$defs/sandbox" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(?:\\.\\d+)?(?:[-+][A-Za-z0-9.-]+)?$"
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "versionArgs"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9+._-]*$"
+        },
+        "version": { "$ref": "#/$defs/version" },
+        "versionArgs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "name", "version"],
+      "properties": {
+        "source": {
+          "enum": ["npm", "pypi"]
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]*$"
+        },
+        "version": { "$ref": "#/$defs/version" }
+      }
+    },
+    "sandbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime",
+        "runtimeVersion",
+        "limiter",
+        "limiterVersion",
+        "network",
+        "filesystem",
+        "rootTmpfsBytes",
+        "temporaryDirectoryBytes",
+        "resourceLimits"
+      ],
+      "properties": {
+        "runtime": { "const": "bubblewrap" },
+        "runtimeVersion": { "$ref": "#/$defs/version" },
+        "limiter": { "const": "prlimit" },
+        "limiterVersion": { "$ref": "#/$defs/version" },
+        "network": { "const": "none" },
+        "filesystem": { "const": "isolated" },
+        "rootTmpfsBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "temporaryDirectoryBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "resourceLimits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["compile", "test"],
+          "properties": {
+            "compile": { "$ref": "#/$defs/resourceLimits" },
+            "test": { "$ref": "#/$defs/resourceLimits" }
+          }
+        }
+      }
+    },
+    "resourceLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "addressSpaceBytes",
+        "cpuSeconds",
+        "fileBytes",
+        "openFiles"
+      ],
+      "properties": {
+        "addressSpaceBytes": { "type": "integer", "minimum": 1 },
+        "cpuSeconds": { "type": "integer", "minimum": 1 },
+        "fileBytes": { "type": "integer", "minimum": 1 },
+        "openFiles": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

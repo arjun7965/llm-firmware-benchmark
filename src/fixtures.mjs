@@ -7,7 +7,11 @@ import {
 import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadTasks } from "./harness.mjs";
-import { requireValidationProfile } from "./validation-profiles.mjs";
+import {
+  getValidationProfile,
+  requireValidationProfile,
+  sandboxProfileBlockReason,
+} from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const identifierPattern = /^[a-z][a-z0-9-]*$/;
@@ -124,8 +128,18 @@ export function validateFixtureManifest(manifest, task) {
       `fixture ${task.id} validationProfile does not match tasks.json`,
     );
   }
+  const validationProfile = getValidationProfile(
+    manifest.validationProfile,
+  );
   if (!fixtureStatuses.has(manifest.status)) {
     throw new TypeError(`fixture ${task.id} has an invalid status`);
+  }
+  const sandboxBlockReason = sandboxProfileBlockReason(validationProfile);
+  if (manifest.status === "active" && sandboxBlockReason) {
+    throw new TypeError(
+      `fixture ${task.id} must remain a scaffold while ` +
+      sandboxBlockReason,
+    );
   }
   requireString(manifest.language, "fixture language", languagePattern);
 
@@ -159,6 +173,12 @@ export function validateFixtureManifest(manifest, task) {
   }
 
   requireObject(manifest.toolVersionArgs, "fixture toolVersionArgs");
+  const profileToolchains = new Map(
+    validationProfile.toolchains.map((toolchain) => [
+      toolchain.name,
+      toolchain,
+    ]),
+  );
   const configuredTools = new Set();
   for (const [tool, args] of Object.entries(manifest.toolVersionArgs)) {
     if (
@@ -172,6 +192,22 @@ export function validateFixtureManifest(manifest, task) {
     ) {
       throw new TypeError(
         `fixture ${task.id} toolVersionArgs is invalid`,
+      );
+    }
+    const profileToolchain = profileToolchains.get(tool);
+    if (!profileToolchain) {
+      throw new TypeError(
+        `fixture ${task.id} tool ${tool} is not in its validation profile`,
+      );
+    }
+    if (
+      args.length !== profileToolchain.versionArgs.length ||
+      args.some((argument, index) =>
+        argument !== profileToolchain.versionArgs[index])
+    ) {
+      throw new TypeError(
+        `fixture ${task.id} tool ${tool} versionArgs do not match its ` +
+        "validation profile",
       );
     }
     configuredTools.add(tool);

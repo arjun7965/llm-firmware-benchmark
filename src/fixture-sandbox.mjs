@@ -31,29 +31,25 @@ import { validateFixtureManifest } from "./fixtures.mjs";
 import { loadTasks } from "./harness.mjs";
 import { requireSuite } from "./suites.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
-import { requireValidationProfile } from "./validation-profiles.mjs";
+import {
+  getValidationProfile,
+  getValidationProfileRevision,
+  profileFingerprint,
+  requireValidationProfile,
+  sandboxProfileBlockReason,
+} from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const maximumOutputBytes = 1024 * 1024;
 const sandboxRoot = "/workspace";
-const rootTmpfsBytes = 32 * 1024 * 1024;
-const temporaryDirectoryBytes = 16 * 1024 * 1024;
 const versionProbeTimeoutMs = 5_000;
-
-export const sandboxResourceLimits = Object.freeze({
-  compile: Object.freeze({
-    addressSpaceBytes: 512 * 1024 * 1024,
-    cpuSeconds: 15,
-    fileBytes: 16 * 1024 * 1024,
-    openFiles: 64,
-  }),
-  test: Object.freeze({
-    addressSpaceBytes: 128 * 1024 * 1024,
-    cpuSeconds: 3,
-    fileBytes: 1024 * 1024,
-    openFiles: 32,
-  }),
+const architectureNames = Object.freeze({
+  arm64: "aarch64",
+  x64: "x86_64",
 });
+
+export const sandboxResourceLimits =
+  getValidationProfile("c11-host").sandbox.resourceLimits;
 
 function asPath(value) {
   return value instanceof URL ? fileURLToPath(value) : value;
@@ -90,6 +86,100 @@ function requirePositiveInteger(value, name) {
 function requireNonnegativeInteger(value, name) {
   if (!Number.isSafeInteger(value) || value < 0) {
     throw new TypeError(`${name} must be a nonnegative safe integer`);
+  }
+}
+
+function decodeOsReleaseValue(value, name) {
+  if (value === "") return "";
+  const quote = value[0];
+  if (quote !== "\"" && quote !== "'") {
+    if (/\s/u.test(value)) {
+      throw new TypeError(`${name} contains unquoted whitespace`);
+    }
+    return value;
+  }
+  if (value.length < 2 || value.at(-1) !== quote) {
+    throw new TypeError(`${name} has an unterminated quote`);
+  }
+  const decoded = value.slice(1, -1);
+  return quote === "\""
+    ? decoded.replace(/\\(["\\$`])/gu, "$1")
+    : decoded;
+}
+
+export function parseOsRelease(contents) {
+  if (typeof contents !== "string" || contents.includes("\0")) {
+    throw new TypeError("os-release contents are invalid");
+  }
+  const values = new Map();
+  for (const rawLine of contents.split(/\r?\n/u)) {
+    const line = rawLine.trim();
+    if (line === "" || line.startsWith("#")) continue;
+    const match = /^([A-Z][A-Z0-9_]*)=(.*)$/u.exec(line);
+    if (!match) throw new TypeError("os-release contains an invalid line");
+    const [, key, rawValue] = match;
+    if (values.has(key)) {
+      throw new TypeError(`os-release contains duplicate ${key}`);
+    }
+    values.set(key, decodeOsReleaseValue(
+      rawValue,
+      `os-release ${key}`,
+    ));
+  }
+  return values;
+}
+
+export function readValidationHost({
+  architecture = process.arch,
+  osReleasePath = "/etc/os-release",
+} = {}) {
+  const osRelease = parseOsRelease(readFileSync(osReleasePath, "utf8"));
+  const operatingSystem = osRelease.get("ID");
+  const release = osRelease.get("VERSION_ID");
+  const normalizedArchitecture = architectureNames[architecture] ??
+    architecture;
+  if (
+    typeof operatingSystem !== "string" ||
+    !/^[a-z0-9._-]+$/u.test(operatingSystem) ||
+    typeof release !== "string" ||
+    !/^[A-Za-z0-9._-]+$/u.test(release) ||
+    typeof normalizedArchitecture !== "string" ||
+    !/^[A-Za-z0-9._-]+$/u.test(normalizedArchitecture)
+  ) {
+    throw new TypeError("validation host metadata is invalid");
+  }
+  return {
+    operatingSystem,
+    release,
+    architecture: normalizedArchitecture,
+  };
+}
+
+function requireMatchingValidationHost(actual, expected) {
+  requireExactKeys(
+    actual,
+    ["architecture", "operatingSystem", "release"],
+    "validation host",
+  );
+  for (const field of ["operatingSystem", "release", "architecture"]) {
+    if (actual[field] !== expected[field]) {
+      throw new TypeError(
+        `validation host does not match profile: expected ` +
+        `${expected.operatingSystem} ${expected.release} ` +
+        `${expected.architecture}`,
+      );
+    }
+  }
+  return actual;
+}
+
+function requireRunnableProfile(profile) {
+  const blockReason = sandboxProfileBlockReason(profile);
+  if (blockReason) {
+    throw new TypeError(
+      `validation profile ${profile.id}@${profile.revision} cannot run: ` +
+      blockReason,
+    );
   }
 }
 
@@ -169,7 +259,24 @@ export function resolveExecutable(name, {
   throw new TypeError(`required executable not found: ${name}`);
 }
 
-function inspectToolchain(name, executable, versionArgs, spawnTool) {
+function versionMatches(version, expectedVersion) {
+  const escapedVersion = expectedVersion.replace(
+    /[.*+?^${}()|[\]\\]/gu,
+    "\\$&",
+  );
+  return new RegExp(
+    `(?:^|[^0-9.])${escapedVersion}(?![0-9A-Za-z._+~-])`,
+    "u",
+  ).test(version);
+}
+
+function inspectToolchain(
+  name,
+  executable,
+  versionArgs,
+  expectedVersion,
+  spawnTool,
+) {
   const result = spawnTool(executable, versionArgs, {
     encoding: "utf8",
     env: {
@@ -195,6 +302,12 @@ function inspectToolchain(name, executable, versionArgs, spawnTool) {
     .find((line) => line !== "");
   if (!version || version.length > 1024 || version.includes("\0")) {
     throw new TypeError(`${name} returned an invalid version`);
+  }
+  if (!versionMatches(version, expectedVersion)) {
+    throw new TypeError(
+      `${name} version does not match validation profile ` +
+      `(${expectedVersion} required)`,
+    );
   }
   return {
     name,
@@ -254,7 +367,8 @@ export function buildSandboxInvocation({
   if (!["compile", "test"].includes(command.phase)) {
     throw new TypeError(`unsupported sandbox phase: ${command.phase}`);
   }
-  const limits = sandboxResourceLimits[command.phase];
+  const sandbox = getValidationProfile(manifest.validationProfile).sandbox;
+  const limits = sandbox.resourceLimits[command.phase];
   const sandboxArgs = [
     "--unshare-all",
     "--unshare-user",
@@ -282,7 +396,7 @@ export function buildSandboxInvocation({
     "TMPDIR",
     "/tmp",
     "--size",
-    String(rootTmpfsBytes),
+    String(sandbox.rootTmpfsBytes),
     "--tmpfs",
     "/",
   ];
@@ -295,7 +409,7 @@ export function buildSandboxInvocation({
     "--dev",
     "/dev",
     "--size",
-    String(temporaryDirectoryBytes),
+    String(sandbox.temporaryDirectoryBytes),
     "--tmpfs",
     "/tmp",
   );
@@ -448,9 +562,11 @@ export function validateFixtureValidationReport(report) {
     "taskId",
     "toolchains",
     "validationProfile",
+    "validationProfileRevision",
+    "validationProfileSha256",
   ];
   requireExactKeys(report, topLevelKeys, "fixture validation report");
-  if (report.schemaVersion !== "1.3") {
+  if (report.schemaVersion !== "1.4") {
     throw new TypeError("unsupported fixture validation report version");
   }
   if (
@@ -476,6 +592,19 @@ export function validateFixtureValidationReport(report) {
     report.validationProfile,
     "fixture validation validationProfile",
   );
+  const validationProfile = getValidationProfileRevision(
+    report.validationProfile,
+    report.validationProfileRevision,
+    "fixture validation validationProfile",
+  );
+  if (
+    report.validationProfileSha256 !==
+      profileFingerprint(validationProfile)
+  ) {
+    throw new TypeError(
+      "fixture validation validationProfileSha256 is invalid",
+    );
+  }
   if (report.suite === "firmware" && report.targetProfile === null) {
     throw new TypeError(
       "firmware fixture validation requires a targetProfile",
@@ -502,15 +631,52 @@ export function validateFixtureValidationReport(report) {
   }
   requireExactKeys(
     report.sandbox,
-    ["filesystem", "network", "resourceLimits", "runtime"],
+    [
+      "filesystem",
+      "limiter",
+      "limiterVersion",
+      "network",
+      "resourceLimits",
+      "runtime",
+      "runtimeVersion",
+    ],
     "fixture validation sandbox",
   );
   if (
-    report.sandbox.runtime !== "bubblewrap" ||
-    report.sandbox.network !== "none" ||
-    report.sandbox.filesystem !== "isolated"
+    report.sandbox.runtime !== validationProfile.sandbox.runtime ||
+    report.sandbox.limiter !== validationProfile.sandbox.limiter ||
+    report.sandbox.network !== validationProfile.sandbox.network ||
+    report.sandbox.filesystem !== validationProfile.sandbox.filesystem
   ) {
     throw new TypeError("fixture validation sandbox metadata is invalid");
+  }
+  if (
+    typeof report.sandbox.runtimeVersion !== "string" ||
+    report.sandbox.runtimeVersion.length === 0 ||
+    report.sandbox.runtimeVersion.length > 1024 ||
+    report.sandbox.runtimeVersion.includes("\0") ||
+    typeof report.sandbox.limiterVersion !== "string" ||
+    report.sandbox.limiterVersion.length === 0 ||
+    report.sandbox.limiterVersion.length > 1024 ||
+    report.sandbox.limiterVersion.includes("\0")
+  ) {
+    throw new TypeError(
+      "fixture validation sandbox versions are invalid",
+    );
+  }
+  if (
+    !versionMatches(
+      report.sandbox.runtimeVersion,
+      validationProfile.sandbox.runtimeVersion,
+    ) ||
+    !versionMatches(
+      report.sandbox.limiterVersion,
+      validationProfile.sandbox.limiterVersion,
+    )
+  ) {
+    throw new TypeError(
+      "fixture validation sandbox versions do not match profile",
+    );
   }
   requireExactKeys(
     report.sandbox.resourceLimits,
@@ -531,6 +697,14 @@ export function validateFixtureValidationReport(report) {
     );
     for (const [name, value] of Object.entries(limits)) {
       requirePositiveInteger(value, `${phase}.${name}`);
+      if (
+        value !==
+          validationProfile.sandbox.resourceLimits[phase][name]
+      ) {
+        throw new TypeError(
+          `fixture validation ${phase}.${name} does not match profile`,
+        );
+      }
     }
   }
   if (!Array.isArray(report.toolchains) || report.toolchains.length === 0) {
@@ -564,6 +738,29 @@ export function validateFixtureValidationReport(report) {
       throw new TypeError("fixture validation toolchain is invalid");
     }
     toolchainNames.add(toolchain.name);
+    const expectedToolchain = validationProfile.toolchains
+      .find((item) => item.name === toolchain.name);
+    if (
+      !expectedToolchain ||
+      !versionMatches(toolchain.version, expectedToolchain.version)
+    ) {
+      throw new TypeError(
+        "fixture validation toolchain does not match profile",
+      );
+    }
+    const expectedVersionArgv = [
+      toolchain.executable,
+      ...expectedToolchain.versionArgs,
+    ];
+    if (
+      toolchain.versionArgv.length !== expectedVersionArgv.length ||
+      toolchain.versionArgv.some((argument, index) =>
+        argument !== expectedVersionArgv[index])
+    ) {
+      throw new TypeError(
+        "fixture validation toolchain versionArgv does not match profile",
+      );
+    }
   }
   if (!Array.isArray(report.artifacts)) {
     throw new TypeError("fixture validation artifacts must be an array");
@@ -683,6 +880,7 @@ export function runFixtureValidation({
   now = () => new Date(),
   pathValue = process.env.PATH ?? "",
   resolveExecutableImpl = resolveExecutable,
+  readValidationHostImpl = readValidationHost,
 }) {
   if (typeof taskId !== "string" || !taskIdPattern.test(taskId)) {
     throw new TypeError("taskId is invalid");
@@ -702,6 +900,14 @@ export function runFixtureValidation({
     JSON.parse(readFileSync(manifestPath, "utf8")),
     task,
   );
+  const validationProfile = getValidationProfile(
+    manifest.validationProfile,
+  );
+  requireRunnableProfile(validationProfile);
+  requireMatchingValidationHost(
+    readValidationHostImpl(),
+    validationProfile.host,
+  );
   const answerPath = resolve(fixtureRoot, manifest.answer.output);
   requireContained(fixtureRoot, answerPath, "fixture answer");
   requireRegularFile(answerPath, `fixture ${taskId} extracted answer`);
@@ -711,6 +917,26 @@ export function runFixtureValidation({
 
   const bubblewrapPath = resolveExecutableImpl("bwrap", { pathValue });
   const prlimitPath = resolveExecutableImpl("prlimit", { pathValue });
+  const sandboxRuntime = inspectToolchain(
+    "bwrap",
+    bubblewrapPath,
+    ["--version"],
+    validationProfile.sandbox.runtimeVersion,
+    spawnTool,
+  );
+  const sandboxLimiter = inspectToolchain(
+    "prlimit",
+    prlimitPath,
+    ["--version"],
+    validationProfile.sandbox.limiterVersion,
+    spawnTool,
+  );
+  const profileToolchains = new Map(
+    validationProfile.toolchains.map((toolchain) => [
+      toolchain.name,
+      toolchain,
+    ]),
+  );
   const toolPaths = new Map();
   for (const command of manifest.commands) {
     for (const tool of command.requiredTools) {
@@ -725,6 +951,7 @@ export function runFixtureValidation({
         name,
         executable,
         manifest.toolVersionArgs[name],
+        profileToolchains.get(name).version,
         spawnTool,
       ));
 
@@ -784,21 +1011,26 @@ export function runFixtureValidation({
     }
 
     const report = {
-      schemaVersion: "1.3",
+      schemaVersion: "1.4",
       taskId,
       answerSha256,
       suite: task.suite,
       targetProfile: manifest.targetProfile,
       validationProfile: manifest.validationProfile,
+      validationProfileRevision: validationProfile.revision,
+      validationProfileSha256: profileFingerprint(validationProfile),
       fixtureStatus: manifest.status,
       language: manifest.language,
       startedAt: reportStartedAt.toISOString(),
       finishedAt: now().toISOString(),
       sandbox: {
         runtime: "bubblewrap",
+        runtimeVersion: sandboxRuntime.version,
+        limiter: "prlimit",
+        limiterVersion: sandboxLimiter.version,
         network: "none",
         filesystem: "isolated",
-        resourceLimits: sandboxResourceLimits,
+        resourceLimits: validationProfile.sandbox.resourceLimits,
       },
       toolchains,
       artifacts,

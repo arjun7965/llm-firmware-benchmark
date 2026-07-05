@@ -16,6 +16,8 @@ import {
 import test from "node:test";
 import {
   buildSandboxInvocation,
+  parseOsRelease,
+  readValidationHost,
   resolveExecutable,
   runFixtureValidation,
   validateFixtureValidationReport,
@@ -62,7 +64,7 @@ function sandboxFixture(t) {
     status: "active",
     language: "c11",
     toolVersionArgs: {
-      cc: ["version"],
+      cc: ["--version"],
     },
     answer: {
       format: "markdown-fenced-code",
@@ -113,11 +115,16 @@ function fakeExecutable(name) {
 }
 
 function fakeToolVersion(command, args) {
-  assert.deepEqual(args, ["version"]);
+  assert.deepEqual(args, ["--version"]);
+  const versions = {
+    bwrap: "bubblewrap 0.9.0",
+    cc: "cc (Ubuntu) 13.3.0",
+    prlimit: "prlimit from util-linux 2.39.3",
+  };
   return {
     status: 0,
     signal: null,
-    stdout: `${basename(command)} test-version\n`,
+    stdout: `${versions[basename(command)]}\n`,
     stderr: "",
   };
 }
@@ -130,6 +137,46 @@ function deterministicNow() {
     return value;
   };
 }
+
+function matchingValidationHost() {
+  return {
+    operatingSystem: "ubuntu",
+    release: "24.04",
+    architecture: "x86_64",
+  };
+}
+
+test("validation host detection parses os-release without executing it", (t) => {
+  const root = temporaryDirectory(t);
+  const osReleasePath = join(root, "os-release");
+  writeFileSync(
+    osReleasePath,
+    [
+      "NAME=\"Ubuntu\"",
+      "ID=ubuntu",
+      "VERSION_ID=\"24.04\"",
+      "",
+    ].join("\n"),
+  );
+  assert.deepEqual(
+    readValidationHost({
+      architecture: "x64",
+      osReleasePath,
+    }),
+    matchingValidationHost(),
+  );
+  assert.deepEqual(
+    parseOsRelease("ID='debian'\nVERSION_ID=13\n"),
+    new Map([
+      ["ID", "debian"],
+      ["VERSION_ID", "13"],
+    ]),
+  );
+  assert.throws(
+    () => parseOsRelease("ID=ubuntu\nID=debian\n"),
+    /duplicate ID/u,
+  );
+});
 
 test("sandbox invocation isolates files, network, and build permissions", (t) => {
   const fixture = sandboxFixture(t);
@@ -193,6 +240,87 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
   );
 });
 
+test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) => {
+  const fixture = sandboxFixture(t);
+  const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
+  tasks[0].suite = "auxiliary";
+  tasks[0].validationProfile = "node-typescript";
+  delete tasks[0].targetProfile;
+  writeFileSync(fixture.tasksPath, JSON.stringify(tasks));
+
+  const manifest = {
+    ...fixture.manifest,
+    targetProfile: null,
+    validationProfile: "node-typescript",
+    status: "scaffold",
+    toolVersionArgs: {
+      node: ["--version"],
+      tsc: ["--version"],
+    },
+    commands: [
+      {
+        ...fixture.manifest.commands[0],
+        argv: ["tsc", "--noEmit"],
+        requiredTools: ["node", "tsc"],
+      },
+      fixture.manifest.commands[1],
+    ],
+  };
+  writeFileSync(
+    join(fixture.fixtureRoot, "manifest.json"),
+    JSON.stringify(manifest),
+  );
+
+  assert.throws(
+    () => runFixtureValidation({
+      taskId: "example-task",
+      fixturesRoot: fixture.fixturesRoot,
+      tasksPath: fixture.tasksPath,
+    }),
+    /dependencies are unverifiable/u,
+  );
+
+  const interpreterFixture = sandboxFixture(t);
+  const interpreterTasks = JSON.parse(
+    readFileSync(interpreterFixture.tasksPath, "utf8"),
+  );
+  interpreterTasks[0].suite = "auxiliary";
+  interpreterTasks[0].validationProfile = "python3-stdlib";
+  delete interpreterTasks[0].targetProfile;
+  writeFileSync(
+    interpreterFixture.tasksPath,
+    JSON.stringify(interpreterTasks),
+  );
+  writeFileSync(
+    join(interpreterFixture.fixtureRoot, "manifest.json"),
+    JSON.stringify({
+      ...interpreterFixture.manifest,
+      targetProfile: null,
+      validationProfile: "python3-stdlib",
+      status: "scaffold",
+      toolVersionArgs: {
+        python3: ["--version"],
+      },
+      commands: [
+        {
+          ...interpreterFixture.manifest.commands[0],
+          argv: ["python3", "-m", "py_compile", "generated/answer.c"],
+          requiredTools: ["python3"],
+        },
+        interpreterFixture.manifest.commands[1],
+      ],
+    }),
+  );
+  assert.throws(
+    () => runFixtureValidation({
+      taskId: "example-task",
+      fixturesRoot: interpreterFixture.fixturesRoot,
+      tasksPath: interpreterFixture.tasksPath,
+    }),
+    /requires an unavailable test runtime/u,
+  );
+});
+
 test("sandbox validation records successful compile and test phases", (t) => {
   const fixture = sandboxFixture(t);
   const calls = [];
@@ -201,6 +329,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
     fixturesRoot: fixture.fixturesRoot,
     tasksPath: fixture.tasksPath,
     resolveExecutableImpl: fakeExecutable,
+    readValidationHostImpl: matchingValidationHost,
     spawnTool: fakeToolVersion,
     now: deterministicNow(),
     spawn: (command, args, options) => {
@@ -225,17 +354,24 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.3");
+  assert.equal(report.schemaVersion, "1.4");
   assert.equal(report.suite, "firmware");
   assert.equal(report.validationProfile, "c11-host");
+  assert.equal(report.validationProfileRevision, 1);
+  assert.match(report.validationProfileSha256, /^[a-f0-9]{64}$/u);
   assert.equal(report.language, "c11");
   assert.match(report.answerSha256, /^[a-f0-9]{64}$/u);
   assert.deepEqual(report.toolchains, [{
     name: "cc",
     executable: "/usr/bin/cc",
-    version: "cc test-version",
-    versionArgv: ["/usr/bin/cc", "version"],
+    version: "cc (Ubuntu) 13.3.0",
+    versionArgv: ["/usr/bin/cc", "--version"],
   }]);
+  assert.equal(report.sandbox.runtimeVersion, "bubblewrap 0.9.0");
+  assert.equal(
+    report.sandbox.limiterVersion,
+    "prlimit from util-linux 2.39.3",
+  );
   assert.deepEqual(report.artifacts, [{
     path: "build/tests",
     sizeBytes: 0,
@@ -264,6 +400,99 @@ test("sandbox validation records successful compile and test phases", (t) => {
   assert.throws(
     () => validateFixtureValidationReport({
       ...report,
+      validationProfileRevision: 2,
+    }),
+    /validationProfileRevision/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      sandbox: {
+        ...report.sandbox,
+        runtimeVersion: "bubblewrap 1.0.0",
+      },
+    }),
+    /sandbox versions do not match profile/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      sandbox: {
+        ...report.sandbox,
+        runtimeVersion: ["bubblewrap 0.9.0"],
+      },
+    }),
+    /sandbox versions are invalid/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      sandbox: {
+        ...report.sandbox,
+        limiterVersion: "prlimit 2.39.3\0",
+      },
+    }),
+    /sandbox versions are invalid/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      sandbox: {
+        ...report.sandbox,
+        runtimeVersion: "bubblewrap 0.9.0-beta.1",
+      },
+    }),
+    /sandbox versions do not match profile/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      sandbox: {
+        ...report.sandbox,
+        resourceLimits: {
+          ...report.sandbox.resourceLimits,
+          test: {
+            ...report.sandbox.resourceLimits.test,
+            cpuSeconds: 4,
+          },
+        },
+      },
+    }),
+    /does not match profile/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      toolchains: [{
+        ...report.toolchains[0],
+        version: "cc 13.3.0-beta.1",
+      }],
+    }),
+    /toolchain does not match profile/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      toolchains: [{
+        ...report.toolchains[0],
+        version: "cc 13.3.0rc1",
+      }],
+    }),
+    /toolchain does not match profile/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      toolchains: [{
+        ...report.toolchains[0],
+        versionArgv: ["/usr/bin/cc", "--help"],
+      }],
+    }),
+    /versionArgv does not match profile/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
       suite: "auxiliary",
     }),
     /auxiliary fixture validation.*targetProfile/u,
@@ -285,6 +514,40 @@ test("sandbox validation records successful compile and test phases", (t) => {
     JSON.parse(readFileSync(reportPath, "utf8")),
     report,
   );
+
+  const mismatched = sandboxFixture(t);
+  assert.throws(
+    () => runFixtureValidation({
+      taskId: "example-task",
+      fixturesRoot: mismatched.fixturesRoot,
+      tasksPath: mismatched.tasksPath,
+      resolveExecutableImpl: fakeExecutable,
+      readValidationHostImpl: matchingValidationHost,
+      spawnTool: (command, args) => {
+        const result = fakeToolVersion(command, args);
+        return basename(command) === "cc"
+          ? { ...result, stdout: "cc (Ubuntu) 14.2.0\n" }
+          : result;
+      },
+    }),
+    /cc version does not match validation profile/u,
+  );
+
+  const wrongHost = sandboxFixture(t);
+  assert.throws(
+    () => runFixtureValidation({
+      taskId: "example-task",
+      fixturesRoot: wrongHost.fixturesRoot,
+      tasksPath: wrongHost.tasksPath,
+      readValidationHostImpl: () => ({
+        operatingSystem: "debian",
+        release: "13",
+        architecture: "x86_64",
+      }),
+      resolveExecutableImpl: fakeExecutable,
+    }),
+    /validation host does not match profile/u,
+  );
 });
 
 test("sandbox validation stops after compilation failure", (t) => {
@@ -295,6 +558,7 @@ test("sandbox validation stops after compilation failure", (t) => {
     fixturesRoot: fixture.fixturesRoot,
     tasksPath: fixture.tasksPath,
     resolveExecutableImpl: fakeExecutable,
+    readValidationHostImpl: matchingValidationHost,
     spawnTool: fakeToolVersion,
     now: deterministicNow(),
     spawn: () => {
@@ -321,6 +585,7 @@ test("sandbox validation stops after compilation failure", (t) => {
     fixturesRoot: timedOutFixture.fixturesRoot,
     tasksPath: timedOutFixture.tasksPath,
     resolveExecutableImpl: fakeExecutable,
+    readValidationHostImpl: matchingValidationHost,
     spawnTool: fakeToolVersion,
     now: deterministicNow(),
     spawn: () => ({
@@ -347,6 +612,7 @@ test("sandbox validation rejects missing or symlinked answers", (t) => {
       fixturesRoot: missing.fixturesRoot,
       tasksPath: missing.tasksPath,
       resolveExecutableImpl: fakeExecutable,
+      readValidationHostImpl: matchingValidationHost,
     }),
     /extracted answer does not exist/u,
   );
@@ -363,6 +629,7 @@ test("sandbox validation rejects missing or symlinked answers", (t) => {
       fixturesRoot: linked.fixturesRoot,
       tasksPath: linked.tasksPath,
       resolveExecutableImpl: fakeExecutable,
+      readValidationHostImpl: matchingValidationHost,
     }),
     /non-symlink regular file/u,
   );

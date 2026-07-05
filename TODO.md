@@ -39,15 +39,30 @@ firmware validation work.
   separately without changing task IDs or historical score interpretation.
 - [x] Add a `validationProfile` field for hosted runtime/toolchain assumptions;
   keep `targetProfile` for architecture, ABI, and hardware assumptions.
-- [ ] Pin hosted profiles such as `stable-rust`, `python3-stdlib`,
+- [x] Pin hosted profiles such as `stable-rust`, `python3-stdlib`,
   `node-typescript`, and `go-std`, including tool versions, dependencies,
   resource limits, and sandbox requirements.
+- [ ] **Important:** Separate logical validation profiles from concrete Linux
+  environments. Detect `/etc/os-release` and architecture before validation,
+  select an exact supported environment with environment-specific tool pins,
+  record the matched environment in reports, and require the same environment
+  for scored comparisons. Evaluate digest-pinned OCI images as the preferred
+  path for reproducible validation across host distributions.
+  - [x] Fail closed when the current pinned OS release or architecture does not
+    match the validation host.
 - [x] Make scoring-profile selection explicit so hosted auxiliary tasks never
   inherit `firmware-v1` merely because validation metadata is present.
 - [ ] Decide whether each task returns one source file or uses a validated
   multi-file answer contract before changing prompts or extraction behavior.
 - [ ] Generalize mutation execution beyond C while retaining exact,
   compile-valid mutations and task-declared argv commands.
+- [ ] Add verified lockfile installations or digest-pinned images for
+  validation profiles with npm or PyPI dependencies. Keep the sandbox runner
+  fail-closed for nonempty dependency sets until their installed versions can
+  be attested.
+- [ ] Add profile-approved test-runtime mounts and command contracts for
+  interpreter and service profiles. Keep those fixtures scaffold-only until
+  the test namespace can execute their pinned runtime.
 
 ### Priority 2 — Dependency-Light Auxiliary Fixtures
 

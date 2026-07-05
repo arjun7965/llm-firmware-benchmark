@@ -17,3 +17,9 @@ JSON. When a versioned contract changes:
 `test/schema-evolution.test.mjs` discovers every versioned schema, requires a
 fingerprint entry for its current version, and fails when the schema content
 changes without a matching version entry.
+
+`validation-profiles.schema.json` defines the pinned hosted-environment
+registry in the repository root. Fixture validation reports preserve the
+selected profile revision and canonical profile SHA-256. The append-only
+`validation-profile-fingerprints.json` file prevents published profile
+revisions from being modified without detection.
