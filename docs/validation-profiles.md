@@ -8,25 +8,40 @@ hidden text to a model prompt.
 The machine-readable contracts are pinned in `validation-profiles.json` and
 validated against `schemas/validation-profiles.schema.json`.
 `src/validation-profiles.mjs` loads and enforces the registry. Tasks, fixture
-manifests, raw results, public exports, and validation reports preserve the
-profile ID.
+manifests, raw results, and public exports preserve the logical profile ID.
+Validation reports additionally preserve the selected concrete environment.
 
-Every contract has an immutable revision, Ubuntu release and architecture,
-exact toolchain and package versions, sandbox versions and policy, tmpfs sizes,
-and compile/test resource limits. Validation reports record the revision,
-contract SHA-256, resolved tool versions, and applied resource limits. Append a
-new entry with the same profile ID and next contiguous revision whenever any
-pinned value changes; do not replace a published revision. Tasks and new
-validations use the highest revision, while report validation resolves the
-exact ID and revision recorded by the report. The append-only
-`validation-profile-fingerprints.json` registry records the canonical SHA-256
-for every published ID and revision; startup fails if a contract is changed,
-removed, or added without its corresponding fingerprint.
+A logical profile defines required tool names, package dependencies, sandbox
+policy, tmpfs sizes, compile/test resource limits, and exact supported
+environment references. A concrete environment independently defines its OS
+release, architecture, execution mode, exact toolchain versions, and exact
+Bubblewrap and `prlimit` versions. This lets one logical profile support
+multiple distributions, architectures, or image revisions without treating
+those hosts as the same scoring environment.
+
+Both contract types have immutable, contiguous revisions. Append a new
+environment revision when a host, image digest, or environment-specific tool
+pin changes. Append a new profile revision when its logical requirements or
+supported environment references change. Never replace a published revision.
+Tasks and new validations use the highest profile revision, while report
+validation resolves the exact profile and environment revisions recorded by
+the report.
+
+The append-only `validation-profile-fingerprints.json` registry records the
+canonical SHA-256 for every published profile and environment revision.
+Startup fails if a contract is changed, removed, or added without its matching
+fingerprint. Legacy revision 1 profiles remain available for historical
+fingerprint verification; current revision 2 profiles use the separated
+environment model.
 
 ## Profile Registry
 
-All revision 1 profiles use Ubuntu 24.04 x86-64, Bubblewrap 0.9.0, `prlimit`
-from util-linux 2.39.3, no network, and an isolated filesystem.
+Each current profile references a profile-scoped Ubuntu 24.04 x86-64 host
+environment. Every environment pins only the toolchains required by that
+profile, plus host execution, Bubblewrap 0.9.0, and `prlimit` from util-linux
+2.39.3. Fixture manifests and reports must cover that complete toolchain set,
+so the environment fingerprint never attests an unprobed tool. Profile
+policies require no network and an isolated filesystem.
 
 | Profile | Pinned toolchains | Pinned packages |
 | --- | --- | --- |
@@ -42,13 +57,42 @@ from util-linux 2.39.3, no network, and an isolated filesystem.
 
 The registry is authoritative for full dependency versions and byte-level
 resource limits. Fixture manifests may invoke only toolchains declared by
-their profile and must use the profile's version-probe argv. The sandbox
-validator fails when resolved tool, Bubblewrap, or `prlimit` versions do not
-match the pins. Before probing tools, it reads `/etc/os-release`, normalizes the
-runtime architecture, and rejects a host that does not exactly match the
-selected revision.
+their profile and must use version-probe argv supported by every referenced
+environment. Before probing tools, the sandbox validator reads
+`/etc/os-release`, normalizes the runtime architecture, and selects exactly one
+supported host environment. Zero or multiple matches fail closed. It then
+rejects any resolved tool, Bubblewrap, or `prlimit` version that differs from
+that environment's pins.
 
-The current Bubblewrap runner cannot prove installed npm or PyPI package
+Reports record the profile and environment IDs, revisions, contract SHA-256
+values, detected host fields, and execution mode. `repeat-scores.json` requires
+the same immutable profile/environment pair per scored task, outside the
+model/run records. The summarizer verifies the profile against `tasks.json`
+and verifies that the environment revision is supported by that exact profile
+revision. Consequently, all models and runs compared for a task must use the
+same contracts while unrelated tasks may use different environments.
+Evaluators must check that every validation report used as scoring evidence
+matches that task's declared pair.
+
+## OCI Image Decision
+
+Digest-pinned OCI images are the preferred future execution mode for profiles
+with npm, PyPI, interpreter, or service dependencies. A digest can fix the
+complete userspace and package installation across host distributions, which
+host version probes cannot attest. The registry and schemas accept only
+`image@sha256:<digest>` references for OCI environments.
+
+The current runner intentionally implements only `host` environments. It
+bind-mounts host toolchains and runtime libraries into Bubblewrap and has no
+OCI runtime dependency or verified image-build pipeline. Treating an image tag
+as reproducible, or nesting an unverified container invocation inside the
+existing sandbox, would weaken the fail-closed boundary. Before activating an
+OCI environment, add a rootless runtime contract, a reviewed build recipe and
+lockfiles, image provenance, digest verification before execution, and tests
+for the resulting mount and network boundary. An OCI-only environment is not
+selected by the host runner.
+
+The current host Bubblewrap runner cannot prove installed npm or PyPI package
 versions. It therefore fails closed for every profile with a nonempty
 `dependencies` array before resolving or executing tools. Such a profile can
 be activated only after its fixture provides a verified lockfile installation

@@ -1,5 +1,32 @@
 {
+  "schemaVersion": "1.0",
   "rubric": "Scores are out of 10",
+  "validationContracts": {
+    "bare-metal-timer": {
+      "profile": {
+        "id": "c11-host",
+        "revision": 2,
+        "sha256": "ee0bdc2b27369a73c7533888bb6362da4e15aebdb7be2024b0f0d578eebdb3fd"
+      },
+      "environment": {
+        "id": "ubuntu-24-04-x86-64-c11-host",
+        "revision": 1,
+        "sha256": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
+      }
+    },
+    "frontend-autocomplete": {
+      "profile": {
+        "id": "react18-typescript",
+        "revision": 2,
+        "sha256": "6aa16c7fd305e7ef2d475ed42b6582ca6c17f58f2abf564d876da73769ee4c8a"
+      },
+      "environment": {
+        "id": "ubuntu-24-04-x86-64-react18-typescript",
+        "revision": 1,
+        "sha256": "b640bcbc9b52d1ae8e4fde12b2582b755d7ed24b32edb172c9255fe1ec3eaf90"
+      }
+    }
+  },
   "tasks": [
     "bare-metal-timer",
     "frontend-autocomplete"

@@ -42,7 +42,7 @@ firmware validation work.
 - [x] Pin hosted profiles such as `stable-rust`, `python3-stdlib`,
   `node-typescript`, and `go-std`, including tool versions, dependencies,
   resource limits, and sandbox requirements.
-- [ ] **Important:** Separate logical validation profiles from concrete Linux
+- [x] **Important:** Separate logical validation profiles from concrete Linux
   environments. Detect `/etc/os-release` and architecture before validation,
   select an exact supported environment with environment-specific tool pins,
   record the matched environment in reports, and require the same environment

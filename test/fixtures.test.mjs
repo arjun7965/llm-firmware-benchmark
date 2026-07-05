@@ -122,6 +122,27 @@ test("fixture commands cannot invoke a shell", () => {
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
+      validationProfile: "stable-rust",
+      toolVersionArgs: {
+        rustc: ["--version"],
+      },
+      commands: [
+        {
+          ...manifest.commands[0],
+          argv: ["rustc", "generated/answer.c"],
+          requiredTools: ["rustc"],
+        },
+        manifest.commands[1],
+      ],
+    }, {
+      ...task,
+      validationProfile: "stable-rust",
+    }),
+    /requiredTools must cover.*toolchains exactly/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
       commands: [{
         ...manifest.commands[0],
         argv: ["sh", "-c", "cc generated/answer.c"],
@@ -182,8 +203,13 @@ test("fixture commands cannot invoke a shell", () => {
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
-      toolVersionArgs: {},
-      commands: [manifest.commands[1]],
+      commands: [
+        {
+          ...manifest.commands[0],
+          phase: "analyze",
+        },
+        manifest.commands[1],
+      ],
     }, task),
     /must define a compile command/,
   );

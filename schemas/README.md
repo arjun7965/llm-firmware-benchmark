@@ -18,8 +18,13 @@ JSON. When a versioned contract changes:
 fingerprint entry for its current version, and fails when the schema content
 changes without a matching version entry.
 
-`validation-profiles.schema.json` defines the pinned hosted-environment
-registry in the repository root. Fixture validation reports preserve the
-selected profile revision and canonical profile SHA-256. The append-only
-`validation-profile-fingerprints.json` file prevents published profile
-revisions from being modified without detection.
+`validation-profiles.schema.json` defines the logical validation profiles and
+concrete execution environments pinned in the repository root. Fixture
+validation reports preserve both selected revisions and canonical SHA-256
+values. The append-only `validation-profile-fingerprints.json` file prevents
+published profile or environment revisions from being modified without
+detection.
+
+`repeat-scores.schema.json` records one pinned profile/environment pair per
+scored task. Runtime validation additionally checks the pair against the task
+registry because JSON Schema cannot express that cross-document relationship.

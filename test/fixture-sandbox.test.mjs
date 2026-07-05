@@ -22,6 +22,12 @@ import {
   runFixtureValidation,
   validateFixtureValidationReport,
 } from "../src/fixture-sandbox.mjs";
+import {
+  getValidationEnvironmentRevision,
+  getValidationProfile,
+  profileFingerprint,
+  validationEnvironmentReference,
+} from "../src/validation-profiles.mjs";
 
 function temporaryDirectory(t) {
   const path = mkdtempSync(join(tmpdir(), "fixture-sandbox-test-"));
@@ -354,11 +360,23 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.4");
+  assert.equal(report.schemaVersion, "1.5");
   assert.equal(report.suite, "firmware");
   assert.equal(report.validationProfile, "c11-host");
-  assert.equal(report.validationProfileRevision, 1);
+  assert.equal(report.validationProfileRevision, 2);
   assert.match(report.validationProfileSha256, /^[a-f0-9]{64}$/u);
+  assert.deepEqual(report.validationEnvironment.host, {
+    operatingSystem: "ubuntu",
+    release: "24.04",
+    architecture: "x86_64",
+  });
+  assert.equal(
+    report.validationEnvironment.id,
+    "ubuntu-24-04-x86-64-c11-host",
+  );
+  assert.equal(report.validationEnvironment.revision, 1);
+  assert.match(report.validationEnvironment.sha256, /^[a-f0-9]{64}$/u);
+  assert.deepEqual(report.validationEnvironment.execution, { kind: "host" });
   assert.equal(report.language, "c11");
   assert.match(report.answerSha256, /^[a-f0-9]{64}$/u);
   assert.deepEqual(report.toolchains, [{
@@ -400,9 +418,32 @@ test("sandbox validation records successful compile and test phases", (t) => {
   assert.throws(
     () => validateFixtureValidationReport({
       ...report,
-      validationProfileRevision: 2,
+      validationProfileRevision: 3,
     }),
     /validationProfileRevision/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      validationEnvironment: {
+        ...report.validationEnvironment,
+        sha256: "0".repeat(64),
+      },
+    }),
+    /validationEnvironmentSha256/u,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      validationEnvironment: {
+        ...report.validationEnvironment,
+        host: {
+          ...report.validationEnvironment.host,
+          release: "22.04",
+        },
+      },
+    }),
+    /does not match environment/u,
   );
   assert.throws(
     () => validateFixtureValidationReport({
@@ -490,6 +531,35 @@ test("sandbox validation records successful compile and test phases", (t) => {
     }),
     /versionArgv does not match profile/u,
   );
+  const stableRustProfile = getValidationProfile("stable-rust");
+  const stableRustEnvironment = getValidationEnvironmentRevision(
+    stableRustProfile.environments[0].id,
+    stableRustProfile.environments[0].revision,
+  );
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      validationProfile: stableRustProfile.id,
+      validationProfileRevision: stableRustProfile.revision,
+      validationProfileSha256: profileFingerprint(stableRustProfile),
+      validationEnvironment: {
+        ...validationEnvironmentReference(stableRustEnvironment),
+        host: stableRustEnvironment.host,
+        execution: stableRustEnvironment.execution,
+      },
+      sandbox: {
+        ...report.sandbox,
+        resourceLimits: stableRustProfile.sandbox.resourceLimits,
+      },
+      toolchains: [{
+        name: "rustc",
+        executable: "/usr/bin/rustc",
+        version: "rustc 1.87.0",
+        versionArgv: ["/usr/bin/rustc", "--version"],
+      }],
+    }),
+    /toolchains do not cover profile exactly/u,
+  );
   assert.throws(
     () => validateFixtureValidationReport({
       ...report,
@@ -546,7 +616,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
       }),
       resolveExecutableImpl: fakeExecutable,
     }),
-    /validation host does not match profile/u,
+    /validation host does not match exactly one supported environment/u,
   );
 });
 

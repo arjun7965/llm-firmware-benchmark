@@ -41,8 +41,9 @@ defect separately in the scoring notes.
 
 ## Scoring Procedure
 
-1. Blind model identity and confirm the task prompt, validation profile, target
-   profile, and rubric version match the compared runs.
+1. Blind model identity and confirm the task prompt, validation profile,
+   concrete validation environment, target profile, and rubric version match
+   the compared runs.
 2. Run the task's declared deterministic validation where available. Treat
    compiler, test, mutation, and sandbox results as evidence for the affected
    dimensions, not as an automatic total score.

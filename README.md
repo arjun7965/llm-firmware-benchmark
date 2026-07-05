@@ -129,6 +129,9 @@ requirements such as score-array lengths. Firmware-suite tasks use the shared
 `firmware-v1` dimensions in `docs/benchmarks/firmware-scoring.md`. Summaries
 report combined totals and separate firmware and auxiliary totals using the
 task registry; set `BENCHMARK_TASKS_FILE` when scoring an alternate task file.
+Each score document pins logical-profile and concrete-environment revisions
+and SHA-256 values per task. The summarizer verifies those references against
+the task registry before comparing models or runs.
 
 Embedded and firmware expansion is governed by
 `docs/embedded/capability-matrix.md` and reusable target profiles in

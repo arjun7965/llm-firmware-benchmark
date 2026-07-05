@@ -1,9 +1,18 @@
 import { readFileSync } from "node:fs";
+import {
+  validateValidationEnvironmentReference,
+  validateValidationProfileReference,
+} from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const modelIdPattern = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 const runNamePattern = /^run[1-9][0-9]*$/;
-const reservedKeys = new Set(["rubric", "tasks"]);
+const reservedKeys = new Set([
+  "rubric",
+  "schemaVersion",
+  "tasks",
+  "validationContracts",
+]);
 
 function isObject(value) {
   return value && typeof value === "object" && !Array.isArray(value);
@@ -13,9 +22,32 @@ export function scoreModelIds(scores) {
   return Object.keys(scores).filter((key) => !reservedKeys.has(key));
 }
 
-export function validateScores(scores) {
+function validationProfileForTask(validationProfileByTask, task) {
+  let validationProfile;
+  if (validationProfileByTask instanceof Map) {
+    validationProfile = validationProfileByTask.get(task);
+  } else if (
+    isObject(validationProfileByTask) &&
+    Object.hasOwn(validationProfileByTask, task)
+  ) {
+    validationProfile = validationProfileByTask[task];
+  }
+  if (typeof validationProfile !== "string") {
+    throw new TypeError(
+      `missing configured validation profile for scored task: ${task}`,
+    );
+  }
+  return validationProfile;
+}
+
+export function validateScores(scores, {
+  validationProfileByTask,
+} = {}) {
   if (!isObject(scores)) {
     throw new TypeError("scores must be an object");
+  }
+  if (scores.schemaVersion !== "1.0") {
+    throw new TypeError("unsupported scores.schemaVersion");
   }
   if (typeof scores.rubric !== "string" || scores.rubric.trim() === "") {
     throw new TypeError("scores.rubric must be a non-empty string");
@@ -27,6 +59,54 @@ export function validateScores(scores) {
   }
   if (new Set(scores.tasks).size !== scores.tasks.length) {
     throw new TypeError("scores.tasks cannot contain duplicates");
+  }
+  if (
+    !isObject(scores.validationContracts) ||
+    Object.keys(scores.validationContracts).sort().join(",") !==
+      [...scores.tasks].sort().join(",")
+  ) {
+    throw new TypeError(
+      "scores.validationContracts must cover exactly scores.tasks",
+    );
+  }
+  for (const task of scores.tasks) {
+    const contract = scores.validationContracts[task];
+    if (
+      !isObject(contract) ||
+      Object.keys(contract).sort().join(",") !== "environment,profile"
+    ) {
+      throw new TypeError(
+        `scores.validationContracts.${task} has unexpected fields`,
+      );
+    }
+    const profile = validateValidationProfileReference(
+      contract.profile,
+      `scores.validationContracts.${task}.profile`,
+    );
+    if (
+      profile.id !== validationProfileForTask(
+        validationProfileByTask,
+        task,
+      )
+    ) {
+      throw new TypeError(
+        `scores.validationContracts.${task}.profile does not match task`,
+      );
+    }
+    const environment = validateValidationEnvironmentReference(
+      contract.environment,
+      `scores.validationContracts.${task}.environment`,
+    );
+    if (
+      !profile.environments?.some((reference) =>
+        reference.id === environment.id &&
+        reference.revision === environment.revision)
+    ) {
+      throw new TypeError(
+        `scores.validationContracts.${task}.environment is unsupported ` +
+        "by its validation profile",
+      );
+    }
   }
 
   const models = scoreModelIds(scores);
@@ -55,6 +135,6 @@ export function validateScores(scores) {
   return scores;
 }
 
-export function loadScores(path) {
-  return validateScores(JSON.parse(readFileSync(path, "utf8")));
+export function loadScores(path, options) {
+  return validateScores(JSON.parse(readFileSync(path, "utf8")), options);
 }

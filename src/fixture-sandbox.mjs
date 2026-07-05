@@ -36,7 +36,11 @@ import {
   getValidationProfileRevision,
   profileFingerprint,
   requireValidationProfile,
+  resolveValidationProfile,
   sandboxProfileBlockReason,
+  selectValidationEnvironment,
+  validateValidationEnvironmentReference,
+  validationEnvironmentReference,
 } from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -164,7 +168,7 @@ function requireMatchingValidationHost(actual, expected) {
   for (const field of ["operatingSystem", "release", "architecture"]) {
     if (actual[field] !== expected[field]) {
       throw new TypeError(
-        `validation host does not match profile: expected ` +
+        `validation host does not match environment: expected ` +
         `${expected.operatingSystem} ${expected.release} ` +
         `${expected.architecture}`,
       );
@@ -564,9 +568,10 @@ export function validateFixtureValidationReport(report) {
     "validationProfile",
     "validationProfileRevision",
     "validationProfileSha256",
+    "validationEnvironment",
   ];
   requireExactKeys(report, topLevelKeys, "fixture validation report");
-  if (report.schemaVersion !== "1.4") {
+  if (report.schemaVersion !== "1.5") {
     throw new TypeError("unsupported fixture validation report version");
   }
   if (
@@ -592,19 +597,57 @@ export function validateFixtureValidationReport(report) {
     report.validationProfile,
     "fixture validation validationProfile",
   );
-  const validationProfile = getValidationProfileRevision(
+  const validationProfileContract = getValidationProfileRevision(
     report.validationProfile,
     report.validationProfileRevision,
     "fixture validation validationProfile",
   );
   if (
     report.validationProfileSha256 !==
-      profileFingerprint(validationProfile)
+      profileFingerprint(validationProfileContract)
   ) {
     throw new TypeError(
       "fixture validation validationProfileSha256 is invalid",
     );
   }
+  requireExactKeys(
+    report.validationEnvironment,
+    ["execution", "host", "id", "revision", "sha256"],
+    "fixture validation validationEnvironment",
+  );
+  const validationEnvironment = validateValidationEnvironmentReference(
+    {
+      id: report.validationEnvironment.id,
+      revision: report.validationEnvironment.revision,
+      sha256: report.validationEnvironment.sha256,
+    },
+    "fixture validation validationEnvironment",
+  );
+  requireMatchingValidationHost(
+    report.validationEnvironment.host,
+    validationEnvironment.host,
+  );
+  const expectedExecution = validationEnvironment.execution;
+  requireExactKeys(
+    report.validationEnvironment.execution,
+    expectedExecution.kind === "oci" ? ["image", "kind"] : ["kind"],
+    "fixture validation environment execution",
+  );
+  if (
+    report.validationEnvironment.execution.kind !== expectedExecution.kind ||
+    (
+      expectedExecution.kind === "oci" &&
+      report.validationEnvironment.execution.image !== expectedExecution.image
+    )
+  ) {
+    throw new TypeError(
+      "fixture validation environment execution is invalid",
+    );
+  }
+  const validationProfile = resolveValidationProfile(
+    validationProfileContract,
+    validationEnvironment,
+  );
   if (report.suite === "firmware" && report.targetProfile === null) {
     throw new TypeError(
       "firmware fixture validation requires a targetProfile",
@@ -762,6 +805,16 @@ export function validateFixtureValidationReport(report) {
       );
     }
   }
+  const expectedToolchainNames = validationProfile.toolchains
+    .map((toolchain) => toolchain.name);
+  if (
+    toolchainNames.size !== expectedToolchainNames.length ||
+    expectedToolchainNames.some((name) => !toolchainNames.has(name))
+  ) {
+    throw new TypeError(
+      "fixture validation toolchains do not cover profile exactly",
+    );
+  }
   if (!Array.isArray(report.artifacts)) {
     throw new TypeError("fixture validation artifacts must be an array");
   }
@@ -900,13 +953,18 @@ export function runFixtureValidation({
     JSON.parse(readFileSync(manifestPath, "utf8")),
     task,
   );
-  const validationProfile = getValidationProfile(
+  const validationProfileContract = getValidationProfile(
     manifest.validationProfile,
   );
-  requireRunnableProfile(validationProfile);
-  requireMatchingValidationHost(
-    readValidationHostImpl(),
-    validationProfile.host,
+  requireRunnableProfile(validationProfileContract);
+  const validationHost = readValidationHostImpl();
+  const validationEnvironment = selectValidationEnvironment(
+    validationProfileContract,
+    validationHost,
+  );
+  const validationProfile = resolveValidationProfile(
+    validationProfileContract,
+    validationEnvironment,
   );
   const answerPath = resolve(fixtureRoot, manifest.answer.output);
   requireContained(fixtureRoot, answerPath, "fixture answer");
@@ -915,20 +973,26 @@ export function runFixtureValidation({
     .update(readFileSync(answerPath))
     .digest("hex");
 
-  const bubblewrapPath = resolveExecutableImpl("bwrap", { pathValue });
-  const prlimitPath = resolveExecutableImpl("prlimit", { pathValue });
+  const bubblewrapPath = resolveExecutableImpl(
+    validationEnvironment.sandbox.runtime.executable,
+    { pathValue },
+  );
+  const prlimitPath = resolveExecutableImpl(
+    validationEnvironment.sandbox.limiter.executable,
+    { pathValue },
+  );
   const sandboxRuntime = inspectToolchain(
-    "bwrap",
+    validationEnvironment.sandbox.runtime.executable,
     bubblewrapPath,
-    ["--version"],
-    validationProfile.sandbox.runtimeVersion,
+    validationEnvironment.sandbox.runtime.versionArgs,
+    validationEnvironment.sandbox.runtime.version,
     spawnTool,
   );
   const sandboxLimiter = inspectToolchain(
-    "prlimit",
+    validationEnvironment.sandbox.limiter.executable,
     prlimitPath,
-    ["--version"],
-    validationProfile.sandbox.limiterVersion,
+    validationEnvironment.sandbox.limiter.versionArgs,
+    validationEnvironment.sandbox.limiter.version,
     spawnTool,
   );
   const profileToolchains = new Map(
@@ -1011,14 +1075,21 @@ export function runFixtureValidation({
     }
 
     const report = {
-      schemaVersion: "1.4",
+      schemaVersion: "1.5",
       taskId,
       answerSha256,
       suite: task.suite,
       targetProfile: manifest.targetProfile,
       validationProfile: manifest.validationProfile,
-      validationProfileRevision: validationProfile.revision,
-      validationProfileSha256: profileFingerprint(validationProfile),
+      validationProfileRevision: validationProfileContract.revision,
+      validationProfileSha256: profileFingerprint(
+        validationProfileContract,
+      ),
+      validationEnvironment: {
+        ...validationEnvironmentReference(validationEnvironment),
+        host: validationHost,
+        execution: validationEnvironment.execution,
+      },
       fixtureStatus: manifest.status,
       language: manifest.language,
       startedAt: reportStartedAt.toISOString(),

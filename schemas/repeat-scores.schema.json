@@ -3,11 +3,29 @@
   "$id": "https://github.com/arjun7965/llm-firmware-benchmark/schemas/repeat-scores.schema.json",
   "title": "Repeated benchmark scores",
   "type": "object",
-  "required": ["rubric", "tasks"],
+  "required": [
+    "schemaVersion",
+    "rubric",
+    "validationContracts",
+    "tasks"
+  ],
   "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
     "rubric": {
       "type": "string",
       "minLength": 1
+    },
+    "validationContracts": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/validationContract"
+      }
     },
     "tasks": {
       "type": "array",
@@ -20,7 +38,7 @@
     }
   },
   "patternProperties": {
-    "^(?!rubric$|tasks$)[a-z0-9]+(?:[._-][a-z0-9]+)*$": {
+    "^(?!rubric$|schemaVersion$|tasks$|validationContracts$)[a-z0-9]+(?:[._-][a-z0-9]+)*$": {
       "type": "object",
       "minProperties": 1,
       "propertyNames": {
@@ -37,5 +55,39 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "contractReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "sha256"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "validationContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "environment"],
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/contractReference"
+        },
+        "environment": {
+          "$ref": "#/$defs/contractReference"
+        }
+      }
+    }
+  }
 }

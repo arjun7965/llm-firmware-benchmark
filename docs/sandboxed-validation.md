@@ -11,8 +11,9 @@ The validator requires Bubblewrap, `prlimit`, and each manifest toolchain as
 root-owned, non-writable executables under `/usr`. It fails closed when any
 dependency or namespace feature is unavailable; it never falls back to host
 execution. It also reads `/etc/os-release` as data and checks the OS ID, release,
-and normalized architecture against the current validation-profile revision
-before resolving or executing sandbox tools.
+and normalized architecture against the concrete environments supported by
+the current logical validation-profile revision. Exactly one environment must
+match before the validator resolves or executes sandbox tools.
 
 Profiles with npm or PyPI dependencies are rejected by the current runner
 because tool version probes cannot attest installed package contents. They
@@ -61,11 +62,12 @@ Each run writes ignored machine-readable output to:
 fixtures/<task-id>/build/validation-report.json
 ```
 
-The report follows `schemas/fixture-validation-report.schema.json` version 1.4.
-It records the extracted-code SHA-256, validation profile revision and contract
-SHA-256, target profile, language, resolved toolchain and sandbox versions, and
-produced binary size. Each phase preserves the exact compiler or test
-argv—including compile flags—and records a normalized `passed`, `failed`,
+The report follows `schemas/fixture-validation-report.schema.json` version 1.5.
+It records the extracted-code SHA-256, logical validation-profile revision and
+contract SHA-256, concrete environment revision and contract SHA-256, detected
+host, execution mode, target profile, language, resolved toolchain and sandbox
+versions, and produced binary size. Each phase preserves the exact compiler or
+test argv—including compile flags—and records a normalized `passed`, `failed`,
 `timed-out`, or `error` outcome alongside timing, limits, diagnostics, exit
 status, and signals.
 
