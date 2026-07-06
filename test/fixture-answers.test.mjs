@@ -114,14 +114,22 @@ test("fenced-code extraction preserves code and normalizes line endings", () => 
     "",
     "int answer(void) { return 42; }",
     "```",
-    "```text",
-    "ignored",
-    "```",
   ].join("\r\n");
 
   assert.equal(
     extractFencedCode(answer, { language: "c" }),
     "#include <stdint.h>\n\nint answer(void) { return 42; }\n",
+  );
+});
+
+test("fenced-code extraction honors marker type and length", () => {
+  assert.equal(
+    extractFencedCode("````c\n```\n````", { language: "c" }),
+    "```\n",
+  );
+  assert.equal(
+    extractFencedCode("~~~c\ncode\n~~~", { language: "c" }),
+    "code\n",
   );
 });
 
@@ -138,6 +146,18 @@ test("fenced-code extraction rejects malformed or ambiguous answers", () => {
   assert.throws(
     () => extractFencedCode("```c\none\n```\n```c\ntwo\n```", options),
     /multiple/u,
+  );
+  assert.throws(
+    () => extractFencedCode("```c\ncode\n```\n```text\nextra\n```", options),
+    /additional/u,
+  );
+  assert.throws(
+    () => extractFencedCode("```\nextra\n```\n```c\ncode\n```", options),
+    /additional/u,
+  );
+  assert.throws(
+    () => extractFencedCode("~~~c\ncode\n~~~\n```text\nextra\n```", options),
+    /additional/u,
   );
   assert.throws(
     () => extractFencedCode("```c extra\ncode\n```", options),

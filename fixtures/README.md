@@ -14,6 +14,12 @@ generated/     # Extracted model code; ignored
 build/         # Compiler and test output; ignored
 ```
 
+Fixture-backed tasks currently use the single-file
+`markdown-fenced-code` answer contract. Multi-file tasks remain rubric-only
+until the opt-in bundle contract is implemented. See
+`docs/answer-contracts.md` for the per-task decisions and activation
+requirements.
+
 `manifest.json` follows `schemas/fixture-manifest.schema.json` and its
 `validationProfile` and `targetProfile` must match `tasks.json`. Commands and
 per-tool `toolVersionArgs` are stored as argv arrays and must be executed

@@ -40,3 +40,50 @@ test("every benchmark task has documented validation dependencies", () => {
     );
   }
 });
+
+test("every task has a documented answer-contract decision", () => {
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+  const contracts = readFileSync(
+    new URL("../docs/answer-contracts.md", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(contracts, /^## Decision$/mu);
+  assert.match(contracts, /^## Future Multi-File Contract$/mu);
+  for (const task of tasks) {
+    const marker = `| \`${task.id}\` |`;
+    assert.equal(
+      contracts.split(marker).length - 1,
+      1,
+      `answer-contract decision for ${task.id} must appear exactly once`,
+    );
+  }
+  assert.match(
+    contracts,
+    /\| `go-graceful-shutdown` \| Rubric-only \| Multi-file \|/u,
+    "Go server and *_test.go outputs must retain a multi-file contract",
+  );
+});
+
+test("fixture-backed prompts retain the single-file contract", () => {
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+
+  for (const task of tasks) {
+    const manifestUrl = new URL(
+      `../fixtures/${task.id}/manifest.json`,
+      import.meta.url,
+    );
+    if (!existsSync(manifestUrl)) continue;
+    const manifest = JSON.parse(readFileSync(manifestUrl, "utf8"));
+    assert.equal(
+      manifest.answer.format,
+      "markdown-fenced-code",
+      `fixture ${task.id} must use the current single-file format`,
+    );
+    assert.match(
+      task.prompt,
+      /Return one fenced\b/u,
+      `fixture ${task.id} prompt must request one fenced implementation`,
+    );
+  }
+});

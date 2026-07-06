@@ -52,7 +52,7 @@ firmware validation work.
     match the validation host.
 - [x] Make scoring-profile selection explicit so hosted auxiliary tasks never
   inherit `firmware-v1` merely because validation metadata is present.
-- [ ] Decide whether each task returns one source file or uses a validated
+- [x] Decide whether each task returns one source file or uses a validated
   multi-file answer contract before changing prompts or extraction behavior.
 - [ ] Generalize mutation execution beyond C while retaining exact,
   compile-valid mutations and task-declared argv commands.

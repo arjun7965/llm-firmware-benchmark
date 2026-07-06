@@ -93,10 +93,12 @@ export function extractFencedCode(answer, {
   const expectedLanguage = language.toLowerCase();
   const lines = answer.replace(/\r\n?/gu, "\n").split("\n");
   const matches = [];
+  let fenceCount = 0;
 
   for (let index = 0; index < lines.length; index++) {
     const opening = openingFence(lines[index]);
     if (!opening) continue;
+    fenceCount += 1;
 
     let closingIndex = -1;
     for (let candidate = index + 1; candidate < lines.length; candidate++) {
@@ -136,6 +138,9 @@ export function extractFencedCode(answer, {
     throw new TypeError(
       `answer contains multiple fenced ${language} code blocks`,
     );
+  }
+  if (fenceCount > 1) {
+    throw new TypeError("answer contains additional fenced code blocks");
   }
   return matches[0];
 }
