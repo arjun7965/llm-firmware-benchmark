@@ -12,6 +12,12 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runFixtureValidation } from "../src/fixture-sandbox.mjs";
 import { validateFixtureRepository } from "../src/fixtures.mjs";
+import {
+  environmentFingerprint,
+  getValidationEnvironmentRevision,
+  getValidationProfile,
+  profileFingerprint,
+} from "../src/validation-profiles.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const repositoryFixtures = join(repositoryRoot, "fixtures");
@@ -39,6 +45,12 @@ const references = [
     source: "reference/firmware_state_machine.c",
   },
 ];
+const validationProfile = getValidationProfile("c11-host");
+const environmentReference = validationProfile.environments[0];
+const validationEnvironment = getValidationEnvironmentRevision(
+  environmentReference.id,
+  environmentReference.revision,
+);
 
 try {
   validateFixtureRepository({
@@ -74,9 +86,25 @@ try {
       );
     }
     if (
-      report.schemaVersion !== "1.4" ||
+      report.schemaVersion !== "1.5" ||
       report.suite !== "firmware" ||
-      report.validationProfile !== "c11-host" ||
+      report.validationProfile !== validationProfile.id ||
+      report.validationProfileRevision !== validationProfile.revision ||
+      report.validationProfileSha256 !==
+        profileFingerprint(validationProfile) ||
+      report.validationEnvironment.id !== validationEnvironment.id ||
+      report.validationEnvironment.revision !==
+        validationEnvironment.revision ||
+      report.validationEnvironment.sha256 !==
+        environmentFingerprint(validationEnvironment) ||
+      report.validationEnvironment.host.operatingSystem !==
+        validationEnvironment.host.operatingSystem ||
+      report.validationEnvironment.host.release !==
+        validationEnvironment.host.release ||
+      report.validationEnvironment.host.architecture !==
+        validationEnvironment.host.architecture ||
+      report.validationEnvironment.execution.kind !==
+        validationEnvironment.execution.kind ||
       report.toolchains.length !== 1 ||
       report.toolchains[0].name !== "cc" ||
       report.toolchains[0].version === "" ||
