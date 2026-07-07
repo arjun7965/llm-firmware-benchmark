@@ -54,7 +54,7 @@ firmware validation work.
   inherit `firmware-v1` merely because validation metadata is present.
 - [x] Decide whether each task returns one source file or uses a validated
   multi-file answer contract before changing prompts or extraction behavior.
-- [ ] Generalize mutation execution beyond C while retaining exact,
+- [x] Generalize mutation execution beyond C while retaining exact,
   compile-valid mutations and task-declared argv commands.
 - [ ] Add verified lockfile installations or digest-pinned images for
   validation profiles with npm or PyPI dependencies. Keep the sandbox runner

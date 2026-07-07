@@ -45,12 +45,14 @@ Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
 metadata only; it does not execute compiler commands.
 
-`mutations.json` follows `schemas/fixture-mutations.schema.json`. Every active C
+`mutations.json` follows `schemas/fixture-mutations.schema.json`. Every active
 fixture supplies exact, single-match source substitutions derived from its
-trusted reference. `npm run test:mutations` requires each mutant to compile
-and then fail the public tests; compilation failures are invalid mutations,
-not successful detections. `npm run test:c` runs trusted references and
-mutations. Mutation tests never use extracted model output.
+trusted reference. `npm run test:mutations` rewrites the fixture-declared
+answer source path and shared `build/` artifacts into a temporary directory,
+then runs the manifest's compile and test argv without a shell. Each mutant
+must compile for that fixture's language and then fail the public tests;
+compilation failures are invalid mutations, not successful detections.
+Mutation tests never use extracted model output.
 
 Extract one successful raw result with:
 

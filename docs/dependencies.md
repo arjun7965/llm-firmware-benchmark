@@ -72,9 +72,11 @@ compile/test argv, suite and target metadata, artifact size, outcomes, and
 diagnostics.
 See `docs/sandboxed-validation.md`.
 
-`npm run test:mutations` uses the same host C compiler to build controlled
-mutations of trusted references. Every mutation must compile and be rejected by
-the public tests. `npm run test:c` includes these mutation checks.
+`npm run test:mutations` uses each active fixture's declared compile and test
+commands to build controlled mutations of trusted references. Every mutation
+must be compile-valid for that fixture's language and be rejected by the public
+tests. `npm run test:c` includes these mutation checks for the current C
+fixtures.
 
 The fictional bare-metal timer fixture uses `cc` for instrumented host MMIO:
 
