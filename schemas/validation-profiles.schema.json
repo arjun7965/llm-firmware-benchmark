@@ -7,7 +7,7 @@
   "required": ["schemaVersion", "environments", "profiles"],
   "properties": {
     "schemaVersion": {
-      "const": "2.0"
+      "const": "2.1"
     },
     "environments": {
       "type": "array",
@@ -182,6 +182,41 @@
         "version": { "$ref": "#/$defs/version" }
       }
     },
+    "dependencyInstall": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "source", "lockfile", "sha256"],
+          "properties": {
+            "kind": { "const": "lockfile" },
+            "source": {
+              "enum": ["npm", "pypi"]
+            },
+            "lockfile": {
+              "type": "string",
+              "pattern": "^validation-locks/[A-Za-z0-9._/-]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "image"],
+          "properties": {
+            "kind": { "const": "oci-image" },
+            "image": {
+              "type": "string",
+              "pattern": "^[a-z0-9./_-]+(?::[A-Za-z0-9._-]+)?@sha256:[a-f0-9]{64}$"
+            }
+          }
+        }
+      ]
+    },
     "resourceLimits": {
       "type": "object",
       "additionalProperties": false,
@@ -280,6 +315,7 @@
           "type": "array",
           "items": { "$ref": "#/$defs/dependency" }
         },
+        "dependencyInstall": { "$ref": "#/$defs/dependencyInstall" },
         "sandbox": { "$ref": "#/$defs/legacySandbox" }
       }
     },
@@ -317,6 +353,7 @@
           "type": "array",
           "items": { "$ref": "#/$defs/dependency" }
         },
+        "dependencyInstall": { "$ref": "#/$defs/dependencyInstall" },
         "sandbox": { "$ref": "#/$defs/sandboxPolicy" }
       }
     }

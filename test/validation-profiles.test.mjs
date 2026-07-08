@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import {
   environmentFingerprint,
   getValidationProfile,
   getValidationEnvironmentRevision,
   getValidationProfileRevision,
+  normalizeDependencyLockfileContent,
   profileFingerprint,
   resolveValidationProfile,
   selectValidationEnvironment,
@@ -20,6 +22,7 @@ import {
   validationProfileIds,
   validationProfiles,
   validationProfilesDocument,
+  validateValidationProfileLockfiles,
 } from "../src/validation-profiles.mjs";
 
 test("hosted validation profiles are pinned and immutable", () => {
@@ -34,6 +37,13 @@ test("hosted validation profiles are pinned and immutable", () => {
   );
   assert.equal(
     validateValidationProfiles(validationProfilesDocument),
+    validationProfilesDocument,
+  );
+  assert.equal(
+    validateValidationProfileLockfiles(
+      validationProfilesDocument,
+      new URL("../", import.meta.url),
+    ),
     validationProfilesDocument,
   );
   assert.equal(
@@ -55,6 +65,13 @@ test("hosted validation profiles are pinned and immutable", () => {
     assert.ok(Number.isSafeInteger(profile.revision));
     assert.ok(profile.revision >= 1);
     assert.ok(profile.toolchains.length > 0);
+    if (
+      profile.dependencies.length > 0 &&
+      getValidationProfile(profile.id) === profile
+    ) {
+      assert.equal(profile.dependencyInstall.kind, "lockfile");
+      assert.match(profile.dependencyInstall.sha256, /^[a-f0-9]{64}$/u);
+    }
     assert.match(profileFingerprint(profile), /^[a-f0-9]{64}$/u);
     assert.equal(Object.isFrozen(profile), true);
     assert.equal(Object.isFrozen(profile.sandbox.resourceLimits.test), true);
@@ -114,6 +131,29 @@ test("hosted validation profiles are pinned and immutable", () => {
     ),
     /c11-host@1 fingerprint is invalid/u,
   );
+  const changedLockfileHash = structuredClone(validationProfilesDocument);
+  changedLockfileHash.profiles
+    .find((profile) => profile.id === "node-typescript" &&
+      profile.revision === 3)
+    .dependencyInstall.sha256 = "0".repeat(64);
+  assert.throws(
+    () => validateValidationProfileLockfiles(
+      changedLockfileHash,
+      new URL("../", import.meta.url),
+    ),
+    /dependencyInstall sha256 does not match/u,
+  );
+  const lockfileContent = readFileSync(
+    new URL("../validation-locks/node-typescript-v3.lock.json", import.meta.url),
+    "utf8",
+  );
+  const crlfContent = lockfileContent.replace(/\n/gu, "\r\n");
+  assert.equal(
+    createHash("sha256")
+      .update(normalizeDependencyLockfileContent(crlfContent))
+      .digest("hex"),
+    getValidationProfile("node-typescript").dependencyInstall.sha256,
+  );
 });
 
 test("validation profile contracts reject unpinned or unsafe values", () => {
@@ -126,7 +166,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   };
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.0",
+      schemaVersion: "2.1",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, secondRevision],
     }),
@@ -134,7 +174,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.0",
+      schemaVersion: "2.1",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -148,7 +188,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.0",
+      schemaVersion: "2.1",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -162,7 +202,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.0",
+      schemaVersion: "2.1",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, structuredClone(validProfile)],
     }),
@@ -170,7 +210,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.0",
+      schemaVersion: "2.1",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...structuredClone(validProfile),
@@ -182,7 +222,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   const logicalProfile = structuredClone(getValidationProfile("c11-host"));
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.0",
+      schemaVersion: "2.1",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...logicalProfile,
@@ -208,5 +248,23 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   assert.throws(
     () => validateValidationProfiles(mismatchedTools),
     /toolchains must exactly match environment/u,
+  );
+  const missingInstall = structuredClone(validationProfilesDocument);
+  delete missingInstall.profiles
+    .find((profile) => profile.id === "node-typescript" &&
+      profile.revision === 3)
+    .dependencyInstall;
+  assert.throws(
+    () => validateValidationProfiles(missingInstall),
+    /current validation profile node-typescript@3 must define dependencyInstall/u,
+  );
+  const mismatchedInstall = structuredClone(validationProfilesDocument);
+  mismatchedInstall.profiles
+    .find((profile) => profile.id === "node-typescript" &&
+      profile.revision === 3)
+    .dependencyInstall.source = "pypi";
+  assert.throws(
+    () => validateValidationProfiles(mismatchedInstall),
+    /dependencyInstall source does not cover/u,
   );
 });

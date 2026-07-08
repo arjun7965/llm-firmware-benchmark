@@ -62,7 +62,7 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
       ...task,
       validationProfile: "node-typescript",
     }),
-    /must remain a scaffold.*dependencies are unverifiable/u,
+    /must remain a scaffold.*dependency installation cannot be runtime-attested/u,
   );
   assert.throws(
     () => validateFixtureManifest({

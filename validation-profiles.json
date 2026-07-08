@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "2.1",
   "environments": [
     {
       "id": "ubuntu-24-04-x86-64-c11-host",
@@ -678,6 +678,60 @@
       }
     },
     {
+      "id": "node-typescript",
+      "revision": 3,
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-node-typescript",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "node",
+        "tsc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 30,
+            "fileBytes": 33554432,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "npm",
+        "lockfile": "validation-locks/node-typescript-v3.lock.json",
+        "sha256": "665b39a02acb2f8ba4848f01a5b3da6e15bc1dce5bc9531176d63829eb2a34a1"
+      }
+    },
+    {
       "id": "node-typescript-postgresql",
       "revision": 1,
       "host": {
@@ -840,6 +894,82 @@
             "openFiles": 256
           }
         }
+      }
+    },
+    {
+      "id": "node-typescript-postgresql",
+      "revision": 3,
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@types/express",
+          "version": "5.0.2"
+        },
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "@types/pg",
+          "version": "8.15.4"
+        },
+        {
+          "source": "npm",
+          "name": "express",
+          "version": "5.1.0"
+        },
+        {
+          "source": "npm",
+          "name": "pg",
+          "version": "8.16.0"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-node-typescript-postgresql",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "node",
+        "postgres",
+        "psql",
+        "tsc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 67108864,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 60,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "npm",
+        "lockfile": "validation-locks/node-typescript-postgresql-v3.lock.json",
+        "sha256": "bd404ff3f08888d3f61863a1d9481c32e4db084b89edf3a718900fe23c031116"
       }
     },
     {
@@ -1036,6 +1166,60 @@
             "openFiles": 128
           }
         }
+      }
+    },
+    {
+      "id": "python3-pytest-hypothesis",
+      "revision": 3,
+      "dependencies": [
+        {
+          "source": "pypi",
+          "name": "hypothesis",
+          "version": "6.135.9"
+        },
+        {
+          "source": "pypi",
+          "name": "pytest",
+          "version": "8.4.0"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-python3-pytest-hypothesis",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "pytest",
+        "python3"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 15,
+            "fileBytes": 16777216,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 20,
+            "fileBytes": 16777216,
+            "openFiles": 128
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "pypi",
+        "lockfile": "validation-locks/python3-pytest-hypothesis-v3.lock.json",
+        "sha256": "a0ee2b079cad8510389120a121881ed736c8fa3c80e7fbf473a40162f26732c2"
       }
     },
     {
@@ -1314,6 +1498,105 @@
             "openFiles": 256
           }
         }
+      }
+    },
+    {
+      "id": "react18-typescript",
+      "revision": 3,
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@testing-library/dom",
+          "version": "10.4.0"
+        },
+        {
+          "source": "npm",
+          "name": "@testing-library/react",
+          "version": "16.3.0"
+        },
+        {
+          "source": "npm",
+          "name": "@testing-library/user-event",
+          "version": "14.6.1"
+        },
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "@types/react",
+          "version": "18.3.23"
+        },
+        {
+          "source": "npm",
+          "name": "@types/react-dom",
+          "version": "18.3.7"
+        },
+        {
+          "source": "npm",
+          "name": "jsdom",
+          "version": "26.1.0"
+        },
+        {
+          "source": "npm",
+          "name": "react",
+          "version": "18.3.1"
+        },
+        {
+          "source": "npm",
+          "name": "react-dom",
+          "version": "18.3.1"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        },
+        {
+          "source": "npm",
+          "name": "vitest",
+          "version": "3.2.1"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-react18-typescript",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "node",
+        "tsc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 33554432,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 60,
+            "fileBytes": 67108864,
+            "openFiles": 256
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 33554432,
+            "openFiles": 256
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "npm",
+        "lockfile": "validation-locks/react18-typescript-v3.lock.json",
+        "sha256": "23e0fd5f61b74cc47f6b0bea4c15bea4dea341959c7281024b4697638b681437"
       }
     },
     {

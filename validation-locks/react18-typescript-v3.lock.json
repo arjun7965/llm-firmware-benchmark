@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0",
+  "profile": {
+    "id": "react18-typescript",
+    "revision": 3
+  },
+  "source": "npm",
+  "dependencies": [
+    {
+      "name": "@testing-library/dom",
+      "version": "10.4.0"
+    },
+    {
+      "name": "@testing-library/react",
+      "version": "16.3.0"
+    },
+    {
+      "name": "@testing-library/user-event",
+      "version": "14.6.1"
+    },
+    {
+      "name": "@types/node",
+      "version": "22.15.29"
+    },
+    {
+      "name": "@types/react",
+      "version": "18.3.23"
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "18.3.7"
+    },
+    {
+      "name": "jsdom",
+      "version": "26.1.0"
+    },
+    {
+      "name": "react",
+      "version": "18.3.1"
+    },
+    {
+      "name": "react-dom",
+      "version": "18.3.1"
+    },
+    {
+      "name": "typescript",
+      "version": "5.8.3"
+    },
+    {
+      "name": "vitest",
+      "version": "3.2.1"
+    }
+  ]
+}

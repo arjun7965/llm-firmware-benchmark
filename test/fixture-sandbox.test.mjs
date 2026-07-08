@@ -283,7 +283,7 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
       fixturesRoot: fixture.fixturesRoot,
       tasksPath: fixture.tasksPath,
     }),
-    /dependencies are unverifiable/u,
+    /dependency installation cannot be runtime-attested/u,
   );
 
   const interpreterFixture = sandboxFixture(t);

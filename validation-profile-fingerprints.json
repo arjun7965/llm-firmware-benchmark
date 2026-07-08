@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "2.1",
   "environments": {
     "ubuntu-24-04-x86-64-c11-host": {
       "1": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
@@ -40,11 +40,13 @@
     },
     "node-typescript": {
       "1": "2c7d22458c5a5b90369237b3875cac9bd97c5886f8ac720521fadc86410274f1",
-      "2": "655fd393ce4fab119f635d474bc3b735e1243a855a8a0d63c19ae4fe1df166c8"
+      "2": "655fd393ce4fab119f635d474bc3b735e1243a855a8a0d63c19ae4fe1df166c8",
+      "3": "5e27f632be1428007ea13d4ea46473f54641fb2741bce9ef2dba5922a27f2e5f"
     },
     "node-typescript-postgresql": {
       "1": "57e91a3f981e9fc00b018343d672a032520580ded9d6c143b5e0cb5ed3f65b7b",
-      "2": "24b12e5e490a957482acfec5389b2867aadd089aec4d0debc2ecaeedbf406617"
+      "2": "24b12e5e490a957482acfec5389b2867aadd089aec4d0debc2ecaeedbf406617",
+      "3": "e3abe7d9af10c943191f2a8d14307525759488c817f61c1673455fa56a315b19"
     },
     "postgresql": {
       "1": "b119b04ef8173f2671dbe26126fe590737597734c88333c5ea7e9cafe03379ac",
@@ -52,7 +54,8 @@
     },
     "python3-pytest-hypothesis": {
       "1": "374dcbf18d79fca3623a8ce4c22f2aec4b475632ee798df92d031370a1ba5a75",
-      "2": "608745aa50a3e8736bafc2b5553ad637f29517e991f4891cd6071b4a86e929a3"
+      "2": "608745aa50a3e8736bafc2b5553ad637f29517e991f4891cd6071b4a86e929a3",
+      "3": "36521a4a42f94aabaf21acb8541b61f5610f73632983242aaf6ddac74021c6d9"
     },
     "python3-stdlib": {
       "1": "44780975a921637636a5545d4e8b76f7da9e56264beaa078ed2192a7a1c2b9b2",
@@ -60,7 +63,8 @@
     },
     "react18-typescript": {
       "1": "aed1489d9e1d8211b47742ce8e6a24f905633d0a952ec110da81e71862942225",
-      "2": "6aa16c7fd305e7ef2d475ed42b6582ca6c17f58f2abf564d876da73769ee4c8a"
+      "2": "6aa16c7fd305e7ef2d475ed42b6582ca6c17f58f2abf564d876da73769ee4c8a",
+      "3": "00a38121086f88597e5fd47a25269bda8db9277c94f2244025ad880a488f50b6"
     },
     "stable-rust": {
       "1": "1de183a0892100343bddd9961868b765d231dac8f5fe279e64a59a8d33666ce1",

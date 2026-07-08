@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0",
+  "profile": {
+    "id": "node-typescript-postgresql",
+    "revision": 3
+  },
+  "source": "npm",
+  "dependencies": [
+    {
+      "name": "@types/express",
+      "version": "5.0.2"
+    },
+    {
+      "name": "@types/node",
+      "version": "22.15.29"
+    },
+    {
+      "name": "@types/pg",
+      "version": "8.15.4"
+    },
+    {
+      "name": "express",
+      "version": "5.1.0"
+    },
+    {
+      "name": "pg",
+      "version": "8.16.0"
+    },
+    {
+      "name": "typescript",
+      "version": "5.8.3"
+    }
+  ]
+}

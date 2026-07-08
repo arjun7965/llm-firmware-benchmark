@@ -330,8 +330,12 @@ test("JSON Schema files declare the expected contracts", () => {
     ["error", "failed", "passed", "timed-out"],
   );
   assert.equal(fixtureValidationSchema.additionalProperties, false);
-  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.0");
+  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.1");
   assert.equal(validationProfilesSchema.additionalProperties, false);
+  assert.equal(
+    validationProfilesSchema.$defs.dependencyInstall.oneOf.length,
+    2,
+  );
   assert.equal(
     validationProfilesSchema.$defs.environment
       .properties.execution.$ref,

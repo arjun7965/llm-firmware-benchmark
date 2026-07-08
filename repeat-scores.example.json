@@ -17,8 +17,8 @@
     "frontend-autocomplete": {
       "profile": {
         "id": "react18-typescript",
-        "revision": 2,
-        "sha256": "6aa16c7fd305e7ef2d475ed42b6582ca6c17f58f2abf564d876da73769ee4c8a"
+        "revision": 3,
+        "sha256": "00a38121086f88597e5fd47a25269bda8db9277c94f2244025ad880a488f50b6"
       },
       "environment": {
         "id": "ubuntu-24-04-x86-64-react18-typescript",

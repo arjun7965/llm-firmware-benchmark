@@ -56,7 +56,7 @@ firmware validation work.
   multi-file answer contract before changing prompts or extraction behavior.
 - [x] Generalize mutation execution beyond C while retaining exact,
   compile-valid mutations and task-declared argv commands.
-- [ ] Add verified lockfile installations or digest-pinned images for
+- [x] Add verified lockfile installations or digest-pinned images for
   validation profiles with npm or PyPI dependencies. Keep the sandbox runner
   fail-closed for nonempty dependency sets until their installed versions can
   be attested.

@@ -15,10 +15,12 @@ and normalized architecture against the concrete environments supported by
 the current logical validation-profile revision. Exactly one environment must
 match before the validator resolves or executes sandbox tools.
 
-Profiles with npm or PyPI dependencies are rejected by the current runner
-because tool version probes cannot attest installed package contents. They
-require a verified lockfile installation or digest-pinned image before
-executable fixture validation is enabled.
+Profiles with npm or PyPI dependencies are rejected by the current runner even
+when their logical profile includes a verified `dependencyInstall` lockfile.
+The committed lockfiles attest the intended package set, but the host runner
+does not yet verify or mount an installed package tree from those lockfiles.
+Such profiles require runtime install attestation or a digest-pinned image
+before executable fixture validation is enabled.
 
 The test namespace currently executes only a native binary from `build/`.
 Consequently, dependency-free interpreter and service profiles are also

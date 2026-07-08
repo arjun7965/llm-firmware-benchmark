@@ -31,8 +31,9 @@ The append-only `validation-profile-fingerprints.json` registry records the
 canonical SHA-256 for every published profile and environment revision.
 Startup fails if a contract is changed, removed, or added without its matching
 fingerprint. Legacy revision 1 profiles remain available for historical
-fingerprint verification; current revision 2 profiles use the separated
-environment model.
+fingerprint verification; revision 2 profiles use the separated environment
+model, and dependency-bearing revision 3 profiles add dependency-install
+attestation.
 
 ## Profile Registry
 
@@ -56,13 +57,20 @@ policies require no network and an isolated filesystem.
 | `stable-rust` | Rust and Cargo 1.87.0 | None; standard library only |
 
 The registry is authoritative for full dependency versions and byte-level
-resource limits. Fixture manifests may invoke only toolchains declared by
-their profile and must use version-probe argv supported by every referenced
-environment. Before probing tools, the sandbox validator reads
-`/etc/os-release`, normalizes the runtime architecture, and selects exactly one
-supported host environment. Zero or multiple matches fail closed. It then
-rejects any resolved tool, Bubblewrap, or `prlimit` version that differs from
-that environment's pins.
+resource limits. Dependency-bearing current profiles also record a
+`dependencyInstall` attestation. The current committed attestations are
+lockfiles under `validation-locks/`; each profile pins the lockfile path,
+source (`npm` or `pypi`), and SHA-256, and startup verifies both the file hash
+and that the lockfile package set exactly matches the profile dependencies.
+Git attributes force those lockfiles to LF line endings, and the verifier
+normalizes CRLF to LF before hashing so platform checkout settings do not
+change the contract.
+Fixture manifests may invoke only toolchains declared by their profile and
+must use version-probe argv supported by every referenced environment. Before
+probing tools, the sandbox validator reads `/etc/os-release`, normalizes the
+runtime architecture, and selects exactly one supported host environment. Zero
+or multiple matches fail closed. It then rejects any resolved tool, Bubblewrap,
+or `prlimit` version that differs from that environment's pins.
 
 Reports record the profile and environment IDs, revisions, contract SHA-256
 values, detected host fields, and execution mode. `repeat-scores.json` requires
@@ -92,13 +100,15 @@ lockfiles, image provenance, digest verification before execution, and tests
 for the resulting mount and network boundary. An OCI-only environment is not
 selected by the host runner.
 
-The current host Bubblewrap runner cannot prove installed npm or PyPI package
-versions. It therefore fails closed for every profile with a nonempty
-`dependencies` array before resolving or executing tools. Such a profile can
-be activated only after its fixture provides a verified lockfile installation
-or validation runs in a digest-pinned image. Standard-library-only profiles
-are not automatically eligible: the current test sandbox supports only native
-binaries produced by `c11-host`, `go-std`, and `stable-rust`.
+The current host Bubblewrap runner can verify committed lockfiles but still
+cannot prove that the sandboxed runtime is executing from the installed npm or
+PyPI package set described by those lockfiles. It therefore fails closed for
+every profile with a nonempty `dependencies` array before resolving or
+executing tools. Such a profile can be activated only after the runner verifies
+and mounts the corresponding lockfile installation, or validation runs in a
+digest-pinned image. Standard-library-only profiles are not automatically
+eligible: the current test sandbox supports only native binaries produced by
+`c11-host`, `go-std`, and `stable-rust`.
 Interpreter and service profiles remain scaffold-only until their approved
 runtime is explicitly mounted in the test namespace.
 

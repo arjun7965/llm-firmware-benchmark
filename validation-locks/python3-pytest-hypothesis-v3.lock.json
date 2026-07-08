@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0",
+  "profile": {
+    "id": "python3-pytest-hypothesis",
+    "revision": 3
+  },
+  "source": "pypi",
+  "dependencies": [
+    {
+      "name": "hypothesis",
+      "version": "6.135.9"
+    },
+    {
+      "name": "pytest",
+      "version": "8.4.0"
+    }
+  ]
+}

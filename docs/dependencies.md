@@ -41,6 +41,12 @@ and commands. Use the same exact profile and environment IDs, revisions, and
 SHA-256 values for all models in a comparison. The repeat-score contract pins
 one compatible profile/environment pair per scored task and verifies the
 profile ID against the task registry.
+Profiles with npm or PyPI dependencies additionally pin committed lockfiles
+under `validation-locks/`; startup verifies their SHA-256 and package set.
+Those lockfiles are stored with LF line endings and normalized before hashing
+so Git checkout settings do not change the attested contract.
+The current sandbox runner still rejects those profiles until it can attest
+the mounted installation or run a digest-pinned image.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free

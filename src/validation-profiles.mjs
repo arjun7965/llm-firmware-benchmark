@@ -1,5 +1,16 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  readFileSync,
+} from "node:fs";
+import {
+  dirname,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
+import { fileURLToPath } from "node:url";
 
 const identifierPattern = /^[a-z][a-z0-9-]*$/u;
 const packageNamePattern = /^(?:@[a-z0-9._-]+\/)?[a-z0-9][a-z0-9._-]*$/u;
@@ -9,6 +20,7 @@ const versionPattern =
 const imagePattern =
   /^[a-z0-9./_-]+(?::[A-Za-z0-9._-]+)?@sha256:[a-f0-9]{64}$/u;
 const fingerprintPattern = /^[a-f0-9]{64}$/u;
+const lockfilePattern = /^validation-locks\/[A-Za-z0-9._/-]+$/u;
 const resourceLimitFields = [
   "addressSpaceBytes",
   "cpuSeconds",
@@ -23,6 +35,10 @@ function requireObject(value, name) {
   }
 }
 
+function asPath(value) {
+  return value instanceof URL ? fileURLToPath(value) : value;
+}
+
 function requireExactFields(value, fields, name) {
   requireObject(value, name);
   if (Object.keys(value).sort().join(",") !== [...fields].sort().join(",")) {
@@ -33,6 +49,37 @@ function requireExactFields(value, fields, name) {
 function requireString(value, name, pattern) {
   if (typeof value !== "string" || !pattern.test(value)) {
     throw new TypeError(`${name} is invalid`);
+  }
+}
+
+function requireSafeRelativePath(value, name, pattern) {
+  requireString(value, name, pattern);
+  if (
+    value.includes("\\") ||
+    value.startsWith("/") ||
+    value.split("/").some((segment) =>
+      segment === "" || segment === "." || segment === "..")
+  ) {
+    throw new TypeError(`${name} must be a safe relative path`);
+  }
+}
+
+function requireRegularFile(path, name) {
+  if (!existsSync(path)) throw new TypeError(`${name} does not exist`);
+  const metadata = lstatSync(path);
+  if (metadata.isSymbolicLink() || !metadata.isFile()) {
+    throw new TypeError(`${name} must be a non-symlink regular file`);
+  }
+}
+
+function requireContained(root, path, name) {
+  const relativePath = relative(root, path);
+  if (
+    relativePath === "" ||
+    relativePath === ".." ||
+    relativePath.startsWith(`..${sep}`)
+  ) {
+    throw new TypeError(`${name} escapes its root`);
   }
 }
 
@@ -144,6 +191,86 @@ function validateDependencies(dependencies, profileId) {
     dependencies,
     `validation profile ${profileId} dependencies`,
     (dependency) => `${dependency.source}:${dependency.name}`,
+  );
+}
+
+function validateDependencyInstall(profile, environmentRevisionMap) {
+  if (!Object.hasOwn(profile, "dependencyInstall")) return;
+  if (profile.dependencies.length === 0) {
+    throw new TypeError(
+      `validation profile ${profile.id} dependencyInstall is unnecessary`,
+    );
+  }
+  const install = profile.dependencyInstall;
+  requireObject(
+    install,
+    `validation profile ${profile.id} dependencyInstall`,
+  );
+  if (install.kind === "lockfile") {
+    requireExactFields(
+      install,
+      ["kind", "lockfile", "sha256", "source"],
+      `validation profile ${profile.id} dependencyInstall`,
+    );
+    requireString(
+      install.source,
+      `validation profile ${profile.id} dependencyInstall source`,
+      /^(?:npm|pypi)$/u,
+    );
+    if (profile.dependencies.some((dependency) =>
+      dependency.source !== install.source)) {
+      throw new TypeError(
+        `validation profile ${profile.id} dependencyInstall source ` +
+        "does not cover its dependencies",
+      );
+    }
+    requireSafeRelativePath(
+      install.lockfile,
+      `validation profile ${profile.id} dependencyInstall lockfile`,
+      lockfilePattern,
+    );
+    requireString(
+      install.sha256,
+      `validation profile ${profile.id} dependencyInstall sha256`,
+      fingerprintPattern,
+    );
+    return;
+  }
+  if (install.kind === "oci-image") {
+    requireExactFields(
+      install,
+      ["image", "kind"],
+      `validation profile ${profile.id} dependencyInstall`,
+    );
+    requireString(
+      install.image,
+      `validation profile ${profile.id} dependencyInstall image`,
+      imagePattern,
+    );
+    if (!Array.isArray(profile.environments)) {
+      throw new TypeError(
+        `validation profile ${profile.id} dependencyInstall image requires ` +
+        "logical environments",
+      );
+    }
+    for (const reference of profile.environments) {
+      const environment = environmentRevisionMap.get(
+        `${reference.id}@${reference.revision}`,
+      );
+      if (
+        environment.execution.kind !== "oci" ||
+        environment.execution.image !== install.image
+      ) {
+        throw new TypeError(
+          `validation profile ${profile.id} dependencyInstall image ` +
+          "does not match its environments",
+        );
+      }
+    }
+    return;
+  }
+  throw new TypeError(
+    `validation profile ${profile.id} dependencyInstall kind is invalid`,
   );
 }
 
@@ -334,16 +461,20 @@ function validateEnvironment(environment) {
 }
 
 function validateLegacyProfile(profile) {
+  const fields = [
+    "dependencies",
+    "host",
+    "id",
+    "revision",
+    "sandbox",
+    "toolchains",
+  ];
+  if (Object.hasOwn(profile, "dependencyInstall")) {
+    fields.push("dependencyInstall");
+  }
   requireExactFields(
     profile,
-    [
-      "dependencies",
-      "host",
-      "id",
-      "revision",
-      "sandbox",
-      "toolchains",
-    ],
+    fields,
     "validation profile",
   );
   validateHost(profile.host, `validation profile ${profile.id} host`);
@@ -355,16 +486,20 @@ function validateLegacyProfile(profile) {
 }
 
 function validateLogicalProfile(profile, environmentRevisionMap) {
+  const fields = [
+    "dependencies",
+    "environments",
+    "id",
+    "revision",
+    "sandbox",
+    "toolchains",
+  ];
+  if (Object.hasOwn(profile, "dependencyInstall")) {
+    fields.push("dependencyInstall");
+  }
   requireExactFields(
     profile,
-    [
-      "dependencies",
-      "environments",
-      "id",
-      "revision",
-      "sandbox",
-      "toolchains",
-    ],
+    fields,
     "validation profile",
   );
   if (!Array.isArray(profile.environments) ||
@@ -441,7 +576,7 @@ export function validateValidationProfiles(document) {
     ["environments", "profiles", "schemaVersion"],
     "validation profiles document",
   );
-  if (document.schemaVersion !== "2.0") {
+  if (document.schemaVersion !== "2.1") {
     throw new TypeError("unsupported validation profiles schemaVersion");
   }
   if (
@@ -478,6 +613,7 @@ export function validateValidationProfiles(document) {
     } else {
       validateLogicalProfile(profile, environmentRevisionMap);
     }
+    validateDependencyInstall(profile, environmentRevisionMap);
   }
   validateRevisionHistory(document.profiles, "validation profile");
   const currentProfiles = new Map();
@@ -489,6 +625,15 @@ export function validateValidationProfiles(document) {
       throw new TypeError(
         `current validation profile ${profile.id}@${profile.revision} ` +
         "must use the logical environment shape",
+      );
+    }
+    if (
+      profile.dependencies.length > 0 &&
+      !Object.hasOwn(profile, "dependencyInstall")
+    ) {
+      throw new TypeError(
+        `current validation profile ${profile.id}@${profile.revision} ` +
+        "must define dependencyInstall",
       );
     }
   }
@@ -567,7 +712,7 @@ export function validateValidationProfileFingerprints(
     ["environments", "profiles", "schemaVersion"],
     "validation profile fingerprints document",
   );
-  if (fingerprintsDocument.schemaVersion !== "2.0") {
+  if (fingerprintsDocument.schemaVersion !== "2.1") {
     throw new TypeError(
       "unsupported validation profile fingerprints schemaVersion",
     );
@@ -587,6 +732,125 @@ export function validateValidationProfileFingerprints(
   return fingerprintsDocument;
 }
 
+export function normalizeDependencyLockfileContent(content) {
+  return content.toString("utf8").replace(/\r\n/gu, "\n");
+}
+
+function lockfileFingerprint(content) {
+  return createHash("sha256")
+    .update(normalizeDependencyLockfileContent(content))
+    .digest("hex");
+}
+
+function validateDependencyLockfile(lockfile, profile, source) {
+  requireExactFields(
+    lockfile,
+    ["dependencies", "profile", "schemaVersion", "source"],
+    `validation profile ${profile.id} dependency lockfile`,
+  );
+  if (lockfile.schemaVersion !== "1.0") {
+    throw new TypeError(
+      `validation profile ${profile.id} dependency lockfile schemaVersion ` +
+      "is unsupported",
+    );
+  }
+  requireExactFields(
+    lockfile.profile,
+    ["id", "revision"],
+    `validation profile ${profile.id} dependency lockfile profile`,
+  );
+  if (
+    lockfile.profile.id !== profile.id ||
+    lockfile.profile.revision !== profile.revision
+  ) {
+    throw new TypeError(
+      `validation profile ${profile.id} dependency lockfile profile ` +
+      "does not match",
+    );
+  }
+  if (lockfile.source !== source) {
+    throw new TypeError(
+      `validation profile ${profile.id} dependency lockfile source ` +
+      "does not match",
+    );
+  }
+  if (!Array.isArray(lockfile.dependencies)) {
+    throw new TypeError(
+      `validation profile ${profile.id} dependency lockfile dependencies ` +
+      "must be an array",
+    );
+  }
+  for (const dependency of lockfile.dependencies) {
+    requireExactFields(
+      dependency,
+      ["name", "version"],
+      `validation profile ${profile.id} dependency lockfile dependency`,
+    );
+    requireString(
+      dependency.name,
+      `validation profile ${profile.id} dependency lockfile dependency name`,
+      packageNamePattern,
+    );
+    requireString(
+      dependency.version,
+      `validation profile ${profile.id} dependency lockfile dependency version`,
+      versionPattern,
+    );
+  }
+  requireSortedUnique(
+    lockfile.dependencies,
+    `validation profile ${profile.id} dependency lockfile dependencies`,
+    (dependency) => dependency.name,
+  );
+  const expected = profile.dependencies.map((dependency) => ({
+    name: dependency.name,
+    version: dependency.version,
+  }));
+  if (JSON.stringify(lockfile.dependencies) !== JSON.stringify(expected)) {
+    throw new TypeError(
+      `validation profile ${profile.id} dependency lockfile dependencies ` +
+      "do not match",
+    );
+  }
+}
+
+export function validateValidationProfileLockfiles(
+  profilesDocument,
+  root,
+) {
+  validateValidationProfiles(profilesDocument);
+  const resolvedRoot = resolve(asPath(root));
+  for (const profile of profilesDocument.profiles) {
+    if (profile.dependencyInstall?.kind !== "lockfile") continue;
+    const lockfilePath = resolve(
+      resolvedRoot,
+      profile.dependencyInstall.lockfile,
+    );
+    requireContained(
+      resolvedRoot,
+      lockfilePath,
+      `validation profile ${profile.id} dependencyInstall lockfile`,
+    );
+    requireRegularFile(
+      lockfilePath,
+      `validation profile ${profile.id} dependencyInstall lockfile`,
+    );
+    const content = readFileSync(lockfilePath);
+    if (lockfileFingerprint(content) !== profile.dependencyInstall.sha256) {
+      throw new TypeError(
+        `validation profile ${profile.id} dependencyInstall sha256 ` +
+        "does not match",
+      );
+    }
+    validateDependencyLockfile(
+      JSON.parse(normalizeDependencyLockfileContent(content)),
+      profile,
+      profile.dependencyInstall.source,
+    );
+  }
+  return profilesDocument;
+}
+
 export function loadValidationProfiles(
   path = new URL("../validation-profiles.json", import.meta.url),
   fingerprintsPath = new URL(
@@ -594,9 +858,11 @@ export function loadValidationProfiles(
     import.meta.url,
   ),
 ) {
-  const document = JSON.parse(readFileSync(path, "utf8"));
+  const resolvedPath = asPath(path);
+  const document = JSON.parse(readFileSync(resolvedPath, "utf8"));
   const fingerprints = JSON.parse(readFileSync(fingerprintsPath, "utf8"));
   validateValidationProfileFingerprints(document, fingerprints);
+  validateValidationProfileLockfiles(document, dirname(resolvedPath));
   return deepFreeze(document);
 }
 
@@ -788,7 +1054,7 @@ export function validateValidationEnvironmentReference(
 
 export function sandboxProfileBlockReason(profile) {
   if (profile.dependencies.length > 0) {
-    return "its validation profile dependencies are unverifiable";
+    return "its validation profile dependency installation cannot be runtime-attested";
   }
   if (!sandboxRunnableValidationProfileSet.has(profile.id)) {
     return "its validation profile requires an unavailable test runtime";
