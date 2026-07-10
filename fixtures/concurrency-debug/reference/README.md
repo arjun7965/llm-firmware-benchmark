@@ -1,5 +1,5 @@
 # Reference
 
-The trusted worker-pool reference is not committed yet. Keep this fixture as a
-scaffold until the Python runtime is mounted in the test namespace and the race
-tests are calibrated.
+`pool.py` is the trusted standard-library implementation used to calibrate the
+public race tests and controlled mutations. The fixture remains a scaffold
+until it passes under the pinned Python 3.12.11 sandbox runtime.

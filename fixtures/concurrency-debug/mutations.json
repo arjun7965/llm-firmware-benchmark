@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.2",
+  "source": "reference/pool.py",
+  "mutations": [
+    {
+      "id": "allow-zero-workers",
+      "description": "Accept a pool with no workers.",
+      "find": "        if n <= 0:\n",
+      "replace": "        if n < 0:\n"
+    },
+    {
+      "id": "coerce-worker-count",
+      "description": "Coerce non-integer worker counts instead of rejecting them.",
+      "find": "        if not isinstance(n, int):\n            raise TypeError(\"n must be an integer\")\n",
+      "replace": "        if not isinstance(n, int):\n            n = int(n)\n"
+    },
+    {
+      "id": "exit-during-import",
+      "description": "Exit successfully before exposing the Pool API.",
+      "find": "import queue\nimport threading\n",
+      "replace": "import queue\nimport threading\n\nraise SystemExit(0)\n"
+    },
+    {
+      "id": "accept-after-shutdown",
+      "description": "Allow submissions after shutdown has begun.",
+      "find": "            if self._closed:\n                raise RuntimeError(\"pool is shutting down\")\n",
+      "replace": "            if False:\n                raise RuntimeError(\"pool is shutting down\")\n"
+    },
+    {
+      "id": "accept-non-callable",
+      "description": "Queue non-callable task values.",
+      "find": "            if not callable(fn):\n                raise TypeError(\"fn must be callable\")\n",
+      "replace": "            if False:\n                raise TypeError(\"fn must be callable\")\n"
+    },
+    {
+      "id": "return-submit-token",
+      "description": "Return a task token from an accepted submission.",
+      "find": "            self._queue.put(fn)\n",
+      "replace": "            self._queue.put(fn)\n            return True\n"
+    },
+    {
+      "id": "exception-kills-worker",
+      "description": "Let a task exception terminate its worker.",
+      "find": "                except BaseException:\n                    pass\n",
+      "replace": "                except BaseException:\n                    raise\n"
+    },
+    {
+      "id": "skip-task-accounting",
+      "description": "Omit task accounting for ordinary work items.",
+      "find": "                self._queue.task_done()\n",
+      "replace": "                if item is self._sentinel:\n                    self._queue.task_done()\n"
+    },
+    {
+      "id": "signal-one-worker",
+      "description": "Send a shutdown sentinel to only one worker.",
+      "find": "                for _ in self._threads:\n",
+      "replace": "                for _ in self._threads[:1]:\n"
+    },
+    {
+      "id": "worker-waits-for-itself",
+      "description": "Make worker-initiated shutdown wait on its own task.",
+      "find": "        if threading.current_thread() in self._threads:\n            return\n",
+      "replace": "        if False:\n            return\n"
+    },
+    {
+      "id": "external-shutdown-returns-early",
+      "description": "Return from external shutdown before accepted work finishes.",
+      "find": "        self._queue.join()\n        for thread in self._threads:\n            thread.join()\n",
+      "replace": "        return\n"
+    },
+    {
+      "id": "repeat-shutdown-signals",
+      "description": "Enqueue new sentinels on every shutdown call.",
+      "find": "            if not self._closed:\n                self._closed = True\n",
+      "replace": "            if True:\n                self._closed = True\n"
+    }
+  ]
+}

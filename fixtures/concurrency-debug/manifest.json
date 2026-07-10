@@ -42,7 +42,13 @@
         "python3",
         "-m",
         "unittest",
-        "tests/public/test_pool.py"
+        "discover",
+        "-s",
+        "tests/public",
+        "-p",
+        "test_pool.py",
+        "-f",
+        "-q"
       ],
       "requiredTools": ["python3"],
       "timeoutMs": 10000

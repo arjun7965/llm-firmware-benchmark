@@ -24,7 +24,7 @@ code. Each task references a pinned hosted runtime contract from
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
-| `concurrency-debug` | Python 3 using only its standard library |
+| `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL server and client tools for schema, query, and `EXPLAIN` validation |
 | `testing-property-based` | Python 3, pytest, and Hypothesis |
 | `go-graceful-shutdown` | The Go toolchain; only the standard library is used |
@@ -118,6 +118,14 @@ activation still requires the exact 1.87.0 profile inside the sandbox:
 
 ```bash
 npm run fixture:rust-decoder:self-test
+```
+
+The concurrency-debug scaffold requires Python 3. Its local calibration runs
+the reference and all controlled mutations, but activation still requires the
+exact Python 3.12.11 runtime inside the sandbox:
+
+```bash
+npm run fixture:concurrency:self-test
 ```
 
 Run all trusted C fixture suites with:

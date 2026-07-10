@@ -219,6 +219,9 @@ function buildPathReplacements(commands, manifest, candidateRoot) {
   const sharedBuildPaths = [...testBuildPaths].filter((path) =>
     compileBuildPaths.has(path));
   if (sharedBuildPaths.length === 0) {
+    if (compileBuildPaths.size === 0 && testBuildPaths.size === 0) {
+      return new Map();
+    }
     throw new TypeError(
       `${manifest.taskId} compile and test commands must share a build artifact`,
     );

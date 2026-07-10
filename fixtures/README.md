@@ -39,6 +39,10 @@ The `rust-stream-decoder` scaffold has a complete API, trusted reference,
 public tests, and controlled mutations. It remains inactive until those
 commands are calibrated under the pinned Rust/Cargo 1.87.0 environment.
 
+The `concurrency-debug` scaffold has a complete `Pool` API, trusted reference,
+subprocess-isolated race tests, and controlled mutations. It remains inactive
+until those commands run under the pinned Python 3.12.11 sandbox environment.
+
 The current sandbox runner accepts active fixtures only for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
 interpreter, and service fixtures must remain scaffolds until their exact
@@ -54,12 +58,12 @@ metadata only; it does not execute compiler commands.
 
 `mutations.json` follows `schemas/fixture-mutations.schema.json`. Every active
 fixture supplies exact, single-match source substitutions derived from its
-trusted reference. `npm run test:mutations` rewrites the fixture-declared
-answer source path and shared `build/` artifacts into a temporary directory,
-then runs the manifest's compile and test argv without a shell. Each mutant
-must compile for that fixture's language and then fail the public tests;
-compilation failures are invalid mutations, not successful detections.
-Mutation tests never use extracted model output.
+trusted reference. `npm run test:mutations` stages each candidate and its
+validator-owned inputs in a temporary directory, rewrites declared `build/`
+artifacts when present, then runs the manifest's compile and test argv without
+a shell. Each mutant must compile for that fixture's language and then fail
+the public tests; compilation failures are invalid mutations, not successful
+detections. Mutation tests never use extracted model output.
 
 Extract one successful raw result with:
 
