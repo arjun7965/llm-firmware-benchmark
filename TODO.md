@@ -71,6 +71,10 @@ controlled mutations, sandbox commands, dependency documentation, and
 calibration before marking the fixture active:
 
 1. [ ] `rust-stream-decoder`
+   - [x] Add the API contract, trusted reference, public tests, seven
+     controlled mutations, and sandbox command scaffold.
+   - [ ] Execute and calibrate the scaffold under pinned Rust/Cargo 1.87.0,
+     then mark it active.
 2. [ ] `concurrency-debug`
 3. [ ] `typescript-singleflight-cache`
 4. [ ] `go-graceful-shutdown`

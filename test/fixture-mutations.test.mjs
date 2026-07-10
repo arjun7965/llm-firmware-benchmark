@@ -90,6 +90,54 @@ test("mutation command planning rewrites non-C source and test binary paths", (t
   assert.deepEqual(plan.test.args, ["--nocapture"]);
 });
 
+test("mutation command planning stages validator-owned wrapper inputs", (t) => {
+  const candidateRoot = temporaryDirectory(t);
+  const candidatePath = join(candidateRoot, "generated/answer.rs");
+  const manifest = {
+    ...manifestFor([
+      {
+        phase: "compile",
+        argv: [
+          "rustc",
+          "--test",
+          "starter/test_harness.rs",
+          "-o",
+          "build/public-tests",
+        ],
+        timeoutMs: 30000,
+      },
+      {
+        phase: "test",
+        argv: ["build/public-tests"],
+        timeoutMs: 5000,
+      },
+    ]),
+    paths: {
+      build: "build",
+      mocks: "mocks",
+      publicTests: "tests/public",
+      starter: "starter",
+    },
+  };
+  const commands = fixtureMutationCommands(manifest);
+  const plan = createMutationCommandPlan({
+    candidatePath,
+    candidateRoot,
+    commands,
+    manifest,
+  });
+
+  assert.equal(plan.compile.command, "rustc");
+  assert.deepEqual(plan.compile.args, [
+    "--test",
+    join(candidateRoot, "starter/test_harness.rs"),
+    "-o",
+    join(candidateRoot, "build/public-tests"),
+  ]);
+  assert.equal(plan.test.command, join(candidateRoot, "build/public-tests"));
+  assert.deepEqual(plan.test.args, []);
+});
+
 test("mutation command planning supports tool-backed test commands", (t) => {
   const candidateRoot = temporaryDirectory(t);
   const candidatePath = join(candidateRoot, "main.go");

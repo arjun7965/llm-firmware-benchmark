@@ -35,6 +35,10 @@ manifests for those profiles must use an approved command prefix. A
 `scaffold` manifest defines an incomplete interface. An `active` manifest has
 verified extraction, compile, and test commands.
 
+The `rust-stream-decoder` scaffold has a complete API, trusted reference,
+public tests, and controlled mutations. It remains inactive until those
+commands are calibrated under the pinned Rust/Cargo 1.87.0 environment.
+
 The current sandbox runner accepts active fixtures only for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
 interpreter, and service fixtures must remain scaffolds until their exact
