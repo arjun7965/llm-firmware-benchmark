@@ -313,7 +313,16 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
           argv: ["python3", "-m", "py_compile", "generated/answer.c"],
           requiredTools: ["python3"],
         },
-        interpreterFixture.manifest.commands[1],
+        {
+          ...interpreterFixture.manifest.commands[1],
+          argv: [
+            "python3",
+            "-m",
+            "unittest",
+            "tests/public/test_pool.py",
+          ],
+          requiredTools: ["python3"],
+        },
       ],
     }),
   );
@@ -323,7 +332,7 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
       fixturesRoot: interpreterFixture.fixturesRoot,
       tasksPath: interpreterFixture.tasksPath,
     }),
-    /requires an unavailable test runtime/u,
+    /test runtime is not mounted/u,
   );
 });
 

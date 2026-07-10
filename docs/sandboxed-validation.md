@@ -24,8 +24,10 @@ before executable fixture validation is enabled.
 
 The test namespace currently executes only a native binary from `build/`.
 Consequently, dependency-free interpreter and service profiles are also
-rejected. Their fixtures must remain scaffolds until the runner explicitly
-mounts the pinned runtime and supports a profile-appropriate test command.
+rejected. `python3-stdlib` and `postgresql` now declare profile-approved
+test-runtime mounts and command prefixes, and their scaffold manifests must
+match those contracts. They must remain scaffolds until the runner explicitly
+mounts the pinned runtime and executes those commands in the test namespace.
 
 Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor. The CI
 workflow installs `apparmor-profiles` and explicitly loads the distribution's

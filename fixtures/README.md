@@ -29,14 +29,17 @@ for Go. Every tool must be required by the logical profile, and each version
 probe must match every concrete environment supported by that profile in
 `validation-profiles.json`. `requiredTools` and `toolVersionArgs` must cover
 the profile's complete toolchain set so validation reports attest every tool
-included in the environment fingerprint. A `scaffold` manifest defines an
-incomplete interface. An `active` manifest has verified extraction, compile,
-and test commands.
+included in the environment fingerprint. Profiles may also declare
+test-runtime command contracts for interpreter or service fixtures; scaffold
+manifests for those profiles must use an approved command prefix. A
+`scaffold` manifest defines an incomplete interface. An `active` manifest has
+verified extraction, compile, and test commands.
 
 The current sandbox runner accepts active fixtures only for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
 interpreter, and service fixtures must remain scaffolds until their exact
-packages and test runtimes can be verified and mounted in the test namespace.
+packages and test runtimes can be verified, mounted, and executed in the test
+namespace.
 
 Fixture manifests and public result records use schema version 1.3. Validation
 reports use version 1.5, and mutation catalogs remain at version 1.2.

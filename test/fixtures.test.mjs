@@ -22,14 +22,26 @@ function ringBufferFixture() {
   );
 }
 
+function concurrencyFixture() {
+  return JSON.parse(
+    readFileSync(
+      new URL(
+        "../fixtures/concurrency-debug/manifest.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+}
+
 test("repository fixture scaffolds match task metadata", () => {
   assert.deepEqual(
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
-      fixtureCount: 4,
+      fixtureCount: 6,
       activeCount: 4,
-      scaffoldCount: 0,
-      commandCount: 8,
+      scaffoldCount: 2,
+      commandCount: 11,
     },
   );
 });
@@ -72,7 +84,7 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
       ...task,
       validationProfile: "python3-stdlib",
     }),
-    /must remain a scaffold.*unavailable test runtime/u,
+    /must remain a scaffold.*test runtime is not mounted/u,
   );
   assert.throws(
     () => validateFixtureManifest({
@@ -93,6 +105,48 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
       },
     }, task),
     /under generated/,
+  );
+});
+
+test("fixture commands must match profile-approved runtime contracts", () => {
+  const task = loadTasks(tasksPath)
+    .find((item) => item.id === "concurrency-debug");
+  const manifest = concurrencyFixture();
+
+  assert.equal(validateFixtureManifest(manifest, task), manifest);
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      commands: [
+        manifest.commands[0],
+        {
+          ...manifest.commands[1],
+          argv: ["python3", "tests/public/test_pool.py"],
+        },
+      ],
+    }, task),
+    /command public-tests is not approved by validation profile python3-stdlib/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      commands: [
+        manifest.commands[0],
+        {
+          ...manifest.commands[1],
+          argv: ["build/public-tests"],
+          requiredTools: [],
+        },
+      ],
+    }, task),
+    /command public-tests is not approved by validation profile python3-stdlib/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      status: "active",
+    }, task),
+    /must remain a scaffold.*test runtime is not mounted/u,
   );
 });
 

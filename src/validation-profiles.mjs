@@ -15,6 +15,8 @@ import { fileURLToPath } from "node:url";
 const identifierPattern = /^[a-z][a-z0-9-]*$/u;
 const packageNamePattern = /^(?:@[a-z0-9._-]+\/)?[a-z0-9][a-z0-9._-]*$/u;
 const toolNamePattern = /^[a-z0-9][a-z0-9+._-]*$/u;
+const runtimeMountPattern =
+  /^\/(?:usr|lib|lib64)(?:\/[A-Za-z0-9+._-]+)+$/u;
 const versionPattern =
   /^\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?$/u;
 const imagePattern =
@@ -28,6 +30,15 @@ const resourceLimitFields = [
   "openFiles",
 ];
 const phaseNames = ["compile", "test"];
+const commandPhases = new Set(["analyze", "compile", "test"]);
+const forbiddenCommandTools = new Set([
+  "bash",
+  "cmd",
+  "powershell",
+  "pwsh",
+  "sh",
+  "zsh",
+]);
 
 function requireObject(value, name) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -274,6 +285,109 @@ function validateDependencyInstall(profile, environmentRevisionMap) {
   );
 }
 
+function profileToolNames(profile) {
+  return profile.toolchains.map((toolchain) =>
+    typeof toolchain === "string" ? toolchain : toolchain.name);
+}
+
+function requireToolSubset(tools, profile, name) {
+  if (
+    !Array.isArray(tools) ||
+    tools.length === 0 ||
+    tools.some((tool) =>
+      typeof tool !== "string" || !toolNamePattern.test(tool))
+  ) {
+    throw new TypeError(`${name} requiredTools are invalid`);
+  }
+  requireSortedUnique(tools, `${name} requiredTools`, (tool) => tool);
+  const availableTools = profileToolNames(profile);
+  for (const tool of tools) {
+    if (!availableTools.includes(tool)) {
+      throw new TypeError(`${name} tool ${tool} is not in its profile`);
+    }
+  }
+}
+
+function validateTestRuntime(profile) {
+  if (!Object.hasOwn(profile, "testRuntime")) return;
+  const name = `validation profile ${profile.id} testRuntime`;
+  requireExactFields(
+    profile.testRuntime,
+    ["commandContracts", "mounts"],
+    name,
+  );
+  if (
+    !Array.isArray(profile.testRuntime.mounts) ||
+    profile.testRuntime.mounts.length === 0
+  ) {
+    throw new TypeError(`${name} mounts must be non-empty`);
+  }
+  for (const mount of profile.testRuntime.mounts) {
+    requireExactFields(mount, ["access", "path"], `${name} mount`);
+    requireString(mount.path, `${name} mount path`, runtimeMountPattern);
+    if (mount.access !== "read-only") {
+      throw new TypeError(`${name} mount access is invalid`);
+    }
+  }
+  requireSortedUnique(
+    profile.testRuntime.mounts,
+    `${name} mounts`,
+    (mount) => mount.path,
+  );
+  if (
+    !Array.isArray(profile.testRuntime.commandContracts) ||
+    profile.testRuntime.commandContracts.length === 0
+  ) {
+    throw new TypeError(`${name} commandContracts must be non-empty`);
+  }
+  for (const contract of profile.testRuntime.commandContracts) {
+    requireExactFields(
+      contract,
+      ["argvPrefix", "id", "phase", "requiredTools"],
+      `${name} commandContract`,
+    );
+    requireString(
+      contract.id,
+      `${name} commandContract id`,
+      identifierPattern,
+    );
+    if (!commandPhases.has(contract.phase)) {
+      throw new TypeError(`${name} commandContract phase is invalid`);
+    }
+    if (
+      !Array.isArray(contract.argvPrefix) ||
+      contract.argvPrefix.length === 0 ||
+      contract.argvPrefix.some((argument) =>
+        typeof argument !== "string" ||
+        argument.length === 0 ||
+        argument.includes("\0"))
+    ) {
+      throw new TypeError(`${name} commandContract argvPrefix is invalid`);
+    }
+    if (
+      !toolNamePattern.test(contract.argvPrefix[0]) ||
+      forbiddenCommandTools.has(contract.argvPrefix[0])
+    ) {
+      throw new TypeError(`${name} commandContract executable is invalid`);
+    }
+    requireToolSubset(
+      contract.requiredTools,
+      profile,
+      `${name} commandContract ${contract.id}`,
+    );
+    if (!contract.requiredTools.includes(contract.argvPrefix[0])) {
+      throw new TypeError(
+        `${name} commandContract ${contract.id} must invoke a required tool`,
+      );
+    }
+  }
+  requireSortedUnique(
+    profile.testRuntime.commandContracts,
+    `${name} commandContracts`,
+    (contract) => `${contract.phase}:${contract.id}`,
+  );
+}
+
 function validateResourcePolicy(sandbox, profileId, {
   legacy,
 } = {}) {
@@ -472,6 +586,9 @@ function validateLegacyProfile(profile) {
   if (Object.hasOwn(profile, "dependencyInstall")) {
     fields.push("dependencyInstall");
   }
+  if (Object.hasOwn(profile, "testRuntime")) {
+    fields.push("testRuntime");
+  }
   requireExactFields(
     profile,
     fields,
@@ -496,6 +613,9 @@ function validateLogicalProfile(profile, environmentRevisionMap) {
   ];
   if (Object.hasOwn(profile, "dependencyInstall")) {
     fields.push("dependencyInstall");
+  }
+  if (Object.hasOwn(profile, "testRuntime")) {
+    fields.push("testRuntime");
   }
   requireExactFields(
     profile,
@@ -568,6 +688,7 @@ function validateLogicalProfile(profile, environmentRevisionMap) {
     }
   }
   validateResourcePolicy(profile.sandbox, profile.id);
+  validateTestRuntime(profile);
 }
 
 export function validateValidationProfiles(document) {
@@ -576,7 +697,7 @@ export function validateValidationProfiles(document) {
     ["environments", "profiles", "schemaVersion"],
     "validation profiles document",
   );
-  if (document.schemaVersion !== "2.1") {
+  if (document.schemaVersion !== "2.2") {
     throw new TypeError("unsupported validation profiles schemaVersion");
   }
   if (
@@ -613,6 +734,7 @@ export function validateValidationProfiles(document) {
     } else {
       validateLogicalProfile(profile, environmentRevisionMap);
     }
+    if (Object.hasOwn(profile, "host")) validateTestRuntime(profile);
     validateDependencyInstall(profile, environmentRevisionMap);
   }
   validateRevisionHistory(document.profiles, "validation profile");
@@ -712,7 +834,7 @@ export function validateValidationProfileFingerprints(
     ["environments", "profiles", "schemaVersion"],
     "validation profile fingerprints document",
   );
-  if (fingerprintsDocument.schemaVersion !== "2.1") {
+  if (fingerprintsDocument.schemaVersion !== "2.2") {
     throw new TypeError(
       "unsupported validation profile fingerprints schemaVersion",
     );
@@ -1014,6 +1136,23 @@ export function validationProfileReference(profile) {
   };
 }
 
+function requiredToolsMatch(left, right) {
+  const leftTools = [...left].sort();
+  const rightTools = [...right].sort();
+  return leftTools.length === rightTools.length &&
+    leftTools.every((tool, index) => tool === rightTools[index]);
+}
+
+export function validationProfileCommandContract(profile, command) {
+  if (!profile.testRuntime) return null;
+  return profile.testRuntime.commandContracts.find((contract) =>
+    contract.phase === command.phase &&
+    requiredToolsMatch(command.requiredTools, contract.requiredTools) &&
+    command.argv.length >= contract.argvPrefix.length &&
+    contract.argvPrefix.every((argument, index) =>
+      command.argv[index] === argument)) ?? null;
+}
+
 export function validateValidationProfileReference(
   reference,
   name = "validationProfile",
@@ -1057,6 +1196,9 @@ export function sandboxProfileBlockReason(profile) {
     return "its validation profile dependency installation cannot be runtime-attested";
   }
   if (!sandboxRunnableValidationProfileSet.has(profile.id)) {
+    if (profile.testRuntime) {
+      return "its validation profile test runtime is not mounted by the current runner";
+    }
     return "its validation profile requires an unavailable test runtime";
   }
   return null;

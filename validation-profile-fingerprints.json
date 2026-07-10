@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.1",
+  "schemaVersion": "2.2",
   "environments": {
     "ubuntu-24-04-x86-64-c11-host": {
       "1": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
@@ -50,7 +50,8 @@
     },
     "postgresql": {
       "1": "b119b04ef8173f2671dbe26126fe590737597734c88333c5ea7e9cafe03379ac",
-      "2": "a5f49a3198a2a4c4a223c07578d0d97fe27e0d3b8db998fe5d5a2f3a137c116c"
+      "2": "a5f49a3198a2a4c4a223c07578d0d97fe27e0d3b8db998fe5d5a2f3a137c116c",
+      "3": "277fcc8d6ed5b3a34c6e74c4fb302896807c18ce6596beb093da25fc0429d054"
     },
     "python3-pytest-hypothesis": {
       "1": "374dcbf18d79fca3623a8ce4c22f2aec4b475632ee798df92d031370a1ba5a75",
@@ -59,7 +60,8 @@
     },
     "python3-stdlib": {
       "1": "44780975a921637636a5545d4e8b76f7da9e56264beaa078ed2192a7a1c2b9b2",
-      "2": "8028cd817145436e35a64cc587b81e3fcf32572418ce48352ef410b4bde67517"
+      "2": "8028cd817145436e35a64cc587b81e3fcf32572418ce48352ef410b4bde67517",
+      "3": "a2af182ea4ecf1b8bd776d99a986421e5de01f6f4e6f85184b3f789d5d1b39de"
     },
     "react18-typescript": {
       "1": "aed1489d9e1d8211b47742ce8e6a24f905633d0a952ec110da81e71862942225",

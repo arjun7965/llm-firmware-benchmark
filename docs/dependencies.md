@@ -47,6 +47,10 @@ Those lockfiles are stored with LF line endings and normalized before hashing
 so Git checkout settings do not change the attested contract.
 The current sandbox runner still rejects those profiles until it can attest
 the mounted installation or run a digest-pinned image.
+Dependency-free interpreter and service profiles may declare profile-approved
+test-runtime mounts and command prefixes, but the current runner still keeps
+those fixtures as scaffolds until it can mount and execute the pinned runtime
+inside the test namespace.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free

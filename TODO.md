@@ -60,7 +60,7 @@ firmware validation work.
   validation profiles with npm or PyPI dependencies. Keep the sandbox runner
   fail-closed for nonempty dependency sets until their installed versions can
   be attested.
-- [ ] Add profile-approved test-runtime mounts and command contracts for
+- [x] Add profile-approved test-runtime mounts and command contracts for
   interpreter and service profiles. Keep those fixtures scaffold-only until
   the test namespace can execute their pinned runtime.
 

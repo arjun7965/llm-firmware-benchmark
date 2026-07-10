@@ -75,6 +75,7 @@ test("fixture-backed prompts retain the single-file contract", () => {
     );
     if (!existsSync(manifestUrl)) continue;
     const manifest = JSON.parse(readFileSync(manifestUrl, "utf8"));
+    if (manifest.status !== "active") continue;
     assert.equal(
       manifest.answer.format,
       "markdown-fenced-code",

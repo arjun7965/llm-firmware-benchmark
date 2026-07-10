@@ -32,8 +32,9 @@ canonical SHA-256 for every published profile and environment revision.
 Startup fails if a contract is changed, removed, or added without its matching
 fingerprint. Legacy revision 1 profiles remain available for historical
 fingerprint verification; revision 2 profiles use the separated environment
-model, and dependency-bearing revision 3 profiles add dependency-install
-attestation.
+model. Current dependency-bearing profiles use revision 3 for
+dependency-install attestation, while dependency-free interpreter and service
+profiles use revision 3 for profile-approved test-runtime contracts.
 
 ## Profile Registry
 
@@ -44,17 +45,17 @@ profile, plus host execution, Bubblewrap 0.9.0, and `prlimit` from util-linux
 so the environment fingerprint never attests an unprobed tool. Profile
 policies require no network and an isolated filesystem.
 
-| Profile | Pinned toolchains | Pinned packages |
-| --- | --- | --- |
-| `c11-host` | GCC/`cc` 13.3.0 | None |
-| `go-std` | Go 1.24.4 | None; standard library only |
-| `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types |
-| `node-typescript-postgresql` | Node.js 22.16.0, TypeScript 5.8.3, PostgreSQL 16.9 | Express, `pg`, TypeScript, and types |
-| `postgresql` | PostgreSQL server and client 16.9 | None |
-| `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | pytest 8.4.0, Hypothesis 6.135.9 |
-| `python3-stdlib` | Python 3.12.11 | None; standard library only |
-| `react18-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | React 18.3.1 and the exact test stack in the registry |
-| `stable-rust` | Rust and Cargo 1.87.0 | None; standard library only |
+| Profile | Pinned toolchains | Pinned packages | Test command contract |
+| --- | --- | --- | --- |
+| `c11-host` | GCC/`cc` 13.3.0 | None | Native `build/` executable |
+| `go-std` | Go 1.24.4 | None; standard library only | Native `build/` executable |
+| `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | Not active until dependencies are mounted |
+| `node-typescript-postgresql` | Node.js 22.16.0, TypeScript 5.8.3, PostgreSQL 16.9 | Express, `pg`, TypeScript, and types | Not active until dependencies and service runtime are mounted |
+| `postgresql` | PostgreSQL server and client 16.9 | None | `psql -v ON_ERROR_STOP=1 -f ...` with PostgreSQL runtime mounts |
+| `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | pytest 8.4.0, Hypothesis 6.135.9 | Not active until dependencies are mounted |
+| `python3-stdlib` | Python 3.12.11 | None; standard library only | `python3 -m py_compile ...` and `python3 -m unittest ...` with Python runtime mounts |
+| `react18-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | React 18.3.1 and the exact test stack in the registry | Not active until dependencies are mounted |
+| `stable-rust` | Rust and Cargo 1.87.0 | None; standard library only | Native `build/` executable |
 
 The registry is authoritative for full dependency versions and byte-level
 resource limits. Dependency-bearing current profiles also record a
@@ -108,9 +109,11 @@ executing tools. Such a profile can be activated only after the runner verifies
 and mounts the corresponding lockfile installation, or validation runs in a
 digest-pinned image. Standard-library-only profiles are not automatically
 eligible: the current test sandbox supports only native binaries produced by
-`c11-host`, `go-std`, and `stable-rust`.
-Interpreter and service profiles remain scaffold-only until their approved
-runtime is explicitly mounted in the test namespace.
+`c11-host`, `go-std`, and `stable-rust`. The registry now records
+profile-approved test-runtime mounts and command prefixes for `python3-stdlib`
+and `postgresql`, and scaffold manifests must match those prefixes. The runner
+still fails closed for those profiles until it actually mounts the recorded
+runtime in the test namespace and can execute it there.
 
 ## Task Mapping
 

@@ -155,7 +155,7 @@ model code.
 
 ## Fixture Validation
 
-Profile-backed tasks have manifests under `fixtures/<task-id>/`. Manifests
+Fixture-backed tasks have manifests under `fixtures/<task-id>/`. Manifests
 declare answer extraction, stable asset paths, required tools, argv-based build
 and test commands, and whether a fixture is an inactive scaffold or active.
 

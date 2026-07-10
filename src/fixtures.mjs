@@ -12,6 +12,7 @@ import {
   getValidationProfile,
   requireValidationProfile,
   sandboxProfileBlockReason,
+  validationProfileCommandContract,
 } from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -273,6 +274,15 @@ export function validateFixtureManifest(manifest, task) {
     ) {
       throw new TypeError(
         `fixture ${task.id} command must invoke a declared non-shell tool`,
+      );
+    }
+    if (
+      validationProfile.testRuntime &&
+      !validationProfileCommandContract(validationProfile, command)
+    ) {
+      throw new TypeError(
+        `fixture ${task.id} command ${command.id} is not approved by ` +
+        `validation profile ${validationProfile.id}`,
       );
     }
     if (!Number.isSafeInteger(command.timeoutMs) || command.timeoutMs < 1) {
