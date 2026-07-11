@@ -36,7 +36,7 @@ implemented and calibrated.
 | `concurrency-debug` | Scaffold | Single file | One repaired Python module; race tests are validator-owned |
 | `testing-property-based` | Rubric-only | Single file | One property-test module importing the supplied implementation |
 | `go-graceful-shutdown` | Rubric-only | Multi-file | Runnable server code and Go-discoverable `*_test.go` tests require distinct files |
-| `rust-stream-decoder` | Scaffold | Single file | One Rust library module; unit tests are validator-owned |
+| `rust-stream-decoder` | Single file | Single file | One Rust library module; unit tests are validator-owned |
 | `typescript-singleflight-cache` | Scaffold | Single file | One cache module; fake-clock tests are validator-owned |
 | `backend-idempotency` | Rubric-only | Multi-file | SQL migration and TypeScript endpoint are independently validated artifacts |
 | `postgres-pagination` | Scaffold | Multi-file | SQL/index artifacts and cursor-validation code require distinct files |

@@ -182,13 +182,14 @@ export function fixtureMutationCommands(manifest) {
     command.phase === "compile");
   const test = manifest.commands.filter((command) =>
     command.phase === "test");
-  if (compile.length !== 1 || test.length !== 1) {
+  if (compile.length === 0 || test.length !== 1) {
     throw new TypeError(
-      `${manifest.taskId} mutation testing requires one compile and one test command`,
+      `${manifest.taskId} mutation testing requires compile commands and ` +
+      "one test command",
     );
   }
   return {
-    compile: compile[0],
+    compile,
     test: test[0],
   };
 }
@@ -211,7 +212,8 @@ function countArgument(argv, value) {
 
 function buildPathReplacements(commands, manifest, candidateRoot) {
   const compileBuildPaths = new Set(
-    declaredBuildPaths(commands.compile.argv, manifest),
+    commands.compile.flatMap((command) =>
+      declaredBuildPaths(command.argv, manifest)),
   );
   const testBuildPaths = new Set(
     declaredBuildPaths(commands.test.argv, manifest),
@@ -246,7 +248,7 @@ function fixtureInputReplacements(commands, manifest, candidateRoot) {
     .map((field) => manifest.paths[field])
     .filter((path) => typeof path === "string");
   for (const argument of [
-    ...commands.compile.argv,
+    ...commands.compile.flatMap((command) => command.argv),
     ...commands.test.argv,
   ]) {
     if (!roots.some((root) =>
@@ -269,8 +271,9 @@ export function createMutationCommandPlan({
   commands,
   manifest,
 }) {
+  const compileArgv = commands.compile.flatMap((command) => command.argv);
   const answerOccurrences = countArgument(
-    commands.compile.argv,
+    compileArgv,
     manifest.answer.output,
   );
   const inputReplacements = fixtureInputReplacements(
@@ -278,7 +281,7 @@ export function createMutationCommandPlan({
     manifest,
     candidateRoot,
   );
-  const compileUsesFixtureInput = commands.compile.argv.some((argument) =>
+  const compileUsesFixtureInput = compileArgv.some((argument) =>
     inputReplacements.has(argument));
   if (
     answerOccurrences > 1 ||
@@ -299,15 +302,17 @@ export function createMutationCommandPlan({
   }
   replacements.set(manifest.answer.output, candidatePath);
 
-  const compileArgv = replaceArgv(commands.compile.argv, replacements);
   const testArgv = replaceArgv(commands.test.argv, replacements);
 
   return {
-    compile: {
-      args: compileArgv.slice(1),
-      command: compileArgv[0],
-      timeoutMs: commands.compile.timeoutMs,
-    },
+    compile: commands.compile.map((command) => {
+      const argv = replaceArgv(command.argv, replacements);
+      return {
+        args: argv.slice(1),
+        command: argv[0],
+        timeoutMs: command.timeoutMs,
+      };
+    }),
     test: {
       args: testArgv.slice(1),
       command: testArgv[0],
@@ -342,16 +347,18 @@ function compileCandidate({
   manifest,
   name,
 }) {
-  const result = run(commandPlan.compile.command, commandPlan.compile.args, {
-    cwd: fixtureRoot,
-    timeout: commandPlan.compile.timeoutMs,
-  });
-  requireCompleted(result, `${name} compilation`);
-  if (result.status !== 0) {
-    throw new Error(
-      `${name} did not compile; mutations must remain compile-valid ` +
-      `for ${manifest.language}\n${mutationDiagnostics(result)}`,
-    );
+  for (const compile of commandPlan.compile) {
+    const result = run(compile.command, compile.args, {
+      cwd: fixtureRoot,
+      timeout: compile.timeoutMs,
+    });
+    requireCompleted(result, `${name} compilation`);
+    if (result.status !== 0) {
+      throw new Error(
+        `${name} did not compile; mutations must remain compile-valid ` +
+        `for ${manifest.language}\n${mutationDiagnostics(result)}`,
+      );
+    }
   }
 }
 

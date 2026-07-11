@@ -183,9 +183,9 @@ public C fixtures against their trusted references and confirm that all 23
 controlled mutations are rejected. Use `npm run test:mutations` to run only
 the mutation checks.
 
-The Rust stream-decoder scaffold can be calibrated against the locally
-available Rust toolchain with `npm run fixture:rust-decoder:self-test`; it is
-not active until the pinned Rust/Cargo 1.87.0 sandbox run is available.
+The active Rust stream-decoder fixture is calibrated with
+`npm run fixture:rust-decoder:self-test` and validated in CI under pinned
+Rust/Cargo 1.87.0 with its attested GCC 13.3.0 linker.
 
 The concurrency-debug scaffold can be calibrated against the locally
 available Python runtime with `npm run fixture:concurrency:self-test`; it is

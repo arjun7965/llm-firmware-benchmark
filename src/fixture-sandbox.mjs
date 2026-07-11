@@ -323,7 +323,7 @@ function inspectToolchain(
 
 function existingSystemMounts(phase) {
   const candidates = phase === "compile"
-    ? ["/usr", "/bin", "/lib", "/lib64"]
+    ? ["/usr", "/bin", "/lib", "/lib64", "/etc/alternatives"]
     : ["/lib", "/lib64"];
   return candidates
     .filter((path) => existsSync(path));

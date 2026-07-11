@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runFixtureValidation } from "../src/fixture-sandbox.mjs";
 import { validateFixtureRepository } from "../src/fixtures.mjs";
@@ -31,26 +31,29 @@ const references = [
   {
     taskId: "bare-metal-timer",
     source: "reference/fictional_timer.c",
+    suite: "firmware",
   },
   {
     taskId: "binary-parser",
     source: "reference/binary_parser.c",
+    suite: "firmware",
   },
   {
     taskId: "embedded-ring-buffer",
     source: "reference/ring_buffer.c",
+    suite: "firmware",
   },
   {
     taskId: "firmware-state-machine",
     source: "reference/firmware_state_machine.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "rust-stream-decoder",
+    source: "reference/stream_decoder.rs",
+    suite: "auxiliary",
   },
 ];
-const validationProfile = getValidationProfile("c11-host");
-const environmentReference = validationProfile.environments[0];
-const validationEnvironment = getValidationEnvironmentRevision(
-  environmentReference.id,
-  environmentReference.revision,
-);
 
 try {
   validateFixtureRepository({
@@ -68,10 +71,23 @@ try {
       filter: (source) =>
         !["build", "generated"].includes(source.split("/").at(-1)),
     });
-    mkdirSync(join(fixtureRoot, "generated"));
+    const manifest = JSON.parse(
+      readFileSync(join(fixtureRoot, "manifest.json"), "utf8"),
+    );
+    const answerPath = join(fixtureRoot, manifest.answer.output);
+    mkdirSync(dirname(answerPath), { recursive: true });
     copyFileSync(
       join(sourceRoot, reference.source),
-      join(fixtureRoot, "generated", "answer.c"),
+      answerPath,
+    );
+
+    const validationProfile = getValidationProfile(
+      manifest.validationProfile,
+    );
+    const environmentReference = validationProfile.environments[0];
+    const validationEnvironment = getValidationEnvironmentRevision(
+      environmentReference.id,
+      environmentReference.revision,
     );
 
     const { report } = runFixtureValidation({
@@ -87,7 +103,7 @@ try {
     }
     if (
       report.schemaVersion !== "1.5" ||
-      report.suite !== "firmware" ||
+      report.suite !== reference.suite ||
       report.validationProfile !== validationProfile.id ||
       report.validationProfileRevision !== validationProfile.revision ||
       report.validationProfileSha256 !==
@@ -105,11 +121,16 @@ try {
         validationEnvironment.host.architecture ||
       report.validationEnvironment.execution.kind !==
         validationEnvironment.execution.kind ||
-      report.toolchains.length !== 1 ||
-      report.toolchains[0].name !== "cc" ||
-      report.toolchains[0].version === "" ||
-      report.toolchains[0].versionArgv.join(" ") !==
-        `${report.toolchains[0].executable} --version` ||
+      report.toolchains.length !== validationProfile.toolchains.length ||
+      report.toolchains.map((toolchain) => toolchain.name).join(",") !==
+        [...validationProfile.toolchains].sort().join(",") ||
+      report.toolchains.some((toolchain) =>
+        toolchain.version === "" ||
+        toolchain.versionArgv.join(" ") !==
+          [
+            toolchain.executable,
+            ...manifest.toolVersionArgs[toolchain.name],
+          ].join(" ")) ||
       report.artifacts.length !== 1 ||
       report.artifacts[0].sizeBytes < 1 ||
       report.phases.some((phase) => phase.outcome !== "passed")

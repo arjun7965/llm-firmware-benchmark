@@ -21,7 +21,7 @@ compiled through a fixed crate root; model output cannot omit them.
 Discarding a possible trailing first magic byte during resynchronization loses
 partial-boundary correctness credit.
 
-The trusted reference and seven controlled mutations are calibrated with:
+The trusted reference and eight controlled mutations are calibrated with:
 
 ```bash
 npm run fixture:rust-decoder:self-test

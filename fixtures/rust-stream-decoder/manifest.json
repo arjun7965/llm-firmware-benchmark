@@ -3,10 +3,11 @@
   "taskId": "rust-stream-decoder",
   "targetProfile": null,
   "validationProfile": "stable-rust",
-  "status": "scaffold",
+  "status": "active",
   "language": "rust",
   "toolVersionArgs": {
     "cargo": ["--version"],
+    "cc": ["--version"],
     "rustc": ["--version"]
   },
   "answer": {
@@ -35,15 +36,30 @@
         "-D",
         "warnings",
         "-o",
+        "build/candidate-tests"
+      ],
+      "requiredTools": ["cargo", "cc", "rustc"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "rust-supervisor-compile",
+      "phase": "compile",
+      "argv": [
+        "rustc",
+        "--edition=2021",
+        "starter/test_supervisor.rs",
+        "-D",
+        "warnings",
+        "-o",
         "build/public-tests"
       ],
-      "requiredTools": ["cargo", "rustc"],
+      "requiredTools": ["rustc"],
       "timeoutMs": 30000
     },
     {
       "id": "public-tests",
       "phase": "test",
-      "argv": ["build/public-tests", "--test-threads=1"],
+      "argv": ["build/public-tests"],
       "requiredTools": [],
       "timeoutMs": 15000
     }

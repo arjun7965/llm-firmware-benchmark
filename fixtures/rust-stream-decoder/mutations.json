@@ -43,6 +43,12 @@
       "description": "Retain arbitrary non-magic input without a bound.",
       "find": "            if self.buffer[0] != MAGIC[0] {\n                self.discard_invalid_candidate();\n                continue;\n            }",
       "replace": "            if self.buffer[0] != MAGIC[0] {\n                return;\n            }"
+    },
+    {
+      "id": "exit-before-test-harness",
+      "description": "Exit successfully during process initialization before tests run.",
+      "find": "const CHECKSUM_LEN: usize = 1;",
+      "replace": "const CHECKSUM_LEN: usize = 1;\n\n#[used]\n#[link_section = \".init_array\"]\nstatic EXIT_AT_STARTUP: extern \"C\" fn() = {\n    extern \"C\" fn exit_at_startup() {\n        std::process::exit(0);\n    }\n    exit_at_startup\n};"
     }
   ]
 }

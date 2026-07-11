@@ -35,9 +35,11 @@ manifests for those profiles must use an approved command prefix. A
 `scaffold` manifest defines an incomplete interface. An `active` manifest has
 verified extraction, compile, and test commands.
 
-The `rust-stream-decoder` scaffold has a complete API, trusted reference,
-public tests, and controlled mutations. It remains inactive until those
-commands are calibrated under the pinned Rust/Cargo 1.87.0 environment.
+The active `rust-stream-decoder` fixture has a complete API, trusted reference,
+public tests, and controlled mutations calibrated under pinned Rust/Cargo
+1.87.0 with its GCC 13.3.0 linker in the sandbox namespace. Its trusted test
+supervisor requires a randomized child-side completion token so successful
+initialization-time exits cannot bypass the public tests.
 
 The `concurrency-debug` scaffold has a complete `Pool` API, trusted reference,
 subprocess-isolated race tests, and controlled mutations. It remains inactive

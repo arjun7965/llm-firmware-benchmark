@@ -8,7 +8,9 @@ npm run fixture:validate -- --task <task>
 ```
 
 The validator requires Bubblewrap, `prlimit`, and each manifest toolchain as
-root-owned, non-writable executables under `/usr`. It fails closed when any
+root-owned, non-writable executables under `/usr`. Compile namespaces also
+mount `/etc/alternatives` read-only so attested compiler and linker symlinks
+resolve to their root-owned `/usr` targets. Validation fails closed when any
 dependency or namespace feature is unavailable; it never falls back to host
 execution. It also reads `/etc/os-release` as data and checks the OS ID, release,
 and normalized architecture against the concrete environments supported by

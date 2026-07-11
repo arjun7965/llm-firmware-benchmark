@@ -121,3 +121,10 @@ fn bounds_buffering_for_large_garbage() {
     assert!(decoder.push(&[0xCA]).is_empty());
     assert_eq!(decoder.buffered_len(), 1);
 }
+
+#[test]
+fn zzzz_fixture_suite_completed() {
+    let token = std::env::var("FIXTURE_COMPLETION_TOKEN")
+        .expect("missing fixture completion token");
+    println!("\nfixture-complete:{token}");
+}
