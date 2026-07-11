@@ -27,7 +27,7 @@ code. Each task references a pinned hosted runtime contract from
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL server and client tools for schema, query, and `EXPLAIN` validation |
 | `testing-property-based` | Python 3, pytest, and Hypothesis |
-| `go-graceful-shutdown` | The Go toolchain; only the standard library is used |
+| `go-graceful-shutdown` | Go 1.24.4; only the standard library is used |
 | `rust-stream-decoder` | Rust 1.87.0 and Cargo 1.87.0; standard library only |
 | `typescript-singleflight-cache` | Node.js 22.16.0, TypeScript 5.8.3, and `@types/node` 22.15.29 |
 | `webhook-replay-security` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |

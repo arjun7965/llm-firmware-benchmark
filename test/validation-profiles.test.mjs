@@ -105,6 +105,12 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfileRevision("stable-rust", 2),
     getValidationProfile("stable-rust"),
   );
+  assert.equal(getValidationProfile("go-std").revision, 3);
+  assert.equal(
+    getValidationProfile("go-std").sandbox.resourceLimits.test
+      .addressSpaceBytes,
+    1024 * 1024 * 1024,
+  );
   assert.equal(
     getValidationProfile("python3-stdlib").revision,
     3,

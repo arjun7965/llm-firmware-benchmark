@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.3",
+  "taskId": "go-graceful-shutdown",
+  "targetProfile": null,
+  "validationProfile": "go-std",
+  "status": "scaffold",
+  "language": "go",
+  "toolVersionArgs": {
+    "go": ["version"]
+  },
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "go",
+    "output": "generated/answer.go"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "go-test-compile",
+      "phase": "compile",
+      "argv": [
+        "go",
+        "run",
+        "starter/build_tests.go",
+        "--answer",
+        "generated/answer.go",
+        "--tests",
+        "tests/public/server_test.go",
+        "--supervisor",
+        "starter/test_supervisor.go",
+        "--module-root",
+        "build/module",
+        "--test-binary",
+        "build/candidate-tests",
+        "--output",
+        "build/public-tests"
+      ],
+      "requiredTools": ["go"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "public-tests",
+      "phase": "test",
+      "argv": ["build/public-tests"],
+      "requiredTools": [],
+      "timeoutMs": 15000
+    }
+  ]
+}

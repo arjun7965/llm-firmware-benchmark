@@ -48,6 +48,13 @@ trusted reference, deterministic fake-clock tests, and controlled mutations.
 It remains inactive until the pinned npm dependency installation can be
 attested and mounted inside the sandbox.
 
+The `go-graceful-shutdown` scaffold has an exact server-module API, trusted
+reference, deterministic lifecycle tests, and controlled mutations. Its test
+supervisor requires a child-side completion token so package initialization
+cannot exit successfully before tests run. It remains inactive until validated
+multi-file answer bundles preserve the runnable server and model-authored Go
+tests required by the benchmark prompt.
+
 The current sandbox runner accepts active fixtures only for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
 interpreter, and service fixtures must remain scaffolds until their exact

@@ -86,6 +86,11 @@ calibration before marking the fixture active:
    - [ ] Attest and mount the pinned Node.js 22.16.0, TypeScript 5.8.3, and
      `@types/node` 22.15.29 package set, then calibrate and mark it active.
 4. [ ] `go-graceful-shutdown`
+   - [x] Add the exact server-module contract, trusted reference, public
+     lifecycle tests, twenty-two controlled mutations, and sandbox command
+     scaffold.
+   - [ ] Implement validated multi-file answer bundles, execute the fixture
+     under pinned Go 1.24.4 in the sandbox namespace, then mark it active.
 
 Keep validator-only toolchains outside the dependency-free root harness and
 record exact versions in validation reports.
