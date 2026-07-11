@@ -37,7 +37,7 @@ implemented and calibrated.
 | `testing-property-based` | Rubric-only | Single file | One property-test module importing the supplied implementation |
 | `go-graceful-shutdown` | Rubric-only | Multi-file | Runnable server code and Go-discoverable `*_test.go` tests require distinct files |
 | `rust-stream-decoder` | Scaffold | Single file | One Rust library module; unit tests are validator-owned |
-| `typescript-singleflight-cache` | Rubric-only | Single file | One cache module; fake-clock tests are validator-owned |
+| `typescript-singleflight-cache` | Scaffold | Single file | One cache module; fake-clock tests are validator-owned |
 | `backend-idempotency` | Rubric-only | Multi-file | SQL migration and TypeScript endpoint are independently validated artifacts |
 | `postgres-pagination` | Scaffold | Multi-file | SQL/index artifacts and cursor-validation code require distinct files |
 | `webhook-replay-security` | Rubric-only | Multi-file | SQL migration and TypeScript handler are independently validated artifacts |

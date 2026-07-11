@@ -43,6 +43,11 @@ The `concurrency-debug` scaffold has a complete `Pool` API, trusted reference,
 subprocess-isolated race tests, and controlled mutations. It remains inactive
 until those commands run under the pinned Python 3.12.11 sandbox environment.
 
+The `typescript-singleflight-cache` scaffold has a complete generic API,
+trusted reference, deterministic fake-clock tests, and controlled mutations.
+It remains inactive until the pinned npm dependency installation can be
+attested and mounted inside the sandbox.
+
 The current sandbox runner accepts active fixtures only for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
 interpreter, and service fixtures must remain scaffolds until their exact

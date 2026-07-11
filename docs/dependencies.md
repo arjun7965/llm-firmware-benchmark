@@ -29,7 +29,7 @@ code. Each task references a pinned hosted runtime contract from
 | `testing-property-based` | Python 3, pytest, and Hypothesis |
 | `go-graceful-shutdown` | The Go toolchain; only the standard library is used |
 | `rust-stream-decoder` | Rust 1.87.0 and Cargo 1.87.0; standard library only |
-| `typescript-singleflight-cache` | Node.js and the TypeScript compiler |
+| `typescript-singleflight-cache` | Node.js 22.16.0, TypeScript 5.8.3, and `@types/node` 22.15.29 |
 | `webhook-replay-security` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
 
 These tools are optional because automated answer extraction and compilation
@@ -126,6 +126,14 @@ exact Python 3.12.11 runtime inside the sandbox:
 
 ```bash
 npm run fixture:concurrency:self-test
+```
+
+The TypeScript singleflight-cache scaffold requires TypeScript 5.8.3 on
+`PATH` for local calibration. Activation additionally requires attestation and
+sandbox mounting of the complete pinned `node-typescript` dependency set:
+
+```bash
+npm run fixture:typescript-cache:self-test
 ```
 
 Run all trusted C fixture suites with:

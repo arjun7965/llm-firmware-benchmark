@@ -204,6 +204,89 @@ test("mutation command planning supports interpreter-only commands", (t) => {
   ]);
 });
 
+test("mutation command planning supports nested build output artifacts", (t) => {
+  const candidateRoot = temporaryDirectory(t);
+  const candidatePath = join(candidateRoot, "generated/answer.ts");
+  const manifest = {
+    ...manifestFor([
+      {
+        phase: "compile",
+        argv: [
+          "tsc",
+          "--outDir",
+          "build/output",
+          "generated/answer.ts",
+          "tests/public/test_cache.ts",
+        ],
+        timeoutMs: 30000,
+      },
+      {
+        phase: "test",
+        argv: ["node", "build/output/tests/public/test_cache.js"],
+        timeoutMs: 10000,
+      },
+    ]),
+    answer: {
+      output: "generated/answer.ts",
+    },
+    paths: {
+      build: "build",
+      mocks: "mocks",
+      publicTests: "tests/public",
+      starter: "starter",
+    },
+  };
+  const commands = fixtureMutationCommands(manifest);
+  const plan = createMutationCommandPlan({
+    candidatePath,
+    candidateRoot,
+    commands,
+    manifest,
+  });
+
+  assert.deepEqual(plan.compile.args, [
+    "--outDir",
+    join(candidateRoot, "build/output"),
+    candidatePath,
+    join(candidateRoot, "tests/public/test_cache.ts"),
+  ]);
+  assert.equal(plan.test.command, "node");
+  assert.deepEqual(plan.test.args, [
+    join(candidateRoot, "build/output/tests/public/test_cache.js"),
+  ]);
+});
+
+test("mutation command planning rejects unrelated build outputs", (t) => {
+  const candidateRoot = temporaryDirectory(t);
+  const manifest = manifestFor([
+    {
+      phase: "compile",
+      argv: [
+        "rustc",
+        "generated/lib.rs",
+        "-o",
+        "build/compiled-tests",
+      ],
+      timeoutMs: 30000,
+    },
+    {
+      phase: "test",
+      argv: ["build/different-tests"],
+      timeoutMs: 5000,
+    },
+  ]);
+
+  assert.throws(
+    () => createMutationCommandPlan({
+      candidatePath: join(candidateRoot, "generated/lib.rs"),
+      candidateRoot,
+      commands: fixtureMutationCommands(manifest),
+      manifest,
+    }),
+    /compile and test commands must share a build output/u,
+  );
+});
+
 test("mutation command planning supports tool-backed test commands", (t) => {
   const candidateRoot = temporaryDirectory(t);
   const candidatePath = join(candidateRoot, "main.go");

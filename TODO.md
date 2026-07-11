@@ -77,10 +77,14 @@ calibration before marking the fixture active:
      then mark it active.
 2. [ ] `concurrency-debug`
    - [x] Add the exact `Pool` contract, trusted reference, public race tests,
-     twelve controlled mutations, and sandbox command scaffold.
+     eighteen controlled mutations, and sandbox command scaffold.
    - [ ] Execute and calibrate the scaffold under pinned Python 3.12.11 in
      the sandbox namespace, then mark it active.
 3. [ ] `typescript-singleflight-cache`
+   - [x] Add the exact cache API, trusted reference, public fake-clock tests,
+     twelve controlled mutations, and sandbox command scaffold.
+   - [ ] Attest and mount the pinned Node.js 22.16.0, TypeScript 5.8.3, and
+     `@types/node` 22.15.29 package set, then calibrate and mark it active.
 4. [ ] `go-graceful-shutdown`
 
 Keep validator-only toolchains outside the dependency-free root harness and

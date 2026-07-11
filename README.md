@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![82 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=82%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![84 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=84%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -190,6 +190,11 @@ not active until the pinned Rust/Cargo 1.87.0 sandbox run is available.
 The concurrency-debug scaffold can be calibrated against the locally
 available Python runtime with `npm run fixture:concurrency:self-test`; it is
 not active until the pinned Python 3.12.11 sandbox run is available.
+
+The TypeScript singleflight-cache scaffold can be calibrated with
+`npm run fixture:typescript-cache:self-test` when TypeScript 5.8.3 is on
+`PATH`; it remains inactive until the pinned npm dependency set is attested
+and mounted inside the sandbox.
 
 On Linux, validate extracted code in separate compile and test sandboxes:
 
