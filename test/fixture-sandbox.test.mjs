@@ -206,12 +206,31 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
     command: fixture.manifest.commands[1],
     systemMounts: ["/lib", "/lib64"],
   });
+  const compileWithDefaultMounts = buildSandboxInvocation({
+    bubblewrapPath: "/usr/bin/bwrap",
+    prlimitPath: "/usr/bin/prlimit",
+    fixtureRoot: fixture.fixtureRoot,
+    manifest: fixture.manifest,
+    buildRoot,
+    command: fixture.manifest.commands[0],
+    toolPath: "/usr/bin/cc",
+  });
 
   assert.equal(compile.command, "/usr/bin/prlimit");
   assert.ok(compile.args.includes("--unshare-all"));
   assert.ok(compile.args.includes("--disable-userns"));
   assert.equal(compile.args.includes("--share-net"), false);
   assert.ok(compile.args.includes("/usr/bin/cc"));
+  const alternativesMount = compileWithDefaultMounts.args.indexOf(
+    "/etc/alternatives",
+  );
+  assert.deepEqual(
+    compileWithDefaultMounts.args.slice(
+      alternativesMount - 1,
+      alternativesMount + 2,
+    ),
+    ["--ro-bind", "/etc/alternatives", "/etc/alternatives"],
+  );
   const rootTmpfs = compile.args.indexOf("/");
   assert.deepEqual(
     compile.args.slice(rootTmpfs - 3, rootTmpfs + 1),
@@ -235,6 +254,7 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
   );
   assert.equal(testRun.args.at(-1), "build/tests");
   assert.equal(testRun.args.includes("/usr"), false);
+  assert.equal(testRun.args.includes("/etc/alternatives"), false);
 
   const goCompile = buildSandboxInvocation({
     bubblewrapPath: "/usr/bin/bwrap",
