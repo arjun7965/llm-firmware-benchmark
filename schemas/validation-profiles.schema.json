@@ -7,7 +7,7 @@
   "required": ["schemaVersion", "environments", "profiles"],
   "properties": {
     "schemaVersion": {
-      "const": "2.1"
+      "const": "2.2"
     },
     "environments": {
       "type": "array",
@@ -233,6 +233,79 @@
         "openFiles": { "type": "integer", "minimum": 1 }
       }
     },
+    "testRuntimeMount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "access"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/(?:usr|lib|lib64)(?:/[A-Za-z0-9+._-]+)+$"
+        },
+        "access": { "const": "read-only" }
+      }
+    },
+    "testRuntimeCommandContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "phase", "argvPrefix", "requiredTools"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "phase": {
+          "enum": ["analyze", "compile", "test"]
+        },
+        "argvPrefix": {
+          "type": "array",
+          "minItems": 1,
+          "prefixItems": [
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9+._-]*$",
+              "not": {
+                "enum": [
+                  "bash",
+                  "cmd",
+                  "powershell",
+                  "pwsh",
+                  "sh",
+                  "zsh"
+                ]
+              }
+            }
+          ],
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requiredTools": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9+._-]*$"
+          }
+        }
+      }
+    },
+    "testRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mounts", "commandContracts"],
+      "properties": {
+        "mounts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/testRuntimeMount" }
+        },
+        "commandContracts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/testRuntimeCommandContract" }
+        }
+      }
+    },
     "sandboxPolicyFields": {
       "type": "object",
       "required": [
@@ -316,6 +389,7 @@
           "items": { "$ref": "#/$defs/dependency" }
         },
         "dependencyInstall": { "$ref": "#/$defs/dependencyInstall" },
+        "testRuntime": { "$ref": "#/$defs/testRuntime" },
         "sandbox": { "$ref": "#/$defs/legacySandbox" }
       }
     },
@@ -354,6 +428,7 @@
           "items": { "$ref": "#/$defs/dependency" }
         },
         "dependencyInstall": { "$ref": "#/$defs/dependencyInstall" },
+        "testRuntime": { "$ref": "#/$defs/testRuntime" },
         "sandbox": { "$ref": "#/$defs/sandboxPolicy" }
       }
     }

@@ -29,14 +29,37 @@ for Go. Every tool must be required by the logical profile, and each version
 probe must match every concrete environment supported by that profile in
 `validation-profiles.json`. `requiredTools` and `toolVersionArgs` must cover
 the profile's complete toolchain set so validation reports attest every tool
-included in the environment fingerprint. A `scaffold` manifest defines an
-incomplete interface. An `active` manifest has verified extraction, compile,
-and test commands.
+included in the environment fingerprint. Profiles may also declare
+test-runtime command contracts for interpreter or service fixtures; scaffold
+manifests for those profiles must use an approved command prefix. A
+`scaffold` manifest defines an incomplete interface. An `active` manifest has
+verified extraction, compile, and test commands.
+
+The `rust-stream-decoder` scaffold has a complete API, trusted reference,
+public tests, and controlled mutations. It remains inactive until those
+commands are calibrated under the pinned Rust/Cargo 1.87.0 environment.
+
+The `concurrency-debug` scaffold has a complete `Pool` API, trusted reference,
+subprocess-isolated race tests, and controlled mutations. It remains inactive
+until those commands run under the pinned Python 3.12.11 sandbox environment.
+
+The `typescript-singleflight-cache` scaffold has a complete generic API,
+trusted reference, deterministic fake-clock tests, and controlled mutations.
+It remains inactive until the pinned npm dependency installation can be
+attested and mounted inside the sandbox.
+
+The `go-graceful-shutdown` scaffold has an exact server-module API, trusted
+reference, deterministic lifecycle tests, and controlled mutations. Its test
+supervisor requires a child-side completion token so package initialization
+cannot exit successfully before tests run. It remains inactive until validated
+multi-file answer bundles preserve the runnable server and model-authored Go
+tests required by the benchmark prompt.
 
 The current sandbox runner accepts active fixtures only for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
 interpreter, and service fixtures must remain scaffolds until their exact
-packages and test runtimes can be verified and mounted in the test namespace.
+packages and test runtimes can be verified, mounted, and executed in the test
+namespace.
 
 Fixture manifests and public result records use schema version 1.3. Validation
 reports use version 1.5, and mutation catalogs remain at version 1.2.
@@ -47,12 +70,12 @@ metadata only; it does not execute compiler commands.
 
 `mutations.json` follows `schemas/fixture-mutations.schema.json`. Every active
 fixture supplies exact, single-match source substitutions derived from its
-trusted reference. `npm run test:mutations` rewrites the fixture-declared
-answer source path and shared `build/` artifacts into a temporary directory,
-then runs the manifest's compile and test argv without a shell. Each mutant
-must compile for that fixture's language and then fail the public tests;
-compilation failures are invalid mutations, not successful detections.
-Mutation tests never use extracted model output.
+trusted reference. `npm run test:mutations` stages each candidate and its
+validator-owned inputs in a temporary directory, rewrites declared `build/`
+artifacts when present, then runs the manifest's compile and test argv without
+a shell. Each mutant must compile for that fixture's language and then fail
+the public tests; compilation failures are invalid mutations, not successful
+detections. Mutation tests never use extracted model output.
 
 Extract one successful raw result with:
 

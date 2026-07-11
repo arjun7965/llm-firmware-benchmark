@@ -60,7 +60,7 @@ firmware validation work.
   validation profiles with npm or PyPI dependencies. Keep the sandbox runner
   fail-closed for nonempty dependency sets until their installed versions can
   be attested.
-- [ ] Add profile-approved test-runtime mounts and command contracts for
+- [x] Add profile-approved test-runtime mounts and command contracts for
   interpreter and service profiles. Keep those fixtures scaffold-only until
   the test namespace can execute their pinned runtime.
 
@@ -71,9 +71,26 @@ controlled mutations, sandbox commands, dependency documentation, and
 calibration before marking the fixture active:
 
 1. [ ] `rust-stream-decoder`
+   - [x] Add the API contract, trusted reference, public tests, seven
+     controlled mutations, and sandbox command scaffold.
+   - [ ] Execute and calibrate the scaffold under pinned Rust/Cargo 1.87.0,
+     then mark it active.
 2. [ ] `concurrency-debug`
+   - [x] Add the exact `Pool` contract, trusted reference, public race tests,
+     twelve controlled mutations, and sandbox command scaffold.
+   - [ ] Execute and calibrate the scaffold under pinned Python 3.12.11 in
+     the sandbox namespace, then mark it active.
 3. [ ] `typescript-singleflight-cache`
+   - [x] Add the exact cache API, trusted reference, public fake-clock tests,
+     eighteen controlled mutations, and sandbox command scaffold.
+   - [ ] Attest and mount the pinned Node.js 22.16.0, TypeScript 5.8.3, and
+     `@types/node` 22.15.29 package set, then calibrate and mark it active.
 4. [ ] `go-graceful-shutdown`
+   - [x] Add the exact server-module contract, trusted reference, public
+     lifecycle tests, twenty-two controlled mutations, and sandbox command
+     scaffold.
+   - [ ] Implement validated multi-file answer bundles, execute the fixture
+     under pinned Go 1.24.4 in the sandbox namespace, then mark it active.
 
 Keep validator-only toolchains outside the dependency-free root harness and
 record exact versions in validation reports.

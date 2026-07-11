@@ -236,6 +236,40 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
   assert.equal(testRun.args.at(-1), "build/tests");
   assert.equal(testRun.args.includes("/usr"), false);
 
+  const goCompile = buildSandboxInvocation({
+    bubblewrapPath: "/usr/bin/bwrap",
+    prlimitPath: "/usr/bin/prlimit",
+    fixtureRoot: fixture.fixtureRoot,
+    manifest: {
+      ...fixture.manifest,
+      validationProfile: "go-std",
+    },
+    buildRoot,
+    command: {
+      ...fixture.manifest.commands[0],
+      argv: ["go", "run", "starter/build_tests.go"],
+      requiredTools: ["go"],
+    },
+    toolPath: "/usr/bin/go",
+    systemMounts: [],
+  });
+  const environmentValue = (name) => {
+    const index = goCompile.args.indexOf(name);
+    assert.ok(index > 0, `missing sandbox environment variable ${name}`);
+    assert.equal(goCompile.args[index - 1], "--setenv");
+    return goCompile.args[index + 1];
+  };
+  assert.equal(environmentValue("GOCACHE"), "/workspace/build/go-cache");
+  assert.equal(
+    environmentValue("GOMODCACHE"),
+    "/workspace/build/go-mod-cache",
+  );
+  assert.equal(environmentValue("GOTOOLCHAIN"), "local");
+  assert.equal(environmentValue("GOWORK"), "off");
+  assert.equal(environmentValue("GOENV"), "off");
+  assert.equal(environmentValue("CGO_ENABLED"), "0");
+  assert.equal(environmentValue("FIXTURE_GO_EXECUTABLE"), "/usr/bin/go");
+
   const userTools = temporaryDirectory(t);
   const fakeTool = join(userTools, "bwrap");
   writeFileSync(fakeTool, "");
@@ -313,7 +347,16 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
           argv: ["python3", "-m", "py_compile", "generated/answer.c"],
           requiredTools: ["python3"],
         },
-        interpreterFixture.manifest.commands[1],
+        {
+          ...interpreterFixture.manifest.commands[1],
+          argv: [
+            "python3",
+            "-m",
+            "unittest",
+            "tests/public/test_pool.py",
+          ],
+          requiredTools: ["python3"],
+        },
       ],
     }),
   );
@@ -323,7 +366,7 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
       fixturesRoot: interpreterFixture.fixturesRoot,
       tasksPath: interpreterFixture.tasksPath,
     }),
-    /requires an unavailable test runtime/u,
+    /test runtime is not mounted/u,
   );
 });
 

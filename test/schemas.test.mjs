@@ -330,11 +330,24 @@ test("JSON Schema files declare the expected contracts", () => {
     ["error", "failed", "passed", "timed-out"],
   );
   assert.equal(fixtureValidationSchema.additionalProperties, false);
-  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.1");
+  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.2");
   assert.equal(validationProfilesSchema.additionalProperties, false);
   assert.equal(
     validationProfilesSchema.$defs.dependencyInstall.oneOf.length,
     2,
+  );
+  assert.deepEqual(
+    validationProfilesSchema.$defs.testRuntime.required,
+    ["mounts", "commandContracts"],
+  );
+  assert.equal(
+    validationProfilesSchema.$defs.testRuntimeMount.properties.access.const,
+    "read-only",
+  );
+  assert.deepEqual(
+    validationProfilesSchema.$defs.testRuntimeCommandContract
+      .properties.phase.enum,
+    ["analyze", "compile", "test"],
   );
   assert.equal(
     validationProfilesSchema.$defs.environment

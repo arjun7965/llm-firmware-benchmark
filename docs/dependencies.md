@@ -24,12 +24,12 @@ code. Each task references a pinned hosted runtime contract from
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
-| `concurrency-debug` | Python 3 using only its standard library |
+| `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL server and client tools for schema, query, and `EXPLAIN` validation |
 | `testing-property-based` | Python 3, pytest, and Hypothesis |
-| `go-graceful-shutdown` | The Go toolchain; only the standard library is used |
-| `rust-stream-decoder` | Stable `rustc` to compile; Cargo is recommended for running the unit tests |
-| `typescript-singleflight-cache` | Node.js and the TypeScript compiler |
+| `go-graceful-shutdown` | Go 1.24.4; only the standard library is used |
+| `rust-stream-decoder` | Rust 1.87.0 and Cargo 1.87.0; standard library only |
+| `typescript-singleflight-cache` | Node.js 22.16.0, TypeScript 5.8.3, and `@types/node` 22.15.29 |
 | `webhook-replay-security` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
 
 These tools are optional because automated answer extraction and compilation
@@ -47,6 +47,10 @@ Those lockfiles are stored with LF line endings and normalized before hashing
 so Git checkout settings do not change the attested contract.
 The current sandbox runner still rejects those profiles until it can attest
 the mounted installation or run a digest-pinned image.
+Dependency-free interpreter and service profiles may declare profile-approved
+test-runtime mounts and command prefixes, but the current runner still keeps
+those fixtures as scaffolds until it can mount and execute the pinned runtime
+inside the test namespace.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free
@@ -106,6 +110,30 @@ The trusted binary-parser fixture also requires `cc`:
 
 ```bash
 npm run fixture:parser:self-test
+```
+
+The Rust stream-decoder scaffold requires Rust and Cargo. Its local
+calibration command compiles the reference and all controlled mutations, but
+activation still requires the exact 1.87.0 profile inside the sandbox:
+
+```bash
+npm run fixture:rust-decoder:self-test
+```
+
+The concurrency-debug scaffold requires Python 3. Its local calibration runs
+the reference and all controlled mutations, but activation still requires the
+exact Python 3.12.11 runtime inside the sandbox:
+
+```bash
+npm run fixture:concurrency:self-test
+```
+
+The TypeScript singleflight-cache scaffold requires TypeScript 5.8.3 on
+`PATH` for local calibration. Activation additionally requires attestation and
+sandbox mounting of the complete pinned `node-typescript` dependency set:
+
+```bash
+npm run fixture:typescript-cache:self-test
 ```
 
 Run all trusted C fixture suites with:

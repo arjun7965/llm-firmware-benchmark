@@ -105,6 +105,25 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfileRevision("stable-rust", 2),
     getValidationProfile("stable-rust"),
   );
+  assert.equal(getValidationProfile("go-std").revision, 3);
+  assert.equal(
+    getValidationProfile("go-std").sandbox.resourceLimits.test
+      .addressSpaceBytes,
+    1024 * 1024 * 1024,
+  );
+  assert.equal(
+    getValidationProfile("python3-stdlib").revision,
+    3,
+  );
+  assert.deepEqual(
+    getValidationProfile("python3-stdlib").testRuntime.mounts.map((mount) =>
+      mount.path),
+    ["/usr/bin/python3", "/usr/lib/python3.12"],
+  );
+  assert.equal(
+    getValidationProfile("postgresql").testRuntime.commandContracts[0].id,
+    "postgresql-script",
+  );
   assert.deepEqual(
     validateValidationProfileReference(
       validationProfileReference(getValidationProfile("stable-rust")),
@@ -166,7 +185,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   };
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.1",
+      schemaVersion: "2.2",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, secondRevision],
     }),
@@ -174,7 +193,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.1",
+      schemaVersion: "2.2",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -188,7 +207,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.1",
+      schemaVersion: "2.2",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -202,7 +221,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.1",
+      schemaVersion: "2.2",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, structuredClone(validProfile)],
     }),
@@ -210,7 +229,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.1",
+      schemaVersion: "2.2",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...structuredClone(validProfile),
@@ -222,7 +241,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   const logicalProfile = structuredClone(getValidationProfile("c11-host"));
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.1",
+      schemaVersion: "2.2",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...logicalProfile,
@@ -266,5 +285,32 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   assert.throws(
     () => validateValidationProfiles(mismatchedInstall),
     /dependencyInstall source does not cover/u,
+  );
+  const unsafeRuntimeMount = structuredClone(validationProfilesDocument);
+  unsafeRuntimeMount.profiles
+    .find((profile) => profile.id === "python3-stdlib" &&
+      profile.revision === 3)
+    .testRuntime.mounts[0].path = "/opt/python3";
+  assert.throws(
+    () => validateValidationProfiles(unsafeRuntimeMount),
+    /testRuntime mount path is invalid/u,
+  );
+  const unsafeRuntimeCommand = structuredClone(validationProfilesDocument);
+  unsafeRuntimeCommand.profiles
+    .find((profile) => profile.id === "python3-stdlib" &&
+      profile.revision === 3)
+    .testRuntime.commandContracts[0].argvPrefix[0] = "sh";
+  assert.throws(
+    () => validateValidationProfiles(unsafeRuntimeCommand),
+    /commandContract executable is invalid/u,
+  );
+  const unknownRuntimeTool = structuredClone(validationProfilesDocument);
+  unknownRuntimeTool.profiles
+    .find((profile) => profile.id === "python3-stdlib" &&
+      profile.revision === 3)
+    .testRuntime.commandContracts[0].requiredTools = ["pytest"];
+  assert.throws(
+    () => validateValidationProfiles(unknownRuntimeTool),
+    /tool pytest is not in its profile/u,
   );
 });

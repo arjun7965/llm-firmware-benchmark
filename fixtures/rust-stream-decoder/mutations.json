@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.2",
+  "source": "reference/stream_decoder.rs",
+  "mutations": [
+    {
+      "id": "wrong-magic",
+      "description": "Recognize the wrong second magic byte.",
+      "find": "const MAGIC: [u8; 2] = [0xCA, 0xFE];",
+      "replace": "const MAGIC: [u8; 2] = [0xCA, 0xFD];"
+    },
+    {
+      "id": "little-endian-length",
+      "description": "Decode the payload length as little-endian.",
+      "find": "let payload_len = u32::from_be_bytes([",
+      "replace": "let payload_len = u32::from_le_bytes(["
+    },
+    {
+      "id": "reject-maximum-payload",
+      "description": "Reject a payload at the documented maximum size.",
+      "find": "if payload_len > MAX_PAYLOAD {",
+      "replace": "if payload_len >= MAX_PAYLOAD {"
+    },
+    {
+      "id": "invert-checksum-result",
+      "description": "Accept bad checksums while rejecting valid frames.",
+      "find": "if expected_checksum == actual_checksum {",
+      "replace": "if expected_checksum != actual_checksum {"
+    },
+    {
+      "id": "drop-partial-magic",
+      "description": "Discard a trailing first magic byte at a chunk boundary.",
+      "find": "let keep_prefix = self.buffer.last() == Some(&MAGIC[0]);",
+      "replace": "let keep_prefix = false;"
+    },
+    {
+      "id": "discard-embedded-frame",
+      "description": "Clear an embedded frame instead of resynchronizing to it.",
+      "find": "        if let Some(index) = next_magic {\n            self.buffer.drain(..index);\n            return;\n        }",
+      "replace": "        if next_magic.is_some() {\n            self.buffer.clear();\n            return;\n        }"
+    },
+    {
+      "id": "retain-garbage",
+      "description": "Retain arbitrary non-magic input without a bound.",
+      "find": "            if self.buffer[0] != MAGIC[0] {\n                self.discard_invalid_candidate();\n                continue;\n            }",
+      "replace": "            if self.buffer[0] != MAGIC[0] {\n                return;\n            }"
+    }
+  ]
+}

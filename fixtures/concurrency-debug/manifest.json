@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.3",
+  "taskId": "concurrency-debug",
+  "targetProfile": null,
+  "validationProfile": "python3-stdlib",
+  "status": "scaffold",
+  "language": "python3",
+  "toolVersionArgs": {
+    "python3": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "python",
+    "output": "generated/answer.py"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "bytecode-check",
+      "phase": "compile",
+      "argv": [
+        "python3",
+        "-m",
+        "py_compile",
+        "generated/answer.py"
+      ],
+      "requiredTools": ["python3"],
+      "timeoutMs": 10000
+    },
+    {
+      "id": "public-tests",
+      "phase": "test",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/public",
+        "-p",
+        "test_pool.py",
+        "-f",
+        "-q"
+      ],
+      "requiredTools": ["python3"],
+      "timeoutMs": 10000
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.1",
+  "schemaVersion": "2.2",
   "environments": [
     {
       "id": "ubuntu-24-04-x86-64-c11-host",
@@ -569,6 +569,42 @@
       }
     },
     {
+      "id": "go-std",
+      "revision": 3,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-go-std",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "go"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      }
+    },
+    {
       "id": "node-typescript",
       "revision": 1,
       "host": {
@@ -1060,6 +1096,71 @@
       }
     },
     {
+      "id": "postgresql",
+      "revision": 3,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-postgresql",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "postgres",
+        "psql"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 67108864,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 30,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          }
+        }
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/lib/postgresql/16",
+            "access": "read-only"
+          },
+          {
+            "path": "/usr/share/postgresql/16",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "postgresql-script",
+            "phase": "test",
+            "argvPrefix": [
+              "psql",
+              "-v",
+              "ON_ERROR_STOP=1",
+              "-f"
+            ],
+            "requiredTools": [
+              "postgres",
+              "psql"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "python3-pytest-hypothesis",
       "revision": 1,
       "host": {
@@ -1299,6 +1400,80 @@
             "openFiles": 64
           }
         }
+      }
+    },
+    {
+      "id": "python3-stdlib",
+      "revision": 3,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-python3-stdlib",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "python3"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/bin/python3",
+            "access": "read-only"
+          },
+          {
+            "path": "/usr/lib/python3.12",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "python3-bytecode",
+            "phase": "compile",
+            "argvPrefix": [
+              "python3",
+              "-m",
+              "py_compile"
+            ],
+            "requiredTools": [
+              "python3"
+            ]
+          },
+          {
+            "id": "python3-unittest",
+            "phase": "test",
+            "argvPrefix": [
+              "python3",
+              "-m",
+              "unittest"
+            ],
+            "requiredTools": [
+              "python3"
+            ]
+          }
+        ]
       }
     },
     {

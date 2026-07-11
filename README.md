@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![79 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=79%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![84 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=84%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -155,7 +155,7 @@ model code.
 
 ## Fixture Validation
 
-Profile-backed tasks have manifests under `fixtures/<task-id>/`. Manifests
+Fixture-backed tasks have manifests under `fixtures/<task-id>/`. Manifests
 declare answer extraction, stable asset paths, required tools, argv-based build
 and test commands, and whether a fixture is an inactive scaffold or active.
 
@@ -182,6 +182,19 @@ compile or execute the extracted code. Run `npm run test:c` to verify all
 public C fixtures against their trusted references and confirm that all 23
 controlled mutations are rejected. Use `npm run test:mutations` to run only
 the mutation checks.
+
+The Rust stream-decoder scaffold can be calibrated against the locally
+available Rust toolchain with `npm run fixture:rust-decoder:self-test`; it is
+not active until the pinned Rust/Cargo 1.87.0 sandbox run is available.
+
+The concurrency-debug scaffold can be calibrated against the locally
+available Python runtime with `npm run fixture:concurrency:self-test`; it is
+not active until the pinned Python 3.12.11 sandbox run is available.
+
+The TypeScript singleflight-cache scaffold can be calibrated with
+`npm run fixture:typescript-cache:self-test` when TypeScript 5.8.3 is on
+`PATH`; it remains inactive until the pinned npm dependency set is attested
+and mounted inside the sandbox.
 
 On Linux, validate extracted code in separate compile and test sandboxes:
 

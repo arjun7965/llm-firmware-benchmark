@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "1.2",
+  "source": "reference/server.go",
+  "mutations": [
+    {
+      "id": "three-worker-contract",
+      "description": "Declare and start only three workers.",
+      "find": "\tWorkerCount            = 4",
+      "replace": "\tWorkerCount            = 3"
+    },
+    {
+      "id": "one-second-default-timeout",
+      "description": "Use a one-second graceful shutdown timeout instead of ten seconds.",
+      "find": "\tDefaultShutdownTimeout = 10 * time.Second",
+      "replace": "\tDefaultShutdownTimeout = 1 * time.Second"
+    },
+    {
+      "id": "accept-nil-processor",
+      "description": "Accept a nil processor during construction.",
+      "find": "\tif processor == nil {",
+      "replace": "\tif false {"
+    },
+    {
+      "id": "accept-zero-capacity",
+      "description": "Accept an unbuffered queue despite the positive-capacity contract.",
+      "find": "\tif options.QueueCapacity <= 0 {",
+      "replace": "\tif options.QueueCapacity < 0 {"
+    },
+    {
+      "id": "expand-queue-capacity",
+      "description": "Allocate one more queue slot than the configured bound.",
+      "find": "\t\tjobs:            make(chan Job, options.QueueCapacity),",
+      "replace": "\t\tjobs:            make(chan Job, options.QueueCapacity+1),"
+    },
+    {
+      "id": "ignore-configured-timeout",
+      "description": "Use a one-millisecond deadline instead of the configured shutdown timeout.",
+      "find": "\t\tshutdownTimeout: shutdownTimeout,",
+      "replace": "\t\tshutdownTimeout: time.Millisecond,"
+    },
+    {
+      "id": "start-only-three-workers",
+      "description": "Start one fewer worker while leaving the exported count unchanged.",
+      "find": "\tfor worker := 0; worker < WorkerCount; worker++ {",
+      "replace": "\tfor worker := 0; worker < WorkerCount-1; worker++ {"
+    },
+    {
+      "id": "accept-wrong-method",
+      "description": "Return success for a non-POST request.",
+      "find": "\t\thttp.Error(writer, \"method not allowed\", http.StatusMethodNotAllowed)",
+      "replace": "\t\thttp.Error(writer, \"method not allowed\", http.StatusOK)"
+    },
+    {
+      "id": "allow-unknown-fields",
+      "description": "Allow undeclared fields in the submitted JSON object.",
+      "find": "\tdecoder.DisallowUnknownFields()\n",
+      "replace": ""
+    },
+    {
+      "id": "allow-blank-id",
+      "description": "Accept a job whose ID contains only whitespace.",
+      "find": "strings.TrimSpace(job.ID) == \"\" {",
+      "replace": "strings.TrimSpace(job.ID) == \"\" && false {"
+    },
+    {
+      "id": "allow-trailing-json",
+      "description": "Accept another JSON value after the submitted job object.",
+      "find": "\tif err := requireJSONEnd(decoder); err != nil || strings.TrimSpace(job.ID) == \"\" {",
+      "replace": "\tif err := error(nil); err != nil || strings.TrimSpace(job.ID) == \"\" {"
+    },
+    {
+      "id": "wrong-accepted-status",
+      "description": "Return 200 instead of 202 after enqueueing a job.",
+      "find": "\t\twriter.WriteHeader(http.StatusAccepted)",
+      "replace": "\t\twriter.WriteHeader(http.StatusOK)"
+    },
+    {
+      "id": "wrong-queue-full-status",
+      "description": "Return 503 instead of the declared 429 when the queue is full.",
+      "find": "\t\thttp.Error(writer, \"job queue is full\", http.StatusTooManyRequests)",
+      "replace": "\t\thttp.Error(writer, \"job queue is full\", http.StatusServiceUnavailable)"
+    },
+    {
+      "id": "wrong-shutdown-status",
+      "description": "Return 429 instead of 503 after shutdown starts.",
+      "find": "\t\thttp.Error(writer, \"server is shutting down\", http.StatusServiceUnavailable)",
+      "replace": "\t\thttp.Error(writer, \"server is shutting down\", http.StatusTooManyRequests)"
+    },
+    {
+      "id": "leave-job-queue-open",
+      "description": "Never close the queue, so workers cannot finish graceful shutdown.",
+      "find": "\t\tclose(s.jobs)",
+      "replace": "\t\tif false {\n\t\t\tclose(s.jobs)\n\t\t}"
+    },
+    {
+      "id": "return-before-drain",
+      "description": "Return from shutdown immediately instead of waiting for workers.",
+      "find": "\tcase <-s.workersDone:\n\t\ts.cancelWorkers()\n\t\treturn shutdownError",
+      "replace": "\tcase <-time.After(0 * time.Second):\n\t\ts.cancelWorkers()\n\t\treturn shutdownError"
+    },
+    {
+      "id": "keep-processors-running-after-deadline",
+      "description": "Do not cancel processor contexts when the shutdown deadline expires.",
+      "find": "\tcase <-ctx.Done():\n\t\ts.cancelWorkers()\n\t\treturn errors.Join(shutdownError, ctx.Err())",
+      "replace": "\tcase <-ctx.Done():\n\t\t_ = s.cancelWorkers\n\t\treturn errors.Join(shutdownError, ctx.Err())"
+    },
+    {
+      "id": "leave-http-listener-open",
+      "description": "Skip http.Server shutdown and leave the listener accepting.",
+      "find": "\t\tshutdownError = httpServer.Shutdown(ctx)",
+      "replace": "\t\tshutdownError = nil"
+    },
+    {
+      "id": "discard-processor-panics",
+      "description": "Recover processor panics without reporting them and report nil recoveries instead.",
+      "find": "\t\tif recovered := recover(); recovered != nil {",
+      "replace": "\t\tif recovered := recover(); recovered == nil {"
+    },
+    {
+      "id": "invert-processor-error-check",
+      "description": "Ignore processor errors while reporting successful calls as failures.",
+      "find": "\tif err := s.processor(s.workerContext, job); err != nil {",
+      "replace": "\tif err := s.processor(s.workerContext, job); err == nil {"
+    },
+    {
+      "id": "ignore-sigint",
+      "description": "Register SIGTERM twice and leave SIGINT unhandled.",
+      "find": "\t\tos.Interrupt,",
+      "replace": "\t\tos.Signal(syscall.SIGTERM),"
+    },
+    {
+      "id": "ignore-sigterm",
+      "description": "Register SIGINT twice and leave SIGTERM unhandled.",
+      "find": "\t\tsyscall.SIGTERM,",
+      "replace": "\t\tsyscall.SIGINT,"
+    }
+  ]
+}

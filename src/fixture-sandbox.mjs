@@ -372,6 +372,35 @@ export function buildSandboxInvocation({
     throw new TypeError(`unsupported sandbox phase: ${command.phase}`);
   }
   const sandbox = getValidationProfile(manifest.validationProfile).sandbox;
+  const profileEnvironment = manifest.validationProfile === "go-std"
+    ? [
+      "--setenv",
+      "GOCACHE",
+      `${sandboxRoot}/build/go-cache`,
+      "--setenv",
+      "GOMODCACHE",
+      `${sandboxRoot}/build/go-mod-cache`,
+      "--setenv",
+      "GOTOOLCHAIN",
+      "local",
+      "--setenv",
+      "GOWORK",
+      "off",
+      "--setenv",
+      "GOENV",
+      "off",
+      "--setenv",
+      "CGO_ENABLED",
+      "0",
+      ...(command.phase === "compile" && toolPath
+        ? [
+          "--setenv",
+          "FIXTURE_GO_EXECUTABLE",
+          toolPath,
+        ]
+        : []),
+    ]
+    : [];
   const limits = sandbox.resourceLimits[command.phase];
   const sandboxArgs = [
     "--unshare-all",
@@ -399,6 +428,7 @@ export function buildSandboxInvocation({
     "--setenv",
     "TMPDIR",
     "/tmp",
+    ...profileEnvironment,
     "--size",
     String(sandbox.rootTmpfsBytes),
     "--tmpfs",

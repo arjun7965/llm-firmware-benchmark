@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "1.2",
+  "source": "reference/cache.ts",
+  "mutations": [
+    {
+      "id": "exit-during-import",
+      "description": "Exit successfully before exposing the cache API.",
+      "find": "export type CacheLoader<K, V> = (key: K) => V | PromiseLike<V>;\n",
+      "replace": "(globalThis as unknown as { process: { exit(code?: number): never } }).process.exit(0);\n\nexport type CacheLoader<K, V> = (key: K) => V | PromiseLike<V>;\n"
+    },
+    {
+      "id": "extend-ttl-boundary",
+      "description": "Treat a value as fresh at its exact expiry time.",
+      "find": "    if (cached && this.now() < cached.expiresAt) {\n",
+      "replace": "    if (cached && this.now() <= cached.expiresAt) {\n"
+    },
+    {
+      "id": "cache-zero-ttl",
+      "description": "Treat a zero TTL as an indefinitely reusable value.",
+      "find": "    this.ttlMs = options.ttlMs;\n",
+      "replace": "    this.ttlMs = options.ttlMs === 0 ? Number.POSITIVE_INFINITY : options.ttlMs;\n"
+    },
+    {
+      "id": "disable-coalescing",
+      "description": "Start another loader instead of joining the current per-key flight.",
+      "find": "    if (existingFlight) {\n",
+      "replace": "    if (existingFlight && Math.random() < 0) {\n"
+    },
+    {
+      "id": "load-for-aborted-caller",
+      "description": "Invoke the loader for a caller whose signal is already aborted.",
+      "find": "    if (signal?.aborted) {\n",
+      "replace": "    if (signal?.aborted && Math.random() < 0) {\n"
+    },
+    {
+      "id": "join-flight-before-abort-check",
+      "description": "Let an already-aborted caller join an existing flight.",
+      "find": "    if (signal?.aborted) {\n      return Promise.reject(abortReason(signal));\n    }\n",
+      "replace": "    if (signal?.aborted) {\n      const current = this.flights.get(key);\n      if (current) return current.promise;\n      return Promise.reject(abortReason(signal));\n    }\n"
+    },
+    {
+      "id": "ignore-caller-cancellation",
+      "description": "Return the shared promise without caller-local abort handling.",
+      "find": "    if (!signal) return shared;\n",
+      "replace": "    if (!signal || Math.random() >= 0) return shared;\n"
+    },
+    {
+      "id": "cache-loader-failure",
+      "description": "Cache a rejected loader reason as though it were a value.",
+      "find": "      () => {\n        if (this.flights.get(key) === flight) {\n          this.flights.delete(key);\n        }\n      },\n",
+      "replace": "      (error) => {\n        if (this.flights.get(key) === flight) {\n          this.flights.delete(key);\n          this.values.set(key, {\n            value: error as V,\n            expiresAt: this.now() + this.ttlMs,\n          });\n        }\n      },\n"
+    },
+    {
+      "id": "escape-synchronous-throw",
+      "description": "Throw synchronously from get instead of returning a rejected promise.",
+      "find": "      rejectShared(error);\n",
+      "replace": "      throw error;\n"
+    },
+    {
+      "id": "retain-invalidated-flight",
+      "description": "Keep an old in-flight request joinable after invalidate.",
+      "find": "  invalidate(key: K): void {\n    this.values.delete(key);\n    this.flights.delete(key);\n  }\n",
+      "replace": "  invalidate(key: K): void {\n    this.values.delete(key);\n  }\n"
+    },
+    {
+      "id": "retain-invalidated-value",
+      "description": "Keep a cached value after invalidate.",
+      "find": "  invalidate(key: K): void {\n    this.values.delete(key);\n    this.flights.delete(key);\n  }\n",
+      "replace": "  invalidate(key: K): void {\n    this.flights.delete(key);\n  }\n"
+    },
+    {
+      "id": "return-from-invalidate",
+      "description": "Return a boolean token from invalidate.",
+      "find": "  invalidate(key: K): void {\n    this.values.delete(key);\n    this.flights.delete(key);\n  }\n",
+      "replace": "  invalidate(key: K): boolean {\n    this.values.delete(key);\n    this.flights.delete(key);\n    return true;\n  }\n"
+    },
+    {
+      "id": "retain-cleared-flights",
+      "description": "Leave every in-flight request joinable after clear.",
+      "find": "  clear(): void {\n    this.values.clear();\n    this.flights.clear();\n  }\n",
+      "replace": "  clear(): void {\n    this.values.clear();\n  }\n"
+    },
+    {
+      "id": "retain-cleared-values",
+      "description": "Keep cached values after clear.",
+      "find": "  clear(): void {\n    this.values.clear();\n    this.flights.clear();\n  }\n",
+      "replace": "  clear(): void {\n    this.flights.clear();\n  }\n"
+    },
+    {
+      "id": "return-from-clear",
+      "description": "Return a boolean token from clear.",
+      "find": "  clear(): void {\n    this.values.clear();\n    this.flights.clear();\n  }\n",
+      "replace": "  clear(): boolean {\n    this.values.clear();\n    this.flights.clear();\n    return true;\n  }\n"
+    },
+    {
+      "id": "allow-stale-repopulation",
+      "description": "Let an invalidated flight overwrite a newer cached value.",
+      "find": "        if (this.flights.get(key) !== flight) return;\n",
+      "replace": "        if (false) return;\n"
+    },
+    {
+      "id": "create-entry-timer",
+      "description": "Create a timer whenever a successful value is cached.",
+      "find": "        this.values.set(key, {\n          value,\n          expiresAt: this.now() + this.ttlMs,\n        });\n",
+      "replace": "        this.values.set(key, {\n          value,\n          expiresAt: this.now() + this.ttlMs,\n        });\n        setTimeout(() => undefined, this.ttlMs);\n"
+    },
+    {
+      "id": "create-unrefed-entry-interval",
+      "description": "Create an unrefed interval whenever a successful value is cached.",
+      "find": "        this.values.set(key, {\n          value,\n          expiresAt: this.now() + this.ttlMs,\n        });\n",
+      "replace": "        this.values.set(key, {\n          value,\n          expiresAt: this.now() + this.ttlMs,\n        });\n        const timer = setInterval(() => undefined, this.ttlMs);\n        (timer as unknown as { unref(): void }).unref();\n"
+    }
+  ]
+}

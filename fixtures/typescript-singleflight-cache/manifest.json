@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "1.3",
+  "taskId": "typescript-singleflight-cache",
+  "targetProfile": null,
+  "validationProfile": "node-typescript",
+  "status": "scaffold",
+  "language": "typescript",
+  "toolVersionArgs": {
+    "node": ["--version"],
+    "tsc": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "typescript",
+    "output": "generated/answer.ts"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "typescript-compile",
+      "phase": "compile",
+      "argv": [
+        "tsc",
+        "--strict",
+        "--target",
+        "ES2022",
+        "--module",
+        "CommonJS",
+        "--moduleResolution",
+        "Node",
+        "--lib",
+        "ES2022,DOM",
+        "--outDir",
+        "build/output",
+        "generated/answer.ts",
+        "starter/cache_api.ts",
+        "tests/public/test_cache.ts"
+      ],
+      "requiredTools": ["tsc"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "public-tests",
+      "phase": "test",
+      "argv": ["node", "build/output/tests/public/test_cache.js"],
+      "requiredTools": ["node"],
+      "timeoutMs": 10000
+    }
+  ]
+}

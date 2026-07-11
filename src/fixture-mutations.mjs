@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -11,7 +12,6 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import {
-  basename,
   dirname,
   join,
   relative,
@@ -216,11 +216,15 @@ function buildPathReplacements(commands, manifest, candidateRoot) {
   const testBuildPaths = new Set(
     declaredBuildPaths(commands.test.argv, manifest),
   );
-  const sharedBuildPaths = [...testBuildPaths].filter((path) =>
-    compileBuildPaths.has(path));
-  if (sharedBuildPaths.length === 0) {
+  const hasSharedBuildOutput = [...compileBuildPaths].some((compilePath) =>
+    [...testBuildPaths].some((testPath) =>
+      testPath === compilePath || testPath.startsWith(`${compilePath}/`)));
+  if (!hasSharedBuildOutput) {
+    if (compileBuildPaths.size === 0 && testBuildPaths.size === 0) {
+      return new Map();
+    }
     throw new TypeError(
-      `${manifest.taskId} compile and test commands must share a build artifact`,
+      `${manifest.taskId} compile and test commands must share a build output`,
     );
   }
 
@@ -236,6 +240,25 @@ function buildPathReplacements(commands, manifest, candidateRoot) {
   return replacements;
 }
 
+function fixtureInputReplacements(commands, manifest, candidateRoot) {
+  const replacements = new Map();
+  const roots = ["starter", "mocks", "publicTests"]
+    .map((field) => manifest.paths[field])
+    .filter((path) => typeof path === "string");
+  for (const argument of [
+    ...commands.compile.argv,
+    ...commands.test.argv,
+  ]) {
+    if (!roots.some((root) =>
+      argument === root || argument.startsWith(`${root}/`))) {
+      continue;
+    }
+    requireSafeRelativePath(argument, `${manifest.taskId} fixture input`);
+    replacements.set(argument, join(candidateRoot, argument));
+  }
+  return replacements;
+}
+
 function replaceArgv(argv, replacements) {
   return argv.map((argument) => replacements.get(argument) ?? argument);
 }
@@ -246,7 +269,21 @@ export function createMutationCommandPlan({
   commands,
   manifest,
 }) {
-  if (countArgument(commands.compile.argv, manifest.answer.output) !== 1) {
+  const answerOccurrences = countArgument(
+    commands.compile.argv,
+    manifest.answer.output,
+  );
+  const inputReplacements = fixtureInputReplacements(
+    commands,
+    manifest,
+    candidateRoot,
+  );
+  const compileUsesFixtureInput = commands.compile.argv.some((argument) =>
+    inputReplacements.has(argument));
+  if (
+    answerOccurrences > 1 ||
+    (answerOccurrences === 0 && !compileUsesFixtureInput)
+  ) {
     throw new TypeError(
       `${manifest.taskId} compile command cannot be adapted for mutations`,
     );
@@ -257,6 +294,9 @@ export function createMutationCommandPlan({
     manifest,
     candidateRoot,
   );
+  for (const [path, replacement] of inputReplacements) {
+    replacements.set(path, replacement);
+  }
   replacements.set(manifest.answer.output, candidatePath);
 
   const compileArgv = replaceArgv(commands.compile.argv, replacements);
@@ -274,6 +314,26 @@ export function createMutationCommandPlan({
       timeoutMs: commands.test.timeoutMs,
     },
   };
+}
+
+function stageMutationCandidate({
+  candidateRoot,
+  fixtureRoot,
+  manifest,
+  source,
+}) {
+  for (const field of ["starter", "mocks", "publicTests"]) {
+    const relativePath = manifest.paths[field];
+    const destination = join(candidateRoot, relativePath);
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(join(fixtureRoot, relativePath), destination, {
+      recursive: true,
+    });
+  }
+  const candidatePath = join(candidateRoot, manifest.answer.output);
+  mkdirSync(dirname(candidatePath), { recursive: true });
+  writeFileSync(candidatePath, source, { encoding: "utf8", mode: 0o600 });
+  return candidatePath;
 }
 
 function compileCandidate({
@@ -309,11 +369,36 @@ function runCandidate({
 }
 
 export function runFixtureMutationTests({
+  fixtureStatuses = ["active"],
   fixturesRoot,
   logger = console.log,
+  taskIds = null,
   tasksPath,
   temporaryRoot,
 }) {
+  if (
+    !Array.isArray(fixtureStatuses) ||
+    fixtureStatuses.length === 0 ||
+    fixtureStatuses.some((status) =>
+      !["active", "scaffold"].includes(status)) ||
+    new Set(fixtureStatuses).size !== fixtureStatuses.length
+  ) {
+    throw new TypeError("fixtureStatuses must be unique known statuses");
+  }
+  if (
+    taskIds !== null &&
+    (
+      !Array.isArray(taskIds) ||
+      taskIds.length === 0 ||
+      taskIds.some((taskId) =>
+        typeof taskId !== "string" || !identifierPattern.test(taskId)) ||
+      new Set(taskIds).size !== taskIds.length
+    )
+  ) {
+    throw new TypeError("taskIds must be unique fixture task IDs");
+  }
+  const fixtureStatusSet = new Set(fixtureStatuses);
+  const taskIdSet = taskIds === null ? null : new Set(taskIds);
   const resolvedFixturesRoot = resolve(asPath(fixturesRoot));
   const resolvedTasksPath = resolve(asPath(tasksPath));
   validateFixtureRepository({
@@ -329,7 +414,7 @@ export function runFixtureMutationTests({
   if (temporaryRoot) mkdirSync(resolvedTemporaryRoot, { recursive: true });
 
   let killedMutations = 0;
-  let activeMutationFixtures = 0;
+  let mutationFixtures = 0;
 
   try {
     const fixtureNames = readdirSync(
@@ -351,8 +436,13 @@ export function runFixtureMutationTests({
         JSON.parse(readFileSync(manifestPath, "utf8")),
         task,
       );
-      if (manifest.status !== "active") continue;
-      activeMutationFixtures++;
+      if (
+        !fixtureStatusSet.has(manifest.status) ||
+        (taskIdSet !== null && !taskIdSet.has(manifest.taskId))
+      ) {
+        continue;
+      }
+      mutationFixtures++;
 
       const { catalog, sourcePath } = loadMutationCatalog(
         fixtureRoot,
@@ -365,8 +455,14 @@ export function runFixtureMutationTests({
 
       const baselineRoot = join(fixtureTemporaryRoot, "_baseline");
       mkdirSync(baselineRoot);
+      const baselinePath = stageMutationCandidate({
+        candidateRoot: baselineRoot,
+        fixtureRoot,
+        manifest,
+        source,
+      });
       const baselinePlan = createMutationCommandPlan({
-        candidatePath: sourcePath,
+        candidatePath: baselinePath,
         candidateRoot: baselineRoot,
         commands,
         manifest,
@@ -394,12 +490,12 @@ export function runFixtureMutationTests({
         const name = `${fixtureName}/${mutation.id}`;
         const candidateRoot = join(fixtureTemporaryRoot, mutation.id);
         mkdirSync(candidateRoot);
-        const candidatePath = join(candidateRoot, basename(sourcePath));
-        writeFileSync(
-          candidatePath,
-          applyMutation(source, mutation, fixtureName),
-          { encoding: "utf8", mode: 0o600 },
-        );
+        const candidatePath = stageMutationCandidate({
+          candidateRoot,
+          fixtureRoot,
+          manifest,
+          source: applyMutation(source, mutation, fixtureName),
+        });
         const commandPlan = createMutationCommandPlan({
           candidatePath,
           candidateRoot,
@@ -427,15 +523,15 @@ export function runFixtureMutationTests({
       }
     }
 
-    if (activeMutationFixtures === 0) {
-      throw new Error("no active fixtures found for mutation testing");
+    if (mutationFixtures === 0) {
+      throw new Error("no selected fixtures found for mutation testing");
     }
 
     logger(
       `Fixture mutation testing passed: ${killedMutations} mutations killed.`,
     );
     return {
-      fixtureCount: activeMutationFixtures,
+      fixtureCount: mutationFixtures,
       killedMutations,
     };
   } finally {
