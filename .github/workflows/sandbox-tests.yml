@@ -22,6 +22,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
             apparmor-profiles bubblewrap gcc libc6-dev util-linux
+      - name: Install pinned root-owned Rust toolchain
+        run: |
+          rustup toolchain install 1.87.0 --profile minimal
+          rust_sysroot="$(rustup run 1.87.0 rustc --print sysroot)"
+          sudo install -d /usr/local/lib/rust-1.87.0
+          sudo cp -a "${rust_sysroot}/." /usr/local/lib/rust-1.87.0/
+          sudo chown -R root:root /usr/local/lib/rust-1.87.0
+          sudo chmod -R go-w /usr/local/lib/rust-1.87.0
+          sudo ln -sfn /usr/local/lib/rust-1.87.0/bin/cargo /usr/local/bin/cargo
+          sudo ln -sfn /usr/local/lib/rust-1.87.0/bin/rustc /usr/local/bin/rustc
       - name: Enable the packaged Bubblewrap AppArmor profile
         run: |
           sudo install -m 0644 \
@@ -30,4 +40,7 @@ jobs:
           sudo apparmor_parser --replace \
             /etc/apparmor.d/bwrap-userns-restrict
       - name: Run sandbox fixture tests as the unprivileged runner
-        run: npm run test:sandbox
+        run: |
+          export PATH="/usr/local/bin:/usr/bin:/bin"
+          npm run fixture:rust-decoder:self-test
+          npm run test:sandbox

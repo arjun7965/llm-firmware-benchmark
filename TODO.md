@@ -70,10 +70,10 @@ For each task below, add starter assets, a trusted reference, public tests,
 controlled mutations, sandbox commands, dependency documentation, and
 calibration before marking the fixture active:
 
-1. [ ] `rust-stream-decoder`
-   - [x] Add the API contract, trusted reference, public tests, seven
+1. [x] `rust-stream-decoder`
+   - [x] Add the API contract, trusted reference, public tests, eight
      controlled mutations, and sandbox command scaffold.
-   - [ ] Execute and calibrate the scaffold under pinned Rust/Cargo 1.87.0,
+   - [x] Execute and calibrate the scaffold under pinned Rust/Cargo 1.87.0,
      then mark it active.
 2. [ ] `concurrency-debug`
    - [x] Add the exact `Pool` contract, trusted reference, public race tests,

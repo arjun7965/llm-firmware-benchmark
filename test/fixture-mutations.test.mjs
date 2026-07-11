@@ -78,8 +78,8 @@ test("mutation command planning rewrites non-C source and test binary paths", (t
     manifest,
   });
 
-  assert.equal(plan.compile.command, "rustc");
-  assert.deepEqual(plan.compile.args, [
+  assert.equal(plan.compile[0].command, "rustc");
+  assert.deepEqual(plan.compile[0].args, [
     "--edition=2021",
     "--test",
     candidatePath,
@@ -101,6 +101,16 @@ test("mutation command planning stages validator-owned wrapper inputs", (t) => {
           "rustc",
           "--test",
           "starter/test_harness.rs",
+          "-o",
+          "build/candidate-tests",
+        ],
+        timeoutMs: 30000,
+      },
+      {
+        phase: "compile",
+        argv: [
+          "rustc",
+          "starter/test_supervisor.rs",
           "-o",
           "build/public-tests",
         ],
@@ -127,10 +137,16 @@ test("mutation command planning stages validator-owned wrapper inputs", (t) => {
     manifest,
   });
 
-  assert.equal(plan.compile.command, "rustc");
-  assert.deepEqual(plan.compile.args, [
+  assert.equal(plan.compile[0].command, "rustc");
+  assert.deepEqual(plan.compile[0].args, [
     "--test",
     join(candidateRoot, "starter/test_harness.rs"),
+    "-o",
+    join(candidateRoot, "build/candidate-tests"),
+  ]);
+  assert.equal(plan.compile[1].command, "rustc");
+  assert.deepEqual(plan.compile[1].args, [
+    join(candidateRoot, "starter/test_supervisor.rs"),
     "-o",
     join(candidateRoot, "build/public-tests"),
   ]);
@@ -186,8 +202,8 @@ test("mutation command planning supports interpreter-only commands", (t) => {
     manifest,
   });
 
-  assert.equal(plan.compile.command, "python3");
-  assert.deepEqual(plan.compile.args, [
+  assert.equal(plan.compile[0].command, "python3");
+  assert.deepEqual(plan.compile[0].args, [
     "-m",
     "py_compile",
     candidatePath,
@@ -244,7 +260,7 @@ test("mutation command planning supports nested build output artifacts", (t) => 
     manifest,
   });
 
-  assert.deepEqual(plan.compile.args, [
+  assert.deepEqual(plan.compile[0].args, [
     "--outDir",
     join(candidateRoot, "build/output"),
     candidatePath,

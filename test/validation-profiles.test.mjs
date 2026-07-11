@@ -91,7 +91,7 @@ test("hosted validation profiles are pinned and immutable", () => {
   );
   const stableEnvironment = getValidationEnvironmentRevision(
     "ubuntu-24-04-x86-64-stable-rust",
-    1,
+    2,
   );
   assert.equal(
     resolveValidationProfile(
@@ -102,8 +102,12 @@ test("hosted validation profiles are pinned and immutable", () => {
     "1.87.0",
   );
   assert.equal(
-    getValidationProfileRevision("stable-rust", 2),
+    getValidationProfileRevision("stable-rust", 3),
     getValidationProfile("stable-rust"),
+  );
+  assert.deepEqual(
+    getValidationProfile("stable-rust").toolchains,
+    ["cargo", "cc", "rustc"],
   );
   assert.equal(getValidationProfile("go-std").revision, 3);
   assert.equal(

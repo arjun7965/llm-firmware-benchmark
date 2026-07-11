@@ -28,7 +28,7 @@ code. Each task references a pinned hosted runtime contract from
 | `postgres-pagination` | PostgreSQL server and client tools for schema, query, and `EXPLAIN` validation |
 | `testing-property-based` | Python 3, pytest, and Hypothesis |
 | `go-graceful-shutdown` | Go 1.24.4; only the standard library is used |
-| `rust-stream-decoder` | Rust 1.87.0 and Cargo 1.87.0; standard library only |
+| `rust-stream-decoder` | Rust/Cargo 1.87.0 and GCC 13.3.0 as the system linker; standard library only |
 | `typescript-singleflight-cache` | Node.js 22.16.0, TypeScript 5.8.3, and `@types/node` 22.15.29 |
 | `webhook-replay-security` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
 
@@ -112,9 +112,10 @@ The trusted binary-parser fixture also requires `cc`:
 npm run fixture:parser:self-test
 ```
 
-The Rust stream-decoder scaffold requires Rust and Cargo. Its local
-calibration command compiles the reference and all controlled mutations, but
-activation still requires the exact 1.87.0 profile inside the sandbox:
+The active Rust stream-decoder fixture requires Rust/Cargo 1.87.0 and its
+GCC 13.3.0 linker. Its calibration command compiles the reference and all
+controlled mutations, including initialization-time successful exit; sandbox
+CI verifies the same pinned toolchain set:
 
 ```bash
 npm run fixture:rust-decoder:self-test

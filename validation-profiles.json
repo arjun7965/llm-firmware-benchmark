@@ -407,6 +407,59 @@
           ]
         }
       ]
+    },
+    {
+      "id": "ubuntu-24-04-x86-64-stable-rust",
+      "revision": 2,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "execution": {
+        "kind": "host"
+      },
+      "sandbox": {
+        "runtime": {
+          "name": "bubblewrap",
+          "executable": "bwrap",
+          "version": "0.9.0",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "limiter": {
+          "name": "prlimit",
+          "executable": "prlimit",
+          "version": "2.39.3",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      },
+      "toolchains": [
+        {
+          "name": "cargo",
+          "version": "1.87.0",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "cc",
+          "version": "13.3.0",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "rustc",
+          "version": "1.87.0",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      ]
     }
   ],
   "profiles": [
@@ -1836,6 +1889,44 @@
       ],
       "toolchains": [
         "cargo",
+        "rustc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 60,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      }
+    },
+    {
+      "id": "stable-rust",
+      "revision": 3,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-stable-rust",
+          "revision": 2
+        }
+      ],
+      "toolchains": [
+        "cargo",
+        "cc",
         "rustc"
       ],
       "sandbox": {

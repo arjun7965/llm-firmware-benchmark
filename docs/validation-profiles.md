@@ -55,7 +55,7 @@ policies require no network and an isolated filesystem.
 | `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | pytest 8.4.0, Hypothesis 6.135.9 | Not active until dependencies are mounted |
 | `python3-stdlib` | Python 3.12.11 | None; standard library only | `python3 -m py_compile ...` and `python3 -m unittest ...` with Python runtime mounts |
 | `react18-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | React 18.3.1 and the exact test stack in the registry | Not active until dependencies are mounted |
-| `stable-rust` | Rust and Cargo 1.87.0 | None; standard library only | Native `build/` executable |
+| `stable-rust` | Rust/Cargo 1.87.0 and GCC/`cc` 13.3.0 | None; standard library only | Native `build/` executable |
 
 The registry is authoritative for full dependency versions and byte-level
 resource limits. Dependency-bearing current profiles also record a
