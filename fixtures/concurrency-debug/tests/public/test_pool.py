@@ -11,6 +11,9 @@ LOADER = """
 import importlib.util
 import pathlib
 import sys
+import threading
+
+threading.stack_size(256 * 1024)
 
 answer_path = pathlib.Path(sys.argv[1])
 spec = importlib.util.spec_from_file_location("candidate_pool", answer_path)

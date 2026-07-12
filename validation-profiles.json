@@ -1557,7 +1557,7 @@
             "openFiles": 64
           },
           "test": {
-            "addressSpaceBytes": 1073741824,
+            "addressSpaceBytes": 268435456,
             "cpuSeconds": 10,
             "fileBytes": 8388608,
             "openFiles": 64
