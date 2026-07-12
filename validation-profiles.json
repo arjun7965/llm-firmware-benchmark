@@ -854,13 +854,13 @@
         "temporaryDirectoryBytes": 16777216,
         "resourceLimits": {
           "compile": {
-            "addressSpaceBytes": 536870912,
+            "addressSpaceBytes": 2147483648,
             "cpuSeconds": 30,
             "fileBytes": 33554432,
             "openFiles": 128
           },
           "test": {
-            "addressSpaceBytes": 268435456,
+            "addressSpaceBytes": 2147483648,
             "cpuSeconds": 10,
             "fileBytes": 8388608,
             "openFiles": 64

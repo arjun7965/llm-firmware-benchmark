@@ -468,6 +468,9 @@ test("sandbox attests and mounts pinned npm dependencies", (t) => {
   assert.equal(report.success, true);
   assert.deepEqual(report.artifacts, []);
   assert.equal(calls.length, 2);
+  for (const call of calls) {
+    assert.equal(call.args[0], `--as=${2 * 1024 * 1024 * 1024}`);
+  }
   const compilePath = calls[0].args.indexOf("PATH");
   assert.deepEqual(
     calls[0].args.slice(compilePath - 1, compilePath + 2),

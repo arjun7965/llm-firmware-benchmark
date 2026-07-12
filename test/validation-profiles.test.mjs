@@ -121,6 +121,16 @@ test("hosted validation profiles are pinned and immutable", () => {
   );
   assert.equal(getValidationProfile("node-typescript").revision, 4);
   assert.equal(
+    getValidationProfile("node-typescript").sandbox.resourceLimits.compile
+      .addressSpaceBytes,
+    2 * 1024 * 1024 * 1024,
+  );
+  assert.equal(
+    getValidationProfile("node-typescript").sandbox.resourceLimits.test
+      .addressSpaceBytes,
+    2 * 1024 * 1024 * 1024,
+  );
+  assert.equal(
     getValidationProfile("node-typescript").dependencyInstall.mountPath,
     "/workspace/node_modules",
   );
