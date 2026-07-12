@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.12.11
       - name: Install sandbox dependencies
         run: |
           sudo apt-get update
@@ -32,6 +35,15 @@ jobs:
           sudo chmod -R go-w /usr/local/lib/rust-1.87.0
           sudo ln -sfn /usr/local/lib/rust-1.87.0/bin/cargo /usr/local/bin/cargo
           sudo ln -sfn /usr/local/lib/rust-1.87.0/bin/rustc /usr/local/bin/rustc
+      - name: Install pinned root-owned Python runtime
+        run: |
+          sudo install -d /usr/local/lib/python-3.12.11
+          sudo cp -a "${pythonLocation}/." /usr/local/lib/python-3.12.11/
+          sudo chown -R root:root /usr/local/lib/python-3.12.11
+          sudo chmod -R go-w /usr/local/lib/python-3.12.11
+          sudo ln -sfn \
+            /usr/local/lib/python-3.12.11/bin/python3 \
+            /usr/local/bin/python3
       - name: Enable the packaged Bubblewrap AppArmor profile
         run: |
           sudo install -m 0644 \
@@ -42,5 +54,6 @@ jobs:
       - name: Run sandbox fixture tests as the unprivileged runner
         run: |
           export PATH="/usr/local/bin:/usr/bin:/bin"
+          npm run fixture:concurrency:self-test
           npm run fixture:rust-decoder:self-test
           npm run test:sandbox

@@ -126,6 +126,7 @@ function fakeToolVersion(command, args) {
     bwrap: "bubblewrap 0.9.0",
     cc: "cc (Ubuntu) 13.3.0",
     prlimit: "prlimit from util-linux 2.39.3",
+    python3: "Python 3.12.11",
   };
   return {
     status: 0,
@@ -290,6 +291,29 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
   assert.equal(environmentValue("CGO_ENABLED"), "0");
   assert.equal(environmentValue("FIXTURE_GO_EXECUTABLE"), "/usr/bin/go");
 
+  assert.throws(
+    () => buildSandboxInvocation({
+      bubblewrapPath: "/usr/bin/bwrap",
+      prlimitPath: "/usr/bin/prlimit",
+      fixtureRoot: fixture.fixtureRoot,
+      manifest: {
+        ...fixture.manifest,
+        validationProfile: "python3-stdlib",
+      },
+      buildRoot,
+      command: {
+        id: "public-tests",
+        phase: "test",
+        argv: ["python3", "-m", "unittest"],
+        requiredTools: ["python3"],
+        timeoutMs: 5_000,
+      },
+      toolPath: "/usr/bin/python3",
+      systemMounts: [],
+    }),
+    /outside its runtime mounts/u,
+  );
+
   const userTools = temporaryDirectory(t);
   const fakeTool = join(userTools, "bwrap");
   writeFileSync(fakeTool, "");
@@ -300,7 +324,7 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
   );
 });
 
-test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) => {
+test("sandbox rejects profiles with unavailable dependencies", (t) => {
   const fixture = sandboxFixture(t);
   const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
   tasks[0].suite = "auxiliary";
@@ -339,7 +363,9 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
     }),
     /dependency installation cannot be runtime-attested/u,
   );
+});
 
+test("sandbox mounts and runs an approved interpreter test runtime", (t) => {
   const interpreterFixture = sandboxFixture(t);
   const interpreterTasks = JSON.parse(
     readFileSync(interpreterFixture.tasksPath, "utf8"),
@@ -357,7 +383,7 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
       ...interpreterFixture.manifest,
       targetProfile: null,
       validationProfile: "python3-stdlib",
-      status: "scaffold",
+      status: "active",
       toolVersionArgs: {
         python3: ["--version"],
       },
@@ -380,13 +406,46 @@ test("sandbox rejects profiles with unavailable dependencies or runtimes", (t) =
       ],
     }),
   );
-  assert.throws(
-    () => runFixtureValidation({
-      taskId: "example-task",
-      fixturesRoot: interpreterFixture.fixturesRoot,
-      tasksPath: interpreterFixture.tasksPath,
-    }),
-    /test runtime is not mounted/u,
+  const calls = [];
+  const pythonPath = "/usr/local/lib/python-3.12.11/bin/python3";
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: interpreterFixture.fixturesRoot,
+    tasksPath: interpreterFixture.tasksPath,
+    resolveExecutableImpl: (name) =>
+      name === "python3" ? pythonPath : fakeExecutable(name),
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    spawn: (command, args, options) => {
+      calls.push({ command, args, options });
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.equal(report.success, true);
+  assert.equal(report.validationProfileRevision, 4);
+  assert.deepEqual(report.artifacts, []);
+  assert.equal(calls.length, 2);
+  const pycacheEnvironment = calls[0].args.indexOf("PYTHONPYCACHEPREFIX");
+  assert.deepEqual(
+    calls[0].args.slice(pycacheEnvironment - 1, pycacheEnvironment + 2),
+    ["--setenv", "PYTHONPYCACHEPREFIX", "/workspace/build/pycache"],
+  );
+  const runtimeMount = "/usr/local/lib/python-3.12.11";
+  const mountIndex = calls[1].args.indexOf(runtimeMount);
+  assert.deepEqual(
+    calls[1].args.slice(mountIndex - 1, mountIndex + 2),
+    ["--ro-bind", runtimeMount, runtimeMount],
+  );
+  assert.equal(
+    calls[1].args[calls[1].args.lastIndexOf("--") + 1],
+    pythonPath,
   );
 });
 

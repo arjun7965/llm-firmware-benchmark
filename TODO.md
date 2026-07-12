@@ -75,10 +75,10 @@ calibration before marking the fixture active:
      controlled mutations, and sandbox command scaffold.
    - [x] Execute and calibrate the scaffold under pinned Rust/Cargo 1.87.0,
      then mark it active.
-2. [ ] `concurrency-debug`
+2. [x] `concurrency-debug`
    - [x] Add the exact `Pool` contract, trusted reference, public race tests,
      twelve controlled mutations, and sandbox command scaffold.
-   - [ ] Execute and calibrate the scaffold under pinned Python 3.12.11 in
+   - [x] Execute and calibrate the scaffold under pinned Python 3.12.11 in
      the sandbox namespace, then mark it active.
 3. [ ] `typescript-singleflight-cache`
    - [x] Add the exact cache API, trusted reference, public fake-clock tests,

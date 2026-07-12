@@ -24,12 +24,11 @@ does not yet verify or mount an installed package tree from those lockfiles.
 Such profiles require runtime install attestation or a digest-pinned image
 before executable fixture validation is enabled.
 
-The test namespace currently executes only a native binary from `build/`.
-Consequently, dependency-free interpreter and service profiles are also
-rejected. `python3-stdlib` and `postgresql` now declare profile-approved
-test-runtime mounts and command prefixes, and their scaffold manifests must
-match those contracts. They must remain scaffolds until the runner explicitly
-mounts the pinned runtime and executes those commands in the test namespace.
+The test namespace executes either a native binary from `build/` or an exact
+profile-approved runtime command. `python3-stdlib` mounts its pinned,
+root-owned Python 3.12.11 runtime read-only and is enabled for active fixtures.
+`postgresql` declares runtime mounts and command prefixes but remains disabled
+until the runner implements its isolated service boundary.
 
 Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor. The CI
 workflow installs `apparmor-profiles` and explicitly loads the distribution's
@@ -48,7 +47,8 @@ Compilation and testing run in separate Bubblewrap namespaces with:
 - profile-specific root and temporary tmpfs sizes, with the root remounted
   read-only after sandbox setup;
 - read-only compiler and system libraries during compilation;
-- only runtime libraries and the test binary during execution; and
+- only approved runtime files and either the test binary or interpreter during
+  execution; and
 - PID namespace teardown and `--die-with-parent` cleanup.
 
 `prlimit` applies address-space, CPU, output-file, open-file, and core-dump
@@ -72,8 +72,8 @@ The report follows `schemas/fixture-validation-report.schema.json` version 1.5.
 It records the extracted-code SHA-256, logical validation-profile revision and
 contract SHA-256, concrete environment revision and contract SHA-256, detected
 host, execution mode, target profile, language, resolved toolchain and sandbox
-versions, and produced binary size. Each phase preserves the exact compiler or
-test argv—including compile flags—and records a normalized `passed`, `failed`,
+versions, and any produced native artifact size. Each phase preserves the
+exact compiler or test argv—including compile flags—and records a normalized `passed`, `failed`,
 `timed-out`, or `error` outcome alongside timing, limits, diagnostics, exit
 status, and signals.
 

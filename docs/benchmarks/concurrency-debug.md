@@ -5,7 +5,7 @@
 Assess diagnosis and repair of shutdown races, deadlocks, and task accounting
 in a Python worker pool.
 
-The scaffold contract is under `fixtures/concurrency-debug/`. Candidates
+The executable contract is under `fixtures/concurrency-debug/`. Candidates
 provide one module defining `Pool`; validator-owned tests load that module and
 run each bounded concurrency scenario in an isolated subprocess so a broken
 shutdown cannot hang the validator.
@@ -27,5 +27,5 @@ The trusted reference and twelve controlled mutations are calibrated with:
 npm run fixture:concurrency:self-test
 ```
 
-The fixture remains a scaffold until the tests execute under the exact Python
-3.12.11 profile inside the sandbox namespace.
+CI executes the reference and controlled mutations under the exact Python
+3.12.11 profile, then validates the reference inside the sandbox namespace.

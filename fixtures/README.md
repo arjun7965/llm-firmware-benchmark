@@ -41,9 +41,9 @@ public tests, and controlled mutations calibrated under pinned Rust/Cargo
 supervisor requires a randomized child-side completion token so successful
 initialization-time exits cannot bypass the public tests.
 
-The `concurrency-debug` scaffold has a complete `Pool` API, trusted reference,
-subprocess-isolated race tests, and controlled mutations. It remains inactive
-until those commands run under the pinned Python 3.12.11 sandbox environment.
+The active `concurrency-debug` fixture has a complete `Pool` API, trusted
+reference, subprocess-isolated race tests, and controlled mutations calibrated
+under the pinned Python 3.12.11 sandbox environment.
 
 The `typescript-singleflight-cache` scaffold has a complete generic API,
 trusted reference, deterministic fake-clock tests, and controlled mutations.
@@ -57,11 +57,11 @@ cannot exit successfully before tests run. It remains inactive until validated
 multi-file answer bundles preserve the runnable server and model-authored Go
 tests required by the benchmark prompt.
 
-The current sandbox runner accepts active fixtures only for the native-binary
-profiles `c11-host`, `go-std`, and `stable-rust`. Dependency-bearing,
-interpreter, and service fixtures must remain scaffolds until their exact
-packages and test runtimes can be verified, mounted, and executed in the test
-namespace.
+The current sandbox runner accepts active fixtures for the native-binary
+profiles `c11-host`, `go-std`, and `stable-rust`, plus the dependency-free
+`python3-stdlib` interpreter profile. Dependency-bearing and service fixtures
+must remain scaffolds until their exact packages and test runtimes can be
+verified, mounted, and executed in the test namespace.
 
 Fixture manifests and public result records use schema version 1.3. Validation
 reports use version 1.5, and mutation catalogs remain at version 1.2.

@@ -187,9 +187,9 @@ The active Rust stream-decoder fixture is calibrated with
 `npm run fixture:rust-decoder:self-test` and validated in CI under pinned
 Rust/Cargo 1.87.0 with its attested GCC 13.3.0 linker.
 
-The concurrency-debug scaffold can be calibrated against the locally
-available Python runtime with `npm run fixture:concurrency:self-test`; it is
-not active until the pinned Python 3.12.11 sandbox run is available.
+The active concurrency-debug fixture is calibrated with
+`npm run fixture:concurrency:self-test` and validated in CI under its pinned,
+root-owned Python 3.12.11 runtime.
 
 The TypeScript singleflight-cache scaffold can be calibrated with
 `npm run fixture:typescript-cache:self-test` when TypeScript 5.8.3 is on
@@ -207,8 +207,8 @@ if isolation is unavailable and writes an ignored machine-readable report under
 the fixture’s `build/` directory. See
 `docs/sandboxed-validation.md` for the isolation boundary and limitations.
 Reports include suite, validation-profile, target, and language metadata,
-compiler versions, exact argv, binary sizes, normalized outcomes, and
-diagnostics.
+toolchain versions, exact argv, native artifact sizes when produced,
+normalized outcomes, and diagnostics.
 
 ## Adding a Provider
 

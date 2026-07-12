@@ -39,8 +39,8 @@ test("repository fixture scaffolds match task metadata", () => {
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
       fixtureCount: 9,
-      activeCount: 5,
-      scaffoldCount: 4,
+      activeCount: 6,
+      scaffoldCount: 3,
       commandCount: 18,
     },
   );
@@ -75,16 +75,6 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
       validationProfile: "node-typescript",
     }),
     /must remain a scaffold.*dependency installation cannot be runtime-attested/u,
-  );
-  assert.throws(
-    () => validateFixtureManifest({
-      ...manifest,
-      validationProfile: "python3-stdlib",
-    }, {
-      ...task,
-      validationProfile: "python3-stdlib",
-    }),
-    /must remain a scaffold.*test runtime is not mounted/u,
   );
   assert.throws(
     () => validateFixtureManifest({
@@ -141,13 +131,7 @@ test("fixture commands must match profile-approved runtime contracts", () => {
     }, task),
     /command public-tests is not approved by validation profile python3-stdlib/u,
   );
-  assert.throws(
-    () => validateFixtureManifest({
-      ...manifest,
-      status: "active",
-    }, task),
-    /must remain a scaffold.*test runtime is not mounted/u,
-  );
+  assert.equal(manifest.status, "active");
 });
 
 test("fixture commands cannot invoke a shell", () => {

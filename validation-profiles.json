@@ -1530,6 +1530,76 @@
       }
     },
     {
+      "id": "python3-stdlib",
+      "revision": 4,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-python3-stdlib",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "python3"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/local/lib/python-3.12.11",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "python3-bytecode",
+            "phase": "compile",
+            "argvPrefix": [
+              "python3",
+              "-m",
+              "py_compile"
+            ],
+            "requiredTools": [
+              "python3"
+            ]
+          },
+          {
+            "id": "python3-unittest",
+            "phase": "test",
+            "argvPrefix": [
+              "python3",
+              "-m",
+              "unittest"
+            ],
+            "requiredTools": [
+              "python3"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "react18-typescript",
       "revision": 1,
       "host": {
