@@ -120,8 +120,14 @@ function fakeExecutable(name) {
   return `/usr/bin/${name}`;
 }
 
-function fakeToolVersion(command, args) {
+function fakeToolVersion(command, args, options) {
   assert.deepEqual(args, ["--version"]);
+  if (basename(command) === "tsc") {
+    assert.equal(
+      options.env.PATH,
+      "/usr/local/lib/node-22.16.0/bin:/usr/bin:/bin",
+    );
+  }
   const versions = {
     bwrap: "bubblewrap 0.9.0",
     cc: "cc (Ubuntu) 13.3.0",

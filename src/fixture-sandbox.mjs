@@ -281,13 +281,16 @@ function inspectToolchain(
   versionArgs,
   expectedVersion,
   spawnTool,
+  {
+    pathValue = "/usr/bin:/bin",
+  } = {},
 ) {
   const result = spawnTool(executable, versionArgs, {
     encoding: "utf8",
     env: {
       LANG: "C",
       LC_ALL: "C",
-      PATH: "/usr/bin:/bin",
+      PATH: pathValue,
     },
     killSignal: "SIGKILL",
     maxBuffer: maximumOutputBytes,
@@ -1100,14 +1103,20 @@ export function runFixtureValidation({
   const toolchains = [...toolPaths.entries()]
     .sort(([left], [right]) =>
       left < right ? -1 : left > right ? 1 : 0)
-    .map(([name, executable]) =>
-      inspectToolchain(
+    .map(([name, executable]) => {
+      const interpreterPath = name === "tsc" && toolPaths.has("node")
+        ? [dirname(toolPaths.get("node")), "/usr/bin", "/bin"]
+          .join(delimiter)
+        : undefined;
+      return inspectToolchain(
         name,
         executable,
         manifest.toolVersionArgs[name],
         profileToolchains.get(name).version,
         spawnTool,
-      ));
+        { pathValue: interpreterPath },
+      );
+    });
 
   const buildRoot = mkdtempSync(join(tmpdir(), `${taskId}-sandbox-build-`));
   const reportStartedAt = now();
