@@ -37,6 +37,8 @@ model. Dependency-bearing profiles introduced lockfile attestation in revision
 profiles introduced command contracts in revision 3; `python3-stdlib`
 revision 4 pins the relocatable runtime tree mounted by the runner, and
 `node-typescript` revision 4 adds installed-tree attestation and runtime mounts.
+`go-std` revision 4 raises its bounded temporary filesystem to 256 MiB so Go
+1.24.4 can compile the standard library inside the sandbox.
 
 ## Profile Registry
 

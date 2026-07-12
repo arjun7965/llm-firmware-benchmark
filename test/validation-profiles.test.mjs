@@ -109,7 +109,11 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfile("stable-rust").toolchains,
     ["cargo", "cc", "rustc"],
   );
-  assert.equal(getValidationProfile("go-std").revision, 3);
+  assert.equal(getValidationProfile("go-std").revision, 4);
+  assert.equal(
+    getValidationProfile("go-std").sandbox.temporaryDirectoryBytes,
+    256 * 1024 * 1024,
+  );
   assert.equal(
     getValidationProfile("go-std").sandbox.resourceLimits.test
       .addressSpaceBytes,

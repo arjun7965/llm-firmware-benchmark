@@ -658,6 +658,42 @@
       }
     },
     {
+      "id": "go-std",
+      "revision": 4,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-go-std",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "go"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 268435456,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      }
+    },
+    {
       "id": "node-typescript",
       "revision": 1,
       "host": {
