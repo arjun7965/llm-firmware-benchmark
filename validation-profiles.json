@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.2",
+  "schemaVersion": "2.3",
   "environments": [
     {
       "id": "ubuntu-24-04-x86-64-c11-host",
@@ -818,6 +818,108 @@
         "source": "npm",
         "lockfile": "validation-locks/node-typescript-v3.lock.json",
         "sha256": "665b39a02acb2f8ba4848f01a5b3da6e15bc1dce5bc9531176d63829eb2a34a1"
+      }
+    },
+    {
+      "id": "node-typescript",
+      "revision": 4,
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-node-typescript",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "node",
+        "tsc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 30,
+            "fileBytes": 33554432,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 268435456,
+            "cpuSeconds": 10,
+            "fileBytes": 8388608,
+            "openFiles": 64
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "npm",
+        "lockfile": "validation-locks/node-typescript-v4/package-lock.json",
+        "sha256": "1dfd504b5de869cde77ed73e921d7b626a366c6153009ab847253525cf8e2a09",
+        "installRoot": "/usr/local/lib/node-typescript-4",
+        "installSha256": "88516811c47bd2ec46701f93e2264ead691371c5eebfad8f46876081a7422fa7",
+        "mountPath": "/workspace/node_modules"
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/local/lib/node-22.16.0",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "typescript-compile",
+            "phase": "compile",
+            "argvPrefix": [
+              "tsc",
+              "--strict",
+              "--target",
+              "ES2022",
+              "--module",
+              "CommonJS",
+              "--moduleResolution",
+              "Node",
+              "--lib",
+              "ES2022,DOM",
+              "--outDir",
+              "build/output",
+              "generated/answer.ts",
+              "starter/cache_api.ts",
+              "tests/public/test_cache.ts"
+            ],
+            "requiredTools": [
+              "tsc"
+            ]
+          },
+          {
+            "id": "node-public-tests",
+            "phase": "test",
+            "argvPrefix": [
+              "node",
+              "build/output/tests/public/test_cache.js"
+            ],
+            "requiredTools": [
+              "node"
+            ]
+          }
+        ]
       }
     },
     {

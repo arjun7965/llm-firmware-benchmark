@@ -80,10 +80,10 @@ calibration before marking the fixture active:
      twelve controlled mutations, and sandbox command scaffold.
    - [x] Execute and calibrate the scaffold under pinned Python 3.12.11 in
      the sandbox namespace, then mark it active.
-3. [ ] `typescript-singleflight-cache`
+3. [x] `typescript-singleflight-cache`
    - [x] Add the exact cache API, trusted reference, public fake-clock tests,
      eighteen controlled mutations, and sandbox command scaffold.
-   - [ ] Attest and mount the pinned Node.js 22.16.0, TypeScript 5.8.3, and
+   - [x] Attest and mount the pinned Node.js 22.16.0, TypeScript 5.8.3, and
      `@types/node` 22.15.29 package set, then calibrate and mark it active.
 4. [ ] `go-graceful-shutdown`
    - [x] Add the exact server-module contract, trusted reference, public

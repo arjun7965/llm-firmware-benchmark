@@ -59,6 +59,12 @@ const references = [
     source: "reference/stream_decoder.rs",
     suite: "auxiliary",
   },
+  {
+    taskId: "typescript-singleflight-cache",
+    source: "reference/cache.ts",
+    suite: "auxiliary",
+    artifactCount: 0,
+  },
 ];
 
 try {

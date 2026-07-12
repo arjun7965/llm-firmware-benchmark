@@ -39,8 +39,8 @@ test("repository fixture scaffolds match task metadata", () => {
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
       fixtureCount: 9,
-      activeCount: 6,
-      scaffoldCount: 3,
+      activeCount: 7,
+      scaffoldCount: 2,
       commandCount: 18,
     },
   );
@@ -69,10 +69,10 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,
-      validationProfile: "node-typescript",
+      validationProfile: "react18-typescript",
     }, {
       ...task,
-      validationProfile: "node-typescript",
+      validationProfile: "react18-typescript",
     }),
     /must remain a scaffold.*dependency installation cannot be runtime-attested/u,
   );

@@ -191,10 +191,9 @@ The active concurrency-debug fixture is calibrated with
 `npm run fixture:concurrency:self-test` and validated in CI under its pinned,
 root-owned Python 3.12.11 runtime.
 
-The TypeScript singleflight-cache scaffold can be calibrated with
-`npm run fixture:typescript-cache:self-test` when TypeScript 5.8.3 is on
-`PATH`; it remains inactive until the pinned npm dependency set is attested
-and mounted inside the sandbox.
+The active TypeScript singleflight-cache fixture is calibrated with
+`npm run fixture:typescript-cache:self-test` and validated in CI with its
+attested, read-only Node.js 22.16.0 and TypeScript 5.8.3 installation.
 
 On Linux, validate extracted code in separate compile and test sandboxes:
 

@@ -3,7 +3,7 @@
   "taskId": "typescript-singleflight-cache",
   "targetProfile": null,
   "validationProfile": "node-typescript",
-  "status": "scaffold",
+  "status": "active",
   "language": "typescript",
   "toolVersionArgs": {
     "node": ["--version"],

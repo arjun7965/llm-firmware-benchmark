@@ -5,7 +5,7 @@
 Assess asynchronous coalescing, caller-local cancellation, and invalidation
 races in a generic TypeScript cache.
 
-The scaffold contract is under `fixtures/typescript-singleflight-cache/`.
+The executable contract is under `fixtures/typescript-singleflight-cache/`.
 Candidates export one generic cache module; validator-owned tests use an
 injected fake clock and deferred promises to control every completion order.
 
@@ -26,5 +26,5 @@ The trusted reference and eighteen controlled mutations are calibrated with:
 npm run fixture:typescript-cache:self-test
 ```
 
-The fixture remains a scaffold until the exact profile dependency set is
-attested, mounted, and executed inside the sandbox namespace.
+The active fixture attests and mounts the exact profile dependency set before
+compiling and executing public tests inside the sandbox namespace.

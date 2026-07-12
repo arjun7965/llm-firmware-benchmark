@@ -1,0 +1,9 @@
+{
+  "name": "node-typescript-validation-profile",
+  "version": "4.0.0",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "22.15.29",
+    "typescript": "5.8.3"
+  }
+}

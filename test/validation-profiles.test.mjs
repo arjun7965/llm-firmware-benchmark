@@ -119,6 +119,16 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfile("python3-stdlib").revision,
     4,
   );
+  assert.equal(getValidationProfile("node-typescript").revision, 4);
+  assert.equal(
+    getValidationProfile("node-typescript").dependencyInstall.mountPath,
+    "/workspace/node_modules",
+  );
+  assert.deepEqual(
+    getValidationProfile("node-typescript").testRuntime.mounts.map((mount) =>
+      mount.path),
+    ["/usr/local/lib/node-22.16.0"],
+  );
   assert.deepEqual(
     getValidationProfile("python3-stdlib").testRuntime.mounts.map((mount) =>
       mount.path),
@@ -157,7 +167,7 @@ test("hosted validation profiles are pinned and immutable", () => {
   const changedLockfileHash = structuredClone(validationProfilesDocument);
   changedLockfileHash.profiles
     .find((profile) => profile.id === "node-typescript" &&
-      profile.revision === 3)
+      profile.revision === 4)
     .dependencyInstall.sha256 = "0".repeat(64);
   assert.throws(
     () => validateValidationProfileLockfiles(
@@ -167,7 +177,10 @@ test("hosted validation profiles are pinned and immutable", () => {
     /dependencyInstall sha256 does not match/u,
   );
   const lockfileContent = readFileSync(
-    new URL("../validation-locks/node-typescript-v3.lock.json", import.meta.url),
+    new URL(
+      "../validation-locks/node-typescript-v4/package-lock.json",
+      import.meta.url,
+    ),
     "utf8",
   );
   const crlfContent = lockfileContent.replace(/\n/gu, "\r\n");
@@ -189,7 +202,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   };
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.2",
+      schemaVersion: "2.3",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, secondRevision],
     }),
@@ -197,7 +210,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.2",
+      schemaVersion: "2.3",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -211,7 +224,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.2",
+      schemaVersion: "2.3",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -225,7 +238,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.2",
+      schemaVersion: "2.3",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, structuredClone(validProfile)],
     }),
@@ -233,7 +246,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.2",
+      schemaVersion: "2.3",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...structuredClone(validProfile),
@@ -245,7 +258,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   const logicalProfile = structuredClone(getValidationProfile("c11-host"));
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.2",
+      schemaVersion: "2.3",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...logicalProfile,
@@ -275,20 +288,55 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   const missingInstall = structuredClone(validationProfilesDocument);
   delete missingInstall.profiles
     .find((profile) => profile.id === "node-typescript" &&
-      profile.revision === 3)
+      profile.revision === 4)
     .dependencyInstall;
   assert.throws(
     () => validateValidationProfiles(missingInstall),
-    /current validation profile node-typescript@3 must define dependencyInstall/u,
+    /current validation profile node-typescript@4 must define dependencyInstall/u,
   );
   const mismatchedInstall = structuredClone(validationProfilesDocument);
   mismatchedInstall.profiles
     .find((profile) => profile.id === "node-typescript" &&
-      profile.revision === 3)
+      profile.revision === 4)
     .dependencyInstall.source = "pypi";
   assert.throws(
     () => validateValidationProfiles(mismatchedInstall),
     /dependencyInstall source does not cover/u,
+  );
+  const unsafeInstallRoot = structuredClone(validationProfilesDocument);
+  unsafeInstallRoot.profiles
+    .find((profile) => profile.id === "node-typescript" &&
+      profile.revision === 4)
+    .dependencyInstall.installRoot = "/opt/node-typescript";
+  assert.throws(
+    () => validateValidationProfiles(unsafeInstallRoot),
+    /dependencyInstall installRoot is invalid/u,
+  );
+  const unsafeInstallMount = structuredClone(validationProfilesDocument);
+  unsafeInstallMount.profiles
+    .find((profile) => profile.id === "node-typescript" &&
+      profile.revision === 4)
+    .dependencyInstall.mountPath = "/etc/node_modules";
+  assert.throws(
+    () => validateValidationProfiles(unsafeInstallMount),
+    /dependencyInstall mountPath is invalid/u,
+  );
+  const unsupportedRuntimeSource = structuredClone(
+    validationProfilesDocument,
+  );
+  const runtimeInstall = unsupportedRuntimeSource.profiles
+    .find((profile) => profile.id === "node-typescript" &&
+      profile.revision === 4)
+    .dependencyInstall;
+  runtimeInstall.source = "pypi";
+  for (const dependency of unsupportedRuntimeSource.profiles
+    .find((profile) => profile.id === "node-typescript" &&
+      profile.revision === 4).dependencies) {
+    dependency.source = "pypi";
+  }
+  assert.throws(
+    () => validateValidationProfiles(unsupportedRuntimeSource),
+    /runtime dependency attestation source is unsupported/u,
   );
   const unsafeRuntimeMount = structuredClone(validationProfilesDocument);
   unsafeRuntimeMount.profiles

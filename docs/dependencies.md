@@ -45,8 +45,9 @@ Profiles with npm or PyPI dependencies additionally pin committed lockfiles
 under `validation-locks/`; startup verifies their SHA-256 and package set.
 Those lockfiles are stored with LF line endings and normalized before hashing
 so Git checkout settings do not change the attested contract.
-The current sandbox runner still rejects those profiles until it can attest
-the mounted installation or run a digest-pinned image.
+The current sandbox runner verifies and mounts the `node-typescript`
+installation. Other dependency-bearing profiles remain rejected until they
+define equivalent installed-tree attestation or run in a digest-pinned image.
 Dependency-free interpreter and service profiles may declare profile-approved
 test-runtime mounts and command prefixes. The runner supports the pinned
 `python3-stdlib` runtime; other service runtimes remain scaffold-only until
@@ -129,9 +130,9 @@ reference and all controlled mutations:
 npm run fixture:concurrency:self-test
 ```
 
-The TypeScript singleflight-cache scaffold requires TypeScript 5.8.3 on
-`PATH` for local calibration. Activation additionally requires attestation and
-sandbox mounting of the complete pinned `node-typescript` dependency set:
+The active TypeScript singleflight-cache fixture requires the attested
+`node-typescript` revision 4 installation. Its calibration command verifies the
+trusted reference and all controlled mutations:
 
 ```bash
 npm run fixture:typescript-cache:self-test
