@@ -17,16 +17,20 @@ and normalized architecture against the concrete environments supported by
 the current logical validation-profile revision. Exactly one environment must
 match before the validator resolves or executes sandbox tools.
 
-Profiles with npm or PyPI dependencies are rejected by the current runner even
-when their logical profile includes a verified `dependencyInstall` lockfile.
-The committed lockfiles attest the intended package set, but the host runner
-does not yet verify or mount an installed package tree from those lockfiles.
-Such profiles require runtime install attestation or a digest-pinned image
-before executable fixture validation is enabled.
+The `node-typescript` profile pins a complete npm package-lock, a root-owned
+installation path, and a canonical SHA-256 over every installed directory and
+file. Before resolving tools or running Bubblewrap, the host runner rejects
+missing, writable, non-root-owned, symlinked, altered, or oversized package
+trees. The verified tree is mounted read-only at `/workspace/node_modules` in
+the compile namespace only; tests receive the compiled output and pinned Node
+runtime without access to the package tree.
+Other npm and PyPI profiles remain disabled until they define an equivalent
+runtime attestation or use a digest-pinned image.
 
 The test namespace executes either a native binary from `build/` or an exact
 profile-approved runtime command. `python3-stdlib` mounts its pinned,
 root-owned Python 3.12.11 runtime read-only and is enabled for active fixtures.
+`node-typescript` similarly mounts its pinned Node.js runtime for tests.
 `postgresql` declares runtime mounts and command prefixes but remains disabled
 until the runner implements its isolated service boundary.
 

@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.16.0
       - uses: actions/setup-python@v6
         with:
           python-version: 3.12.11
@@ -44,6 +44,38 @@ jobs:
           sudo ln -sfn \
             /usr/local/lib/python-3.12.11/bin/python3 \
             /usr/local/bin/python3
+      - name: Install pinned root-owned Node and TypeScript runtimes
+        run: |
+          node_prefix="$(dirname "$(dirname "$(command -v node)")")"
+          npm ci \
+            --prefix validation-locks/node-typescript-v4 \
+            --ignore-scripts \
+            --no-audit \
+            --no-fund \
+            --bin-links=false
+          rm validation-locks/node-typescript-v4/node_modules/.package-lock.json
+          sudo install -d /usr/local/lib/node-22.16.0
+          sudo cp -a "${node_prefix}/." /usr/local/lib/node-22.16.0/
+          sudo chown -R root:root /usr/local/lib/node-22.16.0
+          sudo chmod -R go-w /usr/local/lib/node-22.16.0
+          sudo install -d /usr/local/lib/node-typescript-4
+          sudo cp -a \
+            validation-locks/node-typescript-v4/node_modules/. \
+            /usr/local/lib/node-typescript-4/
+          sudo chown -R root:root /usr/local/lib/node-typescript-4
+          sudo chmod -R go-w /usr/local/lib/node-typescript-4
+          sudo ln -sfn \
+            /usr/local/lib/node-22.16.0/bin/node \
+            /usr/local/bin/node
+          sudo ln -sfn \
+            /usr/local/lib/node-22.16.0/bin/npm \
+            /usr/local/bin/npm
+          sudo ln -sfn \
+            /usr/local/lib/node-22.16.0/bin/npx \
+            /usr/local/bin/npx
+          sudo ln -sfn \
+            /usr/local/lib/node-typescript-4/typescript/bin/tsc \
+            /usr/local/bin/tsc
       - name: Enable the packaged Bubblewrap AppArmor profile
         run: |
           sudo install -m 0644 \
@@ -56,4 +88,5 @@ jobs:
           export PATH="/usr/local/bin:/usr/bin:/bin"
           npm run fixture:concurrency:self-test
           npm run fixture:rust-decoder:self-test
+          npm run fixture:typescript-cache:self-test
           npm run test:sandbox

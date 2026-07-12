@@ -11,6 +11,10 @@ import {
   sep,
 } from "node:path";
 import { fileURLToPath } from "node:url";
+export {
+  attestDependencyInstallation,
+  dependencyInstallationFingerprint,
+} from "./dependency-installation.mjs";
 
 const identifierPattern = /^[a-z][a-z0-9-]*$/u;
 const packageNamePattern = /^(?:@[a-z0-9._-]+\/)?[a-z0-9][a-z0-9._-]*$/u;
@@ -23,6 +27,7 @@ const imagePattern =
   /^[a-z0-9./_-]+(?::[A-Za-z0-9._-]+)?@sha256:[a-f0-9]{64}$/u;
 const fingerprintPattern = /^[a-f0-9]{64}$/u;
 const lockfilePattern = /^validation-locks\/[A-Za-z0-9._/-]+$/u;
+const dependencyInstallMountPattern = /^\/workspace\/[A-Za-z0-9._-]+$/u;
 const resourceLimitFields = [
   "addressSpaceBytes",
   "cpuSeconds",
@@ -218,9 +223,20 @@ function validateDependencyInstall(profile, environmentRevisionMap) {
     `validation profile ${profile.id} dependencyInstall`,
   );
   if (install.kind === "lockfile") {
+    const runtimeAttested = Object.hasOwn(install, "installRoot");
     requireExactFields(
       install,
-      ["kind", "lockfile", "sha256", "source"],
+      runtimeAttested
+        ? [
+          "installRoot",
+          "installSha256",
+          "kind",
+          "lockfile",
+          "mountPath",
+          "sha256",
+          "source",
+        ]
+        : ["kind", "lockfile", "sha256", "source"],
       `validation profile ${profile.id} dependencyInstall`,
     );
     requireString(
@@ -245,6 +261,29 @@ function validateDependencyInstall(profile, environmentRevisionMap) {
       `validation profile ${profile.id} dependencyInstall sha256`,
       fingerprintPattern,
     );
+    if (runtimeAttested) {
+      if (install.source !== "npm") {
+        throw new TypeError(
+          `validation profile ${profile.id} runtime dependency ` +
+          "attestation source is unsupported",
+        );
+      }
+      requireString(
+        install.installRoot,
+        `validation profile ${profile.id} dependencyInstall installRoot`,
+        runtimeMountPattern,
+      );
+      requireString(
+        install.installSha256,
+        `validation profile ${profile.id} dependencyInstall installSha256`,
+        fingerprintPattern,
+      );
+      requireString(
+        install.mountPath,
+        `validation profile ${profile.id} dependencyInstall mountPath`,
+        dependencyInstallMountPattern,
+      );
+    }
     return;
   }
   if (install.kind === "oci-image") {
@@ -697,7 +736,7 @@ export function validateValidationProfiles(document) {
     ["environments", "profiles", "schemaVersion"],
     "validation profiles document",
   );
-  if (document.schemaVersion !== "2.2") {
+  if (document.schemaVersion !== "2.3") {
     throw new TypeError("unsupported validation profiles schemaVersion");
   }
   if (
@@ -834,7 +873,7 @@ export function validateValidationProfileFingerprints(
     ["environments", "profiles", "schemaVersion"],
     "validation profile fingerprints document",
   );
-  if (fingerprintsDocument.schemaVersion !== "2.2") {
+  if (fingerprintsDocument.schemaVersion !== "2.3") {
     throw new TypeError(
       "unsupported validation profile fingerprints schemaVersion",
     );
@@ -858,6 +897,86 @@ export function normalizeDependencyLockfileContent(content) {
   return content.toString("utf8").replace(/\r\n/gu, "\n");
 }
 
+function validateNpmPackageLock(lockfile, profile) {
+  requireExactFields(
+    lockfile,
+    ["lockfileVersion", "name", "packages", "requires", "version"],
+    `validation profile ${profile.id} npm dependency lockfile`,
+  );
+  if (
+    lockfile.lockfileVersion !== 3 ||
+    lockfile.requires !== true ||
+    lockfile.name !== `${profile.id}-validation-profile` ||
+    lockfile.version !== `${profile.revision}.0.0`
+  ) {
+    throw new TypeError(
+      `validation profile ${profile.id} npm dependency lockfile metadata ` +
+      "does not match",
+    );
+  }
+  requireObject(
+    lockfile.packages,
+    `validation profile ${profile.id} npm dependency lockfile packages`,
+  );
+  const rootPackage = lockfile.packages[""];
+  requireExactFields(
+    rootPackage,
+    ["devDependencies", "name", "version"],
+    `validation profile ${profile.id} npm dependency lockfile root package`,
+  );
+  const expectedDependencies = Object.fromEntries(
+    profile.dependencies.map((dependency) => [
+      dependency.name,
+      dependency.version,
+    ]),
+  );
+  if (
+    rootPackage.name !== lockfile.name ||
+    rootPackage.version !== lockfile.version ||
+    JSON.stringify(rootPackage.devDependencies) !==
+      JSON.stringify(expectedDependencies)
+  ) {
+    throw new TypeError(
+      `validation profile ${profile.id} npm dependency lockfile ` +
+      "dependencies do not match",
+    );
+  }
+  const packagePaths = Object.keys(lockfile.packages);
+  if (
+    packagePaths.length < profile.dependencies.length + 1 ||
+    packagePaths.some((path, index) =>
+      (index === 0 && path !== "") ||
+      (index > 0 && !path.startsWith("node_modules/")))
+  ) {
+    throw new TypeError(
+      `validation profile ${profile.id} npm dependency lockfile package ` +
+      "paths are invalid",
+    );
+  }
+  for (const path of packagePaths.slice(1)) {
+    const installedPackage = lockfile.packages[path];
+    requireObject(
+      installedPackage,
+      `validation profile ${profile.id} npm dependency lockfile package`,
+    );
+    requireString(
+      installedPackage.version,
+      `validation profile ${profile.id} npm dependency lockfile package version`,
+      versionPattern,
+    );
+    requireString(
+      installedPackage.resolved,
+      `validation profile ${profile.id} npm dependency lockfile package resolved`,
+      /^https:\/\/registry\.npmjs\.org\/[A-Za-z0-9@%+._/-]+\.tgz$/u,
+    );
+    requireString(
+      installedPackage.integrity,
+      `validation profile ${profile.id} npm dependency lockfile package integrity`,
+      /^sha512-[A-Za-z0-9+/]+={0,2}$/u,
+    );
+  }
+}
+
 function lockfileFingerprint(content) {
   return createHash("sha256")
     .update(normalizeDependencyLockfileContent(content))
@@ -865,6 +984,10 @@ function lockfileFingerprint(content) {
 }
 
 function validateDependencyLockfile(lockfile, profile, source) {
+  if (source === "npm" && lockfile.lockfileVersion === 3) {
+    validateNpmPackageLock(lockfile, profile);
+    return;
+  }
   requireExactFields(
     lockfile,
     ["dependencies", "profile", "schemaVersion", "source"],
@@ -1003,6 +1126,7 @@ export const validationEnvironmentSet = new Set(validationEnvironmentIds);
 export const sandboxRunnableValidationProfileIds = Object.freeze([
   "c11-host",
   "go-std",
+  "node-typescript",
   "python3-stdlib",
   "stable-rust",
 ]);
@@ -1193,7 +1317,13 @@ export function validateValidationEnvironmentReference(
 }
 
 export function sandboxProfileBlockReason(profile) {
-  if (profile.dependencies.length > 0) {
+  if (
+    profile.dependencies.length > 0 &&
+    (
+      profile.dependencyInstall?.kind !== "lockfile" ||
+      !Object.hasOwn(profile.dependencyInstall, "installRoot")
+    )
+  ) {
     return "its validation profile dependency installation cannot be runtime-attested";
   }
   if (!sandboxRunnableValidationProfileSet.has(profile.id)) {

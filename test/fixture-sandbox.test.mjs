@@ -120,13 +120,21 @@ function fakeExecutable(name) {
   return `/usr/bin/${name}`;
 }
 
-function fakeToolVersion(command, args) {
+function fakeToolVersion(command, args, options) {
   assert.deepEqual(args, ["--version"]);
+  if (basename(command) === "tsc") {
+    assert.equal(
+      options.env.PATH,
+      "/usr/local/lib/node-22.16.0/bin:/usr/bin:/bin",
+    );
+  }
   const versions = {
     bwrap: "bubblewrap 0.9.0",
     cc: "cc (Ubuntu) 13.3.0",
+    node: "v22.16.0",
     prlimit: "prlimit from util-linux 2.39.3",
     python3: "Python 3.12.11",
+    tsc: "Version 5.8.3",
   };
   return {
     status: 0,
@@ -150,6 +158,30 @@ function matchingValidationHost() {
     operatingSystem: "ubuntu",
     release: "24.04",
     architecture: "x86_64",
+  };
+}
+
+function typescriptCompileCommand(command) {
+  return {
+    ...command,
+    argv: [
+      "tsc",
+      "--strict",
+      "--target",
+      "ES2022",
+      "--module",
+      "CommonJS",
+      "--moduleResolution",
+      "Node",
+      "--lib",
+      "ES2022,DOM",
+      "--outDir",
+      "build/output",
+      "generated/answer.ts",
+      "starter/cache_api.ts",
+      "tests/public/test_cache.ts",
+    ],
+    requiredTools: ["tsc"],
   };
 }
 
@@ -324,7 +356,7 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
   );
 });
 
-test("sandbox rejects profiles with unavailable dependencies", (t) => {
+test("sandbox rejects a missing attested dependency installation", (t) => {
   const fixture = sandboxFixture(t);
   const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
   tasks[0].suite = "auxiliary";
@@ -342,12 +374,12 @@ test("sandbox rejects profiles with unavailable dependencies", (t) => {
       tsc: ["--version"],
     },
     commands: [
+      typescriptCompileCommand(fixture.manifest.commands[0]),
       {
-        ...fixture.manifest.commands[0],
-        argv: ["tsc", "--noEmit"],
-        requiredTools: ["node", "tsc"],
+        ...fixture.manifest.commands[1],
+        argv: ["node", "build/output/tests/public/test_cache.js"],
+        requiredTools: ["node"],
       },
-      fixture.manifest.commands[1],
     ],
   };
   writeFileSync(
@@ -361,7 +393,118 @@ test("sandbox rejects profiles with unavailable dependencies", (t) => {
       fixturesRoot: fixture.fixturesRoot,
       tasksPath: fixture.tasksPath,
     }),
-    /dependency installation cannot be runtime-attested/u,
+    /dependency installation does not exist/u,
+  );
+});
+
+test("sandbox attests and mounts pinned npm dependencies", (t) => {
+  const fixture = sandboxFixture(t);
+  const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
+  tasks[0].suite = "auxiliary";
+  tasks[0].validationProfile = "node-typescript";
+  delete tasks[0].targetProfile;
+  writeFileSync(fixture.tasksPath, JSON.stringify(tasks));
+
+  const manifest = {
+    ...fixture.manifest,
+    targetProfile: null,
+    validationProfile: "node-typescript",
+    status: "active",
+    toolVersionArgs: {
+      node: ["--version"],
+      tsc: ["--version"],
+    },
+    commands: [
+      typescriptCompileCommand(fixture.manifest.commands[0]),
+      {
+        ...fixture.manifest.commands[1],
+        argv: ["node", "build/output/tests/public/test_cache.js"],
+        requiredTools: ["node"],
+      },
+    ],
+  };
+  writeFileSync(
+    join(fixture.fixtureRoot, "manifest.json"),
+    JSON.stringify(manifest),
+  );
+
+  const calls = [];
+  let attestedProfile = null;
+  const toolPaths = {
+    bwrap: "/usr/bin/bwrap",
+    node: "/usr/local/lib/node-22.16.0/bin/node",
+    prlimit: "/usr/bin/prlimit",
+    tsc: "/usr/local/lib/node-typescript-4/typescript/bin/tsc",
+  };
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: fixture.fixturesRoot,
+    tasksPath: fixture.tasksPath,
+    attestDependencyInstallationImpl: (profile) => {
+      attestedProfile = profile;
+      return {
+        installRoot: profile.dependencyInstall.installRoot,
+        mountPath: profile.dependencyInstall.mountPath,
+        sha256: profile.dependencyInstall.installSha256,
+      };
+    },
+    resolveExecutableImpl: (name) => toolPaths[name],
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    spawn: (command, args, options) => {
+      calls.push({ command, args, options });
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.equal(attestedProfile.id, "node-typescript");
+  assert.equal(attestedProfile.revision, 4);
+  assert.equal(report.success, true);
+  assert.deepEqual(report.artifacts, []);
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    assert.equal(call.args[0], `--as=${2 * 1024 * 1024 * 1024}`);
+  }
+  const compilePath = calls[0].args.indexOf("PATH");
+  assert.deepEqual(
+    calls[0].args.slice(compilePath - 1, compilePath + 2),
+    ["--setenv", "PATH", "/usr/local/bin:/usr/bin:/bin"],
+  );
+  const dependencyMount = calls[0].args.indexOf(
+    "/usr/local/lib/node-typescript-4",
+  );
+  assert.deepEqual(
+    calls[0].args.slice(dependencyMount - 1, dependencyMount + 2),
+    [
+      "--ro-bind",
+      "/usr/local/lib/node-typescript-4",
+      "/workspace/node_modules",
+    ],
+  );
+  assert.equal(
+    calls[1].args.includes("/usr/local/lib/node-typescript-4"),
+    false,
+  );
+  const runtimeMount = calls[1].args.indexOf(
+    "/usr/local/lib/node-22.16.0",
+  );
+  assert.deepEqual(
+    calls[1].args.slice(runtimeMount - 1, runtimeMount + 2),
+    [
+      "--ro-bind",
+      "/usr/local/lib/node-22.16.0",
+      "/usr/local/lib/node-22.16.0",
+    ],
+  );
+  assert.equal(
+    calls[1].args[calls[1].args.lastIndexOf("--") + 1],
+    "/usr/local/lib/node-22.16.0/bin/node",
   );
 });
 

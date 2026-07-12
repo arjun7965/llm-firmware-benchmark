@@ -7,7 +7,7 @@
   "required": ["schemaVersion", "environments", "profiles"],
   "properties": {
     "schemaVersion": {
-      "const": "2.2"
+      "const": "2.3"
     },
     "environments": {
       "type": "array",
@@ -200,6 +200,43 @@
             "sha256": {
               "type": "string",
               "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source",
+            "lockfile",
+            "sha256",
+            "installRoot",
+            "installSha256",
+            "mountPath"
+          ],
+          "properties": {
+            "kind": { "const": "lockfile" },
+            "source": { "const": "npm" },
+            "lockfile": {
+              "type": "string",
+              "pattern": "^validation-locks/[A-Za-z0-9._/-]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "installRoot": {
+              "type": "string",
+              "pattern": "^/(?:usr|lib|lib64)(?:/[A-Za-z0-9+._-]+)+$"
+            },
+            "installSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "mountPath": {
+              "type": "string",
+              "pattern": "^/workspace/[A-Za-z0-9._-]+$"
             }
           }
         },

@@ -45,10 +45,11 @@ The active `concurrency-debug` fixture has a complete `Pool` API, trusted
 reference, subprocess-isolated race tests, and controlled mutations calibrated
 under the pinned Python 3.12.11 sandbox environment.
 
-The `typescript-singleflight-cache` scaffold has a complete generic API,
+The active `typescript-singleflight-cache` fixture has a complete generic API,
 trusted reference, deterministic fake-clock tests, and controlled mutations.
-It remains inactive until the pinned npm dependency installation can be
-attested and mounted inside the sandbox.
+Its pinned npm package closure is hashed and mounted read-only for compilation;
+the compiled tests execute with the pinned Node.js runtime in a separate
+sandbox without the package tree.
 
 The `go-graceful-shutdown` scaffold has an exact server-module API, trusted
 reference, deterministic lifecycle tests, and controlled mutations. Its test
@@ -58,10 +59,11 @@ multi-file answer bundles preserve the runnable server and model-authored Go
 tests required by the benchmark prompt.
 
 The current sandbox runner accepts active fixtures for the native-binary
-profiles `c11-host`, `go-std`, and `stable-rust`, plus the dependency-free
-`python3-stdlib` interpreter profile. Dependency-bearing and service fixtures
-must remain scaffolds until their exact packages and test runtimes can be
-verified, mounted, and executed in the test namespace.
+profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
+`python3-stdlib` interpreter profile, and the runtime-attested
+`node-typescript` profile. Other dependency-bearing and service fixtures must
+remain scaffolds until their exact packages and test runtimes can be verified,
+mounted, and executed in the test namespace.
 
 Fixture manifests and public result records use schema version 1.3. Validation
 reports use version 1.5, and mutation catalogs remain at version 1.2.

@@ -32,10 +32,11 @@ canonical SHA-256 for every published profile and environment revision.
 Startup fails if a contract is changed, removed, or added without its matching
 fingerprint. Legacy revision 1 profiles remain available for historical
 fingerprint verification; revision 2 profiles use the separated environment
-model. Current dependency-bearing profiles use revision 3 for
-dependency-install attestation. Dependency-free interpreter and service
+model. Dependency-bearing profiles introduced lockfile attestation in revision
+3. Dependency-free interpreter and service
 profiles introduced command contracts in revision 3; `python3-stdlib`
-revision 4 pins the relocatable runtime tree mounted by the runner.
+revision 4 pins the relocatable runtime tree mounted by the runner, and
+`node-typescript` revision 4 adds installed-tree attestation and runtime mounts.
 
 ## Profile Registry
 
@@ -50,7 +51,7 @@ policies require no network and an isolated filesystem.
 | --- | --- | --- | --- |
 | `c11-host` | GCC/`cc` 13.3.0 | None | Native `build/` executable |
 | `go-std` | Go 1.24.4 | None; standard library only | Native `build/` executable |
-| `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | Not active until dependencies are mounted |
+| `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | `tsc` compile and Node.js public-test commands |
 | `node-typescript-postgresql` | Node.js 22.16.0, TypeScript 5.8.3, PostgreSQL 16.9 | Express, `pg`, TypeScript, and types | Not active until dependencies and service runtime are mounted |
 | `postgresql` | PostgreSQL server and client 16.9 | None | `psql -v ON_ERROR_STOP=1 -f ...` with PostgreSQL runtime mounts |
 | `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | pytest 8.4.0, Hypothesis 6.135.9 | Not active until dependencies are mounted |
@@ -60,10 +61,12 @@ policies require no network and an isolated filesystem.
 
 The registry is authoritative for full dependency versions and byte-level
 resource limits. Dependency-bearing current profiles also record a
-`dependencyInstall` attestation. The current committed attestations are
-lockfiles under `validation-locks/`; each profile pins the lockfile path,
-source (`npm` or `pypi`), and SHA-256, and startup verifies both the file hash
-and that the lockfile package set exactly matches the profile dependencies.
+`dependencyInstall` attestation. Committed attestations live under
+`validation-locks/`; each profile pins the lockfile path, source (`npm` or
+`pypi`), and SHA-256. Startup verifies the file hash and direct package set.
+The runtime-enabled `node-typescript` profile additionally uses an npm
+package-lock with registry integrity values for the complete transitive
+closure and pins the canonical hash of its installed tree.
 Git attributes force those lockfiles to LF line endings, and the verifier
 normalizes CRLF to LF before hashing so platform checkout settings do not
 change the contract.
@@ -102,16 +105,16 @@ lockfiles, image provenance, digest verification before execution, and tests
 for the resulting mount and network boundary. An OCI-only environment is not
 selected by the host runner.
 
-The current host Bubblewrap runner can verify committed lockfiles but still
-cannot prove that the sandboxed runtime is executing from the installed npm or
-PyPI package set described by those lockfiles. It therefore fails closed for
-every profile with a nonempty `dependencies` array before resolving or
-executing tools. Such a profile can be activated only after the runner verifies
-and mounts the corresponding lockfile installation, or validation runs in a
-digest-pinned image. Standard-library-only profiles are not automatically
-eligible: the test sandbox supports native binaries produced by `c11-host`,
-`go-std`, and `stable-rust`, plus approved interpreter commands for
-`python3-stdlib`. The registry also records PostgreSQL runtime mounts and
+The host Bubblewrap runner supports `node-typescript` by hashing its complete
+root-owned installed tree and comparing it with the profile contract before
+mounting it read-only. The npm package-lock pins the complete package closure
+and registry integrity values; the installed-tree hash additionally pins file
+contents, modes, paths, and directory layout. Dependency profiles without
+these runtime fields continue to fail closed before tools are resolved or
+executed. Standard-library-only profiles are not automatically eligible: the
+test sandbox supports native binaries produced by `c11-host`, `go-std`, and
+`stable-rust`, plus approved interpreter commands for `python3-stdlib` and
+`node-typescript`. The registry also records PostgreSQL runtime mounts and
 command prefixes, but the runner fails closed for that service profile until
 its isolated server boundary is implemented.
 

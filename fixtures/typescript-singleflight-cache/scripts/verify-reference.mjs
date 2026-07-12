@@ -4,7 +4,7 @@ import { runFixtureMutationTests } from "../../../src/fixture-mutations.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const result = runFixtureMutationTests({
-  fixtureStatuses: ["scaffold"],
+  fixtureStatuses: ["active"],
   fixturesRoot: join(repositoryRoot, "fixtures"),
   taskIds: ["typescript-singleflight-cache"],
   tasksPath: join(repositoryRoot, "tasks.json"),

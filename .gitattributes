@@ -1,1 +1,2 @@
 validation-locks/*.lock.json text eol=lf
+validation-locks/**/*.json text eol=lf

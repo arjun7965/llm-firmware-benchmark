@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.2",
+  "schemaVersion": "2.3",
   "environments": {
     "ubuntu-24-04-x86-64-c11-host": {
       "1": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
@@ -43,7 +43,8 @@
     "node-typescript": {
       "1": "2c7d22458c5a5b90369237b3875cac9bd97c5886f8ac720521fadc86410274f1",
       "2": "655fd393ce4fab119f635d474bc3b735e1243a855a8a0d63c19ae4fe1df166c8",
-      "3": "5e27f632be1428007ea13d4ea46473f54641fb2741bce9ef2dba5922a27f2e5f"
+      "3": "5e27f632be1428007ea13d4ea46473f54641fb2741bce9ef2dba5922a27f2e5f",
+      "4": "2484ef5a46f832ca7b06a00a3ae9a837b94295fc0df9b3c5829694dc527e6413"
     },
     "node-typescript-postgresql": {
       "1": "57e91a3f981e9fc00b018343d672a032520580ded9d6c143b5e0cb5ed3f65b7b",

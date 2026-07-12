@@ -219,8 +219,8 @@ async function testNoEntryTimers(Cache: CacheConstructor): Promise<void> {
     timerCalls++;
     throw new Error("per-entry timer created");
   };
-  globalThis.setTimeout = rejectTimer as typeof setTimeout;
-  globalThis.setInterval = rejectTimer as typeof setInterval;
+  globalThis.setTimeout = rejectTimer as unknown as typeof setTimeout;
+  globalThis.setInterval = rejectTimer as unknown as typeof setInterval;
   try {
     const cache = new Cache<string, number>({ ttlMs: 100 });
     equal(await cache.get("key", () => 1), 1, "timer test load");

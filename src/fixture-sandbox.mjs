@@ -28,6 +28,7 @@ import {
 } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateFixtureManifest } from "./fixtures.mjs";
+import { attestDependencyInstallation } from "./dependency-installation.mjs";
 import { loadTasks } from "./harness.mjs";
 import { requireSuite } from "./suites.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
@@ -280,13 +281,16 @@ function inspectToolchain(
   versionArgs,
   expectedVersion,
   spawnTool,
+  {
+    pathValue = "/usr/bin:/bin",
+  } = {},
 ) {
   const result = spawnTool(executable, versionArgs, {
     encoding: "utf8",
     env: {
       LANG: "C",
       LC_ALL: "C",
-      PATH: "/usr/bin:/bin",
+      PATH: pathValue,
     },
     killSignal: "SIGKILL",
     maxBuffer: maximumOutputBytes,
@@ -339,7 +343,7 @@ function toolIsUnderRuntimeMount(toolPath, profile) {
     toolPath === mount.path || toolPath.startsWith(`${mount.path}/`)) ?? false;
 }
 
-function workspaceDirectories(manifest) {
+function workspaceDirectories(manifest, profile) {
   const directories = new Set([
     sandboxRoot,
     `${sandboxRoot}/build`,
@@ -360,6 +364,14 @@ function workspaceDirectories(manifest) {
     let current = sandboxRoot;
     for (const segment of segments) {
       current = `${current}/${segment}`;
+      directories.add(current);
+    }
+  }
+  const dependencyMountPath = profile.dependencyInstall?.mountPath;
+  if (dependencyMountPath) {
+    let current = "";
+    for (const segment of dependencyMountPath.split("/").filter(Boolean)) {
+      current += `/${segment}`;
       directories.add(current);
     }
   }
@@ -423,6 +435,9 @@ export function buildSandboxInvocation({
         `${sandboxRoot}/build/pycache`,
       ]
       : [];
+  const sandboxPath = manifest.validationProfile === "node-typescript"
+    ? "/usr/local/bin:/usr/bin:/bin"
+    : "/usr/bin:/bin";
   const limits = sandbox.resourceLimits[command.phase];
   const sandboxArgs = [
     "--unshare-all",
@@ -446,7 +461,7 @@ export function buildSandboxInvocation({
     "C",
     "--setenv",
     "PATH",
-    "/usr/bin:/bin",
+    sandboxPath,
     "--setenv",
     "TMPDIR",
     "/tmp",
@@ -469,8 +484,17 @@ export function buildSandboxInvocation({
     "--tmpfs",
     "/tmp",
   );
-  for (const directory of workspaceDirectories(manifest)) {
+  for (const directory of workspaceDirectories(manifest, validationProfile)) {
     sandboxArgs.push("--dir", directory);
+  }
+
+  const dependencyInstall = validationProfile.dependencyInstall;
+  if (command.phase === "compile" && dependencyInstall?.installRoot) {
+    sandboxArgs.push(
+      "--ro-bind",
+      dependencyInstall.installRoot,
+      dependencyInstall.mountPath,
+    );
   }
 
   const readOnlyBindings = [
@@ -982,10 +1006,7 @@ export function validateFixtureValidationReport(report) {
   if (
     report.success &&
     report.artifacts.length === 0 &&
-    !(
-      validationProfileContract.id === "python3-stdlib" &&
-      validationProfileContract.revision >= 4
-    )
+    !validationProfileContract.testRuntime
   ) {
     throw new TypeError("successful validation must record an artifact");
   }
@@ -996,6 +1017,7 @@ export function runFixtureValidation({
   taskId,
   fixturesRoot,
   tasksPath,
+  attestDependencyInstallationImpl = attestDependencyInstallation,
   spawn = spawnSync,
   spawnTool = spawnSync,
   now = () => new Date(),
@@ -1025,6 +1047,9 @@ export function runFixtureValidation({
     manifest.validationProfile,
   );
   requireRunnableProfile(validationProfileContract);
+  if (validationProfileContract.dependencies.length > 0) {
+    attestDependencyInstallationImpl(validationProfileContract);
+  }
   const validationHost = readValidationHostImpl();
   const validationEnvironment = selectValidationEnvironment(
     validationProfileContract,
@@ -1078,14 +1103,20 @@ export function runFixtureValidation({
   const toolchains = [...toolPaths.entries()]
     .sort(([left], [right]) =>
       left < right ? -1 : left > right ? 1 : 0)
-    .map(([name, executable]) =>
-      inspectToolchain(
+    .map(([name, executable]) => {
+      const interpreterPath = name === "tsc" && toolPaths.has("node")
+        ? [dirname(toolPaths.get("node")), "/usr/bin", "/bin"]
+          .join(delimiter)
+        : undefined;
+      return inspectToolchain(
         name,
         executable,
         manifest.toolVersionArgs[name],
         profileToolchains.get(name).version,
         spawnTool,
-      ));
+        { pathValue: interpreterPath },
+      );
+    });
 
   const buildRoot = mkdtempSync(join(tmpdir(), `${taskId}-sandbox-build-`));
   const reportStartedAt = now();
