@@ -3,11 +3,10 @@
 ## Decision
 
 Fixture-backed tasks use a single-source-file answer contract by default.
-Multi-file answers are opt-in and may be activated only after the manifest
-schema, extractor, sandbox report, and tests implement the bundle contract
-defined below. Existing prompts and result interpretation do not change as
-part of this decision. Extraction now enforces the documented one-block rule
-by rejecting every additional fenced block.
+Multi-file answers are opt-in through the validated `markdown-file-bundle`
+contract. Existing single-file prompts and result interpretation do not change
+as part of this decision. Single-file extraction enforces the documented
+one-block rule by rejecting every additional fenced block.
 
 The current single-file contract is identified by the fixture manifest answer
 format `markdown-fenced-code`. A model returns exactly one nonempty fenced code
@@ -35,7 +34,7 @@ implemented and calibrated.
 | `frontend-autocomplete` | Rubric-only | Single file | One component module; interaction tests are validator-owned |
 | `concurrency-debug` | Single file | Single file | One repaired Python module; race tests are validator-owned |
 | `testing-property-based` | Rubric-only | Single file | One property-test module importing the supplied implementation |
-| `go-graceful-shutdown` | Rubric-only | Multi-file | Runnable server code and Go-discoverable `*_test.go` tests require distinct files |
+| `go-graceful-shutdown` | Multi-file | Multi-file | Runnable server code and Go-discoverable `*_test.go` tests require distinct files |
 | `rust-stream-decoder` | Single file | Single file | One Rust library module; unit tests are validator-owned |
 | `typescript-singleflight-cache` | Single file | Single file | One cache module; fake-clock tests are validator-owned |
 | `backend-idempotency` | Rubric-only | Multi-file | SQL migration and TypeScript endpoint are independently validated artifacts |
@@ -46,13 +45,12 @@ Changing a task from its planned contract requires a documented rationale.
 Changing an existing prompt to activate executable extraction changes its
 prompt hash and invalidates reuse of earlier raw results.
 
-## Future Multi-File Contract
+## Multi-File Contract
 
-The first multi-file fixture must introduce an explicit answer format such as
-`markdown-file-bundle`; it must not overload `markdown-fenced-code`. Its
-manifest owns a sorted, unique list of relative file paths and the expected
-language for each file. Output locations are derived under `generated/`; the
-model never chooses filesystem destinations.
+The `markdown-file-bundle` format does not overload
+`markdown-fenced-code`. Its manifest owns a sorted, unique list of relative
+file paths and the expected language for each file. Output locations are
+derived under `generated/`; the model never chooses filesystem destinations.
 
 A human-readable response uses one file heading followed immediately by one
 fenced block:
@@ -85,10 +83,17 @@ The implemented parser and writer must:
 - keep all build and test commands as task-declared argv arrays without a
   shell.
 
-Before any multi-file fixture becomes active, bump the affected versioned
-schemas, add the new manifest variant, implement extraction and rollback,
-define report digest semantics, and add tests for malformed bundles and partial
-write failures. Until then, multi-file tasks remain rubric-only.
+The extractor caps the complete response at 1 MiB, each normalized file at
+256 KiB, and all normalized bundle contents together at 512 KiB.
+
+Bundle extraction parses and validates every file before staging a replacement
+`generated/` directory. Commit uses a directory rename with restoration of the
+previous directory on failure, preventing partial bundles. Validation reports
+list each generated path, byte length, and content SHA-256. For bundles,
+`answerSha256` is a canonical SHA-256 over the ordered file count followed by
+each UTF-8 path length and path, then content length and content; all lengths
+are unsigned 64-bit big-endian integers. Single-file reports retain the direct
+content SHA-256 meaning.
 
 ## Comparison Integrity
 

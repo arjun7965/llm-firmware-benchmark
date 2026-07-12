@@ -17,12 +17,14 @@ import (
 const modulePath = "fixture.local/go-graceful-shutdown"
 
 type config struct {
-	answer       string
-	tests        string
-	supervisor   string
-	moduleRoot   string
-	testBinary   string
-	outputBinary string
+	answer              string
+	candidateTests      string
+	tests               string
+	supervisor          string
+	moduleRoot          string
+	testBinary          string
+	validatorTestBinary string
+	outputBinary        string
 }
 
 func main() {
@@ -40,10 +42,12 @@ func main() {
 func parseConfig() (config, error) {
 	var configuration config
 	flag.StringVar(&configuration.answer, "answer", "", "candidate Go source")
+	flag.StringVar(&configuration.candidateTests, "candidate-tests", "", "candidate Go tests")
 	flag.StringVar(&configuration.tests, "tests", "", "public Go tests")
 	flag.StringVar(&configuration.supervisor, "supervisor", "", "test supervisor source")
 	flag.StringVar(&configuration.moduleRoot, "module-root", "", "staged module directory")
 	flag.StringVar(&configuration.testBinary, "test-binary", "", "candidate test output")
+	flag.StringVar(&configuration.validatorTestBinary, "validator-test-binary", "", "validator test output")
 	flag.StringVar(&configuration.outputBinary, "output", "", "supervisor output")
 	flag.Parse()
 
@@ -51,12 +55,14 @@ func parseConfig() (config, error) {
 		return config{}, errors.New("unexpected positional arguments")
 	}
 	for name, value := range map[string]string{
-		"answer":      configuration.answer,
-		"tests":       configuration.tests,
-		"supervisor":  configuration.supervisor,
-		"module-root": configuration.moduleRoot,
-		"test-binary": configuration.testBinary,
-		"output":      configuration.outputBinary,
+		"answer":                configuration.answer,
+		"candidate-tests":       configuration.candidateTests,
+		"tests":                 configuration.tests,
+		"supervisor":            configuration.supervisor,
+		"module-root":           configuration.moduleRoot,
+		"test-binary":           configuration.testBinary,
+		"validator-test-binary": configuration.validatorTestBinary,
+		"output":                configuration.outputBinary,
 	} {
 		if value == "" {
 			return config{}, fmt.Errorf("--%s is required", name)
@@ -67,16 +73,20 @@ func parseConfig() (config, error) {
 		return config{}, errors.New("module root must be build/module")
 	}
 	if filepath.Dir(configuration.testBinary) != filepath.Dir(configuration.outputBinary) ||
+		filepath.Dir(configuration.validatorTestBinary) != filepath.Dir(configuration.outputBinary) ||
 		filepath.Base(configuration.testBinary) != "candidate-tests" ||
+		filepath.Base(configuration.validatorTestBinary) != "validator-tests" ||
 		filepath.Base(configuration.outputBinary) != "public-tests" {
 		return config{}, errors.New("test binaries must use their declared sibling paths")
 	}
 	paths := []*string{
 		&configuration.answer,
+		&configuration.candidateTests,
 		&configuration.tests,
 		&configuration.supervisor,
 		&configuration.moduleRoot,
 		&configuration.testBinary,
+		&configuration.validatorTestBinary,
 		&configuration.outputBinary,
 	}
 	for _, path := range paths {
@@ -92,6 +102,9 @@ func parseConfig() (config, error) {
 func build(configuration config) error {
 	if err := validateCandidateSource(configuration.answer); err != nil {
 		return fmt.Errorf("candidate source policy: %w", err)
+	}
+	if err := validateCandidateSource(configuration.candidateTests); err != nil {
+		return fmt.Errorf("candidate test policy: %w", err)
 	}
 	if err := os.RemoveAll(configuration.moduleRoot); err != nil {
 		return fmt.Errorf("clear staged module: %w", err)
@@ -117,7 +130,12 @@ func build(configuration config) error {
 		configuration.answer: filepath.Join(
 			configuration.moduleRoot,
 			"generated",
-			"answer.go",
+			"server.go",
+		),
+		configuration.candidateTests: filepath.Join(
+			configuration.moduleRoot,
+			"generated",
+			"server_test.go",
 		),
 		configuration.tests: filepath.Join(
 			configuration.moduleRoot,
@@ -144,9 +162,21 @@ func build(configuration config) error {
 		"-c",
 		"-o",
 		configuration.testBinary,
+		"./generated",
+	); err != nil {
+		return fmt.Errorf("compile candidate-authored tests: %w", err)
+	}
+	if err := runGo(
+		configuration.moduleRoot,
+		"test",
+		"-buildvcs=false",
+		"-trimpath",
+		"-c",
+		"-o",
+		configuration.validatorTestBinary,
 		"./tests/public",
 	); err != nil {
-		return fmt.Errorf("compile candidate tests: %w", err)
+		return fmt.Errorf("compile validator tests: %w", err)
 	}
 	if err := runGo(
 		configuration.moduleRoot,

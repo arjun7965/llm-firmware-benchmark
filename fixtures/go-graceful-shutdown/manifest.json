@@ -1,17 +1,25 @@
 {
-  "schemaVersion": "1.3",
+  "schemaVersion": "1.4",
   "taskId": "go-graceful-shutdown",
   "targetProfile": null,
   "validationProfile": "go-std",
-  "status": "scaffold",
+  "status": "active",
   "language": "go",
   "toolVersionArgs": {
     "go": ["version"]
   },
   "answer": {
-    "format": "markdown-fenced-code",
-    "language": "go",
-    "output": "generated/answer.go"
+    "format": "markdown-file-bundle",
+    "files": [
+      {
+        "path": "server.go",
+        "language": "go"
+      },
+      {
+        "path": "server_test.go",
+        "language": "go"
+      }
+    ]
   },
   "paths": {
     "starter": "starter",
@@ -31,7 +39,9 @@
         "run",
         "starter/build_tests.go",
         "--answer",
-        "generated/answer.go",
+        "generated/server.go",
+        "--candidate-tests",
+        "generated/server_test.go",
         "--tests",
         "tests/public/server_test.go",
         "--supervisor",
@@ -40,6 +50,8 @@
         "build/module",
         "--test-binary",
         "build/candidate-tests",
+        "--validator-test-binary",
+        "build/validator-tests",
         "--output",
         "build/public-tests"
       ],
@@ -51,7 +63,7 @@
       "phase": "test",
       "argv": ["build/public-tests"],
       "requiredTools": [],
-      "timeoutMs": 15000
+      "timeoutMs": 25000
     }
   ]
 }

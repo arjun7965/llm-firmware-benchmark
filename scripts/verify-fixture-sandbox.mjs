@@ -11,7 +11,10 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runFixtureValidation } from "../src/fixture-sandbox.mjs";
-import { validateFixtureRepository } from "../src/fixtures.mjs";
+import {
+  fixtureAnswerFiles,
+  validateFixtureRepository,
+} from "../src/fixtures.mjs";
 import {
   environmentFingerprint,
   getValidationEnvironmentRevision,
@@ -55,6 +58,10 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "go-graceful-shutdown",
+    suite: "auxiliary",
+  },
+  {
     taskId: "rust-stream-decoder",
     source: "reference/stream_decoder.rs",
     suite: "auxiliary",
@@ -86,12 +93,19 @@ try {
     const manifest = JSON.parse(
       readFileSync(join(fixtureRoot, "manifest.json"), "utf8"),
     );
-    const answerPath = join(fixtureRoot, manifest.answer.output);
-    mkdirSync(dirname(answerPath), { recursive: true });
-    copyFileSync(
-      join(sourceRoot, reference.source),
-      answerPath,
-    );
+    const answerFiles = fixtureAnswerFiles(manifest);
+    for (let index = 0; index < answerFiles.length; index++) {
+      const answerPath = join(fixtureRoot, answerFiles[index].path);
+      mkdirSync(dirname(answerPath), { recursive: true });
+      const source = manifest.answer.format === "markdown-file-bundle"
+        ? join(
+          sourceRoot,
+          manifest.paths.reference,
+          manifest.answer.files[index].path,
+        )
+        : join(sourceRoot, reference.source);
+      copyFileSync(source, answerPath);
+    }
 
     const validationProfile = getValidationProfile(
       manifest.validationProfile,
@@ -114,7 +128,7 @@ try {
       );
     }
     if (
-      report.schemaVersion !== "1.5" ||
+      report.schemaVersion !== "1.6" ||
       report.suite !== reference.suite ||
       report.validationProfile !== validationProfile.id ||
       report.validationProfileRevision !== validationProfile.revision ||
@@ -134,6 +148,7 @@ try {
       report.validationEnvironment.execution.kind !==
         validationEnvironment.execution.kind ||
       report.toolchains.length !== validationProfile.toolchains.length ||
+      report.answerFiles.length !== answerFiles.length ||
       report.toolchains.map((toolchain) => toolchain.name).join(",") !==
         [...validationProfile.toolchains].sort().join(",") ||
       report.toolchains.some((toolchain) =>

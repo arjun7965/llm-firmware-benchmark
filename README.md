@@ -165,20 +165,22 @@ npm run fixtures:check
 
 This validates fixture structure and task/profile references without compiling
 or executing model output. See `fixtures/README.md` for the directory contract
-and `docs/answer-contracts.md` for the single-file default and future
+and `docs/answer-contracts.md` for the single-file default and opt-in
 multi-file rules.
 
-Extract the single expected fenced code block from a successful raw result:
+Extract the manifest-declared fenced code or file bundle from a successful raw
+result:
 
 ```bash
 npm run fixture:extract -- \
   --result results/binary-parser--my-model.json
 ```
 
-The output path comes from the validated fixture manifest and remains ignored
-by Git. Extraction rejects failed or stale-prompt results, ambiguous fences,
-unsafe paths, and existing output unless `--force` is explicit. It does not
-compile or execute the extracted code. Run `npm run test:c` to verify all
+Output paths come from the validated fixture manifest and remain ignored by
+Git. Bundle files require exact manifest-order headings and language fences and
+are committed transactionally. Extraction rejects failed or stale-prompt
+results, ambiguous fences, unsafe paths, and existing output unless `--force`
+is explicit. It does not compile or execute the extracted code. Run `npm run test:c` to verify all
 public C fixtures against their trusted references and confirm that all 23
 controlled mutations are rejected. Use `npm run test:mutations` to run only
 the mutation checks.
@@ -194,6 +196,11 @@ root-owned Python 3.12.11 runtime.
 The active TypeScript singleflight-cache fixture is calibrated with
 `npm run fixture:typescript-cache:self-test` and validated in CI with its
 attested, read-only Node.js 22.16.0 and TypeScript 5.8.3 installation.
+
+The active Go graceful-shutdown fixture is calibrated with
+`npm run fixture:go-shutdown:self-test`. Its two-file bundle compiles the
+candidate implementation and focused tests under pinned Go 1.24.4 while an
+independent public suite remains the authoritative validation gate.
 
 On Linux, validate extracted code in separate compile and test sandboxes:
 

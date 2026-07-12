@@ -18,7 +18,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1.3"
+      "const": "1.4"
     },
     "taskId": {
       "type": "string",
@@ -72,22 +72,56 @@
       }
     },
     "answer": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["format", "language", "output"],
-      "properties": {
-        "format": {
-          "const": "markdown-fenced-code"
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "language", "output"],
+          "properties": {
+            "format": {
+              "const": "markdown-fenced-code"
+            },
+            "language": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9+._-]*$"
+            },
+            "output": {
+              "type": "string",
+              "pattern": "^generated/[A-Za-z0-9._/-]+$"
+            }
+          }
         },
-        "language": {
-          "type": "string",
-          "pattern": "^[a-z][a-z0-9+._-]*$"
-        },
-        "output": {
-          "type": "string",
-          "pattern": "^generated/[A-Za-z0-9._/-]+$"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "files"],
+          "properties": {
+            "format": {
+              "const": "markdown-file-bundle"
+            },
+            "files": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "language"],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^(?![A-Za-z]:/)(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._/-]+$"
+                  },
+                  "language": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9+._-]*$"
+                  }
+                }
+              }
+            }
+          }
         }
-      }
+      ]
     },
     "paths": {
       "type": "object",

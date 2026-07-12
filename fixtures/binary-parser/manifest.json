@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.3",
+  "schemaVersion": "1.4",
   "taskId": "binary-parser",
   "targetProfile": "portable-c11",
   "validationProfile": "c11-host",

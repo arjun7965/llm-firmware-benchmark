@@ -72,11 +72,13 @@ Each run writes ignored machine-readable output to:
 fixtures/<task-id>/build/validation-report.json
 ```
 
-The report follows `schemas/fixture-validation-report.schema.json` version 1.5.
-It records the extracted-code SHA-256, logical validation-profile revision and
-contract SHA-256, concrete environment revision and contract SHA-256, detected
-host, execution mode, target profile, language, resolved toolchain and sandbox
-versions, and any produced native artifact size. Each phase preserves the
+The report follows `schemas/fixture-validation-report.schema.json` version 1.6.
+It records every extracted file's path, byte length, and SHA-256 plus the direct
+single-file or canonical bundle SHA-256. It also records the logical
+validation-profile revision and contract SHA-256, concrete environment revision
+and contract SHA-256, detected host, execution mode, target profile, language,
+resolved toolchain and sandbox versions, and any produced native artifact size.
+Each phase preserves the
 exact compiler or test argv—including compile flags—and records a normalized `passed`, `failed`,
 `timed-out`, or `error` outcome alongside timing, limits, diagnostics, exit
 status, and signals.

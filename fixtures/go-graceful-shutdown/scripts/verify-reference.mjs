@@ -33,6 +33,8 @@ function verifySourcePolicy() {
       "starter/build_tests.go",
       "--answer",
       candidatePath,
+      "--candidate-tests",
+      "reference/server_test.go",
       "--tests",
       "tests/public/server_test.go",
       "--supervisor",
@@ -41,6 +43,8 @@ function verifySourcePolicy() {
       join(buildRoot, "module"),
       "--test-binary",
       join(buildRoot, "candidate-tests"),
+      "--validator-test-binary",
+      join(buildRoot, "validator-tests"),
       "--output",
       join(buildRoot, "public-tests"),
     ], {
@@ -63,7 +67,7 @@ function verifySourcePolicy() {
 
 verifySourcePolicy();
 const result = runFixtureMutationTests({
-  fixtureStatuses: ["scaffold"],
+  fixtureStatuses: ["active"],
   fixturesRoot: join(repositoryRoot, "fixtures"),
   taskIds: ["go-graceful-shutdown"],
   tasksPath: join(repositoryRoot, "tasks.json"),

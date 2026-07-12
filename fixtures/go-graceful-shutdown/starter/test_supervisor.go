@@ -27,9 +27,10 @@ func main() {
 		os.Exit(1)
 	}
 	token := hex.EncodeToString(tokenBytes)
-	testBinary := filepath.Join(filepath.Dir(os.Args[0]), "candidate-tests")
+	validatorBinary := filepath.Join(filepath.Dir(os.Args[0]), "validator-tests")
+	candidateBinary := filepath.Join(filepath.Dir(os.Args[0]), "candidate-tests")
 
-	command := exec.Command(testBinary, "-test.timeout=8s")
+	command := exec.Command(validatorBinary, "-test.timeout=8s")
 	command.Env = append(os.Environ(), completionEnvironment+"="+token)
 	var output limitedOutput
 	command.Stdout = &output
@@ -71,7 +72,36 @@ func main() {
 		}
 	}
 	if !found {
-		fmt.Fprintln(os.Stderr, "candidate tests exited without their completion token")
+		fmt.Fprintln(os.Stderr, "validator tests exited without their completion token")
+		os.Exit(1)
+	}
+
+	candidate := exec.Command(candidateBinary, "-test.timeout=3s")
+	candidate.Stdout = &output
+	candidate.Stderr = &output
+	candidateDone := make(chan error, 1)
+	go func() {
+		candidateDone <- candidate.Run()
+	}()
+	select {
+	case runError = <-candidateDone:
+	case <-time.After(5 * time.Second):
+		if candidate.Process != nil {
+			_ = candidate.Process.Kill()
+		}
+		<-candidateDone
+		runError = fmt.Errorf("candidate-authored tests exceeded supervisor timeout")
+	}
+	updatedOutput, updatedTruncated := output.snapshot()
+	if len(updatedOutput) > len(outputBytes) {
+		_, _ = os.Stdout.Write(updatedOutput[len(outputBytes):])
+	}
+	if updatedTruncated {
+		fmt.Fprintln(os.Stderr, "combined test output exceeded 1 MiB")
+		os.Exit(1)
+	}
+	if runError != nil {
+		fmt.Fprintln(os.Stderr, runError)
 		os.Exit(1)
 	}
 }
