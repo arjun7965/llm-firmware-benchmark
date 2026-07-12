@@ -39,6 +39,12 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "concurrency-debug",
+    source: "reference/pool.py",
+    suite: "auxiliary",
+    artifactCount: 0,
+  },
+  {
     taskId: "embedded-ring-buffer",
     source: "reference/ring_buffer.c",
     suite: "firmware",
@@ -131,8 +137,8 @@ try {
             toolchain.executable,
             ...manifest.toolVersionArgs[toolchain.name],
           ].join(" ")) ||
-      report.artifacts.length !== 1 ||
-      report.artifacts[0].sizeBytes < 1 ||
+      report.artifacts.length !== (reference.artifactCount ?? 1) ||
+      report.artifacts.some((artifact) => artifact.sizeBytes < 1) ||
       report.phases.some((phase) => phase.outcome !== "passed")
     ) {
       throw new Error(

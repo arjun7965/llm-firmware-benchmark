@@ -1003,6 +1003,7 @@ export const validationEnvironmentSet = new Set(validationEnvironmentIds);
 export const sandboxRunnableValidationProfileIds = Object.freeze([
   "c11-host",
   "go-std",
+  "python3-stdlib",
   "stable-rust",
 ]);
 const sandboxRunnableValidationProfileSet = new Set(

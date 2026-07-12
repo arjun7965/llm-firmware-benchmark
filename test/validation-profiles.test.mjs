@@ -117,12 +117,12 @@ test("hosted validation profiles are pinned and immutable", () => {
   );
   assert.equal(
     getValidationProfile("python3-stdlib").revision,
-    3,
+    4,
   );
   assert.deepEqual(
     getValidationProfile("python3-stdlib").testRuntime.mounts.map((mount) =>
       mount.path),
-    ["/usr/bin/python3", "/usr/lib/python3.12"],
+    ["/usr/local/lib/python-3.12.11"],
   );
   assert.equal(
     getValidationProfile("postgresql").testRuntime.commandContracts[0].id,

@@ -48,9 +48,9 @@ so Git checkout settings do not change the attested contract.
 The current sandbox runner still rejects those profiles until it can attest
 the mounted installation or run a digest-pinned image.
 Dependency-free interpreter and service profiles may declare profile-approved
-test-runtime mounts and command prefixes, but the current runner still keeps
-those fixtures as scaffolds until it can mount and execute the pinned runtime
-inside the test namespace.
+test-runtime mounts and command prefixes. The runner supports the pinned
+`python3-stdlib` runtime; other service runtimes remain scaffold-only until
+their complete execution boundary is implemented.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free
@@ -78,8 +78,8 @@ Run `npm run fixture:validate -- --task <task-id>`. The command fails closed if
 isolation is unavailable. `npm run test:sandbox` validates the sandbox runner
 against trusted references only. Validation reports automatically capture the
 resolved toolchain version using each manifest's fixed `toolVersionArgs`,
-compile/test argv, suite and target metadata, artifact size, outcomes, and
-diagnostics.
+compile/test argv, suite and target metadata, native artifact size when
+applicable, outcomes, and diagnostics.
 See `docs/sandboxed-validation.md`.
 
 `npm run test:mutations` uses each active fixture's declared compile and test
@@ -121,9 +121,9 @@ CI verifies the same pinned toolchain set:
 npm run fixture:rust-decoder:self-test
 ```
 
-The concurrency-debug scaffold requires Python 3. Its local calibration runs
-the reference and all controlled mutations, but activation still requires the
-exact Python 3.12.11 runtime inside the sandbox:
+The active concurrency-debug fixture requires the root-owned Python 3.12.11
+runtime mounted read-only in the test namespace. Its calibration runs the
+reference and all controlled mutations:
 
 ```bash
 npm run fixture:concurrency:self-test

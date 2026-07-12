@@ -321,12 +321,22 @@ function inspectToolchain(
   };
 }
 
-function existingSystemMounts(phase) {
-  const candidates = phase === "compile"
+function existingSystemMounts(phase, profile) {
+  const optionalPaths = phase === "compile"
     ? ["/usr", "/bin", "/lib", "/lib64", "/etc/alternatives"]
     : ["/lib", "/lib64"];
-  return candidates
-    .filter((path) => existsSync(path));
+  const requiredPaths = phase === "test"
+    ? profile.testRuntime?.mounts.map((mount) => mount.path) ?? []
+    : [];
+  return [...new Set([
+    ...optionalPaths.filter((path) => existsSync(path)),
+    ...requiredPaths,
+  ])];
+}
+
+function toolIsUnderRuntimeMount(toolPath, profile) {
+  return profile.testRuntime?.mounts.some((mount) =>
+    toolPath === mount.path || toolPath.startsWith(`${mount.path}/`)) ?? false;
 }
 
 function workspaceDirectories(manifest) {
@@ -366,12 +376,17 @@ export function buildSandboxInvocation({
   buildRoot,
   command,
   toolPath = null,
-  systemMounts = existingSystemMounts(command.phase),
+  systemMounts = null,
 }) {
   if (!["compile", "test"].includes(command.phase)) {
     throw new TypeError(`unsupported sandbox phase: ${command.phase}`);
   }
-  const sandbox = getValidationProfile(manifest.validationProfile).sandbox;
+  const validationProfile = getValidationProfile(manifest.validationProfile);
+  const sandbox = validationProfile.sandbox;
+  const mountedSystemPaths = systemMounts ?? existingSystemMounts(
+    command.phase,
+    validationProfile,
+  );
   const profileEnvironment = manifest.validationProfile === "go-std"
     ? [
       "--setenv",
@@ -400,7 +415,14 @@ export function buildSandboxInvocation({
         ]
         : []),
     ]
-    : [];
+    : manifest.validationProfile === "python3-stdlib" &&
+        command.phase === "compile"
+      ? [
+        "--setenv",
+        "PYTHONPYCACHEPREFIX",
+        `${sandboxRoot}/build/pycache`,
+      ]
+      : [];
   const limits = sandbox.resourceLimits[command.phase];
   const sandboxArgs = [
     "--unshare-all",
@@ -434,7 +456,7 @@ export function buildSandboxInvocation({
     "--tmpfs",
     "/",
   ];
-  for (const path of systemMounts) {
+  for (const path of mountedSystemPaths) {
     sandboxArgs.push("--ro-bind", path, path);
   }
   sandboxArgs.push(
@@ -480,6 +502,15 @@ export function buildSandboxInvocation({
     : toolPath;
   if (!executable) {
     throw new TypeError(`tool path is required for ${command.id}`);
+  }
+  if (
+    command.phase === "test" &&
+    validationProfile.testRuntime &&
+    !toolIsUnderRuntimeMount(executable, validationProfile)
+  ) {
+    throw new TypeError(
+      `test executable for ${command.id} is outside its runtime mounts`,
+    );
   }
   sandboxArgs.push(executable, ...command.argv.slice(1));
 
@@ -948,7 +979,14 @@ export function validateFixtureValidationReport(report) {
   ) {
     throw new TypeError("fixture validation success is inconsistent");
   }
-  if (report.success && report.artifacts.length === 0) {
+  if (
+    report.success &&
+    report.artifacts.length === 0 &&
+    !(
+      validationProfileContract.id === "python3-stdlib" &&
+      validationProfileContract.revision >= 4
+    )
+  ) {
     throw new TypeError("successful validation must record an artifact");
   }
   return report;
@@ -1060,7 +1098,10 @@ export function runFixtureValidation({
     ];
     for (const command of commands) {
       if (phases.some((phase) => !phaseSucceeded(phase))) break;
-      if (command.phase === "test") {
+      if (
+        command.phase === "test" &&
+        command.argv[0].startsWith(`${manifest.paths.build}/`)
+      ) {
         const startedAt = now();
         try {
           const artifact = validateTestExecutable(

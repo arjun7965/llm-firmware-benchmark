@@ -3,7 +3,7 @@
   "taskId": "concurrency-debug",
   "targetProfile": null,
   "validationProfile": "python3-stdlib",
-  "status": "scaffold",
+  "status": "active",
   "language": "python3",
   "toolVersionArgs": {
     "python3": ["--version"]

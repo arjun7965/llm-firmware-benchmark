@@ -33,8 +33,9 @@ Startup fails if a contract is changed, removed, or added without its matching
 fingerprint. Legacy revision 1 profiles remain available for historical
 fingerprint verification; revision 2 profiles use the separated environment
 model. Current dependency-bearing profiles use revision 3 for
-dependency-install attestation, while dependency-free interpreter and service
-profiles use revision 3 for profile-approved test-runtime contracts.
+dependency-install attestation. Dependency-free interpreter and service
+profiles introduced command contracts in revision 3; `python3-stdlib`
+revision 4 pins the relocatable runtime tree mounted by the runner.
 
 ## Profile Registry
 
@@ -108,12 +109,11 @@ every profile with a nonempty `dependencies` array before resolving or
 executing tools. Such a profile can be activated only after the runner verifies
 and mounts the corresponding lockfile installation, or validation runs in a
 digest-pinned image. Standard-library-only profiles are not automatically
-eligible: the current test sandbox supports only native binaries produced by
-`c11-host`, `go-std`, and `stable-rust`. The registry now records
-profile-approved test-runtime mounts and command prefixes for `python3-stdlib`
-and `postgresql`, and scaffold manifests must match those prefixes. The runner
-still fails closed for those profiles until it actually mounts the recorded
-runtime in the test namespace and can execute it there.
+eligible: the test sandbox supports native binaries produced by `c11-host`,
+`go-std`, and `stable-rust`, plus approved interpreter commands for
+`python3-stdlib`. The registry also records PostgreSQL runtime mounts and
+command prefixes, but the runner fails closed for that service profile until
+its isolated server boundary is implemented.
 
 ## Task Mapping
 
