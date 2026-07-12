@@ -416,7 +416,7 @@ chmodSync(output, 0o700);
     prompt: "Implement value.",
   }]);
   writeJson(join(fixtureRoot, "manifest.json"), {
-    schemaVersion: "1.3",
+    schemaVersion: "1.4",
     taskId: "baseline-collision",
     targetProfile: "portable-c11",
     validationProfile: "c11-host",

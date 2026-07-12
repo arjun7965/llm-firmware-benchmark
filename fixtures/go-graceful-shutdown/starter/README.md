@@ -1,7 +1,8 @@
 # Starter Contract
 
-The candidate is one Go source file declaring package `shutdown`. It must
-export the following API:
+The candidate bundle contains `server.go` and `server_test.go`, in that
+manifest order. Both files declare package `shutdown`; `server.go` must export
+the following API:
 
 ```go
 const WorkerCount = 4
@@ -50,6 +51,7 @@ termination functions such as `os.Exit`, `syscall.Exit`, `runtime.Goexit`, or
 the `log.Fatal` family. The validator enforces this before compilation so
 package initialization cannot bypass the public tests.
 
-This remains a validator scaffold. The benchmark prompt has a multi-file
-answer contract, so extraction cannot be activated until validated answer
-bundles are supported.
+The extractor requires an exact `### ` file heading and Go fence for each
+declared file. The validator compiles and runs the public lifecycle suite
+first, then runs the candidate-authored focused tests in a separate test
+binary.

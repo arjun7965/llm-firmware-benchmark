@@ -210,6 +210,20 @@ function countArgument(argv, value) {
   return argv.filter((argument) => argument === value).length;
 }
 
+function answerOutputPaths(manifest) {
+  if (typeof manifest.answer.output === "string") {
+    return [manifest.answer.output];
+  }
+  if (
+    manifest.answer.format === "markdown-file-bundle" &&
+    Array.isArray(manifest.answer.files)
+  ) {
+    return manifest.answer.files.map((file) =>
+      `${manifest.paths.generated}/${file.path}`);
+  }
+  throw new TypeError(`${manifest.taskId} answer contract is invalid`);
+}
+
 function buildPathReplacements(commands, manifest, candidateRoot) {
   const compileBuildPaths = new Set(
     commands.compile.flatMap((command) =>
@@ -272,9 +286,11 @@ export function createMutationCommandPlan({
   manifest,
 }) {
   const compileArgv = commands.compile.flatMap((command) => command.argv);
+  const answerOutputs = answerOutputPaths(manifest);
+  const primaryAnswerOutput = answerOutputs[0];
   const answerOccurrences = countArgument(
     compileArgv,
-    manifest.answer.output,
+    primaryAnswerOutput,
   );
   const inputReplacements = fixtureInputReplacements(
     commands,
@@ -300,7 +316,10 @@ export function createMutationCommandPlan({
   for (const [path, replacement] of inputReplacements) {
     replacements.set(path, replacement);
   }
-  replacements.set(manifest.answer.output, candidatePath);
+  replacements.set(primaryAnswerOutput, candidatePath);
+  for (const output of answerOutputs.slice(1)) {
+    replacements.set(output, join(candidateRoot, output));
+  }
 
   const testArgv = replaceArgv(commands.test.argv, replacements);
 
@@ -335,9 +354,26 @@ function stageMutationCandidate({
       recursive: true,
     });
   }
-  const candidatePath = join(candidateRoot, manifest.answer.output);
+  const answerOutputs = answerOutputPaths(manifest);
+  const candidatePath = join(candidateRoot, answerOutputs[0]);
   mkdirSync(dirname(candidatePath), { recursive: true });
   writeFileSync(candidatePath, source, { encoding: "utf8", mode: 0o600 });
+  if (manifest.answer.format === "markdown-file-bundle") {
+    for (let index = 1; index < answerOutputs.length; index++) {
+      const outputPath = join(candidateRoot, answerOutputs[index]);
+      const referencePath = join(
+        fixtureRoot,
+        manifest.paths.reference,
+        manifest.answer.files[index].path,
+      );
+      requireRegularFile(
+        referencePath,
+        `${manifest.taskId} reference answer bundle file`,
+      );
+      mkdirSync(dirname(outputPath), { recursive: true });
+      writeFileSync(outputPath, readFileSync(referencePath), { mode: 0o600 });
+    }
+  }
   return candidatePath;
 }
 

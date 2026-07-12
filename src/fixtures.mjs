@@ -41,7 +41,9 @@ const manifestFields = [
   "toolVersionArgs",
   "validationProfile",
 ];
-const answerFields = ["format", "language", "output"];
+const singleAnswerFields = ["format", "language", "output"];
+const bundleAnswerFields = ["files", "format"];
+const bundleFileFields = ["language", "path"];
 const pathFields = [
   "build",
   "generated",
@@ -98,6 +100,7 @@ function requireString(value, name, pattern) {
 function requireSafeRelativePath(value, name) {
   requireString(value, name);
   if (value.includes("\\") || value.startsWith("/") ||
+      /^[A-Za-z]:\//u.test(value) ||
       value.split("/").some((segment) =>
         segment === "" || segment === "." || segment === "..")) {
     throw new TypeError(`${name} must be a safe relative path`);
@@ -107,7 +110,7 @@ function requireSafeRelativePath(value, name) {
 export function validateFixtureManifest(manifest, task) {
   requireExactFields(manifest, manifestFields, "fixture manifest");
   requireObject(task, "fixture task");
-  if (manifest.schemaVersion !== "1.3") {
+  if (manifest.schemaVersion !== "1.4") {
     throw new TypeError("unsupported fixture schemaVersion");
   }
   requireString(manifest.taskId, "fixture taskId", taskIdPattern);
@@ -145,16 +148,56 @@ export function validateFixtureManifest(manifest, task) {
   }
   requireString(manifest.language, "fixture language", languagePattern);
 
-  requireExactFields(manifest.answer, answerFields, "fixture answer");
-  if (manifest.answer.format !== "markdown-fenced-code") {
+  requireObject(manifest.answer, "fixture answer");
+  if (manifest.answer.format === "markdown-fenced-code") {
+    requireExactFields(
+      manifest.answer,
+      singleAnswerFields,
+      "fixture answer",
+    );
+    requireString(
+      manifest.answer.language,
+      "fixture answer language",
+      languagePattern,
+    );
+    requireSafeRelativePath(manifest.answer.output, "fixture answer output");
+  } else if (manifest.answer.format === "markdown-file-bundle") {
+    requireExactFields(
+      manifest.answer,
+      bundleAnswerFields,
+      "fixture answer",
+    );
+    if (
+      !Array.isArray(manifest.answer.files) ||
+      manifest.answer.files.length < 2 ||
+      manifest.answer.files.length > 16
+    ) {
+      throw new TypeError(
+        `fixture ${task.id} answer files must contain 2 to 16 entries`,
+      );
+    }
+    const filePaths = [];
+    for (const file of manifest.answer.files) {
+      requireExactFields(file, bundleFileFields, "fixture answer file");
+      requireSafeRelativePath(file.path, "fixture answer file path");
+      requireString(
+        file.language,
+        "fixture answer file language",
+        languagePattern,
+      );
+      filePaths.push(file.path);
+    }
+    if (
+      new Set(filePaths).size !== filePaths.length ||
+      filePaths.some((path, index) => index > 0 && path <= filePaths[index - 1])
+    ) {
+      throw new TypeError(
+        `fixture ${task.id} answer files must be sorted and unique`,
+      );
+    }
+  } else {
     throw new TypeError(`fixture ${task.id} has an unsupported answer format`);
   }
-  requireString(
-    manifest.answer.language,
-    "fixture answer language",
-    languagePattern,
-  );
-  requireSafeRelativePath(manifest.answer.output, "fixture answer output");
 
   requireExactFields(manifest.paths, pathFields, "fixture paths");
   for (const [name, path] of Object.entries(manifest.paths)) {
@@ -168,7 +211,10 @@ export function validateFixtureManifest(manifest, task) {
   if (new Set(Object.values(manifest.paths)).size !== pathFields.length) {
     throw new TypeError(`fixture ${task.id} paths must be unique`);
   }
-  if (!manifest.answer.output.startsWith(`${manifest.paths.generated}/`)) {
+  if (
+    manifest.answer.format === "markdown-fenced-code" &&
+    !manifest.answer.output.startsWith(`${manifest.paths.generated}/`)
+  ) {
     throw new TypeError(
       `fixture ${task.id} answer output must be under generated/`,
     );
@@ -317,6 +363,24 @@ export function validateFixtureManifest(manifest, task) {
     }
   }
   return manifest;
+}
+
+export function fixtureAnswerFiles(manifest) {
+  if (manifest.answer.format === "markdown-fenced-code") {
+    return [{
+      language: manifest.answer.language,
+      path: manifest.answer.output,
+    }];
+  }
+  if (manifest.answer.format === "markdown-file-bundle") {
+    return manifest.answer.files.map((file) => ({
+      language: file.language,
+      path: `${manifest.paths.generated}/${file.path}`,
+    }));
+  }
+  throw new TypeError(
+    `fixture ${manifest.taskId} has an unsupported answer format`,
+  );
 }
 
 function rejectSymlinks(directory, taskId) {

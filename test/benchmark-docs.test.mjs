@@ -49,7 +49,7 @@ test("every task has a documented answer-contract decision", () => {
   );
 
   assert.match(contracts, /^## Decision$/mu);
-  assert.match(contracts, /^## Future Multi-File Contract$/mu);
+  assert.match(contracts, /^## Multi-File Contract$/mu);
   for (const task of tasks) {
     const marker = `| \`${task.id}\` |`;
     assert.equal(
@@ -60,12 +60,12 @@ test("every task has a documented answer-contract decision", () => {
   }
   assert.match(
     contracts,
-    /\| `go-graceful-shutdown` \| Rubric-only \| Multi-file \|/u,
+    /\| `go-graceful-shutdown` \| Multi-file \| Multi-file \|/u,
     "Go server and *_test.go outputs must retain a multi-file contract",
   );
 });
 
-test("fixture-backed prompts retain the single-file contract", () => {
+test("fixture-backed prompts match their declared answer contract", () => {
   const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
 
   for (const task of tasks) {
@@ -76,15 +76,21 @@ test("fixture-backed prompts retain the single-file contract", () => {
     if (!existsSync(manifestUrl)) continue;
     const manifest = JSON.parse(readFileSync(manifestUrl, "utf8"));
     if (manifest.status !== "active") continue;
-    assert.equal(
-      manifest.answer.format,
-      "markdown-fenced-code",
-      `fixture ${task.id} must use the current single-file format`,
-    );
-    assert.match(
-      task.prompt,
-      /Return one fenced\b/u,
-      `fixture ${task.id} prompt must request one fenced implementation`,
-    );
+    if (manifest.answer.format === "markdown-file-bundle") {
+      assert.equal(task.id, "go-graceful-shutdown");
+      for (const file of manifest.answer.files) {
+        assert.ok(
+          task.prompt.includes("### `" + file.path + "`"),
+          `fixture ${task.id} prompt must request ${file.path}`,
+        );
+      }
+    } else {
+      assert.equal(manifest.answer.format, "markdown-fenced-code");
+      assert.match(
+        task.prompt,
+        /Return one fenced\b/u,
+        `fixture ${task.id} prompt must request one fenced implementation`,
+      );
+    }
   }
 });

@@ -14,9 +14,9 @@ generated/     # Extracted model code; ignored
 build/         # Compiler and test output; ignored
 ```
 
-Fixture-backed tasks currently use the single-file
-`markdown-fenced-code` answer contract. Multi-file tasks remain rubric-only
-until the opt-in bundle contract is implemented. See
+Fixture-backed tasks use the single-file `markdown-fenced-code` contract by
+default. The opt-in `markdown-file-bundle` contract validates a manifest-owned
+ordered file set before an atomic directory replacement. See
 `docs/answer-contracts.md` for the per-task decisions and activation
 requirements.
 
@@ -51,12 +51,12 @@ Its pinned npm package closure is hashed and mounted read-only for compilation;
 the compiled tests execute with the pinned Node.js runtime in a separate
 sandbox without the package tree.
 
-The `go-graceful-shutdown` scaffold has an exact server-module API, trusted
+The active `go-graceful-shutdown` fixture has an exact server-module API, trusted
 reference, deterministic lifecycle tests, and controlled mutations. Its test
-supervisor requires a child-side completion token so package initialization
-cannot exit successfully before tests run. It remains inactive until validated
-multi-file answer bundles preserve the runnable server and model-authored Go
-tests required by the benchmark prompt.
+supervisor requires a child-side completion token so candidate package
+initialization cannot exit successfully before the validator suite runs. The
+bundle preserves and separately runs the model-authored Go tests only after the
+public lifecycle suite succeeds.
 
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
@@ -65,8 +65,9 @@ profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 remain scaffolds until their exact packages and test runtimes can be verified,
 mounted, and executed in the test namespace.
 
-Fixture manifests and public result records use schema version 1.3. Validation
-reports use version 1.5, and mutation catalogs remain at version 1.2.
+Fixture manifests use schema version 1.4; public result records remain at
+version 1.3. Validation reports use version 1.6, and mutation catalogs remain
+at version 1.2.
 
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
@@ -87,12 +88,13 @@ Extract one successful raw result with:
 npm run fixture:extract -- --result results/<task-id>--<model-id>.json
 ```
 
-The extractor unwraps provider output, requires exactly one nonempty fence with
-the manifest language, and writes only its contents to the ignored
-`generated/` path. It rejects failed, mismatched, or stale-prompt results,
-malformed fences, oversized content, symlinked output paths, and existing
-output. Use `--force` only when intentionally replacing a previous extraction.
-Extraction never compiles or executes model output.
+The extractor unwraps provider output and applies the manifest's single-file or
+bundle contract. Bundles require each declared heading, path, language, and
+fence exactly once and in order, then stage all files before replacing the
+ignored `generated/` directory. Extraction rejects failed, mismatched, or
+stale-prompt results, malformed or oversized content, unsafe paths, and
+existing output. Use `--force` only when intentionally replacing a previous
+extraction. Extraction never compiles or executes model output.
 
 Validate the extracted answer in isolated compile and test sandboxes:
 

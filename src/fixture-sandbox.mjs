@@ -1,7 +1,4 @@
-import {
-  createHash,
-  randomUUID,
-} from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   accessSync,
@@ -27,7 +24,11 @@ import {
   sep,
 } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateFixtureManifest } from "./fixtures.mjs";
+import { summarizeAnswerFiles } from "./fixture-answer-digests.mjs";
+import {
+  fixtureAnswerFiles,
+  validateFixtureManifest,
+} from "./fixtures.mjs";
 import { attestDependencyInstallation } from "./dependency-installation.mjs";
 import { loadTasks } from "./harness.mjs";
 import { requireSuite } from "./suites.mjs";
@@ -355,7 +356,7 @@ function workspaceDirectories(manifest, profile) {
     "/nonexistent",
   ]);
   for (const relativePath of [
-    dirname(manifest.answer.output),
+    ...fixtureAnswerFiles(manifest).map((file) => dirname(file.path)),
     manifest.paths.mocks,
     manifest.paths.publicTests,
     manifest.paths.starter,
@@ -504,8 +505,10 @@ export function buildSandboxInvocation({
       `${sandboxRoot}/${manifest.paths.mocks}`],
     [resolve(fixtureRoot, manifest.paths.publicTests),
       `${sandboxRoot}/${manifest.paths.publicTests}`],
-    [resolve(fixtureRoot, manifest.answer.output),
-      `${sandboxRoot}/${manifest.answer.output}`],
+    ...fixtureAnswerFiles(manifest).map((file) => [
+      resolve(fixtureRoot, file.path),
+      `${sandboxRoot}/${file.path}`,
+    ]),
   ];
   for (const [source, destination] of readOnlyBindings) {
     sandboxArgs.push("--ro-bind", source, destination);
@@ -639,6 +642,7 @@ export function validateFixtureValidationReport(report) {
     "artifacts",
     "finishedAt",
     "fixtureStatus",
+    "answerFiles",
     "answerSha256",
     "language",
     "phases",
@@ -656,7 +660,7 @@ export function validateFixtureValidationReport(report) {
     "validationEnvironment",
   ];
   requireExactKeys(report, topLevelKeys, "fixture validation report");
-  if (report.schemaVersion !== "1.5") {
+  if (report.schemaVersion !== "1.6") {
     throw new TypeError("unsupported fixture validation report version");
   }
   if (
@@ -670,6 +674,37 @@ export function validateFixtureValidationReport(report) {
     !/^[a-f0-9]{64}$/u.test(report.answerSha256)
   ) {
     throw new TypeError("fixture validation answerSha256 is invalid");
+  }
+  if (!Array.isArray(report.answerFiles) || report.answerFiles.length === 0) {
+    throw new TypeError("fixture validation answerFiles is invalid");
+  }
+  const answerPaths = new Set();
+  let previousAnswerPath = null;
+  for (const file of report.answerFiles) {
+    requireExactKeys(
+      file,
+      ["byteLength", "path", "sha256"],
+      "fixture validation answer file",
+    );
+    if (
+      typeof file.path !== "string" ||
+      file.path === "" ||
+      file.path.includes("\\") ||
+      file.path.startsWith("/") ||
+      /^[A-Za-z]:\//u.test(file.path) ||
+      file.path.split("/").some((segment) =>
+        segment === "" || segment === "." || segment === "..") ||
+      answerPaths.has(file.path) ||
+      (previousAnswerPath !== null && file.path <= previousAnswerPath) ||
+      !Number.isSafeInteger(file.byteLength) ||
+      file.byteLength < 1 ||
+      typeof file.sha256 !== "string" ||
+      !/^[a-f0-9]{64}$/u.test(file.sha256)
+    ) {
+      throw new TypeError("fixture validation answer file is invalid");
+    }
+    answerPaths.add(file.path);
+    previousAnswerPath = file.path;
   }
   if (
     report.targetProfile !== null &&
@@ -1059,12 +1094,18 @@ export function runFixtureValidation({
     validationProfileContract,
     validationEnvironment,
   );
-  const answerPath = resolve(fixtureRoot, manifest.answer.output);
-  requireContained(fixtureRoot, answerPath, "fixture answer");
-  requireRegularFile(answerPath, `fixture ${taskId} extracted answer`);
-  const answerSha256 = createHash("sha256")
-    .update(readFileSync(answerPath))
-    .digest("hex");
+  const answerContents = fixtureAnswerFiles(manifest).map((file) => {
+    const answerPath = resolve(fixtureRoot, file.path);
+    requireContained(fixtureRoot, answerPath, "fixture answer");
+    requireRegularFile(answerPath, `fixture ${taskId} extracted answer`);
+    return {
+      content: readFileSync(answerPath),
+      path: file.path,
+    };
+  });
+  const answerSummary = summarizeAnswerFiles(answerContents, {
+    bundle: manifest.answer.format === "markdown-file-bundle",
+  });
 
   const bubblewrapPath = resolveExecutableImpl(
     validationEnvironment.sandbox.runtime.executable,
@@ -1177,9 +1218,10 @@ export function runFixtureValidation({
     }
 
     const report = {
-      schemaVersion: "1.5",
+      schemaVersion: "1.6",
       taskId,
-      answerSha256,
+      answerFiles: answerSummary.files,
+      answerSha256: answerSummary.sha256,
       suite: task.suite,
       targetProfile: manifest.targetProfile,
       validationProfile: manifest.validationProfile,

@@ -63,7 +63,7 @@ function sandboxFixture(t) {
     prompt: "Return code.",
   }]));
   const manifest = {
-    schemaVersion: "1.3",
+    schemaVersion: "1.4",
     taskId: "example-task",
     targetProfile: "portable-c11",
     validationProfile: "c11-host",
@@ -625,7 +625,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.5");
+  assert.equal(report.schemaVersion, "1.6");
   assert.equal(report.suite, "firmware");
   assert.equal(report.validationProfile, "c11-host");
   assert.equal(report.validationProfileRevision, 2);
@@ -644,6 +644,11 @@ test("sandbox validation records successful compile and test phases", (t) => {
   assert.deepEqual(report.validationEnvironment.execution, { kind: "host" });
   assert.equal(report.language, "c11");
   assert.match(report.answerSha256, /^[a-f0-9]{64}$/u);
+  assert.deepEqual(report.answerFiles, [{
+    path: "generated/answer.c",
+    byteLength: 31,
+    sha256: report.answerSha256,
+  }]);
   assert.deepEqual(report.toolchains, [{
     name: "cc",
     executable: "/usr/bin/cc",
@@ -883,6 +888,90 @@ test("sandbox validation records successful compile and test phases", (t) => {
     }),
     /validation host does not match exactly one supported environment/u,
   );
+});
+
+test("sandbox validation records and mounts every bundle file", (t) => {
+  const fixture = sandboxFixture(t);
+  rmSync(join(fixture.fixtureRoot, "generated", "answer.c"));
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "server.c"),
+    "int answer(void) { return 0; }\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "server_test.c"),
+    "int test_answer(void) { return 0; }\n",
+  );
+  const manifest = {
+    ...fixture.manifest,
+    answer: {
+      format: "markdown-file-bundle",
+      files: [
+        { path: "server.c", language: "c" },
+        { path: "server_test.c", language: "c" },
+      ],
+    },
+    commands: [
+      {
+        ...fixture.manifest.commands[0],
+        argv: [
+          "cc",
+          "-c",
+          "generated/server.c",
+          "-o",
+          "build/tests",
+        ],
+      },
+      fixture.manifest.commands[1],
+    ],
+  };
+  writeFileSync(
+    join(fixture.fixtureRoot, "manifest.json"),
+    JSON.stringify(manifest),
+  );
+  const calls = [];
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: fixture.fixturesRoot,
+    tasksPath: fixture.tasksPath,
+    resolveExecutableImpl: fakeExecutable,
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    spawn: (command, args) => {
+      calls.push({ command, args });
+      const buildDestination = args.findIndex(
+        (value, index) =>
+          value === "/workspace/build" &&
+          args[index - 2] === "--bind",
+      );
+      if (calls.length === 1 && buildDestination > 0) {
+        const executable = join(args[buildDestination - 1], "tests");
+        writeFileSync(executable, "");
+        chmodSync(executable, 0o700);
+      }
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.deepEqual(
+    report.answerFiles.map((file) => file.path),
+    ["generated/server.c", "generated/server_test.c"],
+  );
+  assert.notEqual(report.answerSha256, report.answerFiles[0].sha256);
+  for (const path of report.answerFiles.map((file) => file.path)) {
+    const source = join(fixture.fixtureRoot, path);
+    const index = calls[0].args.indexOf(source);
+    assert.deepEqual(
+      calls[0].args.slice(index - 1, index + 2),
+      ["--ro-bind", source, `/workspace/${path}`],
+    );
+  }
+  assert.equal(validateFixtureValidationReport(report), report);
 });
 
 test("sandbox validation stops after compilation failure", (t) => {

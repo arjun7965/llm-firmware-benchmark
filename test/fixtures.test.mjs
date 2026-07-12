@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTasks } from "../src/harness.mjs";
 import {
+  fixtureAnswerFiles,
   validateFixtureManifest,
   validateFixtureRepository,
 } from "../src/fixtures.mjs";
@@ -34,13 +35,25 @@ function concurrencyFixture() {
   );
 }
 
+function goFixture() {
+  return JSON.parse(
+    readFileSync(
+      new URL(
+        "../fixtures/go-graceful-shutdown/manifest.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+}
+
 test("repository fixture scaffolds match task metadata", () => {
   assert.deepEqual(
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
       fixtureCount: 9,
-      activeCount: 7,
-      scaffoldCount: 2,
+      activeCount: 8,
+      scaffoldCount: 1,
       commandCount: 18,
     },
   );
@@ -132,6 +145,41 @@ test("fixture commands must match profile-approved runtime contracts", () => {
     /command public-tests is not approved by validation profile python3-stdlib/u,
   );
   assert.equal(manifest.status, "active");
+});
+
+test("fixture bundles require sorted unique safe files", () => {
+  const task = loadTasks(tasksPath)
+    .find((item) => item.id === "go-graceful-shutdown");
+  const manifest = goFixture();
+
+  assert.equal(validateFixtureManifest(manifest, task), manifest);
+  assert.deepEqual(fixtureAnswerFiles(manifest), [
+    { language: "go", path: "generated/server.go" },
+    { language: "go", path: "generated/server_test.go" },
+  ]);
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      answer: {
+        ...manifest.answer,
+        files: [...manifest.answer.files].reverse(),
+      },
+    }, task),
+    /sorted and unique/u,
+  );
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      answer: {
+        ...manifest.answer,
+        files: [
+          manifest.answer.files[0],
+          { path: "../server_test.go", language: "go" },
+        ],
+      },
+    }, task),
+    /safe relative path/u,
+  );
 });
 
 test("fixture commands cannot invoke a shell", () => {
