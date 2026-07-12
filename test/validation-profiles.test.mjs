@@ -125,6 +125,11 @@ test("hosted validation profiles are pinned and immutable", () => {
     ["/usr/local/lib/python-3.12.11"],
   );
   assert.equal(
+    getValidationProfile("python3-stdlib").sandbox.resourceLimits.test
+      .addressSpaceBytes,
+    1024 * 1024 * 1024,
+  );
+  assert.equal(
     getValidationProfile("postgresql").testRuntime.commandContracts[0].id,
     "postgresql-script",
   );
