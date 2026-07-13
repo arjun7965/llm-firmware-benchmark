@@ -2252,7 +2252,7 @@
         "source": "npm",
         "lockfile": "validation-locks/react18-typescript-v4/package-lock.json",
         "sha256": "3a533326ea47c5beb1b7e92ec7e582d28768bf1151d600b0f370c14164690145",
-        "installRoot": "/usr/local/lib/react18-typescript-4",
+        "installRoot": "/usr/local/lib/react18-typescript-4/node_modules",
         "installSha256": "4d67cf9e535d332f5b53614485f8b7bc60e18908f4f3ea60399a6b66e5774c1e",
         "mountPath": "/workspace/node_modules"
       },
@@ -2263,7 +2263,7 @@
             "access": "read-only"
           },
           {
-            "path": "/usr/local/lib/react18-typescript-4",
+            "path": "/usr/local/lib/react18-typescript-4/node_modules",
             "access": "read-only"
           }
         ],

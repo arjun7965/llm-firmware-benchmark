@@ -580,7 +580,7 @@ test("sandbox mounts React dependencies for interaction tests", (t) => {
     JSON.stringify(manifest),
   );
 
-  const installRoot = "/usr/local/lib/react18-typescript-4";
+  const installRoot = "/usr/local/lib/react18-typescript-4/node_modules";
   const nodeRoot = "/usr/local/lib/node-22.16.0";
   const calls = [];
   const { report } = runFixtureValidation({

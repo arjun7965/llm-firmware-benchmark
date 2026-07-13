@@ -154,7 +154,7 @@ test("hosted validation profiles are pinned and immutable", () => {
     ),
     [
       "/usr/local/lib/node-22.16.0",
-      "/usr/local/lib/react18-typescript-4",
+      "/usr/local/lib/react18-typescript-4/node_modules",
     ],
   );
   assert.deepEqual(
