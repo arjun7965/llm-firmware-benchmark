@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/Autocomplete.tsx",
+  "mutations": [
+    {
+      "id": "exit-during-import",
+      "description": "Exit successfully while the candidate module is loading.",
+      "find": "import {\n",
+      "replace": "(globalThis as unknown as { process: { exit(code?: number): never } }).process.exit(0);\n\nimport {\n"
+    },
+    {
+      "id": "shorten-debounce",
+      "description": "Start searches one millisecond before the required debounce boundary.",
+      "find": "const debounceMilliseconds = 250;\n",
+      "replace": "const debounceMilliseconds = 249;\n"
+    },
+    {
+      "id": "retain-obsolete-debounce",
+      "description": "Leave an older debounce callback scheduled after the query changes.",
+      "find": "  function clearTimer(): void {\n    if (timer.current !== null) {\n      clearTimeout(timer.current);\n      timer.current = null;\n    }\n  }\n",
+      "replace": "  function clearTimer(): void {\n    timer.current = null;\n  }\n"
+    },
+    {
+      "id": "do-not-abort-obsolete-request",
+      "description": "Keep an in-flight request active after its effect becomes obsolete.",
+      "find": "  function abortRequest(request: AbortController | null): void {\n    request?.abort();\n  }\n",
+      "replace": "  function abortRequest(request: AbortController | null): void {\n    void request;\n  }\n"
+    },
+    {
+      "id": "allow-stale-success",
+      "description": "Publish an older successful response after a newer request starts.",
+      "find": "        (users) => {\n          if (\n            requestController?.signal.aborted ||\n            generation.current !== currentGeneration\n          ) {\n            return;\n          }\n",
+      "replace": "        (users) => {\n          if (false) {\n            return;\n          }\n"
+    },
+    {
+      "id": "search-after-selection",
+      "description": "Treat a selected name as a newly typed query and search again.",
+      "find": "    selectedQuery.current = user.name;\n",
+      "replace": "    selectedQuery.current = null;\n"
+    },
+    {
+      "id": "clamp-arrow-down",
+      "description": "Clamp ArrowDown at the last result instead of wrapping.",
+      "find": "      setActiveIndex((index) => (index + 1) % results.length);\n",
+      "replace": "      setActiveIndex((index) => Math.min(index + 1, results.length - 1));\n"
+    },
+    {
+      "id": "break-arrow-up",
+      "description": "Move ArrowUp to the first result instead of wrapping to the last.",
+      "find": "      setActiveIndex((index) =>\n        index < 0 ? results.length - 1 :\n          (index - 1 + results.length) % results.length);\n",
+      "replace": "      setActiveIndex(() => 0);\n"
+    },
+    {
+      "id": "disable-enter-selection",
+      "description": "Ignore Enter while an option is active.",
+      "find": "    } else if (event.key === \"Enter\" && activeIndex >= 0) {\n",
+      "replace": "    } else if (event.key === \"Unidentified\" && activeIndex >= 0) {\n"
+    },
+    {
+      "id": "disable-escape-dismissal",
+      "description": "Ignore Escape while the popup is open.",
+      "find": "    if (event.key === \"Escape\" && open) {\n",
+      "replace": "    if (event.key === \"Unidentified\" && open) {\n"
+    },
+    {
+      "id": "disable-mouse-selection",
+      "description": "Leave mouse clicks unable to select an option.",
+      "find": "              onClick={() => selectUser(user)}\n",
+      "replace": "              onClick={() => undefined}\n"
+    },
+    {
+      "id": "remove-controls-relationship",
+      "description": "Remove the combobox relationship to its popup.",
+      "find": "        aria-controls={popupId}\n",
+      "replace": "        aria-controls={undefined}\n"
+    },
+    {
+      "id": "remove-active-descendant",
+      "description": "Stop exposing the keyboard-active option to assistive technology.",
+      "find": "        aria-activedescendant={activeDescendant}\n",
+      "replace": "        aria-activedescendant={undefined}\n"
+    },
+    {
+      "id": "hide-loading-feedback",
+      "description": "Remove the accessible status role from loading feedback.",
+      "find": "        <div id={popupId} role=\"status\">Loading users…</div>\n",
+      "replace": "        <div id={popupId}>Loading users…</div>\n"
+    },
+    {
+      "id": "hide-empty-feedback",
+      "description": "Remove the accessible status role from empty feedback.",
+      "find": "        <div id={popupId} role=\"status\">No users found.</div>\n",
+      "replace": "        <div id={popupId}>No users found.</div>\n"
+    },
+    {
+      "id": "hide-error-feedback",
+      "description": "Remove the accessible alert role from error feedback.",
+      "find": "        <div id={popupId} role=\"alert\">Unable to load users.</div>\n",
+      "replace": "        <div id={popupId}>Unable to load users.</div>\n"
+    }
+  ]
+}

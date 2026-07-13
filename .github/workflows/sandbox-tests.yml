@@ -94,6 +94,13 @@ jobs:
             --no-fund \
             --bin-links=false
           rm validation-locks/node-typescript-v4/node_modules/.package-lock.json
+          npm ci \
+            --prefix validation-locks/react18-typescript-v4 \
+            --ignore-scripts \
+            --no-audit \
+            --no-fund \
+            --bin-links=false
+          rm validation-locks/react18-typescript-v4/node_modules/.package-lock.json
           sudo install -d /usr/local/lib/node-22.16.0
           sudo cp -a "${node_prefix}/." /usr/local/lib/node-22.16.0/
           sudo chown -R root:root /usr/local/lib/node-22.16.0
@@ -104,6 +111,12 @@ jobs:
             /usr/local/lib/node-typescript-4/
           sudo chown -R root:root /usr/local/lib/node-typescript-4
           sudo chmod -R go-w /usr/local/lib/node-typescript-4
+          sudo install -d /usr/local/lib/react18-typescript-4/node_modules
+          sudo cp -a \
+            validation-locks/react18-typescript-v4/node_modules/. \
+            /usr/local/lib/react18-typescript-4/node_modules/
+          sudo chown -R root:root /usr/local/lib/react18-typescript-4
+          sudo chmod -R go-w /usr/local/lib/react18-typescript-4
           sudo ln -sfn \
             /usr/local/lib/node-22.16.0/bin/node \
             /usr/local/bin/node
@@ -130,5 +143,6 @@ jobs:
           npm run fixture:go-shutdown:self-test
           npm run fixture:rust-decoder:self-test
           npm run fixture:property-tests:self-test
+          npm run fixture:frontend-autocomplete:self-test
           npm run fixture:typescript-cache:self-test
           npm run test:sandbox

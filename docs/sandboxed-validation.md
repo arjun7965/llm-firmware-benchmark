@@ -17,13 +17,15 @@ and normalized architecture against the concrete environments supported by
 the current logical validation-profile revision. Exactly one environment must
 match before the validator resolves or executes sandbox tools.
 
-The `node-typescript` profile pins a complete npm package-lock, a root-owned
-installation path, and a canonical SHA-256 over every installed directory and
-file. Before resolving tools or running Bubblewrap, the host runner rejects
-missing, writable, non-root-owned, symlinked, altered, or oversized package
-trees. The verified tree is mounted read-only at `/workspace/node_modules` in
-the compile namespace only; tests receive the compiled output and pinned Node
-runtime without access to the package tree.
+The `node-typescript` and `react18-typescript` profiles pin complete npm
+package-locks, root-owned installation paths, and canonical SHA-256 values over
+every installed directory and file. Before resolving tools or running
+Bubblewrap, the host runner rejects missing, writable, non-root-owned,
+symlinked, altered, or oversized package trees. Each verified tree is mounted
+read-only at `/workspace/node_modules` in the compile namespace. React
+interaction tests also receive their tree in the test namespace because React,
+jsdom, and Testing Library are runtime inputs; plain TypeScript cache tests
+receive only compiled output and pinned Node.
 Other dependency-bearing profiles remain disabled until they define an
 equivalent runtime attestation or use a digest-pinned image.
 
@@ -34,6 +36,8 @@ The `python3-pytest-hypothesis` profile additionally attests and mounts its
 hash-pinned package tree for both compilation and test execution, redirects
 Hypothesis storage to private `/tmp`, and permits only its fixed pytest command.
 `node-typescript` similarly mounts its pinned Node.js runtime for tests.
+`react18-typescript` mounts that Node runtime plus the attested React/jsdom
+tree and permits only its fixed compiled interaction-test command.
 `postgresql` declares runtime mounts and command prefixes but remains disabled
 until the runner implements its isolated service boundary.
 

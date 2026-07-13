@@ -124,6 +124,7 @@ test("hosted validation profiles are pinned and immutable", () => {
     4,
   );
   assert.equal(getValidationProfile("node-typescript").revision, 4);
+  assert.equal(getValidationProfile("react18-typescript").revision, 4);
   assert.equal(
     getValidationProfile("node-typescript").sandbox.resourceLimits.compile
       .addressSpaceBytes,
@@ -142,6 +143,29 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfile("node-typescript").testRuntime.mounts.map((mount) =>
       mount.path),
     ["/usr/local/lib/node-22.16.0"],
+  );
+  assert.equal(
+    getValidationProfile("react18-typescript").dependencyInstall.mountPath,
+    "/workspace/node_modules",
+  );
+  assert.equal(
+    getValidationProfile("react18-typescript").sandbox.resourceLimits.compile
+      .addressSpaceBytes,
+    2 * 1024 * 1024 * 1024,
+  );
+  assert.equal(
+    getValidationProfile("react18-typescript").sandbox.resourceLimits.test
+      .addressSpaceBytes,
+    2 * 1024 * 1024 * 1024,
+  );
+  assert.deepEqual(
+    getValidationProfile("react18-typescript").testRuntime.mounts.map(
+      (mount) => mount.path,
+    ),
+    [
+      "/usr/local/lib/node-22.16.0",
+      "/usr/local/lib/react18-typescript-4/node_modules",
+    ],
   );
   assert.deepEqual(
     getValidationProfile("python3-stdlib").testRuntime.mounts.map((mount) =>

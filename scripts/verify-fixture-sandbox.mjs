@@ -58,6 +58,12 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "frontend-autocomplete",
+    source: "reference/Autocomplete.tsx",
+    suite: "auxiliary",
+    artifactCount: 0,
+  },
+  {
     taskId: "go-graceful-shutdown",
     suite: "auxiliary",
   },

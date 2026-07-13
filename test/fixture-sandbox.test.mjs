@@ -509,6 +509,132 @@ test("sandbox attests and mounts pinned npm dependencies", (t) => {
   );
 });
 
+test("sandbox mounts React dependencies for interaction tests", (t) => {
+  const fixture = sandboxFixture(t);
+  const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
+  tasks[0].suite = "auxiliary";
+  tasks[0].validationProfile = "react18-typescript";
+  delete tasks[0].targetProfile;
+  writeFileSync(fixture.tasksPath, JSON.stringify(tasks));
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "Autocomplete.tsx"),
+    "export default function Autocomplete() { return null; }\n",
+  );
+
+  const compileArgv = [
+    "tsc",
+    "--strict",
+    "--target",
+    "ES2022",
+    "--module",
+    "CommonJS",
+    "--moduleResolution",
+    "Node",
+    "--lib",
+    "ES2022,DOM",
+    "--jsx",
+    "react-jsx",
+    "--esModuleInterop",
+    "--outDir",
+    "build/output",
+    "generated/Autocomplete.tsx",
+    "starter/autocomplete_api.ts",
+    "tests/public/test_autocomplete.tsx",
+  ];
+  const manifest = {
+    ...fixture.manifest,
+    targetProfile: null,
+    validationProfile: "react18-typescript",
+    language: "typescript-react",
+    toolVersionArgs: {
+      node: ["--version"],
+      tsc: ["--version"],
+    },
+    answer: {
+      format: "markdown-fenced-code",
+      language: "tsx",
+      output: "generated/Autocomplete.tsx",
+    },
+    commands: [
+      {
+        id: "typescript-react-compile",
+        phase: "compile",
+        argv: compileArgv,
+        requiredTools: ["tsc"],
+        timeoutMs: 60_000,
+      },
+      {
+        id: "public-interaction-tests",
+        phase: "test",
+        argv: [
+          "node",
+          "build/output/tests/public/test_autocomplete.js",
+        ],
+        requiredTools: ["node"],
+        timeoutMs: 30_000,
+      },
+    ],
+  };
+  writeFileSync(
+    join(fixture.fixtureRoot, "manifest.json"),
+    JSON.stringify(manifest),
+  );
+
+  const installRoot = "/usr/local/lib/react18-typescript-4/node_modules";
+  const nodeRoot = "/usr/local/lib/node-22.16.0";
+  const calls = [];
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: fixture.fixturesRoot,
+    tasksPath: fixture.tasksPath,
+    attestDependencyInstallationImpl: () => ({
+      installRoot,
+      mountPath: "/workspace/node_modules",
+      sha256: "0".repeat(64),
+    }),
+    resolveExecutableImpl: (name) => {
+      if (name === "node") return `${nodeRoot}/bin/node`;
+      if (name === "tsc") return `${installRoot}/typescript/bin/tsc`;
+      return fakeExecutable(name);
+    },
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    spawn: (command, args, options) => {
+      calls.push({ command, args, options });
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.equal(report.success, true);
+  assert.equal(report.validationProfileRevision, 4);
+  assert.deepEqual(report.artifacts, []);
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    const workspaceMount = call.args.findIndex((argument, index) =>
+      argument === "/workspace/node_modules" &&
+      call.args[index - 1] === installRoot);
+    assert.deepEqual(
+      call.args.slice(workspaceMount - 2, workspaceMount + 1),
+      ["--ro-bind", installRoot, "/workspace/node_modules"],
+    );
+  }
+  const runtimeMount = calls[1].args.indexOf(nodeRoot);
+  assert.deepEqual(
+    calls[1].args.slice(runtimeMount - 1, runtimeMount + 2),
+    ["--ro-bind", nodeRoot, nodeRoot],
+  );
+  assert.equal(
+    calls[1].args[calls[1].args.lastIndexOf("--") + 1],
+    `${nodeRoot}/bin/node`,
+  );
+});
+
 test("sandbox mounts and runs an approved interpreter test runtime", (t) => {
   const interpreterFixture = sandboxFixture(t);
   const interpreterTasks = JSON.parse(

@@ -99,9 +99,13 @@ record exact versions in validation reports.
 
 - [x] Validate `testing-property-based` with isolated pytest/Hypothesis
   dependencies and a controlled set of defective implementations.
-- [ ] Design browser-based React/TypeScript validation for
+- [x] Design browser-based React/TypeScript validation for
   `frontend-autocomplete`, including deterministic timers, accessibility, and
   interaction checks.
+  - [x] Define the component API and add the fixture, trusted
+    reference, deterministic public tests, and controlled mutations.
+  - [x] Attest and mount the pinned React/jsdom test dependency tree, calibrate
+    the mutations in the sandbox, and mark the fixture active.
 - [ ] Design isolated PostgreSQL validation for `backend-idempotency`,
   `postgres-pagination`, and `webhook-replay-security`, including migrations,
   concurrency, cleanup, and fixed server versions.

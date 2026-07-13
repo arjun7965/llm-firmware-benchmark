@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.4",
+  "taskId": "frontend-autocomplete",
+  "targetProfile": null,
+  "validationProfile": "react18-typescript",
+  "status": "active",
+  "language": "typescript-react",
+  "toolVersionArgs": {
+    "node": ["--version"],
+    "tsc": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "tsx",
+    "output": "generated/Autocomplete.tsx"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "typescript-react-compile",
+      "phase": "compile",
+      "argv": [
+        "tsc",
+        "--strict",
+        "--target",
+        "ES2022",
+        "--module",
+        "CommonJS",
+        "--moduleResolution",
+        "Node",
+        "--lib",
+        "ES2022,DOM",
+        "--jsx",
+        "react-jsx",
+        "--esModuleInterop",
+        "--outDir",
+        "build/output",
+        "generated/Autocomplete.tsx",
+        "starter/autocomplete_api.ts",
+        "tests/public/test_autocomplete.tsx"
+      ],
+      "requiredTools": ["tsc"],
+      "timeoutMs": 60000
+    },
+    {
+      "id": "public-interaction-tests",
+      "phase": "test",
+      "argv": ["node", "build/output/tests/public/test_autocomplete.js"],
+      "requiredTools": ["node"],
+      "timeoutMs": 30000
+    }
+  ]
+}
