@@ -66,6 +66,7 @@ jobs:
             "${install_root}/bin/pytest"
           sudo chown -R root:root "${install_root}"
           sudo chmod -R go-w "${install_root}"
+          sudo chmod 0755 "${install_root}"
           sudo ln -sfn "${install_root}/bin/pytest" /usr/local/bin/pytest
       - name: Install pinned root-owned Go toolchain
         run: |
