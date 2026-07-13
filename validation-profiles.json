@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.3",
+  "schemaVersion": "2.4",
   "environments": [
     {
       "id": "ubuntu-24-04-x86-64-c11-host",
@@ -1512,6 +1512,136 @@
         "source": "pypi",
         "lockfile": "validation-locks/python3-pytest-hypothesis-v3.lock.json",
         "sha256": "a0ee2b079cad8510389120a121881ed736c8fa3c80e7fbf473a40162f26732c2"
+      }
+    },
+    {
+      "id": "python3-pytest-hypothesis",
+      "revision": 4,
+      "dependencies": [
+        {
+          "source": "pypi",
+          "name": "attrs",
+          "version": "25.3.0"
+        },
+        {
+          "source": "pypi",
+          "name": "hypothesis",
+          "version": "6.135.9"
+        },
+        {
+          "source": "pypi",
+          "name": "iniconfig",
+          "version": "2.1.0"
+        },
+        {
+          "source": "pypi",
+          "name": "packaging",
+          "version": "25.0"
+        },
+        {
+          "source": "pypi",
+          "name": "pluggy",
+          "version": "1.6.0"
+        },
+        {
+          "source": "pypi",
+          "name": "pygments",
+          "version": "2.19.1"
+        },
+        {
+          "source": "pypi",
+          "name": "pytest",
+          "version": "8.4.0"
+        },
+        {
+          "source": "pypi",
+          "name": "sortedcontainers",
+          "version": "2.4.0"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-python3-pytest-hypothesis",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "pytest",
+        "python3"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 15,
+            "fileBytes": 16777216,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 20,
+            "fileBytes": 16777216,
+            "openFiles": 128
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "pypi",
+        "lockfile": "validation-locks/python3-pytest-hypothesis-v4/requirements.txt",
+        "sha256": "15447026578f55a9d7f0bc6a5287cf211ecd3cb63766bded4f4986914f9ef17f",
+        "installRoot": "/usr/local/lib/python3-pytest-hypothesis-4",
+        "installSha256": "1dbdc927861f2aecf74cc27027c929a1a0115ae3c42967276b90641082c549b5",
+        "mountPath": "/workspace/python-packages"
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/local/lib/python-3.12.11",
+            "access": "read-only"
+          },
+          {
+            "path": "/usr/local/lib/python3-pytest-hypothesis-4",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "python3-bytecode",
+            "phase": "compile",
+            "argvPrefix": [
+              "python3",
+              "-m",
+              "py_compile"
+            ],
+            "requiredTools": [
+              "python3"
+            ]
+          },
+          {
+            "id": "pytest-property-tests",
+            "phase": "test",
+            "argvPrefix": [
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "--hypothesis-seed=0",
+              "-c",
+              "tests/public/pytest.ini",
+              "generated/answer.py"
+            ],
+            "requiredTools": [
+              "pytest"
+            ]
+          }
+        ]
       }
     },
     {

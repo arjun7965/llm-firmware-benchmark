@@ -24,12 +24,15 @@ missing, writable, non-root-owned, symlinked, altered, or oversized package
 trees. The verified tree is mounted read-only at `/workspace/node_modules` in
 the compile namespace only; tests receive the compiled output and pinned Node
 runtime without access to the package tree.
-Other npm and PyPI profiles remain disabled until they define an equivalent
-runtime attestation or use a digest-pinned image.
+Other dependency-bearing profiles remain disabled until they define an
+equivalent runtime attestation or use a digest-pinned image.
 
 The test namespace executes either a native binary from `build/` or an exact
 profile-approved runtime command. `python3-stdlib` mounts its pinned,
 root-owned Python 3.12.11 runtime read-only and is enabled for active fixtures.
+The `python3-pytest-hypothesis` profile additionally attests and mounts its
+hash-pinned package tree for both compilation and test execution, redirects
+Hypothesis storage to private `/tmp`, and permits only its fixed pytest command.
 `node-typescript` similarly mounts its pinned Node.js runtime for tests.
 `postgresql` declares runtime mounts and command prefixes but remains disabled
 until the runner implements its isolated service boundary.

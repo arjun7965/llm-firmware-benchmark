@@ -133,6 +133,7 @@ function fakeToolVersion(command, args, options) {
     cc: "cc (Ubuntu) 13.3.0",
     node: "v22.16.0",
     prlimit: "prlimit from util-linux 2.39.3",
+    pytest: "pytest 8.4.0",
     python3: "Python 3.12.11",
     tsc: "Version 5.8.3",
   };
@@ -589,6 +590,127 @@ test("sandbox mounts and runs an approved interpreter test runtime", (t) => {
   assert.equal(
     calls[1].args[calls[1].args.lastIndexOf("--") + 1],
     pythonPath,
+  );
+});
+
+test("sandbox attests and mounts pytest and Hypothesis at test time", (t) => {
+  const propertyFixture = sandboxFixture(t);
+  const propertyTasks = JSON.parse(
+    readFileSync(propertyFixture.tasksPath, "utf8"),
+  );
+  propertyTasks[0].suite = "auxiliary";
+  propertyTasks[0].validationProfile = "python3-pytest-hypothesis";
+  delete propertyTasks[0].targetProfile;
+  writeFileSync(propertyFixture.tasksPath, JSON.stringify(propertyTasks));
+
+  const manifest = {
+    ...propertyFixture.manifest,
+    targetProfile: null,
+    validationProfile: "python3-pytest-hypothesis",
+    language: "python3",
+    toolVersionArgs: {
+      pytest: ["--version"],
+      python3: ["--version"],
+    },
+    answer: {
+      format: "markdown-fenced-code",
+      language: "python",
+      output: "generated/answer.c",
+    },
+    commands: [
+      {
+        id: "bytecode-check",
+        phase: "compile",
+        argv: [
+          "python3",
+          "-m",
+          "py_compile",
+          "generated/answer.c",
+          "starter/pathutil.py",
+        ],
+        requiredTools: ["python3"],
+        timeoutMs: 10_000,
+      },
+      {
+        id: "property-tests",
+        phase: "test",
+        argv: [
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "--hypothesis-seed=0",
+          "-c",
+          "tests/public/pytest.ini",
+          "generated/answer.py",
+        ],
+        requiredTools: ["pytest"],
+        timeoutMs: 20_000,
+      },
+    ],
+  };
+  writeFileSync(
+    join(propertyFixture.fixtureRoot, "manifest.json"),
+    JSON.stringify(manifest),
+  );
+
+  const installRoot = "/usr/local/lib/python3-pytest-hypothesis-4";
+  const pytestPath = `${installRoot}/bin/pytest`;
+  const pythonPath = "/usr/local/lib/python-3.12.11/bin/python3";
+  const calls = [];
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: propertyFixture.fixturesRoot,
+    tasksPath: propertyFixture.tasksPath,
+    attestDependencyInstallationImpl: () => ({
+      installRoot,
+      mountPath: "/workspace/python-packages",
+      sha256: "0".repeat(64),
+    }),
+    resolveExecutableImpl: (name) => {
+      if (name === "pytest") return pytestPath;
+      if (name === "python3") return pythonPath;
+      return fakeExecutable(name);
+    },
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    spawn: (command, args, options) => {
+      calls.push({ command, args, options });
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.equal(report.success, true);
+  assert.equal(report.validationProfileRevision, 4);
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    const mountPathIndex = call.args.findIndex((argument, index) =>
+      argument === "/workspace/python-packages" &&
+      call.args[index - 1] === installRoot);
+    assert.deepEqual(
+      call.args.slice(mountPathIndex - 2, mountPathIndex + 1),
+      ["--ro-bind", installRoot, "/workspace/python-packages"],
+    );
+  }
+  const hypothesisEnvironment = calls[1].args.indexOf(
+    "HYPOTHESIS_STORAGE_DIRECTORY",
+  );
+  assert.deepEqual(
+    calls[1].args.slice(
+      hypothesisEnvironment - 1,
+      hypothesisEnvironment + 2,
+    ),
+    ["--setenv", "HYPOTHESIS_STORAGE_DIRECTORY", "/tmp/hypothesis"],
+  );
+  assert.equal(
+    calls[1].args[calls[1].args.lastIndexOf("--") + 1],
+    pytestPath,
   );
 });
 

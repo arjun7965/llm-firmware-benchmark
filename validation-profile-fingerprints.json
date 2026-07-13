@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.3",
+  "schemaVersion": "2.4",
   "environments": {
     "ubuntu-24-04-x86-64-c11-host": {
       "1": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
@@ -60,7 +60,8 @@
     "python3-pytest-hypothesis": {
       "1": "374dcbf18d79fca3623a8ce4c22f2aec4b475632ee798df92d031370a1ba5a75",
       "2": "608745aa50a3e8736bafc2b5553ad637f29517e991f4891cd6071b4a86e929a3",
-      "3": "36521a4a42f94aabaf21acb8541b61f5610f73632983242aaf6ddac74021c6d9"
+      "3": "36521a4a42f94aabaf21acb8541b61f5610f73632983242aaf6ddac74021c6d9",
+      "4": "7f8e5f8660be211e4b3393ee726da079129c4c99f4eb8a9abfde1b56057dd0f1"
     },
     "python3-stdlib": {
       "1": "44780975a921637636a5545d4e8b76f7da9e56264beaa078ed2192a7a1c2b9b2",

@@ -64,7 +64,7 @@
     "category": "testing",
     "suite": "auxiliary",
     "validationProfile": "python3-pytest-hypothesis",
-    "prompt": "Create a rigorous test strategy for a function normalize_path(path: str) -> str used for virtual POSIX paths. Contract: output is absolute; collapse repeated slashes and '.'; resolve '..' without escaping root; preserve ordinary Unicode code points exactly; reject NUL; idempotent; no filesystem access. Provide an executable Python pytest + Hypothesis test module, including a clear reference oracle that is independent enough to catch implementation mistakes, targeted examples, metamorphic properties, and shrinking-friendly generators. Do not implement normalize_path itself; import it from pathutil. Keep the answer under 1400 words."
+    "prompt": "Create a rigorous test strategy for a function normalize_path(path: str) -> str used for virtual POSIX paths. Contract: output is absolute; collapse repeated slashes and '.'; resolve '..' without escaping root; preserve ordinary Unicode code points exactly; reject NUL; idempotent; no filesystem access. Return one fenced Python code block containing an executable pytest + Hypothesis test module, including a clear reference oracle that is independent enough to catch implementation mistakes, targeted examples, metamorphic properties, and shrinking-friendly generators. Do not implement normalize_path itself; import it from pathutil. Keep the answer under 1400 words."
   },
   {
     "id": "go-graceful-shutdown",

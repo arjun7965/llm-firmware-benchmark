@@ -26,7 +26,7 @@ code. Each task references a pinned hosted runtime contract from
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL server and client tools for schema, query, and `EXPLAIN` validation |
-| `testing-property-based` | Python 3, pytest, and Hypothesis |
+| `testing-property-based` | Python 3.12.11, pytest 8.4.0, Hypothesis 6.135.9, and the hash-pinned pure-Python transitive closure |
 | `go-graceful-shutdown` | Go 1.24.4; only the standard library is used |
 | `rust-stream-decoder` | Rust/Cargo 1.87.0 and GCC 13.3.0 as the system linker; standard library only |
 | `typescript-singleflight-cache` | Node.js 22.16.0, TypeScript 5.8.3, and `@types/node` 22.15.29 |
@@ -45,13 +45,14 @@ Profiles with npm or PyPI dependencies additionally pin committed lockfiles
 under `validation-locks/`; startup verifies their SHA-256 and package set.
 Those lockfiles are stored with LF line endings and normalized before hashing
 so Git checkout settings do not change the attested contract.
-The current sandbox runner verifies and mounts the `node-typescript`
-installation. Other dependency-bearing profiles remain rejected until they
-define equivalent installed-tree attestation or run in a digest-pinned image.
+The current sandbox runner verifies and mounts the `node-typescript` and
+`python3-pytest-hypothesis` installations. Other dependency-bearing profiles
+remain rejected until they define equivalent installed-tree attestation or run
+in a digest-pinned image.
 Dependency-free interpreter and service profiles may declare profile-approved
 test-runtime mounts and command prefixes. The runner supports the pinned
-`python3-stdlib` runtime; other service runtimes remain scaffold-only until
-their complete execution boundary is implemented.
+`python3-stdlib` runtime; service runtimes remain scaffold-only until their
+complete execution boundary is implemented.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free
@@ -136,6 +137,15 @@ trusted reference and all controlled mutations:
 
 ```bash
 npm run fixture:typescript-cache:self-test
+```
+
+The active property-based testing fixture requires the attested
+`python3-pytest-hypothesis` revision 4 package tree. Its calibration keeps the
+trusted test answer fixed and requires all controlled `pathutil` defects to be
+detected:
+
+```bash
+npm run fixture:property-tests:self-test
 ```
 
 Run all trusted C fixture suites with:

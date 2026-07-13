@@ -216,7 +216,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   };
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.3",
+      schemaVersion: "2.4",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, secondRevision],
     }),
@@ -224,7 +224,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.3",
+      schemaVersion: "2.4",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -238,7 +238,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.3",
+      schemaVersion: "2.4",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -252,7 +252,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.3",
+      schemaVersion: "2.4",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, structuredClone(validProfile)],
     }),
@@ -260,7 +260,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.3",
+      schemaVersion: "2.4",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...structuredClone(validProfile),
@@ -272,7 +272,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   const logicalProfile = structuredClone(getValidationProfile("c11-host"));
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.3",
+      schemaVersion: "2.4",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...logicalProfile,
@@ -335,22 +335,10 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
     () => validateValidationProfiles(unsafeInstallMount),
     /dependencyInstall mountPath is invalid/u,
   );
-  const unsupportedRuntimeSource = structuredClone(
-    validationProfilesDocument,
-  );
-  const runtimeInstall = unsupportedRuntimeSource.profiles
-    .find((profile) => profile.id === "node-typescript" &&
-      profile.revision === 4)
-    .dependencyInstall;
-  runtimeInstall.source = "pypi";
-  for (const dependency of unsupportedRuntimeSource.profiles
-    .find((profile) => profile.id === "node-typescript" &&
-      profile.revision === 4).dependencies) {
-    dependency.source = "pypi";
-  }
-  assert.throws(
-    () => validateValidationProfiles(unsupportedRuntimeSource),
-    /runtime dependency attestation source is unsupported/u,
+  assert.equal(
+    getValidationProfile("python3-pytest-hypothesis")
+      .dependencyInstall.source,
+    "pypi",
   );
   const unsafeRuntimeMount = structuredClone(validationProfilesDocument);
   unsafeRuntimeMount.profiles

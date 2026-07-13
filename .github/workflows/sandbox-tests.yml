@@ -20,6 +20,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: 3.12.11
+          pip-version: 25.1.1
       - uses: actions/setup-go@v5
         with:
           go-version: 1.24.4
@@ -47,6 +48,34 @@ jobs:
           sudo ln -sfn \
             /usr/local/lib/python-3.12.11/bin/python3 \
             /usr/local/bin/python3
+      - name: Install pinned root-owned pytest and Hypothesis packages
+        run: |
+          install_root="/usr/local/lib/python3-pytest-hypothesis-4"
+          install_staging="$(mktemp -d)"
+          python3 -m pip install \
+            --no-compile \
+            --no-deps \
+            --require-hashes \
+            --target "${install_staging}" \
+            --requirement \
+              validation-locks/python3-pytest-hypothesis-v4/requirements.txt
+          rm -rf "${install_staging}/bin"
+          for record in \
+            "${install_staging}/hypothesis-6.135.9.dist-info/RECORD" \
+            "${install_staging}/pygments-2.19.1.dist-info/RECORD" \
+            "${install_staging}/pytest-8.4.0.dist-info/RECORD"
+          do
+            sed -i '\|^\.\./\.\./bin/|d' "${record}"
+          done
+          sudo install -d "${install_root}/bin"
+          sudo cp -a "${install_staging}/." "${install_root}/"
+          sudo install -m 0755 \
+            validation-locks/python3-pytest-hypothesis-v4/pytest \
+            "${install_root}/bin/pytest"
+          sudo chown -R root:root "${install_root}"
+          sudo chmod -R go-w "${install_root}"
+          sudo chmod 0755 "${install_root}"
+          sudo ln -sfn "${install_root}/bin/pytest" /usr/local/bin/pytest
       - name: Install pinned root-owned Go toolchain
         run: |
           go_root="$(go env GOROOT)"
@@ -100,5 +129,6 @@ jobs:
           npm run fixture:concurrency:self-test
           npm run fixture:go-shutdown:self-test
           npm run fixture:rust-decoder:self-test
+          npm run fixture:property-tests:self-test
           npm run fixture:typescript-cache:self-test
           npm run test:sandbox

@@ -67,6 +67,12 @@ const references = [
     suite: "auxiliary",
   },
   {
+    taskId: "testing-property-based",
+    source: "reference/test_normalize_path.py",
+    suite: "auxiliary",
+    artifactCount: 0,
+  },
+  {
     taskId: "typescript-singleflight-cache",
     source: "reference/cache.ts",
     suite: "auxiliary",

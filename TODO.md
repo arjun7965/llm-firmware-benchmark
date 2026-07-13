@@ -97,7 +97,7 @@ record exact versions in validation reports.
 
 ### Priority 3 — Specialized Validation Environments
 
-- [ ] Validate `testing-property-based` with isolated pytest/Hypothesis
+- [x] Validate `testing-property-based` with isolated pytest/Hypothesis
   dependencies and a controlled set of defective implementations.
 - [ ] Design browser-based React/TypeScript validation for
   `frontend-autocomplete`, including deterministic timers, accessibility, and
@@ -162,6 +162,11 @@ record exact versions in validation reports.
   dependency, and license separately.
 - [x] Add optional cross-compilation checks for representative ARM and RISC-V
   targets while keeping the default test suite dependency-free.
+- [ ] Implement digest-pinned OCI validation as a portable alternative to the
+  host Bubblewrap runner. Require a rootless runtime, reviewed reproducible
+  image builds, verified image digests, read-only fixture mounts, no network,
+  dropped capabilities, resource limits, and image metadata in validation
+  reports.
 - [x] Populate fixture starter code, public tests, mocks, extraction helpers,
   and executable validation commands.
   - [x] Add a stable API, trusted reference, and deterministic public self-test

@@ -33,7 +33,7 @@ implemented and calibrated.
 | `firmware-state-machine` | Single file | Single file | One implementation unit; HAL, mocks, and tests are supplied |
 | `frontend-autocomplete` | Rubric-only | Single file | One component module; interaction tests are validator-owned |
 | `concurrency-debug` | Single file | Single file | One repaired Python module; race tests are validator-owned |
-| `testing-property-based` | Rubric-only | Single file | One property-test module importing the supplied implementation |
+| `testing-property-based` | Single file | Single file | One property-test module importing the supplied implementation |
 | `go-graceful-shutdown` | Multi-file | Multi-file | Runnable server code and Go-discoverable `*_test.go` tests require distinct files |
 | `rust-stream-decoder` | Single file | Single file | One Rust library module; unit tests are validator-owned |
 | `typescript-singleflight-cache` | Single file | Single file | One cache module; fake-clock tests are validator-owned |
