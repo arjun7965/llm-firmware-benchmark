@@ -60,6 +60,13 @@ jobs:
             --requirement \
               validation-locks/python3-pytest-hypothesis-v4/requirements.txt
           rm -rf "${install_staging}/bin"
+          for record in \
+            "${install_staging}/hypothesis-6.135.9.dist-info/RECORD" \
+            "${install_staging}/pygments-2.19.1.dist-info/RECORD" \
+            "${install_staging}/pytest-8.4.0.dist-info/RECORD"
+          do
+            sed -i '\|^\.\./\.\./bin/|d' "${record}"
+          done
           sudo install -d "${install_root}/bin"
           sudo cp -a "${install_staging}/." "${install_root}/"
           sudo install -m 0755 \
