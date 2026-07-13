@@ -61,7 +61,7 @@ jobs:
           rm -rf "${install_staging}/bin"
           sudo install -d "${install_root}/bin"
           sudo cp -a "${install_staging}/." "${install_root}/"
-          sudo install -m 0555 \
+          sudo install -m 0755 \
             validation-locks/python3-pytest-hypothesis-v4/pytest \
             "${install_root}/bin/pytest"
           sudo chown -R root:root "${install_root}"
