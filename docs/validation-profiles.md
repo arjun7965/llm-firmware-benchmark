@@ -40,7 +40,8 @@ revision 4 pins the relocatable runtime tree mounted by the runner, and
 `go-std` revision 4 raises its bounded temporary filesystem to 256 MiB so Go
 1.24.4 can compile the standard library inside the sandbox.
 `react18-typescript` revision 4 pins the complete npm package-lock and installed
-tree and mounts that tree for both TypeScript compilation and jsdom tests.
+tree, mounts that tree for both TypeScript compilation and jsdom tests, and
+provides each Node.js phase a 2 GiB virtual-address limit.
 
 ## Profile Registry
 

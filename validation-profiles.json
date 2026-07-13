@@ -2234,13 +2234,13 @@
         "temporaryDirectoryBytes": 33554432,
         "resourceLimits": {
           "compile": {
-            "addressSpaceBytes": 1073741824,
+            "addressSpaceBytes": 2147483648,
             "cpuSeconds": 60,
             "fileBytes": 67108864,
             "openFiles": 256
           },
           "test": {
-            "addressSpaceBytes": 1073741824,
+            "addressSpaceBytes": 2147483648,
             "cpuSeconds": 30,
             "fileBytes": 33554432,
             "openFiles": 256

@@ -148,6 +148,16 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfile("react18-typescript").dependencyInstall.mountPath,
     "/workspace/node_modules",
   );
+  assert.equal(
+    getValidationProfile("react18-typescript").sandbox.resourceLimits.compile
+      .addressSpaceBytes,
+    2 * 1024 * 1024 * 1024,
+  );
+  assert.equal(
+    getValidationProfile("react18-typescript").sandbox.resourceLimits.test
+      .addressSpaceBytes,
+    2 * 1024 * 1024 * 1024,
+  );
   assert.deepEqual(
     getValidationProfile("react18-typescript").testRuntime.mounts.map(
       (mount) => mount.path,
