@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/pathutil.py",
+  "answerSource": "reference/test_normalize_path.py",
+  "stagedPath": "starter/pathutil.py",
+  "mutations": [
+    {
+      "id": "accept-nul",
+      "description": "Accept NUL characters as ordinary path content.",
+      "find": "    if \"\\0\" in path:\n        raise ValueError(\"paths cannot contain NUL\")\n",
+      "replace": "    if False:\n        raise ValueError(\"paths cannot contain NUL\")\n"
+    },
+    {
+      "id": "preserve-empty-components",
+      "description": "Preserve empty components created by repeated slashes.",
+      "find": "        if component == \"\" or component == \".\":\n            continue\n",
+      "replace": "        if component == \".\":\n            continue\n"
+    },
+    {
+      "id": "preserve-dot-components",
+      "description": "Preserve dot components instead of collapsing them.",
+      "find": "        if component == \"\" or component == \".\":\n            continue\n",
+      "replace": "        if component == \"\":\n            continue\n"
+    },
+    {
+      "id": "parent-does-not-pop",
+      "description": "Ignore parent components even when a component can be removed.",
+      "find": "            if components:\n                components.pop()\n",
+      "replace": "            if components:\n                pass\n"
+    },
+    {
+      "id": "parent-escapes-root",
+      "description": "Preserve parent components that would escape the virtual root.",
+      "find": "            if components:\n                components.pop()\n            continue\n",
+      "replace": "            if components:\n                components.pop()\n            else:\n                components.append(\"..\")\n            continue\n"
+    },
+    {
+      "id": "return-relative-path",
+      "description": "Return nonempty normalized paths without a leading slash.",
+      "find": "    return \"/\" + \"/\".join(components)\n",
+      "replace": "    return \"/\".join(components)\n"
+    },
+    {
+      "id": "append-trailing-slash",
+      "description": "Append a trailing slash to every non-root result.",
+      "find": "    return \"/\" + \"/\".join(components)\n",
+      "replace": "    return \"/\" + \"/\".join(components) + (\"/\" if components else \"\")\n"
+    },
+    {
+      "id": "reverse-components",
+      "description": "Return ordinary path components in reverse order.",
+      "find": "    return \"/\" + \"/\".join(components)\n",
+      "replace": "    return \"/\" + \"/\".join(reversed(components))\n"
+    },
+    {
+      "id": "drop-last-component",
+      "description": "Drop the final ordinary component from nonempty paths.",
+      "find": "    return \"/\" + \"/\".join(components)\n",
+      "replace": "    return \"/\" + \"/\".join(components[:-1])\n"
+    },
+    {
+      "id": "ascii-only-components",
+      "description": "Discard components containing non-ASCII characters.",
+      "find": "        components.append(component)\n",
+      "replace": "        if component.isascii():\n            components.append(component)\n"
+    },
+    {
+      "id": "normalize-unicode",
+      "description": "Normalize Unicode components instead of preserving code points.",
+      "find": "        components.append(component)\n",
+      "replace": "        import unicodedata\n        components.append(unicodedata.normalize(\"NFC\", component))\n"
+    },
+    {
+      "id": "resolve-one-parent-only",
+      "description": "Resolve only the first parent component in a path.",
+      "find": "    components = []\n    for component in path.split(\"/\"):\n",
+      "replace": "    components = []\n    resolved_parent = False\n    for component in path.split(\"/\"):\n        if component == \"..\" and resolved_parent:\n            continue\n        if component == \"..\":\n            resolved_parent = True\n"
+    }
+  ]
+}

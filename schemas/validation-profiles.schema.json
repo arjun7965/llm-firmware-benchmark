@@ -7,7 +7,7 @@
   "required": ["schemaVersion", "environments", "profiles"],
   "properties": {
     "schemaVersion": {
-      "const": "2.3"
+      "const": "2.4"
     },
     "environments": {
       "type": "array",
@@ -217,7 +217,7 @@
           ],
           "properties": {
             "kind": { "const": "lockfile" },
-            "source": { "const": "npm" },
+            "source": { "enum": ["npm", "pypi"] },
             "lockfile": {
               "type": "string",
               "pattern": "^validation-locks/[A-Za-z0-9._/-]+$"

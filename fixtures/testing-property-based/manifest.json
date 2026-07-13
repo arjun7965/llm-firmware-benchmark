@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.4",
+  "taskId": "testing-property-based",
+  "targetProfile": null,
+  "validationProfile": "python3-pytest-hypothesis",
+  "status": "active",
+  "language": "python3",
+  "toolVersionArgs": {
+    "pytest": ["--version"],
+    "python3": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "python",
+    "output": "generated/answer.py"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "bytecode-check",
+      "phase": "compile",
+      "argv": [
+        "python3",
+        "-m",
+        "py_compile",
+        "generated/answer.py",
+        "starter/pathutil.py"
+      ],
+      "requiredTools": ["python3"],
+      "timeoutMs": 10000
+    },
+    {
+      "id": "property-tests",
+      "phase": "test",
+      "argv": [
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--hypothesis-seed=0",
+        "-c",
+        "tests/public/pytest.ini",
+        "generated/answer.py"
+      ],
+      "requiredTools": ["pytest"],
+      "timeoutMs": 20000
+    }
+  ]
+}

@@ -58,16 +58,22 @@ initialization cannot exit successfully before the validator suite runs. The
 bundle preserves and separately runs the model-authored Go tests only after the
 public lifecycle suite succeeds.
 
+The active `testing-property-based` fixture supplies `pathutil.normalize_path`
+and validates the model-authored pytest/Hypothesis module. Calibration keeps a
+trusted test answer fixed while staging twelve controlled defective
+implementations, exercising the mutation runner's supplied-input mode.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
-`node-typescript` profile. Other dependency-bearing and service fixtures must
-remain scaffolds until their exact packages and test runtimes can be verified,
-mounted, and executed in the test namespace.
+`node-typescript` and `python3-pytest-hypothesis` profiles. Other
+dependency-bearing and service fixtures must remain scaffolds until their exact
+packages and test runtimes can be verified, mounted, and executed in the test
+namespace.
 
 Fixture manifests use schema version 1.4; public result records remain at
-version 1.3. Validation reports use version 1.6, and mutation catalogs remain
-at version 1.2.
+version 1.3. Validation reports use version 1.6, and mutation catalogs use
+version 1.3.
 
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture
@@ -75,7 +81,9 @@ metadata only; it does not execute compiler commands.
 
 `mutations.json` follows `schemas/fixture-mutations.schema.json`. Every active
 fixture supplies exact, single-match source substitutions derived from its
-trusted reference. `npm run test:mutations` stages each candidate and its
+trusted reference. Catalogs may mutate the answer directly or hold a trusted
+answer fixed while mutating a declared supplied starter/mock input.
+`npm run test:mutations` stages each candidate and its
 validator-owned inputs in a temporary directory, rewrites declared `build/`
 artifacts when present, then runs the manifest's compile and test argv without
 a shell. Each mutant must compile for that fixture's language and then fail

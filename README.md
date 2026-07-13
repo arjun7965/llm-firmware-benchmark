@@ -1,8 +1,8 @@
 # LLM Firmware Benchmark
 
-[![84 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=84%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![95 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=95%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
-[![4 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=4%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
+[![9 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=9%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
 A dependency-free Node.js harness for evaluating language models on firmware
 and embedded coding tasks. Deterministic host fixtures, mutation tests,
@@ -201,6 +201,11 @@ The active Go graceful-shutdown fixture is calibrated with
 `npm run fixture:go-shutdown:self-test`. Its two-file bundle compiles the
 candidate implementation and focused tests under pinned Go 1.24.4 while an
 independent public suite remains the authoritative validation gate.
+
+The active property-based testing fixture is calibrated with
+`npm run fixture:property-tests:self-test`. It runs a model-authored test module
+against the supplied `pathutil` implementation using the attested Python
+3.12.11, pytest 8.4.0, and Hypothesis 6.135.9 environment.
 
 On Linux, validate extracted code in separate compile and test sandboxes:
 

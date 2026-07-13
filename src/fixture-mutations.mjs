@@ -79,12 +79,21 @@ export function loadMutationCatalog(fixtureRoot, manifest) {
   const catalogPath = join(fixtureRoot, "mutations.json");
   requireRegularFile(catalogPath, `${manifest.taskId} mutation catalog`);
   const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
+  const suppliedInputMode = Object.hasOwn(catalog, "answerSource");
   requireExactKeys(
     catalog,
-    ["mutations", "schemaVersion", "source"],
+    suppliedInputMode
+      ? [
+        "answerSource",
+        "mutations",
+        "schemaVersion",
+        "source",
+        "stagedPath",
+      ]
+      : ["mutations", "schemaVersion", "source"],
     `${manifest.taskId} mutation catalog`,
   );
-  if (catalog.schemaVersion !== "1.2") {
+  if (!["1.2", "1.3"].includes(catalog.schemaVersion)) {
     throw new TypeError(`${manifest.taskId} mutation schema is unsupported`);
   }
   requireSafeRelativePath(
@@ -99,6 +108,34 @@ export function loadMutationCatalog(fixtureRoot, manifest) {
   const sourcePath = resolve(fixtureRoot, catalog.source);
   requireContained(fixtureRoot, sourcePath, "mutation source");
   requireRegularFile(sourcePath, `${manifest.taskId} mutation source`);
+  let answerSourcePath = null;
+  if (suppliedInputMode) {
+    requireSafeRelativePath(
+      catalog.answerSource,
+      `${manifest.taskId} mutation answerSource`,
+    );
+    if (!catalog.answerSource.startsWith(`${manifest.paths.reference}/`)) {
+      throw new TypeError(
+        `${manifest.taskId} mutation answerSource must be under reference/`,
+      );
+    }
+    answerSourcePath = resolve(fixtureRoot, catalog.answerSource);
+    requireContained(fixtureRoot, answerSourcePath, "mutation answerSource");
+    requireRegularFile(
+      answerSourcePath,
+      `${manifest.taskId} mutation answerSource`,
+    );
+    requireSafeRelativePath(
+      catalog.stagedPath,
+      `${manifest.taskId} mutation stagedPath`,
+    );
+    if (![manifest.paths.starter, manifest.paths.mocks].some((root) =>
+      catalog.stagedPath.startsWith(`${root}/`))) {
+      throw new TypeError(
+        `${manifest.taskId} mutation stagedPath must be under starter/ or mocks/`,
+      );
+    }
+  }
   if (!Array.isArray(catalog.mutations) || catalog.mutations.length === 0) {
     throw new TypeError(`${manifest.taskId} mutations must be non-empty`);
   }
@@ -132,6 +169,7 @@ export function loadMutationCatalog(fixtureRoot, manifest) {
     mutationIds.add(mutation.id);
   }
   return {
+    answerSourcePath,
     catalog,
     sourcePath,
   };
@@ -341,6 +379,8 @@ export function createMutationCommandPlan({
 }
 
 function stageMutationCandidate({
+  answerSourcePath,
+  catalog,
   candidateRoot,
   fixtureRoot,
   manifest,
@@ -357,7 +397,18 @@ function stageMutationCandidate({
   const answerOutputs = answerOutputPaths(manifest);
   const candidatePath = join(candidateRoot, answerOutputs[0]);
   mkdirSync(dirname(candidatePath), { recursive: true });
-  writeFileSync(candidatePath, source, { encoding: "utf8", mode: 0o600 });
+  if (answerSourcePath !== null) {
+    const stagedPath = join(candidateRoot, catalog.stagedPath);
+    mkdirSync(dirname(stagedPath), { recursive: true });
+    writeFileSync(stagedPath, source, { encoding: "utf8", mode: 0o600 });
+    writeFileSync(
+      candidatePath,
+      readFileSync(answerSourcePath),
+      { mode: 0o600 },
+    );
+  } else {
+    writeFileSync(candidatePath, source, { encoding: "utf8", mode: 0o600 });
+  }
   if (manifest.answer.format === "markdown-file-bundle") {
     for (let index = 1; index < answerOutputs.length; index++) {
       const outputPath = join(candidateRoot, answerOutputs[index]);
@@ -487,7 +538,7 @@ export function runFixtureMutationTests({
       }
       mutationFixtures++;
 
-      const { catalog, sourcePath } = loadMutationCatalog(
+      const { answerSourcePath, catalog, sourcePath } = loadMutationCatalog(
         fixtureRoot,
         manifest,
       );
@@ -499,6 +550,8 @@ export function runFixtureMutationTests({
       const baselineRoot = join(fixtureTemporaryRoot, "_baseline");
       mkdirSync(baselineRoot);
       const baselinePath = stageMutationCandidate({
+        answerSourcePath,
+        catalog,
         candidateRoot: baselineRoot,
         fixtureRoot,
         manifest,
@@ -534,6 +587,8 @@ export function runFixtureMutationTests({
         const candidateRoot = join(fixtureTemporaryRoot, mutation.id);
         mkdirSync(candidateRoot);
         const candidatePath = stageMutationCandidate({
+          answerSourcePath,
+          catalog,
           candidateRoot,
           fixtureRoot,
           manifest,

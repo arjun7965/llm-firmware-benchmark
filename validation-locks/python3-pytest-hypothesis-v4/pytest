@@ -1,0 +1,8 @@
+#!/usr/local/lib/python-3.12.11/bin/python3
+import sys
+
+sys.path.insert(0, "/usr/local/lib/python3-pytest-hypothesis-4")
+
+from pytest import console_main
+
+raise SystemExit(console_main())

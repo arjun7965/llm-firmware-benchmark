@@ -428,7 +428,7 @@ export function buildSandboxInvocation({
         ]
         : []),
     ]
-    : manifest.validationProfile === "python3-stdlib" &&
+    : manifest.validationProfile.startsWith("python3-") &&
         command.phase === "compile"
       ? [
         "--setenv",
@@ -436,7 +436,22 @@ export function buildSandboxInvocation({
         `${sandboxRoot}/build/pycache`,
       ]
       : [];
-  const sandboxPath = manifest.validationProfile === "node-typescript"
+  const dependencyEnvironment =
+    manifest.validationProfile === "python3-pytest-hypothesis"
+      ? [
+        "--setenv",
+        "HYPOTHESIS_STORAGE_DIRECTORY",
+        "/tmp/hypothesis",
+        "--setenv",
+        "PYTHONPATH",
+        validationProfile.dependencyInstall.mountPath,
+        "--setenv",
+        "PYTHONDONTWRITEBYTECODE",
+        "1",
+      ]
+      : [];
+  const sandboxPath = ["node-typescript", "python3-pytest-hypothesis"]
+    .includes(manifest.validationProfile)
     ? "/usr/local/bin:/usr/bin:/bin"
     : "/usr/bin:/bin";
   const limits = sandbox.resourceLimits[command.phase];
@@ -467,6 +482,7 @@ export function buildSandboxInvocation({
     "TMPDIR",
     "/tmp",
     ...profileEnvironment,
+    ...dependencyEnvironment,
     "--size",
     String(sandbox.rootTmpfsBytes),
     "--tmpfs",
@@ -490,7 +506,13 @@ export function buildSandboxInvocation({
   }
 
   const dependencyInstall = validationProfile.dependencyInstall;
-  if (command.phase === "compile" && dependencyInstall?.installRoot) {
+  if (
+    dependencyInstall?.installRoot &&
+    (
+      command.phase === "compile" ||
+      manifest.validationProfile === "python3-pytest-hypothesis"
+    )
+  ) {
     sandboxArgs.push(
       "--ro-bind",
       dependencyInstall.installRoot,

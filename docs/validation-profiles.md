@@ -56,7 +56,7 @@ policies require no network and an isolated filesystem.
 | `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | `tsc` compile and Node.js public-test commands |
 | `node-typescript-postgresql` | Node.js 22.16.0, TypeScript 5.8.3, PostgreSQL 16.9 | Express, `pg`, TypeScript, and types | Not active until dependencies and service runtime are mounted |
 | `postgresql` | PostgreSQL server and client 16.9 | None | `psql -v ON_ERROR_STOP=1 -f ...` with PostgreSQL runtime mounts |
-| `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | pytest 8.4.0, Hypothesis 6.135.9 | Not active until dependencies are mounted |
+| `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | Hash-pinned pytest, Hypothesis, and pure-Python transitive closure | Pytest property-test modules with deterministic Hypothesis settings |
 | `python3-stdlib` | Python 3.12.11 | None; standard library only | `python3 -m py_compile ...` and `python3 -m unittest ...` with Python runtime mounts |
 | `react18-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | React 18.3.1 and the exact test stack in the registry | Not active until dependencies are mounted |
 | `stable-rust` | Rust/Cargo 1.87.0 and GCC/`cc` 13.3.0 | None; standard library only | Native `build/` executable |
@@ -69,6 +69,10 @@ resource limits. Dependency-bearing current profiles also record a
 The runtime-enabled `node-typescript` profile additionally uses an npm
 package-lock with registry integrity values for the complete transitive
 closure and pins the canonical hash of its installed tree.
+The runtime-enabled `python3-pytest-hypothesis` revision 4 profile uses a
+hash-checking pip requirements lock and pins its complete installed tree. The
+runner mounts that tree, the pytest launcher, and the Python runtime read-only;
+Hypothesis state is redirected to the sandbox's private temporary filesystem.
 Git attributes force those lockfiles to LF line endings, and the verifier
 normalizes CRLF to LF before hashing so platform checkout settings do not
 change the contract.
@@ -115,10 +119,10 @@ contents, modes, paths, and directory layout. Dependency profiles without
 these runtime fields continue to fail closed before tools are resolved or
 executed. Standard-library-only profiles are not automatically eligible: the
 test sandbox supports native binaries produced by `c11-host`, `go-std`, and
-`stable-rust`, plus approved interpreter commands for `python3-stdlib` and
-`node-typescript`. The registry also records PostgreSQL runtime mounts and
-command prefixes, but the runner fails closed for that service profile until
-its isolated server boundary is implemented.
+`stable-rust`, plus approved interpreter commands for `python3-stdlib`,
+`python3-pytest-hypothesis`, and `node-typescript`. The registry also records
+PostgreSQL runtime mounts and command prefixes, but the runner fails closed for
+that service profile until its isolated server boundary is implemented.
 
 ## Task Mapping
 

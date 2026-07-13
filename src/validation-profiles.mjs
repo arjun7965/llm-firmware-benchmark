@@ -262,12 +262,6 @@ function validateDependencyInstall(profile, environmentRevisionMap) {
       fingerprintPattern,
     );
     if (runtimeAttested) {
-      if (install.source !== "npm") {
-        throw new TypeError(
-          `validation profile ${profile.id} runtime dependency ` +
-          "attestation source is unsupported",
-        );
-      }
       requireString(
         install.installRoot,
         `validation profile ${profile.id} dependencyInstall installRoot`,
@@ -736,7 +730,7 @@ export function validateValidationProfiles(document) {
     ["environments", "profiles", "schemaVersion"],
     "validation profiles document",
   );
-  if (document.schemaVersion !== "2.3") {
+  if (document.schemaVersion !== "2.4") {
     throw new TypeError("unsupported validation profiles schemaVersion");
   }
   if (
@@ -873,7 +867,7 @@ export function validateValidationProfileFingerprints(
     ["environments", "profiles", "schemaVersion"],
     "validation profile fingerprints document",
   );
-  if (fingerprintsDocument.schemaVersion !== "2.3") {
+  if (fingerprintsDocument.schemaVersion !== "2.4") {
     throw new TypeError(
       "unsupported validation profile fingerprints schemaVersion",
     );
@@ -973,6 +967,39 @@ function validateNpmPackageLock(lockfile, profile) {
       installedPackage.integrity,
       `validation profile ${profile.id} npm dependency lockfile package integrity`,
       /^sha512-[A-Za-z0-9+/]+={0,2}$/u,
+    );
+  }
+}
+
+function validatePypiRequirementsLock(content, profile) {
+  const dependencies = normalizeDependencyLockfileContent(content)
+    .split("\n")
+    .filter((line) => line !== "")
+    .map((line) => {
+      const match = line.match(
+        /^([a-z0-9][a-z0-9._-]*)==([0-9][A-Za-z0-9.+-]*) --hash=sha256:([a-f0-9]{64})$/u,
+      );
+      if (!match) {
+        throw new TypeError(
+          `validation profile ${profile.id} PyPI dependency lockfile ` +
+          "entry is invalid",
+        );
+      }
+      return { name: match[1], version: match[2] };
+    });
+  requireSortedUnique(
+    dependencies,
+    `validation profile ${profile.id} PyPI dependency lockfile dependencies`,
+    (dependency) => dependency.name,
+  );
+  const expected = profile.dependencies.map((dependency) => ({
+    name: dependency.name,
+    version: dependency.version,
+  }));
+  if (JSON.stringify(dependencies) !== JSON.stringify(expected)) {
+    throw new TypeError(
+      `validation profile ${profile.id} PyPI dependency lockfile ` +
+      "dependencies do not match",
     );
   }
 }
@@ -1087,11 +1114,18 @@ export function validateValidationProfileLockfiles(
         "does not match",
       );
     }
-    validateDependencyLockfile(
-      JSON.parse(normalizeDependencyLockfileContent(content)),
-      profile,
-      profile.dependencyInstall.source,
-    );
+    if (
+      profile.dependencyInstall.source === "pypi" &&
+      !normalizeDependencyLockfileContent(content).trimStart().startsWith("{")
+    ) {
+      validatePypiRequirementsLock(content, profile);
+    } else {
+      validateDependencyLockfile(
+        JSON.parse(normalizeDependencyLockfileContent(content)),
+        profile,
+        profile.dependencyInstall.source,
+      );
+    }
   }
   return profilesDocument;
 }
@@ -1127,6 +1161,7 @@ export const sandboxRunnableValidationProfileIds = Object.freeze([
   "c11-host",
   "go-std",
   "node-typescript",
+  "python3-pytest-hypothesis",
   "python3-stdlib",
   "stable-rust",
 ]);

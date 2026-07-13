@@ -32,3 +32,6 @@ models/
 *.ckpt
 *.pt
 *.pth
+.hypothesis/
+__pycache__/
+*.pyc

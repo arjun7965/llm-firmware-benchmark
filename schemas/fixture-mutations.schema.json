@@ -3,18 +3,22 @@
   "title": "Fixture Mutation Catalog",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schemaVersion",
-    "source",
-    "mutations"
-  ],
+  "required": ["schemaVersion", "source", "mutations"],
   "properties": {
     "schemaVersion": {
-      "const": "1.2"
+      "const": "1.3"
     },
     "source": {
       "type": "string",
       "pattern": "^reference/[A-Za-z0-9._/-]+$"
+    },
+    "answerSource": {
+      "type": "string",
+      "pattern": "^reference/[A-Za-z0-9._/-]+$"
+    },
+    "stagedPath": {
+      "type": "string",
+      "pattern": "^(?:starter|mocks)/[A-Za-z0-9._/-]+$"
     },
     "mutations": {
       "type": "array",
@@ -47,5 +51,15 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": { "required": ["answerSource"] },
+      "then": { "required": ["stagedPath"] }
+    },
+    {
+      "if": { "required": ["stagedPath"] },
+      "then": { "required": ["answerSource"] }
+    }
+  ]
 }

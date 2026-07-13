@@ -15,3 +15,13 @@ with an independent oracle and useful generators.
 
 Reusing `normalize_path` inside the oracle defeats independence and loses the
 oracle criterion.
+
+## Executable Calibration
+
+The active fixture supplies `pathutil.normalize_path` and executes the returned
+test module under the pinned `python3-pytest-hypothesis` profile. Its trusted
+answer must reject twelve controlled defective implementations:
+
+```bash
+npm run fixture:property-tests:self-test
+```
