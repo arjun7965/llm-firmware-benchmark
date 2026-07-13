@@ -1163,6 +1163,7 @@ export const sandboxRunnableValidationProfileIds = Object.freeze([
   "node-typescript",
   "python3-pytest-hypothesis",
   "python3-stdlib",
+  "react18-typescript",
   "stable-rust",
 ]);
 const sandboxRunnableValidationProfileSet = new Set(

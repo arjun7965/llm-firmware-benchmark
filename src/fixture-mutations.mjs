@@ -8,6 +8,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -24,6 +25,8 @@ import {
   validateFixtureRepository,
 } from "./fixtures.mjs";
 import { loadTasks } from "./harness.mjs";
+import { attestDependencyInstallation } from "./dependency-installation.mjs";
+import { getValidationProfile } from "./validation-profiles.mjs";
 
 const maximumOutputBytes = 1024 * 1024;
 const identifierPattern = /^[a-z][a-z0-9-]*$/u;
@@ -382,6 +385,7 @@ function stageMutationCandidate({
   answerSourcePath,
   catalog,
   candidateRoot,
+  dependencyInstallRoot,
   fixtureRoot,
   manifest,
   source,
@@ -393,6 +397,13 @@ function stageMutationCandidate({
     cpSync(join(fixtureRoot, relativePath), destination, {
       recursive: true,
     });
+  }
+  if (dependencyInstallRoot !== null) {
+    symlinkSync(
+      dependencyInstallRoot,
+      join(candidateRoot, "node_modules"),
+      "dir",
+    );
   }
   const answerOutputs = answerOutputPaths(manifest);
   const candidatePath = join(candidateRoot, answerOutputs[0]);
@@ -463,6 +474,7 @@ function runCandidate({
 }
 
 export function runFixtureMutationTests({
+  attestDependencyInstallationImpl = attestDependencyInstallation,
   fixtureStatuses = ["active"],
   fixturesRoot,
   logger = console.log,
@@ -537,6 +549,17 @@ export function runFixtureMutationTests({
         continue;
       }
       mutationFixtures++;
+      const validationProfile = getValidationProfile(
+        manifest.validationProfile,
+      );
+      const dependencyInstallRoot =
+        validationProfile.dependencyInstall?.source === "npm" &&
+          Object.hasOwn(
+            validationProfile.dependencyInstall,
+            "installRoot",
+          )
+          ? attestDependencyInstallationImpl(validationProfile).installRoot
+          : null;
 
       const { answerSourcePath, catalog, sourcePath } = loadMutationCatalog(
         fixtureRoot,
@@ -553,6 +576,7 @@ export function runFixtureMutationTests({
         answerSourcePath,
         catalog,
         candidateRoot: baselineRoot,
+        dependencyInstallRoot,
         fixtureRoot,
         manifest,
         source,
@@ -590,6 +614,7 @@ export function runFixtureMutationTests({
           answerSourcePath,
           catalog,
           candidateRoot,
+          dependencyInstallRoot,
           fixtureRoot,
           manifest,
           source: applyMutation(source, mutation, fixtureName),

@@ -450,7 +450,11 @@ export function buildSandboxInvocation({
         "1",
       ]
       : [];
-  const sandboxPath = ["node-typescript", "python3-pytest-hypothesis"]
+  const sandboxPath = [
+    "node-typescript",
+    "python3-pytest-hypothesis",
+    "react18-typescript",
+  ]
     .includes(manifest.validationProfile)
     ? "/usr/local/bin:/usr/bin:/bin"
     : "/usr/bin:/bin";
@@ -506,11 +510,14 @@ export function buildSandboxInvocation({
   }
 
   const dependencyInstall = validationProfile.dependencyInstall;
+  const testRuntimeUsesDependency = command.phase === "test" &&
+    validationProfile.testRuntime?.mounts.some((mount) =>
+      mount.path === dependencyInstall?.installRoot);
   if (
     dependencyInstall?.installRoot &&
     (
       command.phase === "compile" ||
-      manifest.validationProfile === "python3-pytest-hypothesis"
+      testRuntimeUsesDependency
     )
   ) {
     sandboxArgs.push(

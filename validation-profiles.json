@@ -2166,6 +2166,150 @@
       }
     },
     {
+      "id": "react18-typescript",
+      "revision": 4,
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@testing-library/dom",
+          "version": "10.4.0"
+        },
+        {
+          "source": "npm",
+          "name": "@testing-library/react",
+          "version": "16.3.0"
+        },
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "@types/react",
+          "version": "18.3.23"
+        },
+        {
+          "source": "npm",
+          "name": "@types/react-dom",
+          "version": "18.3.7"
+        },
+        {
+          "source": "npm",
+          "name": "jsdom",
+          "version": "26.1.0"
+        },
+        {
+          "source": "npm",
+          "name": "react",
+          "version": "18.3.1"
+        },
+        {
+          "source": "npm",
+          "name": "react-dom",
+          "version": "18.3.1"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-react18-typescript",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "node",
+        "tsc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 33554432,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 60,
+            "fileBytes": 67108864,
+            "openFiles": 256
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 33554432,
+            "openFiles": 256
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "npm",
+        "lockfile": "validation-locks/react18-typescript-v4/package-lock.json",
+        "sha256": "3a533326ea47c5beb1b7e92ec7e582d28768bf1151d600b0f370c14164690145",
+        "installRoot": "/usr/local/lib/react18-typescript-4",
+        "installSha256": "4d67cf9e535d332f5b53614485f8b7bc60e18908f4f3ea60399a6b66e5774c1e",
+        "mountPath": "/workspace/node_modules"
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/local/lib/node-22.16.0",
+            "access": "read-only"
+          },
+          {
+            "path": "/usr/local/lib/react18-typescript-4",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "typescript-react-compile",
+            "phase": "compile",
+            "argvPrefix": [
+              "tsc",
+              "--strict",
+              "--target",
+              "ES2022",
+              "--module",
+              "CommonJS",
+              "--moduleResolution",
+              "Node",
+              "--lib",
+              "ES2022,DOM",
+              "--jsx",
+              "react-jsx",
+              "--esModuleInterop",
+              "--outDir",
+              "build/output",
+              "generated/Autocomplete.tsx",
+              "starter/autocomplete_api.ts",
+              "tests/public/test_autocomplete.tsx"
+            ],
+            "requiredTools": [
+              "tsc"
+            ]
+          },
+          {
+            "id": "public-interaction-tests",
+            "phase": "test",
+            "argvPrefix": [
+              "node",
+              "build/output/tests/public/test_autocomplete.js"
+            ],
+            "requiredTools": [
+              "node"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "stable-rust",
       "revision": 1,
       "host": {

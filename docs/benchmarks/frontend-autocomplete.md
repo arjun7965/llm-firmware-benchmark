@@ -15,3 +15,12 @@ accessibility, and interaction state without external packages.
 
 Do not award full asynchronous-correctness credit if an older request can
 replace newer results, even when `AbortController` is present.
+
+## Executable validation
+
+The active fixture compiles one default-exported TSX component and runs
+validator-owned jsdom interactions with a fake clock. The public suite checks
+the exact 250 ms boundary, abort and generation fencing, accessible feedback,
+wrapped keyboard navigation, Enter/Escape and mouse selection, ARIA ID
+relationships, empty-query reset, and unmount cleanup. Sixteen controlled
+defects calibrate those checks under the pinned `react18-typescript` profile.

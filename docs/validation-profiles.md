@@ -39,6 +39,8 @@ revision 4 pins the relocatable runtime tree mounted by the runner, and
 `node-typescript` revision 4 adds installed-tree attestation and runtime mounts.
 `go-std` revision 4 raises its bounded temporary filesystem to 256 MiB so Go
 1.24.4 can compile the standard library inside the sandbox.
+`react18-typescript` revision 4 pins the complete npm package-lock and installed
+tree and mounts that tree for both TypeScript compilation and jsdom tests.
 
 ## Profile Registry
 
@@ -58,7 +60,7 @@ policies require no network and an isolated filesystem.
 | `postgresql` | PostgreSQL server and client 16.9 | None | `psql -v ON_ERROR_STOP=1 -f ...` with PostgreSQL runtime mounts |
 | `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | Hash-pinned pytest, Hypothesis, and pure-Python transitive closure | Pytest property-test modules with deterministic Hypothesis settings |
 | `python3-stdlib` | Python 3.12.11 | None; standard library only | `python3 -m py_compile ...` and `python3 -m unittest ...` with Python runtime mounts |
-| `react18-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | React 18.3.1 and the exact test stack in the registry | Not active until dependencies are mounted |
+| `react18-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | React 18.3.1, jsdom 26.1.0, Testing Library, and exact type declarations | `tsc` compile and Node.js jsdom interaction tests |
 | `stable-rust` | Rust/Cargo 1.87.0 and GCC/`cc` 13.3.0 | None; standard library only | Native `build/` executable |
 
 The registry is authoritative for full dependency versions and byte-level
@@ -69,6 +71,9 @@ resource limits. Dependency-bearing current profiles also record a
 The runtime-enabled `node-typescript` profile additionally uses an npm
 package-lock with registry integrity values for the complete transitive
 closure and pins the canonical hash of its installed tree.
+The runtime-enabled `react18-typescript` profile applies the same attestation
+to its React, jsdom, Testing Library, TypeScript, and declaration package tree;
+the runner mounts it read-only during both compile and test phases.
 The runtime-enabled `python3-pytest-hypothesis` revision 4 profile uses a
 hash-checking pip requirements lock and pins its complete installed tree. The
 runner mounts that tree, the pytest launcher, and the Python runtime read-only;
@@ -120,7 +125,8 @@ these runtime fields continue to fail closed before tools are resolved or
 executed. Standard-library-only profiles are not automatically eligible: the
 test sandbox supports native binaries produced by `c11-host`, `go-std`, and
 `stable-rust`, plus approved interpreter commands for `python3-stdlib`,
-`python3-pytest-hypothesis`, and `node-typescript`. The registry also records
+`python3-pytest-hypothesis`, `node-typescript`, and `react18-typescript`. The
+registry also records
 PostgreSQL runtime mounts and command prefixes, but the runner fails closed for
 that service profile until its isolated server boundary is implemented.
 

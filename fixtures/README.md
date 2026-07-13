@@ -51,6 +51,11 @@ Its pinned npm package closure is hashed and mounted read-only for compilation;
 the compiled tests execute with the pinned Node.js runtime in a separate
 sandbox without the package tree.
 
+The active `frontend-autocomplete` fixture has an exact default-exported prop
+contract, a trusted React component, deterministic fake-timer/jsdom interaction
+tests, and controlled async, keyboard, selection, feedback, and ARIA mutations.
+Its attested npm tree is mounted read-only for compilation and test execution.
+
 The active `go-graceful-shutdown` fixture has an exact server-module API, trusted
 reference, deterministic lifecycle tests, and controlled mutations. Its test
 supervisor requires a child-side completion token so candidate package
@@ -66,7 +71,8 @@ implementations, exercising the mutation runner's supplied-input mode.
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
-`node-typescript` and `python3-pytest-hypothesis` profiles. Other
+`node-typescript`, `python3-pytest-hypothesis`, and `react18-typescript`
+profiles. Other
 dependency-bearing and service fixtures must remain scaffolds until their exact
 packages and test runtimes can be verified, mounted, and executed in the test
 namespace.

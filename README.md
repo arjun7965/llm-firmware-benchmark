@@ -1,8 +1,8 @@
 # LLM Firmware Benchmark
 
-[![95 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=95%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![96 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=96%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![50 C checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=50%20C%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
-[![9 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=9%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
+[![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
 A dependency-free Node.js harness for evaluating language models on firmware
 and embedded coding tasks. Deterministic host fixtures, mutation tests,
@@ -196,6 +196,11 @@ root-owned Python 3.12.11 runtime.
 The active TypeScript singleflight-cache fixture is calibrated with
 `npm run fixture:typescript-cache:self-test` and validated in CI with its
 attested, read-only Node.js 22.16.0 and TypeScript 5.8.3 installation.
+
+The active frontend-autocomplete fixture is calibrated with
+`npm run fixture:frontend-autocomplete:self-test`. Deterministic jsdom
+interaction tests verify its exact debounce boundary, async race handling,
+keyboard and mouse behavior, and ARIA relationships under pinned React 18.
 
 The active Go graceful-shutdown fixture is calibrated with
 `npm run fixture:go-shutdown:self-test`. Its two-file bundle compiles the

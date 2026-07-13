@@ -18,7 +18,7 @@ code. Each task references a pinned hosted runtime contract from
 
 | Task ID | Validation dependencies |
 | --- | --- |
-| `frontend-autocomplete` | Node.js, TypeScript, React 18 and its type declarations; a browser-like test environment for interaction tests |
+| `frontend-autocomplete` | Node.js 22.16.0, TypeScript 5.8.3, React/React DOM 18.3.1, jsdom 26.1.0, Testing Library 16.3.0, and pinned type declarations |
 | `backend-idempotency` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
 | `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
@@ -45,8 +45,8 @@ Profiles with npm or PyPI dependencies additionally pin committed lockfiles
 under `validation-locks/`; startup verifies their SHA-256 and package set.
 Those lockfiles are stored with LF line endings and normalized before hashing
 so Git checkout settings do not change the attested contract.
-The current sandbox runner verifies and mounts the `node-typescript` and
-`python3-pytest-hypothesis` installations. Other dependency-bearing profiles
+The current sandbox runner verifies and mounts the `node-typescript`,
+`python3-pytest-hypothesis`, and `react18-typescript` installations. Other
 remain rejected until they define equivalent installed-tree attestation or run
 in a digest-pinned image.
 Dependency-free interpreter and service profiles may declare profile-approved
@@ -146,6 +146,14 @@ detected:
 
 ```bash
 npm run fixture:property-tests:self-test
+```
+
+The active frontend autocomplete fixture requires the attested
+`react18-typescript` revision 4 tree. Its fake-timer/jsdom suite exercises the
+trusted component and rejects all controlled async and accessibility defects:
+
+```bash
+npm run fixture:frontend-autocomplete:self-test
 ```
 
 Run all trusted C fixture suites with:

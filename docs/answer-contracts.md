@@ -31,7 +31,7 @@ implemented and calibrated.
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `embedded-ring-buffer` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `firmware-state-machine` | Single file | Single file | One implementation unit; HAL, mocks, and tests are supplied |
-| `frontend-autocomplete` | Rubric-only | Single file | One component module; interaction tests are validator-owned |
+| `frontend-autocomplete` | Scaffold | Single file | One default-exported component module; interaction tests are validator-owned |
 | `concurrency-debug` | Single file | Single file | One repaired Python module; race tests are validator-owned |
 | `testing-property-based` | Single file | Single file | One property-test module importing the supplied implementation |
 | `go-graceful-shutdown` | Multi-file | Multi-file | Runnable server code and Go-discoverable `*_test.go` tests require distinct files |
