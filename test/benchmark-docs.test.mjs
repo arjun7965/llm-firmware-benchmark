@@ -82,6 +82,7 @@ test("fixture-backed prompts match their declared answer contract", () => {
           "backend-idempotency",
           "go-graceful-shutdown",
           "postgres-pagination",
+          "webhook-replay-security",
         ].includes(task.id),
         `fixture ${task.id} has an undocumented multi-file contract`,
       );
@@ -102,12 +103,12 @@ test("fixture-backed prompts match their declared answer contract", () => {
   }
 });
 
-test("backend idempotency prompt requires its exact bundle fence labels", () => {
-  const task = loadTasks(new URL("../tasks.json", import.meta.url)).find(
-    (entry) => entry.id === "backend-idempotency",
-  );
-
-  assert.ok(task);
-  assert.match(task.prompt, /fence label is exactly `typescript`/u);
-  assert.match(task.prompt, /fence label is exactly `sql`/u);
+test("Node/PostgreSQL bundle prompts require exact fence labels", () => {
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+  for (const taskId of ["backend-idempotency", "webhook-replay-security"]) {
+    const task = tasks.find((entry) => entry.id === taskId);
+    assert.ok(task);
+    assert.match(task.prompt, /fence label is exactly `typescript`/u);
+    assert.match(task.prompt, /fence label is exactly `sql`/u);
+  }
 });

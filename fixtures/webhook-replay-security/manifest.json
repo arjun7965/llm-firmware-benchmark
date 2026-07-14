@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.4",
+  "taskId": "webhook-replay-security",
+  "targetProfile": null,
+  "validationProfile": "node-typescript-postgresql",
+  "status": "active",
+  "language": "typescript",
+  "toolVersionArgs": {
+    "initdb": ["--version"],
+    "node": ["--version"],
+    "pg_ctl": ["--version"],
+    "postgres": ["--version"],
+    "psql": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-file-bundle",
+    "files": [
+      {
+        "path": "handler.ts",
+        "language": "typescript"
+      },
+      {
+        "path": "schema.sql",
+        "language": "sql"
+      }
+    ]
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "webhook-typescript-compile",
+      "phase": "compile",
+      "argv": [
+        "node",
+        "starter/compile-typescript.mjs",
+        "--strict",
+        "--target",
+        "ES2022",
+        "--module",
+        "CommonJS",
+        "--moduleResolution",
+        "Node",
+        "--esModuleInterop",
+        "--lib",
+        "ES2022",
+        "--outDir",
+        "build/output",
+        "generated/handler.ts",
+        "starter/webhook_api.ts",
+        "tests/public/test_webhook.ts"
+      ],
+      "requiredTools": ["node"],
+      "timeoutMs": 60000
+    },
+    {
+      "id": "webhook-public-tests",
+      "phase": "test",
+      "argv": [
+        "node",
+        "build/output/tests/public/test_webhook.js",
+        "generated/schema.sql",
+        "generated/handler.ts"
+      ],
+      "requiredTools": ["initdb", "node", "pg_ctl", "postgres", "psql"],
+      "timeoutMs": 30000
+    }
+  ]
+}

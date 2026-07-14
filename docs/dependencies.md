@@ -30,7 +30,7 @@ code. Each task references a pinned hosted runtime contract from
 | `go-graceful-shutdown` | Go 1.24.4; only the standard library is used |
 | `rust-stream-decoder` | Rust/Cargo 1.87.0 and GCC 13.3.0 as the system linker; standard library only |
 | `typescript-singleflight-cache` | Node.js 22.16.0, TypeScript 5.8.3, and `@types/node` 22.15.29 |
-| `webhook-replay-security` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
+| `webhook-replay-security` | Node.js 22.16.0, TypeScript 5.8.3, Express 5.1.0, `pg` 8.16.0, and PostgreSQL 16.9 |
 
 These tools are optional because automated answer extraction and compilation
 are not yet part of the harness. The profile registry separates logical
@@ -143,13 +143,22 @@ npm run fixture:typescript-cache:self-test
 ```
 
 The active backend idempotency fixture requires the attested
-`node-typescript-postgresql` revision 4 package tree, pinned Node.js 22.16.0,
+`node-typescript-postgresql` revision 5 package tree, pinned Node.js 22.16.0,
 and the root-owned PostgreSQL 16.9 runtime. Its calibration runs a fresh
 database for every compile and test phase and rejects eleven controlled
 idempotency, input-validation, and atomicity defects:
 
 ```bash
 npm run fixture:backend-idempotency:self-test
+```
+
+The active webhook replay security fixture uses the same attested
+`node-typescript-postgresql` revision 5 package tree and PostgreSQL runtime.
+Its calibration rejects eleven raw-body authentication, secret-rotation,
+replay, outbox, and transaction-atomicity defects:
+
+```bash
+npm run fixture:webhook-replay-security:self-test
 ```
 
 The active PostgreSQL pagination fixture requires the pinned root-owned

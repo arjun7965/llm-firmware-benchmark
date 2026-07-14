@@ -132,12 +132,12 @@ jobs:
             --bin-links=false
           rm validation-locks/node-typescript-v4/node_modules/.package-lock.json
           npm ci \
-            --prefix validation-locks/node-typescript-postgresql-v4 \
+            --prefix validation-locks/node-typescript-postgresql-v5 \
             --ignore-scripts \
             --no-audit \
             --no-fund \
             --bin-links=false
-          rm validation-locks/node-typescript-postgresql-v4/node_modules/.package-lock.json
+          rm validation-locks/node-typescript-postgresql-v5/node_modules/.package-lock.json
           npm ci \
             --prefix validation-locks/react18-typescript-v4 \
             --ignore-scripts \
@@ -155,12 +155,12 @@ jobs:
             /usr/local/lib/node-typescript-4/
           sudo chown -R root:root /usr/local/lib/node-typescript-4
           sudo chmod -R go-w /usr/local/lib/node-typescript-4
-          sudo install -d /usr/local/lib/node-typescript-postgresql-4/node_modules
+          sudo install -d /usr/local/lib/node-typescript-postgresql-5/node_modules
           sudo cp -a \
-            validation-locks/node-typescript-postgresql-v4/node_modules/. \
-            /usr/local/lib/node-typescript-postgresql-4/node_modules/
-          sudo chown -R root:root /usr/local/lib/node-typescript-postgresql-4
-          sudo chmod -R go-w /usr/local/lib/node-typescript-postgresql-4
+            validation-locks/node-typescript-postgresql-v5/node_modules/. \
+            /usr/local/lib/node-typescript-postgresql-5/node_modules/
+          sudo chown -R root:root /usr/local/lib/node-typescript-postgresql-5
+          sudo chmod -R go-w /usr/local/lib/node-typescript-postgresql-5
           sudo install -d /usr/local/lib/react18-typescript-4/node_modules
           sudo cp -a \
             validation-locks/react18-typescript-v4/node_modules/. \
@@ -195,6 +195,7 @@ jobs:
           npm run fixture:property-tests:self-test
           npm run fixture:frontend-autocomplete:self-test
           npm run fixture:backend-idempotency:self-test
+          npm run fixture:webhook-replay-security:self-test
           npm run fixture:postgres-pagination:self-test
           npm run fixture:typescript-cache:self-test
           npm run test:sandbox

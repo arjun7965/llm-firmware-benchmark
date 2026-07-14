@@ -106,7 +106,7 @@ record exact versions in validation reports.
     reference, deterministic public tests, and controlled mutations.
   - [x] Attest and mount the pinned React/jsdom test dependency tree, calibrate
     the mutations in the sandbox, and mark the fixture active.
-- [ ] Design isolated PostgreSQL validation for `backend-idempotency`,
+- [x] Design isolated PostgreSQL validation for `backend-idempotency`,
   `postgres-pagination`, and `webhook-replay-security`, including migrations,
   concurrency, cleanup, and fixed server versions.
   - [x] Add a profile-owned PostgreSQL 16.9 lifecycle, activate
@@ -115,7 +115,7 @@ record exact versions in validation reports.
   - [x] Attest the Node/Express/`pg` dependency tree, extend the service
     boundary for concurrent `backend-idempotency` validation, and activate its
     fixture with calibrated public tests and controlled mutations.
-  - [ ] Apply the Node/PostgreSQL profile to `webhook-replay-security` with
+  - [x] Apply the Node/PostgreSQL profile to `webhook-replay-security` with
     its own deterministic fixture, public tests, and controlled mutations.
 - [ ] Keep tasks rubric-only when deterministic execution would require
   undocumented services or introduce environment-dependent scoring.
