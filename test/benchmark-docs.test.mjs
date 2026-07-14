@@ -77,7 +77,10 @@ test("fixture-backed prompts match their declared answer contract", () => {
     const manifest = JSON.parse(readFileSync(manifestUrl, "utf8"));
     if (manifest.status !== "active") continue;
     if (manifest.answer.format === "markdown-file-bundle") {
-      assert.equal(task.id, "go-graceful-shutdown");
+      assert.ok(
+        ["go-graceful-shutdown", "postgres-pagination"].includes(task.id),
+        `fixture ${task.id} has an undocumented multi-file contract`,
+      );
       for (const file of manifest.answer.files) {
         assert.ok(
           task.prompt.includes("### `" + file.path + "`"),

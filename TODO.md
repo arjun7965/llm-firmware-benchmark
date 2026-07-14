@@ -109,6 +109,12 @@ record exact versions in validation reports.
 - [ ] Design isolated PostgreSQL validation for `backend-idempotency`,
   `postgres-pagination`, and `webhook-replay-security`, including migrations,
   concurrency, cleanup, and fixed server versions.
+  - [x] Add a profile-owned PostgreSQL 16.9 lifecycle, activate
+    `postgres-pagination`, and calibrate its deterministic public tests and
+    controlled mutations against a fresh cluster per phase.
+  - [ ] Attest the Node/Express/`pg` dependency tree and extend the service
+    boundary for concurrent `backend-idempotency` and
+    `webhook-replay-security` validation.
 - [ ] Keep tasks rubric-only when deterministic execution would require
   undocumented services or introduce environment-dependent scoring.
 

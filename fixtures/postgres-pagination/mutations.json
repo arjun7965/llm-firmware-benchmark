@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/01-pagination.sql",
+  "mutations": [
+    {
+      "id": "drops-id-tie-breaker",
+      "description": "Continue using only the timestamp and skip equal-timestamp rows.",
+      "find": "      (o.created_at, o.id) < (v_created_at, v_id)",
+      "replace": "      o.created_at < v_created_at"
+    },
+    {
+      "id": "reverses-continuation-direction",
+      "description": "Use a greater-than continuation predicate for descending pages.",
+      "find": "      (o.created_at, o.id) < (v_created_at, v_id)",
+      "replace": "      (o.created_at, o.id) > (v_created_at, v_id)"
+    },
+    {
+      "id": "orders-ids-ascending",
+      "description": "Order equal timestamps by ascending ID.",
+      "find": "  ORDER BY o.created_at DESC, o.id DESC\n  LIMIT p_limit;",
+      "replace": "  ORDER BY o.created_at DESC, o.id ASC\n  LIMIT p_limit;"
+    },
+    {
+      "id": "drops-tenant-predicate",
+      "description": "Return orders from every tenant.",
+      "find": "  WHERE o.tenant_id = p_tenant_id\n    AND o.status = ANY(v_statuses)",
+      "replace": "  WHERE o.tenant_id IS NOT NULL\n    AND o.status = ANY(v_statuses)"
+    },
+    {
+      "id": "drops-status-predicate",
+      "description": "Return orders outside the requested status filter.",
+      "find": "    AND o.status = ANY(v_statuses)\n    AND (",
+      "replace": "    AND o.status IS NOT NULL\n    AND ("
+    },
+    {
+      "id": "accepts-cross-tenant-cursor",
+      "description": "Do not bind a continuation cursor to its tenant.",
+      "find": "    IF v_cursor_tenant IS DISTINCT FROM p_tenant_id OR\n        v_cursor_statuses IS DISTINCT FROM v_statuses THEN",
+      "replace": "    IF v_cursor_statuses IS DISTINCT FROM v_statuses THEN"
+    },
+    {
+      "id": "accepts-cross-filter-cursor",
+      "description": "Do not bind a continuation cursor to its status filter.",
+      "find": "    IF v_cursor_tenant IS DISTINCT FROM p_tenant_id OR\n        v_cursor_statuses IS DISTINCT FROM v_statuses THEN",
+      "replace": "    IF v_cursor_tenant IS DISTINCT FROM p_tenant_id THEN"
+    },
+    {
+      "id": "accepts-partial-cursor",
+      "description": "Skip the exact cursor-key check.",
+      "find": "    IF v_keys IS DISTINCT FROM\n        ARRAY['created_at', 'id', 'statuses', 'tenant_id']::text[] THEN",
+      "replace": "    IF false THEN"
+    },
+    {
+      "id": "allows-oversized-pages",
+      "description": "Raise the public maximum page size above 100.",
+      "find": "  IF p_limit IS NULL OR p_limit < 1 OR p_limit > 100 THEN",
+      "replace": "  IF p_limit IS NULL OR p_limit < 1 OR p_limit > 1000 THEN"
+    },
+    {
+      "id": "keeps-duplicate-statuses",
+      "description": "Preserve input status order and duplicate values in cursors.",
+      "find": "  SELECT array_agg(status ORDER BY status)\n  FROM (\n    SELECT DISTINCT value AS status",
+      "replace": "  SELECT array_agg(status)\n  FROM (\n    SELECT value AS status"
+    },
+    {
+      "id": "advances-cursor-id",
+      "description": "Encode an anchor ID one row beyond the supplied row.",
+      "find": "    'created_at', to_jsonb(p_created_at),\n    'id', p_id",
+      "replace": "    'created_at', to_jsonb(p_created_at),\n    'id', p_id + 1"
+    },
+    {
+      "id": "accepts-unknown-cursor-status",
+      "description": "Allow cursor construction with statuses outside the table contract.",
+      "find": "  IF NOT v_statuses <@ ARRAY['cancelled', 'paid', 'pending', 'shipped']::text[]\n      THEN\n    RAISE EXCEPTION 'statuses contain an unknown value'\n      USING ERRCODE = '22023';\n  END IF;\n  IF p_created_at IS NULL OR p_id IS NULL THEN",
+      "replace": "  IF p_created_at IS NULL OR p_id IS NULL THEN"
+    }
+  ]
+}

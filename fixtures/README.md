@@ -68,12 +68,18 @@ and validates the model-authored pytest/Hypothesis module. Calibration keeps a
 trusted test answer fixed while staging twelve controlled defective
 implementations, exercising the mutation runner's supplied-input mode.
 
+The active `postgres-pagination` fixture uses a two-file SQL bundle, a supplied
+orders table, strict tenant/filter-bound JSON cursors, and deterministic
+keyset/index tests. The runner initializes a fresh PostgreSQL 16.9 data
+directory for every compile or test phase, exposes only its private Unix
+socket to the candidate sandbox, and tears down the service afterward.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
-`node-typescript`, `python3-pytest-hypothesis`, and `react18-typescript`
-profiles. Other
-dependency-bearing and service fixtures must remain scaffolds until their exact
+`node-typescript`, `python3-pytest-hypothesis`, `postgresql`, and
+`react18-typescript` profiles. Other dependency-bearing and service fixtures
+must remain scaffolds until their exact
 packages and test runtimes can be verified, mounted, and executed in the test
 namespace.
 

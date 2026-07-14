@@ -28,7 +28,35 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
-            apparmor-profiles bubblewrap gcc libc6-dev util-linux
+            apparmor-profiles bubblewrap bzip2 curl gcc libc6-dev make \
+            util-linux
+      - name: Install pinned root-owned PostgreSQL runtime
+        run: |
+          postgresql_version="16.9"
+          install_root="/usr/local/lib/postgresql-${postgresql_version}"
+          source_root="$(mktemp -d)"
+          archive="${source_root}/postgresql-${postgresql_version}.tar.bz2"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --output "${archive}" \
+            "https://ftp.postgresql.org/pub/source/v${postgresql_version}/postgresql-${postgresql_version}.tar.bz2"
+          echo \
+            "07c00fb824df0a0c295f249f44691b86e3266753b380c96f633c3311e10bd005  ${archive}" \
+            | sha256sum --check
+          tar -xjf "${archive}" --directory "${source_root}"
+          cd "${source_root}/postgresql-${postgresql_version}"
+          ./configure \
+            --prefix="${install_root}" \
+            --without-icu \
+            --without-readline \
+            --without-zlib
+          make --jobs=2
+          sudo make install
+          sudo chown -R root:root "${install_root}"
+          sudo chmod -R go-w "${install_root}"
+          for tool in initdb pg_ctl postgres psql
+          do
+            sudo ln -sfn "${install_root}/bin/${tool}" "/usr/local/bin/${tool}"
+          done
       - name: Install pinned root-owned Rust toolchain
         run: |
           rustup toolchain install 1.87.0 --profile minimal
@@ -144,5 +172,6 @@ jobs:
           npm run fixture:rust-decoder:self-test
           npm run fixture:property-tests:self-test
           npm run fixture:frontend-autocomplete:self-test
+          npm run fixture:postgres-pagination:self-test
           npm run fixture:typescript-cache:self-test
           npm run test:sandbox

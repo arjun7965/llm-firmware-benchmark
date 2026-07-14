@@ -135,6 +135,10 @@ function fakeToolVersion(command, args, options) {
     prlimit: "prlimit from util-linux 2.39.3",
     pytest: "pytest 8.4.0",
     python3: "Python 3.12.11",
+    initdb: "initdb (PostgreSQL) 16.9",
+    pg_ctl: "pg_ctl (PostgreSQL) 16.9",
+    postgres: "postgres (PostgreSQL) 16.9",
+    psql: "psql (PostgreSQL) 16.9",
     tsc: "Version 5.8.3",
   };
   return {
@@ -717,6 +721,139 @@ test("sandbox mounts and runs an approved interpreter test runtime", (t) => {
     calls[1].args[calls[1].args.lastIndexOf("--") + 1],
     pythonPath,
   );
+});
+
+test("sandbox provisions a fresh PostgreSQL service for each phase", (t) => {
+  const fixture = sandboxFixture(t);
+  const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
+  tasks[0].suite = "auxiliary";
+  tasks[0].validationProfile = "postgresql";
+  delete tasks[0].targetProfile;
+  tasks[0].prompt = "Return ### `01-pagination.sql` and `02-indexes.sql`.";
+  writeFileSync(fixture.tasksPath, JSON.stringify(tasks));
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "01-pagination.sql"),
+    "SELECT 1;\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "02-indexes.sql"),
+    "SELECT 2;\n",
+  );
+
+  const requiredTools = ["initdb", "pg_ctl", "postgres", "psql"];
+  const commandPrefix = ["psql", "-X", "-v", "ON_ERROR_STOP=1"];
+  writeFileSync(
+    join(fixture.fixtureRoot, "manifest.json"),
+    JSON.stringify({
+      ...fixture.manifest,
+      targetProfile: null,
+      validationProfile: "postgresql",
+      language: "sql",
+      toolVersionArgs: Object.fromEntries(
+        requiredTools.map((tool) => [tool, ["--version"]]),
+      ),
+      answer: {
+        format: "markdown-file-bundle",
+        files: [
+          { path: "01-pagination.sql", language: "sql" },
+          { path: "02-indexes.sql", language: "sql" },
+        ],
+      },
+      commands: [
+        {
+          id: "postgresql-load",
+          phase: "compile",
+          argv: [
+            ...commandPrefix,
+            "-f",
+            "generated/01-pagination.sql",
+            "-f",
+            "generated/02-indexes.sql",
+          ],
+          requiredTools,
+          timeoutMs: 30_000,
+        },
+        {
+          id: "public-tests",
+          phase: "test",
+          argv: [
+            ...commandPrefix,
+            "-f",
+            "generated/01-pagination.sql",
+            "-f",
+            "generated/02-indexes.sql",
+          ],
+          requiredTools,
+          timeoutMs: 30_000,
+        },
+      ],
+    }),
+  );
+
+  const serviceCalls = [];
+  const runtimeRoot = "/usr/local/lib/postgresql-16.9";
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: fixture.fixturesRoot,
+    tasksPath: fixture.tasksPath,
+    resolveExecutableImpl: (name) =>
+      ["bwrap", "prlimit"].includes(name)
+        ? fakeExecutable(name)
+        : `${runtimeRoot}/bin/${name}`,
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    runPostgresqlServiceImpl: (configuration) => {
+      serviceCalls.push(configuration);
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.equal(report.success, true);
+  assert.equal(report.validationProfileRevision, 4);
+  assert.deepEqual(report.artifacts, []);
+  assert.equal(serviceCalls.length, 2);
+  for (const serviceCall of serviceCalls) {
+    assert.equal(serviceCall.stop, null);
+    assert.ok(serviceCall.initialize.args.includes("--unshare-all"));
+    assert.ok(serviceCall.initialize.args.includes("/bin"));
+    assert.ok(serviceCall.initialize.args.includes("/etc/passwd"));
+    assert.ok(serviceCall.start.args.includes(`${runtimeRoot}/bin/postgres`));
+    assert.ok(serviceCall.ready.args.includes(`${runtimeRoot}/bin/psql`));
+    assert.ok(serviceCall.candidate.args.includes("PGHOST"));
+    assert.ok(serviceCall.candidate.args.includes(
+      "/workspace/service/socket",
+    ));
+    assert.equal(serviceCall.candidate.args.includes("/usr"), false);
+    assert.equal(serviceCall.candidate.args.includes("/bin"), false);
+    assert.equal(serviceCall.candidate.args.includes("/etc/passwd"), false);
+    const serviceMount = serviceCall.candidate.args.findIndex(
+      (argument, index, args) =>
+        argument === "/workspace/service/socket" &&
+        args[index - 2] === "--ro-bind",
+    );
+    assert.ok(serviceMount > 0);
+    assert.equal(serviceCall.candidate.args[serviceMount - 2], "--ro-bind");
+    assert.match(
+      serviceCall.candidate.args[serviceMount - 1],
+      /\/service\/socket$/u,
+    );
+    assert.equal(
+      serviceCall.candidate.args.some((argument, index, args) =>
+        argument === "/workspace/service" && args[index - 2] === "--ro-bind"),
+      false,
+    );
+    assert.ok(serviceCall.ready.args.some((argument, index, args) =>
+      argument === "/workspace/service/socket" &&
+      args[index - 2] === "--ro-bind"));
+    assert.ok(serviceCall.initialize.args.includes("--bind"));
+    assert.ok(serviceCall.start.args.includes("--bind"));
+  }
 });
 
 test("sandbox attests and mounts pytest and Hypothesis at test time", (t) => {

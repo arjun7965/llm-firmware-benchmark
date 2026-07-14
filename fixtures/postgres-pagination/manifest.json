@@ -3,16 +3,26 @@
   "taskId": "postgres-pagination",
   "targetProfile": null,
   "validationProfile": "postgresql",
-  "status": "scaffold",
+  "status": "active",
   "language": "sql",
   "toolVersionArgs": {
+    "initdb": ["--version"],
+    "pg_ctl": ["--version"],
     "postgres": ["--version"],
     "psql": ["--version"]
   },
   "answer": {
-    "format": "markdown-fenced-code",
-    "language": "sql",
-    "output": "generated/answer.sql"
+    "format": "markdown-file-bundle",
+    "files": [
+      {
+        "path": "01-pagination.sql",
+        "language": "sql"
+      },
+      {
+        "path": "02-indexes.sql",
+        "language": "sql"
+      }
+    ]
   },
   "paths": {
     "starter": "starter",
@@ -25,16 +35,41 @@
   },
   "commands": [
     {
+      "id": "postgresql-load",
+      "phase": "compile",
+      "argv": [
+        "psql",
+        "-X",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-f",
+        "starter/orders.sql",
+        "-f",
+        "generated/01-pagination.sql",
+        "-f",
+        "generated/02-indexes.sql"
+      ],
+      "requiredTools": ["initdb", "pg_ctl", "postgres", "psql"],
+      "timeoutMs": 30000
+    },
+    {
       "id": "public-tests",
       "phase": "test",
       "argv": [
         "psql",
+        "-X",
         "-v",
         "ON_ERROR_STOP=1",
         "-f",
+        "starter/orders.sql",
+        "-f",
+        "generated/01-pagination.sql",
+        "-f",
+        "generated/02-indexes.sql",
+        "-f",
         "tests/public/test_pagination.sql"
       ],
-      "requiredTools": ["postgres", "psql"],
+      "requiredTools": ["initdb", "pg_ctl", "postgres", "psql"],
       "timeoutMs": 30000
     }
   ]

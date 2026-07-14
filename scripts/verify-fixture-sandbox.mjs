@@ -68,6 +68,11 @@ const references = [
     suite: "auxiliary",
   },
   {
+    taskId: "postgres-pagination",
+    suite: "auxiliary",
+    artifactCount: 0,
+  },
+  {
     taskId: "rust-stream-decoder",
     source: "reference/stream_decoder.rs",
     suite: "auxiliary",

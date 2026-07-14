@@ -344,9 +344,13 @@ function requireToolSubset(tools, profile, name) {
 function validateTestRuntime(profile) {
   if (!Object.hasOwn(profile, "testRuntime")) return;
   const name = `validation profile ${profile.id} testRuntime`;
+  const fields = ["commandContracts", "mounts"];
+  if (Object.hasOwn(profile.testRuntime, "service")) {
+    fields.push("service");
+  }
   requireExactFields(
     profile.testRuntime,
-    ["commandContracts", "mounts"],
+    fields,
     name,
   );
   if (
@@ -419,6 +423,55 @@ function validateTestRuntime(profile) {
     `${name} commandContracts`,
     (contract) => `${contract.phase}:${contract.id}`,
   );
+  if (Object.hasOwn(profile.testRuntime, "service")) {
+    const service = profile.testRuntime.service;
+    requireExactFields(
+      service,
+      [
+        "initializeArgv",
+        "kind",
+        "readyArgv",
+        "shutdownTimeoutMs",
+        "startArgv",
+        "startupTimeoutMs",
+        "stopArgv",
+      ],
+      `${name} service`,
+    );
+    if (service.kind !== "postgresql") {
+      throw new TypeError(`${name} service kind is invalid`);
+    }
+    requirePositiveInteger(
+      service.startupTimeoutMs,
+      `${name} service startupTimeoutMs`,
+    );
+    requirePositiveInteger(
+      service.shutdownTimeoutMs,
+      `${name} service shutdownTimeoutMs`,
+    );
+    const expectedExecutables = new Map([
+      ["initializeArgv", "initdb"],
+      ["readyArgv", "psql"],
+      ["startArgv", "postgres"],
+      ["stopArgv", "pg_ctl"],
+    ]);
+    const availableTools = profileToolNames(profile);
+    for (const [field, executable] of expectedExecutables) {
+      const argv = service[field];
+      if (
+        !Array.isArray(argv) ||
+        argv.length === 0 ||
+        argv.some((argument) =>
+          typeof argument !== "string" ||
+          argument.length === 0 ||
+          argument.includes("\0")) ||
+        argv[0] !== executable ||
+        !availableTools.includes(executable)
+      ) {
+        throw new TypeError(`${name} service ${field} is invalid`);
+      }
+    }
+  }
 }
 
 function validateResourcePolicy(sandbox, profileId, {
@@ -730,7 +783,7 @@ export function validateValidationProfiles(document) {
     ["environments", "profiles", "schemaVersion"],
     "validation profiles document",
   );
-  if (document.schemaVersion !== "2.4") {
+  if (document.schemaVersion !== "2.5") {
     throw new TypeError("unsupported validation profiles schemaVersion");
   }
   if (
@@ -867,7 +920,7 @@ export function validateValidationProfileFingerprints(
     ["environments", "profiles", "schemaVersion"],
     "validation profile fingerprints document",
   );
-  if (fingerprintsDocument.schemaVersion !== "2.4") {
+  if (fingerprintsDocument.schemaVersion !== "2.5") {
     throw new TypeError(
       "unsupported validation profile fingerprints schemaVersion",
     );
@@ -1163,6 +1216,7 @@ export const sandboxRunnableValidationProfileIds = Object.freeze([
   "node-typescript",
   "python3-pytest-hypothesis",
   "python3-stdlib",
+  "postgresql",
   "react18-typescript",
   "stable-rust",
 ]);

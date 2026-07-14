@@ -27,6 +27,7 @@ import {
 import { loadTasks } from "./harness.mjs";
 import { attestDependencyInstallation } from "./dependency-installation.mjs";
 import { getValidationProfile } from "./validation-profiles.mjs";
+import { runLocalPostgresqlCommand } from "./postgresql-service.mjs";
 
 const maximumOutputBytes = 1024 * 1024;
 const identifierPattern = /^[a-z][a-z0-9-]*$/u;
@@ -190,8 +191,18 @@ export function applyMutation(source, mutation, taskId) {
 
 function run(command, args, {
   cwd,
+  validationProfile,
   timeout,
 }) {
+  if (validationProfile.testRuntime?.service?.kind === "postgresql") {
+    return runLocalPostgresqlCommand({
+      args,
+      command,
+      cwd,
+      profile: validationProfile,
+      timeoutMs: timeout,
+    });
+  }
   return spawnSync(command, args, {
     cwd,
     encoding: "utf8",
@@ -444,10 +455,12 @@ function compileCandidate({
   fixtureRoot,
   manifest,
   name,
+  validationProfile,
 }) {
   for (const compile of commandPlan.compile) {
     const result = run(compile.command, compile.args, {
       cwd: fixtureRoot,
+      validationProfile,
       timeout: compile.timeoutMs,
     });
     requireCompleted(result, `${name} compilation`);
@@ -464,9 +477,11 @@ function runCandidate({
   commandPlan,
   fixtureRoot,
   name,
+  validationProfile,
 }) {
   const result = run(commandPlan.test.command, commandPlan.test.args, {
     cwd: fixtureRoot,
+    validationProfile,
     timeout: commandPlan.test.timeoutMs,
   });
   requireCompleted(result, `${name} tests`);
@@ -592,11 +607,13 @@ export function runFixtureMutationTests({
         fixtureRoot,
         manifest,
         name: `${fixtureName} baseline`,
+        validationProfile,
       });
       const baselineResult = runCandidate({
         commandPlan: baselinePlan,
         fixtureRoot,
         name: `${fixtureName} baseline`,
+        validationProfile,
       });
       if (baselineResult.status !== 0) {
         throw new Error(
@@ -630,11 +647,13 @@ export function runFixtureMutationTests({
           fixtureRoot,
           manifest,
           name,
+          validationProfile,
         });
         const result = runCandidate({
           commandPlan,
           fixtureRoot,
           name,
+          validationProfile,
         });
         if (result.status === 0) {
           throw new Error(
