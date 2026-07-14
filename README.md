@@ -197,6 +197,11 @@ The active TypeScript singleflight-cache fixture is calibrated with
 `npm run fixture:typescript-cache:self-test` and validated in CI with its
 attested, read-only Node.js 22.16.0 and TypeScript 5.8.3 installation.
 
+The active backend idempotency fixture is calibrated with
+`npm run fixture:backend-idempotency:self-test`. It compiles a two-file
+TypeScript/SQL answer with an attested Express and `pg` package tree, then
+exercises duplicate HTTP requests against a fresh private PostgreSQL socket.
+
 The active frontend-autocomplete fixture is calibrated with
 `npm run fixture:frontend-autocomplete:self-test`. Deterministic jsdom
 interaction tests verify its exact debounce boundary, async race handling,

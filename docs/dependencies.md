@@ -19,7 +19,7 @@ code. Each task references a pinned hosted runtime contract from
 | Task ID | Validation dependencies |
 | --- | --- |
 | `frontend-autocomplete` | Node.js 22.16.0, TypeScript 5.8.3, React/React DOM 18.3.1, jsdom 26.1.0, Testing Library 16.3.0, and pinned type declarations |
-| `backend-idempotency` | Node.js, TypeScript, Express, `pg`, and PostgreSQL |
+| `backend-idempotency` | Node.js 22.16.0, TypeScript 5.8.3, Express 5.1.0, `pg` 8.16.0, and PostgreSQL 16.9 |
 | `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
@@ -46,14 +46,16 @@ under `validation-locks/`; startup verifies their SHA-256 and package set.
 Those lockfiles are stored with LF line endings and normalized before hashing
 so Git checkout settings do not change the attested contract.
 The current sandbox runner verifies and mounts the `node-typescript`,
-`python3-pytest-hypothesis`, and `react18-typescript` installations. Other
-remain rejected until they define equivalent installed-tree attestation or run
-in a digest-pinned image.
+`node-typescript-postgresql`, `python3-pytest-hypothesis`, and
+`react18-typescript` installations. Other dependency-bearing profiles remain
+rejected until they define equivalent installed-tree attestation or run in a
+digest-pinned image.
 Dependency-free interpreter and service profiles may declare profile-approved
 test-runtime mounts and command prefixes. The runner supports the pinned
 `python3-stdlib` runtime and a PostgreSQL lifecycle that creates a fresh data
-directory and private Unix socket per phase. Other service runtimes remain
-scaffold-only until their complete execution boundary is implemented.
+directory and private Unix socket per phase. The Node/PostgreSQL profile mounts
+its attested package tree read-only in the candidate namespace while the
+database server remains separate.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free
@@ -138,6 +140,16 @@ trusted reference and all controlled mutations:
 
 ```bash
 npm run fixture:typescript-cache:self-test
+```
+
+The active backend idempotency fixture requires the attested
+`node-typescript-postgresql` revision 4 package tree, pinned Node.js 22.16.0,
+and the root-owned PostgreSQL 16.9 runtime. Its calibration runs a fresh
+database for every compile and test phase and rejects eleven controlled
+idempotency, input-validation, and atomicity defects:
+
+```bash
+npm run fixture:backend-idempotency:self-test
 ```
 
 The active PostgreSQL pagination fixture requires the pinned root-owned

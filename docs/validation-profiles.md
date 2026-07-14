@@ -57,7 +57,7 @@ policies require no network and an isolated filesystem.
 | `c11-host` | GCC/`cc` 13.3.0 | None | Native `build/` executable |
 | `go-std` | Go 1.24.4 | None; standard library only | Native `build/` executable |
 | `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | `tsc` compile and Node.js public-test commands |
-| `node-typescript-postgresql` | Node.js 22.16.0, TypeScript 5.8.3, PostgreSQL 16.9 | Express, `pg`, TypeScript, and types | Not active until dependencies and service runtime are mounted |
+| `node-typescript-postgresql` | Node.js 22.16.0, PostgreSQL 16.9 | Express 5.1.0, `pg` 8.16.0, TypeScript 5.8.3, and types | Validator-owned TypeScript compile launcher plus Node.js public tests over a fresh private PostgreSQL socket |
 | `postgresql` | PostgreSQL 16.9 `initdb`, `pg_ctl`, server, and client | None | Fresh isolated cluster plus approved `psql -X -v ON_ERROR_STOP=1 ...` commands |
 | `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | Hash-pinned pytest, Hypothesis, and pure-Python transitive closure | Pytest property-test modules with deterministic Hypothesis settings |
 | `python3-stdlib` | Python 3.12.11 | None; standard library only | `python3 -m py_compile ...` and `python3 -m unittest ...` with Python runtime mounts |
@@ -72,6 +72,10 @@ resource limits. Dependency-bearing current profiles also record a
 The runtime-enabled `node-typescript` profile additionally uses an npm
 package-lock with registry integrity values for the complete transitive
 closure and pins the canonical hash of its installed tree.
+The runtime-enabled `node-typescript-postgresql` profile applies the same
+attestation to Express, `pg`, TypeScript, and their declarations. It mounts the
+Node runtime and package tree read-only for the candidate and runs PostgreSQL
+in a separate no-network namespace joined only by a fresh Unix socket.
 The runtime-enabled `react18-typescript` profile applies the same attestation
 to its React, jsdom, Testing Library, TypeScript, and declaration package tree;
 the runner mounts it read-only during both compile and test phases.
@@ -127,7 +131,8 @@ executed. Standard-library-only profiles are not automatically eligible: the
 test sandbox supports native binaries produced by `c11-host`, `go-std`, and
 `stable-rust`, plus approved interpreter commands for `python3-stdlib`,
 `python3-pytest-hypothesis`, `node-typescript`, `postgresql`, and
-`react18-typescript`. The PostgreSQL profile additionally records fixed
+`node-typescript-postgresql`, and `react18-typescript`. PostgreSQL-backed
+profiles additionally record fixed
 initialize, start, readiness, and stop argv. Its server and candidate client
 run in separate no-network Bubblewrap namespaces joined only by a fresh
 temporary Unix socket directory. Readiness also creates a non-superuser

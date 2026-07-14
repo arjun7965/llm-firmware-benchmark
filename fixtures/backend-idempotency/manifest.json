@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.4",
+  "taskId": "backend-idempotency",
+  "targetProfile": null,
+  "validationProfile": "node-typescript-postgresql",
+  "status": "active",
+  "language": "typescript",
+  "toolVersionArgs": {
+    "initdb": ["--version"],
+    "node": ["--version"],
+    "pg_ctl": ["--version"],
+    "postgres": ["--version"],
+    "psql": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-file-bundle",
+    "files": [
+      {
+        "path": "orders.ts",
+        "language": "typescript"
+      },
+      {
+        "path": "schema.sql",
+        "language": "sql"
+      }
+    ]
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "typescript-compile",
+      "phase": "compile",
+      "argv": [
+        "node",
+        "starter/compile-typescript.mjs",
+        "--strict",
+        "--target",
+        "ES2022",
+        "--module",
+        "CommonJS",
+        "--moduleResolution",
+        "Node",
+        "--esModuleInterop",
+        "--lib",
+        "ES2022",
+        "--outDir",
+        "build/output",
+        "generated/orders.ts",
+        "starter/orders_api.ts",
+        "tests/public/test_orders.ts"
+      ],
+      "requiredTools": ["node"],
+      "timeoutMs": 60000
+    },
+    {
+      "id": "public-tests",
+      "phase": "test",
+      "argv": [
+        "node",
+        "build/output/tests/public/test_orders.js",
+        "generated/schema.sql"
+      ],
+      "requiredTools": ["initdb", "node", "pg_ctl", "postgres", "psql"],
+      "timeoutMs": 30000
+    }
+  ]
+}

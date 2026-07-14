@@ -1214,6 +1214,7 @@ export const sandboxRunnableValidationProfileIds = Object.freeze([
   "c11-host",
   "go-std",
   "node-typescript",
+  "node-typescript-postgresql",
   "python3-pytest-hypothesis",
   "python3-stdlib",
   "postgresql",

@@ -78,7 +78,11 @@ test("fixture-backed prompts match their declared answer contract", () => {
     if (manifest.status !== "active") continue;
     if (manifest.answer.format === "markdown-file-bundle") {
       assert.ok(
-        ["go-graceful-shutdown", "postgres-pagination"].includes(task.id),
+        [
+          "backend-idempotency",
+          "go-graceful-shutdown",
+          "postgres-pagination",
+        ].includes(task.id),
         `fixture ${task.id} has an undocumented multi-file contract`,
       );
       for (const file of manifest.answer.files) {
@@ -96,4 +100,14 @@ test("fixture-backed prompts match their declared answer contract", () => {
       );
     }
   }
+});
+
+test("backend idempotency prompt requires its exact bundle fence labels", () => {
+  const task = loadTasks(new URL("../tasks.json", import.meta.url)).find(
+    (entry) => entry.id === "backend-idempotency",
+  );
+
+  assert.ok(task);
+  assert.match(task.prompt, /fence label is exactly `typescript`/u);
+  assert.match(task.prompt, /fence label is exactly `sql`/u);
 });

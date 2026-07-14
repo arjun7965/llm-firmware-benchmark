@@ -37,7 +37,7 @@ implemented and calibrated.
 | `go-graceful-shutdown` | Multi-file | Multi-file | Runnable server code and Go-discoverable `*_test.go` tests require distinct files |
 | `rust-stream-decoder` | Single file | Single file | One Rust library module; unit tests are validator-owned |
 | `typescript-singleflight-cache` | Single file | Single file | One cache module; fake-clock tests are validator-owned |
-| `backend-idempotency` | Rubric-only | Multi-file | SQL migration and TypeScript endpoint are independently validated artifacts |
+| `backend-idempotency` | Multi-file | Multi-file | SQL migration and TypeScript endpoint are independently validated artifacts |
 | `postgres-pagination` | Multi-file | Multi-file | SQL/index artifacts and cursor-validation code use distinct files |
 | `webhook-replay-security` | Rubric-only | Multi-file | SQL migration and TypeScript handler are independently validated artifacts |
 

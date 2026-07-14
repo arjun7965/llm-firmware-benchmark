@@ -51,10 +51,10 @@ test("repository fixture scaffolds match task metadata", () => {
   assert.deepEqual(
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
-      fixtureCount: 11,
-      activeCount: 11,
+      fixtureCount: 12,
+      activeCount: 12,
       scaffoldCount: 0,
-      commandCount: 23,
+      commandCount: 25,
     },
   );
 });
@@ -87,7 +87,7 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
       ...task,
       validationProfile: "node-typescript-postgresql",
     }),
-    /must remain a scaffold.*dependency installation cannot be runtime-attested/u,
+    /tool cc is not in its validation profile/u,
   );
   assert.throws(
     () => validateFixtureManifest({

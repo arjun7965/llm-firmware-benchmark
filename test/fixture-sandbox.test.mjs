@@ -856,6 +856,167 @@ test("sandbox provisions a fresh PostgreSQL service for each phase", (t) => {
   }
 });
 
+test("sandbox mounts an attested Node/PostgreSQL runtime for backend tests", (t) => {
+  const fixture = sandboxFixture(t);
+  const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
+  tasks[0].suite = "auxiliary";
+  tasks[0].validationProfile = "node-typescript-postgresql";
+  delete tasks[0].targetProfile;
+  tasks[0].prompt = "Return ### `orders.ts` and `schema.sql`.";
+  writeFileSync(fixture.tasksPath, JSON.stringify(tasks));
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "orders.ts"),
+    "export function createOrdersApp() { return undefined; }\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "schema.sql"),
+    "SELECT 1;\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "starter", "compile-typescript.mjs"),
+    "process.exitCode = 0;\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "starter", "orders_api.ts"),
+    "export {};\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "tests", "public", "test_orders.ts"),
+    "export {};\n",
+  );
+  const requiredTools = ["initdb", "node", "pg_ctl", "postgres", "psql"];
+  writeFileSync(
+    join(fixture.fixtureRoot, "manifest.json"),
+    JSON.stringify({
+      ...fixture.manifest,
+      targetProfile: null,
+      validationProfile: "node-typescript-postgresql",
+      language: "typescript",
+      toolVersionArgs: Object.fromEntries(
+        requiredTools.map((tool) => [tool, ["--version"]]),
+      ),
+      answer: {
+        format: "markdown-file-bundle",
+        files: [
+          { path: "orders.ts", language: "typescript" },
+          { path: "schema.sql", language: "sql" },
+        ],
+      },
+      commands: [
+        {
+          id: "typescript-compile",
+          phase: "compile",
+          argv: [
+            "node",
+            "starter/compile-typescript.mjs",
+            "--strict",
+            "--target",
+            "ES2022",
+            "--module",
+            "CommonJS",
+            "--moduleResolution",
+            "Node",
+            "--esModuleInterop",
+            "--lib",
+            "ES2022",
+            "--outDir",
+            "build/output",
+            "generated/orders.ts",
+            "starter/orders_api.ts",
+            "tests/public/test_orders.ts",
+          ],
+          requiredTools: ["node"],
+          timeoutMs: 60_000,
+        },
+        {
+          id: "public-tests",
+          phase: "test",
+          argv: [
+            "node",
+            "build/output/tests/public/test_orders.js",
+            "generated/schema.sql",
+          ],
+          requiredTools,
+          timeoutMs: 30_000,
+        },
+      ],
+    }),
+  );
+
+  const postgresRoot = "/usr/local/lib/postgresql-16.9";
+  const nodeRoot = "/usr/local/lib/node-22.16.0";
+  const installRoot = "/usr/local/lib/node-typescript-postgresql-4/node_modules";
+  const serviceCalls = [];
+  const toolPaths = {
+    bwrap: "/usr/bin/bwrap",
+    initdb: `${postgresRoot}/bin/initdb`,
+    node: `${nodeRoot}/bin/node`,
+    pg_ctl: `${postgresRoot}/bin/pg_ctl`,
+    postgres: `${postgresRoot}/bin/postgres`,
+    prlimit: "/usr/bin/prlimit",
+    psql: `${postgresRoot}/bin/psql`,
+  };
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: fixture.fixturesRoot,
+    tasksPath: fixture.tasksPath,
+    attestDependencyInstallationImpl: () => ({
+      installRoot,
+      mountPath: "/workspace/node_modules",
+      sha256: "0".repeat(64),
+    }),
+    resolveExecutableImpl: (name) => toolPaths[name],
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    runPostgresqlServiceImpl: (configuration) => {
+      serviceCalls.push(configuration);
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.equal(report.success, true);
+  assert.equal(report.validationProfileRevision, 4);
+  assert.equal(serviceCalls.length, 2);
+  for (const serviceCall of serviceCalls) {
+    assert.ok(serviceCall.initialize.args.includes(`${postgresRoot}/bin/initdb`));
+    assert.ok(serviceCall.start.args.includes(`${postgresRoot}/bin/postgres`));
+    assert.ok(serviceCall.ready.args.includes(`${postgresRoot}/bin/psql`));
+    assert.ok(serviceCall.candidate.args.includes(nodeRoot));
+    assert.ok(serviceCall.candidate.args.includes(installRoot));
+    assert.ok(serviceCall.candidate.args.includes(postgresRoot));
+    const dependencyMount = serviceCall.candidate.args.findIndex(
+      (argument, index, args) =>
+        argument === "/workspace/node_modules" &&
+        args[index - 1] === installRoot,
+    );
+    assert.deepEqual(
+      serviceCall.candidate.args.slice(dependencyMount - 2, dependencyMount + 1),
+      ["--ro-bind", installRoot, "/workspace/node_modules"],
+    );
+    assert.ok(serviceCall.candidate.args.includes(
+      "/workspace/service/socket",
+    ));
+    assert.equal(serviceCall.candidate.args.includes("/usr"), false);
+    assert.equal(serviceCall.candidate.args.includes("/bin"), false);
+    assert.equal(
+      serviceCall.candidate.args[serviceCall.candidate.args.lastIndexOf("--") + 1],
+      `${nodeRoot}/bin/node`,
+    );
+  }
+  assert.ok(serviceCalls[0].candidate.args.includes(
+    "starter/compile-typescript.mjs",
+  ));
+  assert.ok(serviceCalls[1].candidate.args.includes(
+    "build/output/tests/public/test_orders.js",
+  ));
+});
+
 test("sandbox attests and mounts pytest and Hypothesis at test time", (t) => {
   const propertyFixture = sandboxFixture(t);
   const propertyTasks = JSON.parse(

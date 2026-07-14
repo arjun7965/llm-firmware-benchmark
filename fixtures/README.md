@@ -74,12 +74,19 @@ keyset/index tests. The runner initializes a fresh PostgreSQL 16.9 data
 directory for every compile or test phase, exposes only its private Unix
 socket to the candidate sandbox, and tears down the service afterward.
 
+The active `backend-idempotency` fixture uses a two-file TypeScript/SQL bundle.
+It mounts its attested Express and `pg` package tree read-only, starts the
+candidate app on an in-namespace Unix socket, and exposes only the fresh
+PostgreSQL service socket across the server/candidate boundary. Its public
+tests cover concurrent requests, raw-byte request binding, replay behavior,
+user scoping, validation, and transactional rollback.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
-`node-typescript`, `python3-pytest-hypothesis`, `postgresql`, and
-`react18-typescript` profiles. Other dependency-bearing and service fixtures
-must remain scaffolds until their exact
+`node-typescript`, `node-typescript-postgresql`, `python3-pytest-hypothesis`,
+`postgresql`, and `react18-typescript` profiles. Other dependency-bearing and
+service fixtures must remain scaffolds until their exact
 packages and test runtimes can be verified, mounted, and executed in the test
 namespace.
 

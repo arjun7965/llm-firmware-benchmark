@@ -107,11 +107,20 @@ jobs:
       - name: Install pinned root-owned Go toolchain
         run: |
           go_root="$(go env GOROOT)"
-          sudo install -d /usr/local/lib/go-1.24.4
-          sudo cp -a "${go_root}/." /usr/local/lib/go-1.24.4/
-          sudo chown -R root:root /usr/local/lib/go-1.24.4
-          sudo chmod -R go-w /usr/local/lib/go-1.24.4
-          sudo ln -sfn /usr/local/lib/go-1.24.4/bin/go /usr/local/bin/go
+          install_root="/usr/local/lib/go-1.24.4"
+          sudo install -d "${install_root}"
+          sudo cp -aL "${go_root}/." "${install_root}/"
+          sudo test -d "${install_root}/src/crypto/internal/boring/sig"
+          sudo test -f "${install_root}/src/crypto/internal/boring/sig/sig.go"
+          if sudo find "${install_root}/src/crypto/internal/boring/sig" \
+            -type l -print -quit | grep -q .
+          then
+            echo "Go standard-library package contains symbolic links" >&2
+            exit 1
+          fi
+          sudo chown -R root:root "${install_root}"
+          sudo chmod -R go-w "${install_root}"
+          sudo ln -sfn "${install_root}/bin/go" /usr/local/bin/go
       - name: Install pinned root-owned Node and TypeScript runtimes
         run: |
           node_prefix="$(dirname "$(dirname "$(command -v node)")")"
@@ -122,6 +131,13 @@ jobs:
             --no-fund \
             --bin-links=false
           rm validation-locks/node-typescript-v4/node_modules/.package-lock.json
+          npm ci \
+            --prefix validation-locks/node-typescript-postgresql-v4 \
+            --ignore-scripts \
+            --no-audit \
+            --no-fund \
+            --bin-links=false
+          rm validation-locks/node-typescript-postgresql-v4/node_modules/.package-lock.json
           npm ci \
             --prefix validation-locks/react18-typescript-v4 \
             --ignore-scripts \
@@ -139,6 +155,12 @@ jobs:
             /usr/local/lib/node-typescript-4/
           sudo chown -R root:root /usr/local/lib/node-typescript-4
           sudo chmod -R go-w /usr/local/lib/node-typescript-4
+          sudo install -d /usr/local/lib/node-typescript-postgresql-4/node_modules
+          sudo cp -a \
+            validation-locks/node-typescript-postgresql-v4/node_modules/. \
+            /usr/local/lib/node-typescript-postgresql-4/node_modules/
+          sudo chown -R root:root /usr/local/lib/node-typescript-postgresql-4
+          sudo chmod -R go-w /usr/local/lib/node-typescript-postgresql-4
           sudo install -d /usr/local/lib/react18-typescript-4/node_modules
           sudo cp -a \
             validation-locks/react18-typescript-v4/node_modules/. \
@@ -172,6 +194,7 @@ jobs:
           npm run fixture:rust-decoder:self-test
           npm run fixture:property-tests:self-test
           npm run fixture:frontend-autocomplete:self-test
+          npm run fixture:backend-idempotency:self-test
           npm run fixture:postgres-pagination:self-test
           npm run fixture:typescript-cache:self-test
           npm run test:sandbox
