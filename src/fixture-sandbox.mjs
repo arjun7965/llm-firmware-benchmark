@@ -535,13 +535,20 @@ export function buildSandboxInvocation({
     sandboxArgs.push("--dir", directory);
   }
   if (serviceRoot !== null) {
-    sandboxArgs.push(
-      "--dir",
-      postgresqlServiceWorkspace,
-      serviceWritable ? "--bind" : "--ro-bind",
-      serviceRoot,
-      postgresqlServiceWorkspace,
-    );
+    sandboxArgs.push("--dir", postgresqlServiceWorkspace);
+    if (serviceWritable) {
+      sandboxArgs.push(
+        "--bind",
+        serviceRoot,
+        postgresqlServiceWorkspace,
+      );
+    } else {
+      sandboxArgs.push(
+        "--ro-bind",
+        join(serviceRoot, "socket"),
+        `${postgresqlServiceWorkspace}/socket`,
+      );
+    }
   }
 
   const dependencyInstall = validationProfile.dependencyInstall;

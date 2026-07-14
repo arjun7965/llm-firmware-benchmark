@@ -131,7 +131,8 @@ test sandbox supports native binaries produced by `c11-host`, `go-std`, and
 initialize, start, readiness, and stop argv. Its server and candidate client
 run in separate no-network Bubblewrap namespaces joined only by a fresh
 temporary Unix socket directory. Readiness also creates a non-superuser
-database-owner role used for all candidate SQL.
+database-owner role used for all candidate SQL, then disables login on the
+bootstrap superuser so candidate scripts cannot reconnect with another role.
 
 ## Task Mapping
 

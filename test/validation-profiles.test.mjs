@@ -180,6 +180,10 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfile("postgresql").testRuntime.service.kind,
     "postgresql",
   );
+  assert.match(
+    getValidationProfile("postgresql").testRuntime.service.readyArgv.at(-1),
+    /ALTER ROLE validator NOLOGIN/u,
+  );
   assert.deepEqual(
     getValidationProfile("postgresql").toolchains,
     ["initdb", "pg_ctl", "postgres", "psql"],

@@ -18,6 +18,15 @@ SELECT pg_temp.assert_true(
   'candidate SQL must run as the non-superuser benchmark role'
 );
 
+SELECT pg_temp.assert_true(
+  NOT (
+    SELECT rolcanlogin
+    FROM pg_roles
+    WHERE rolname = 'validator'
+  ),
+  'the bootstrap superuser must reject candidate reconnection attempts'
+);
+
 INSERT INTO public.orders (id, tenant_id, created_at, status, total) VALUES
   (101, 1, '2026-01-01 12:00:00+00', 'pending', 10.00),
   (102, 1, '2026-01-02 12:00:00+00', 'cancelled', 20.00),
@@ -106,6 +115,20 @@ SELECT pg_temp.assert_true(
   'cursor status filters must be canonical and duplicate free'
 );
 
+SELECT pg_temp.assert_true(
+  ARRAY(
+    SELECT key
+    FROM jsonb_object_keys(public.orders_cursor(
+      1,
+      ARRAY['paid'],
+      '2026-01-03 12:00:00+00',
+      104
+    )) AS keys(key)
+    ORDER BY key
+  ) = ARRAY['created_at', 'id', 'statuses', 'tenant_id']::text[],
+  'generated cursors must contain exactly the declared fields'
+);
+
 DO $block$
 BEGIN
   BEGIN
@@ -121,6 +144,30 @@ BEGIN
       50
     );
     RAISE EXCEPTION 'tenant-bound cursor was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.orders_page(
+      1,
+      ARRAY['paid'],
+      '{"tenant_id":1,"statuses":["paid"],"created_at":"2026-01-03T12:00:00Z","id":104,"extra":true}'::jsonb,
+      50
+    );
+    RAISE EXCEPTION 'cursor with an extra field was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.orders_page(
+      1,
+      ARRAY['paid'],
+      '{"tenant_id":"1","statuses":["paid"],"created_at":"2026-01-03T12:00:00Z","id":104}'::jsonb,
+      50
+    );
+    RAISE EXCEPTION 'cursor with the wrong field type was accepted';
   EXCEPTION WHEN SQLSTATE '22023' THEN
     NULL;
   END;
@@ -162,6 +209,46 @@ BEGIN
       50
     );
     RAISE EXCEPTION 'malformed cursor was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.orders_page(0, ARRAY['paid'], NULL, 50);
+    RAISE EXCEPTION 'nonpositive tenant was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.orders_page(1, ARRAY[]::text[], NULL, 50);
+    RAISE EXCEPTION 'empty status filter was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.orders_page(
+      1,
+      ARRAY['paid', NULL]::text[],
+      NULL,
+      50
+    );
+    RAISE EXCEPTION 'null status filter was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.orders_page(1, ARRAY['unknown'], NULL, 50);
+    RAISE EXCEPTION 'unknown page status was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM public.orders_page(1, ARRAY['paid'], NULL, 0);
+    RAISE EXCEPTION 'zero page limit was accepted';
   EXCEPTION WHEN SQLSTATE '22023' THEN
     NULL;
   END;

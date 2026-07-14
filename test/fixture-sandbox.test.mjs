@@ -834,11 +834,23 @@ test("sandbox provisions a fresh PostgreSQL service for each phase", (t) => {
     assert.equal(serviceCall.candidate.args.includes("/etc/passwd"), false);
     const serviceMount = serviceCall.candidate.args.findIndex(
       (argument, index, args) =>
-        argument === "/workspace/service" &&
+        argument === "/workspace/service/socket" &&
         args[index - 2] === "--ro-bind",
     );
     assert.ok(serviceMount > 0);
     assert.equal(serviceCall.candidate.args[serviceMount - 2], "--ro-bind");
+    assert.match(
+      serviceCall.candidate.args[serviceMount - 1],
+      /\/service\/socket$/u,
+    );
+    assert.equal(
+      serviceCall.candidate.args.some((argument, index, args) =>
+        argument === "/workspace/service" && args[index - 2] === "--ro-bind"),
+      false,
+    );
+    assert.ok(serviceCall.ready.args.some((argument, index, args) =>
+      argument === "/workspace/service/socket" &&
+      args[index - 2] === "--ro-bind"));
     assert.ok(serviceCall.initialize.args.includes("--bind"));
     assert.ok(serviceCall.start.args.includes("--bind"));
   }

@@ -1536,7 +1536,7 @@
             "ON_ERROR_STOP=1",
             "--username=validator",
             "-Atqc",
-            "DO $bootstrap$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'benchmark') THEN EXECUTE 'CREATE ROLE benchmark LOGIN'; END IF; END $bootstrap$; ALTER DATABASE postgres OWNER TO benchmark; SELECT 1"
+            "DO $bootstrap$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'benchmark') THEN EXECUTE 'CREATE ROLE benchmark LOGIN'; END IF; END $bootstrap$; ALTER DATABASE postgres OWNER TO benchmark; ALTER ROLE validator NOLOGIN; SELECT 1"
           ],
           "stopArgv": [
             "pg_ctl",
