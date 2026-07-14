@@ -202,6 +202,11 @@ The active backend idempotency fixture is calibrated with
 TypeScript/SQL answer with an attested Express and `pg` package tree, then
 exercises duplicate HTTP requests against a fresh private PostgreSQL socket.
 
+The active webhook replay security fixture is calibrated with
+`npm run fixture:webhook-replay-security:self-test`. It authenticates exact
+raw request bytes, verifies secret rotation and cross-instance replay behavior,
+and rolls back the event with its outbox action on a PostgreSQL failure.
+
 The active frontend-autocomplete fixture is calibrated with
 `npm run fixture:frontend-autocomplete:self-test`. Deterministic jsdom
 interaction tests verify its exact debounce boundary, async race handling,

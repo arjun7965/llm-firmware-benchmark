@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/handler.ts",
+  "mutations": [
+    {
+      "id": "parses-json-before-authentication",
+      "description": "Parse a malformed request before checking its signature.",
+      "find": "    if (!hasValidSignature(signingSecrets, timestamp, rawBody, signature)) {",
+      "replace": "    const parsedBeforeAuthentication = JSON.parse(rawBody.toString(\"utf8\"));\n    void parsedBeforeAuthentication;\n    if (!hasValidSignature(signingSecrets, timestamp, rawBody, signature)) {"
+    },
+    {
+      "id": "skips-hmac-verification",
+      "description": "Accept a request without verifying its HMAC.",
+      "find": "    if (!hasValidSignature(signingSecrets, timestamp, rawBody, signature)) {",
+      "replace": "    if (false) {"
+    },
+    {
+      "id": "uses-nonconstant-time-comparison",
+      "description": "Use ordinary buffer equality for signature verification.",
+      "find": "    matches = timingSafeEqual(expected, provided) || matches;",
+      "replace": "    matches = expected.equals(provided) || matches;"
+    },
+    {
+      "id": "drops-previous-rotation-secret",
+      "description": "Only verify with the first configured signing secret.",
+      "find": "  const signingSecrets = [...secrets];",
+      "replace": "  const signingSecrets = [secrets[0]];"
+    },
+    {
+      "id": "accepts-stale-timestamps",
+      "description": "Remove the five-minute timestamp window.",
+      "find": "    if (Math.abs(now() - parsedTimestamp.milliseconds) > MAX_TIMESTAMP_SKEW_MS) {",
+      "replace": "    if (false) {"
+    },
+    {
+      "id": "hashes-reserialized-json",
+      "description": "Bind the event ID to reserialized JSON instead of exact bytes.",
+      "find": "    const authenticatedSha256 = contentSha256(timestamp, rawBody);",
+      "replace": "    const authenticatedSha256 = contentSha256(\n      timestamp,\n      Buffer.from(JSON.stringify(payload), \"utf8\"),\n    );"
+    },
+    {
+      "id": "overwrites-duplicate-event",
+      "description": "Treat an existing event ID as a newly claimed delivery.",
+      "find": "         ON CONFLICT (webhook_id) DO NOTHING\n         RETURNING webhook_id",
+      "replace": "         ON CONFLICT (webhook_id) DO UPDATE\n           SET authenticated_sha256 = EXCLUDED.authenticated_sha256\n         RETURNING webhook_id"
+    },
+    {
+      "id": "accepts-conflicting-id-content",
+      "description": "Do not reject a webhook ID reused for different authenticated bytes.",
+      "find": "          return response.status(409).json({ error: \"webhook_id_reused\" });",
+      "replace": "          return accepted(response);"
+    },
+    {
+      "id": "skips-outbox-enqueue",
+      "description": "Commit an accepted event without inserting its outbox action.",
+      "find": "      const outbox = await client.query(\n        `INSERT INTO public.webhook_outbox (webhook_id, topic, payload)\n         VALUES ($1, 'webhook.received', $2::jsonb)\n         RETURNING id`,\n        [webhookId, serializedPayload],\n      );\n      if (outbox.rowCount !== 1) {\n        throw new Error(\"outbox insert did not return one row\");\n      }\n",
+      "replace": ""
+    },
+    {
+      "id": "commits-event-before-outbox",
+      "description": "Commit the event before an outbox failure can roll it back.",
+      "find": "      await client.query(\"BEGIN\");",
+      "replace": "      await client.query(\"BEGIN\");\n      await client.query(\"COMMIT\");"
+    },
+    {
+      "id": "returns-wrong-success-status",
+      "description": "Return 200 rather than the declared accepted response status.",
+      "find": "  return response.status(202).json(acceptedResponse);",
+      "replace": "  return response.status(200).json(acceptedResponse);"
+    }
+  ]
+}

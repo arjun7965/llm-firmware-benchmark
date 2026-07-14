@@ -81,6 +81,12 @@ PostgreSQL service socket across the server/candidate boundary. Its public
 tests cover concurrent requests, raw-byte request binding, replay behavior,
 user scoping, validation, and transactional rollback.
 
+The active `webhook-replay-security` fixture uses the same isolated
+Node/PostgreSQL boundary for a TypeScript handler and SQL schema bundle. Its
+public tests authenticate exact raw bytes before JSON parsing, exercise secret
+rotation and concurrent deliveries across two app instances, and verify that
+the event and its one outbox row roll back together.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
