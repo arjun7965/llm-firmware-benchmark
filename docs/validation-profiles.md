@@ -58,7 +58,7 @@ policies require no network and an isolated filesystem.
 | `go-std` | Go 1.24.4 | None; standard library only | Native `build/` executable |
 | `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | `tsc` compile and Node.js public-test commands |
 | `node-typescript-postgresql` | Node.js 22.16.0, TypeScript 5.8.3, PostgreSQL 16.9 | Express, `pg`, TypeScript, and types | Not active until dependencies and service runtime are mounted |
-| `postgresql` | PostgreSQL server and client 16.9 | None | `psql -v ON_ERROR_STOP=1 -f ...` with PostgreSQL runtime mounts |
+| `postgresql` | PostgreSQL 16.9 `initdb`, `pg_ctl`, server, and client | None | Fresh isolated cluster plus approved `psql -X -v ON_ERROR_STOP=1 ...` commands |
 | `python3-pytest-hypothesis` | Python 3.12.11, pytest 8.4.0 | Hash-pinned pytest, Hypothesis, and pure-Python transitive closure | Pytest property-test modules with deterministic Hypothesis settings |
 | `python3-stdlib` | Python 3.12.11 | None; standard library only | `python3 -m py_compile ...` and `python3 -m unittest ...` with Python runtime mounts |
 | `react18-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | React 18.3.1, jsdom 26.1.0, Testing Library, and exact type declarations | `tsc` compile and Node.js jsdom interaction tests |
@@ -126,10 +126,12 @@ these runtime fields continue to fail closed before tools are resolved or
 executed. Standard-library-only profiles are not automatically eligible: the
 test sandbox supports native binaries produced by `c11-host`, `go-std`, and
 `stable-rust`, plus approved interpreter commands for `python3-stdlib`,
-`python3-pytest-hypothesis`, `node-typescript`, and `react18-typescript`. The
-registry also records
-PostgreSQL runtime mounts and command prefixes, but the runner fails closed for
-that service profile until its isolated server boundary is implemented.
+`python3-pytest-hypothesis`, `node-typescript`, `postgresql`, and
+`react18-typescript`. The PostgreSQL profile additionally records fixed
+initialize, start, readiness, and stop argv. Its server and candidate client
+run in separate no-network Bubblewrap namespaces joined only by a fresh
+temporary Unix socket directory. Readiness also creates a non-superuser
+database-owner role used for all candidate SQL.
 
 ## Task Mapping
 

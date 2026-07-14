@@ -1,3 +1,4 @@
 # Scripts
 
-No fixture-local scripts are active for this scaffold.
+`verify-reference.mjs` runs the trusted reference and every controlled defect
+through the shared PostgreSQL service lifecycle and mutation runner.

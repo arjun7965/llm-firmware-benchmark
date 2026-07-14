@@ -1,4 +1,4 @@
 # Starter
 
-The task prompt supplies the query to replace. A future active fixture should
-place validator-owned schema setup or support files here.
+`orders.sql` is validator-owned and creates the supplied table. Model answers
+must not create or alter it.

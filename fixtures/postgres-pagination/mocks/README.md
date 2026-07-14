@@ -1,4 +1,4 @@
 # Mocks
 
-This scaffold has no mocks yet. Future validation should create an isolated
-PostgreSQL cluster and deterministic test data inside the sandbox.
+No mocks are required. Validation uses a fresh isolated PostgreSQL cluster
+with a Unix-domain socket and no network listener.

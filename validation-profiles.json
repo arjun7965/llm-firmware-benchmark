@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.4",
+  "schemaVersion": "2.5",
   "environments": [
     {
       "id": "ubuntu-24-04-x86-64-c11-host",
@@ -215,6 +215,66 @@
         }
       },
       "toolchains": [
+        {
+          "name": "postgres",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "psql",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ubuntu-24-04-x86-64-postgresql",
+      "revision": 2,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "execution": {
+        "kind": "host"
+      },
+      "sandbox": {
+        "runtime": {
+          "name": "bubblewrap",
+          "executable": "bwrap",
+          "version": "0.9.0",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "limiter": {
+          "name": "prlimit",
+          "executable": "prlimit",
+          "version": "2.39.3",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      },
+      "toolchains": [
+        {
+          "name": "initdb",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "pg_ctl",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        },
         {
           "name": "postgres",
           "version": "16.9",
@@ -1349,6 +1409,147 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "id": "postgresql",
+      "revision": 4,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-postgresql",
+          "revision": 2
+        }
+      ],
+      "toolchains": [
+        "initdb",
+        "pg_ctl",
+        "postgres",
+        "psql"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 67108864,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 67108864,
+            "openFiles": 128
+          },
+          "test": {
+            "addressSpaceBytes": 1073741824,
+            "cpuSeconds": 30,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          }
+        }
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/local/lib/postgresql-16.9",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "postgresql-load",
+            "phase": "compile",
+            "argvPrefix": [
+              "psql",
+              "-X",
+              "-v",
+              "ON_ERROR_STOP=1"
+            ],
+            "requiredTools": [
+              "initdb",
+              "pg_ctl",
+              "postgres",
+              "psql"
+            ]
+          },
+          {
+            "id": "postgresql-test",
+            "phase": "test",
+            "argvPrefix": [
+              "psql",
+              "-X",
+              "-v",
+              "ON_ERROR_STOP=1"
+            ],
+            "requiredTools": [
+              "initdb",
+              "pg_ctl",
+              "postgres",
+              "psql"
+            ]
+          }
+        ],
+        "service": {
+          "kind": "postgresql",
+          "initializeArgv": [
+            "initdb",
+            "-D",
+            "/workspace/service/data",
+            "--username=validator",
+            "--auth-local=trust",
+            "--auth-host=reject",
+            "--encoding=UTF8",
+            "--locale=C",
+            "--no-instructions",
+            "--no-sync"
+          ],
+          "startArgv": [
+            "postgres",
+            "-D",
+            "/workspace/service/data",
+            "-k",
+            "/workspace/service/socket",
+            "-c",
+            "listen_addresses=",
+            "-c",
+            "unix_socket_permissions=0700",
+            "-c",
+            "max_connections=16",
+            "-c",
+            "shared_buffers=16MB",
+            "-c",
+            "dynamic_shared_memory_type=mmap",
+            "-c",
+            "fsync=off",
+            "-c",
+            "synchronous_commit=off",
+            "-c",
+            "full_page_writes=off",
+            "-c",
+            "log_min_messages=warning"
+          ],
+          "readyArgv": [
+            "psql",
+            "-X",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "--username=validator",
+            "-Atqc",
+            "DO $bootstrap$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'benchmark') THEN EXECUTE 'CREATE ROLE benchmark LOGIN'; END IF; END $bootstrap$; ALTER DATABASE postgres OWNER TO benchmark; SELECT 1"
+          ],
+          "stopArgv": [
+            "pg_ctl",
+            "-D",
+            "/workspace/service/data",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "startupTimeoutMs": 10000,
+          "shutdownTimeoutMs": 10000
+        }
       }
     },
     {

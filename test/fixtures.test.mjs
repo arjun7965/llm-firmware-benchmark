@@ -52,9 +52,9 @@ test("repository fixture scaffolds match task metadata", () => {
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
       fixtureCount: 11,
-      activeCount: 10,
-      scaffoldCount: 1,
-      commandCount: 22,
+      activeCount: 11,
+      scaffoldCount: 0,
+      commandCount: 23,
     },
   );
 });

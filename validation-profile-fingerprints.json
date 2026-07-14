@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.4",
+  "schemaVersion": "2.5",
   "environments": {
     "ubuntu-24-04-x86-64-c11-host": {
       "1": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
@@ -14,7 +14,8 @@
       "1": "d35c7793a84f27e4b8a361b088f45862f8c86e608470ca912b70243be6e6bba0"
     },
     "ubuntu-24-04-x86-64-postgresql": {
-      "1": "a0dbbc2586507b2f2378373fc5f83cc3a15b4eef31f9d8af0336960e54c03d5e"
+      "1": "a0dbbc2586507b2f2378373fc5f83cc3a15b4eef31f9d8af0336960e54c03d5e",
+      "2": "183fe93fbe6141e444cceb71936dc33b3558018ff160727d8662c91532fff1b0"
     },
     "ubuntu-24-04-x86-64-python3-pytest-hypothesis": {
       "1": "8d9b86529bbef0fcbc9c4e37e29dd6426b14b58be86ecfc75adf279a3700651c"
@@ -55,7 +56,8 @@
     "postgresql": {
       "1": "b119b04ef8173f2671dbe26126fe590737597734c88333c5ea7e9cafe03379ac",
       "2": "a5f49a3198a2a4c4a223c07578d0d97fe27e0d3b8db998fe5d5a2f3a137c116c",
-      "3": "277fcc8d6ed5b3a34c6e74c4fb302896807c18ce6596beb093da25fc0429d054"
+      "3": "277fcc8d6ed5b3a34c6e74c4fb302896807c18ce6596beb093da25fc0429d054",
+      "4": "ad5ee14733583be16f63715b782683301173e18a0fb70b925b0c518c1913e23f"
     },
     "python3-pytest-hypothesis": {
       "1": "374dcbf18d79fca3623a8ce4c22f2aec4b475632ee798df92d031370a1ba5a75",

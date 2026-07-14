@@ -38,8 +38,11 @@ Hypothesis storage to private `/tmp`, and permits only its fixed pytest command.
 `node-typescript` similarly mounts its pinned Node.js runtime for tests.
 `react18-typescript` mounts that Node runtime plus the attested React/jsdom
 tree and permits only its fixed compiled interaction-test command.
-`postgresql` declares runtime mounts and command prefixes but remains disabled
-until the runner implements its isolated service boundary.
+`postgresql` mounts the pinned server/client tree and uses profile-owned
+initialize, start, readiness/bootstrap, and stop contracts. Bootstrap creates
+a non-superuser database-owner login for candidate SQL. Each phase receives a
+new data directory and Unix socket; the server has no TCP listener or network
+namespace access and is forcibly reaped with its namespace after the phase.
 
 Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor. The CI
 workflow installs `apparmor-profiles` and explicitly loads the distribution's
@@ -61,6 +64,20 @@ Compilation and testing run in separate Bubblewrap namespaces with:
 - only approved runtime files and either the test binary or interpreter during
   execution; and
 - PID namespace teardown and `--die-with-parent` cleanup.
+
+For PostgreSQL, trusted Node orchestration starts the server in its own
+Bubblewrap process and runs `psql` in a separate candidate namespace. They
+share only the temporary service directory containing the data directory and
+private Unix socket. Neither namespace receives the repository, credentials,
+`/etc`, a network interface, or a shell-capable runtime. Compile and test use
+different service directories, and cleanup removes the complete directory.
+Client namespaces mount the service directory read-only; only initialization
+and the server namespace can write cluster files.
+The separate trusted one-shot `initdb` namespace mounts `/bin` and the
+read-only host `/etc/passwd` because `initdb` internally invokes a shell while
+verifying its sibling server binary and resolves its effective UID.
+The profile's explicit stop command is used by direct trusted calibration;
+sandboxed validation instead reaps the server's separate PID namespace.
 
 `prlimit` applies address-space, CPU, output-file, open-file, and core-dump
 limits. Node applies a wall timeout and a 1 MiB stdout/stderr cap. A portable

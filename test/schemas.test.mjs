@@ -330,7 +330,7 @@ test("JSON Schema files declare the expected contracts", () => {
     ["error", "failed", "passed", "timed-out"],
   );
   assert.equal(fixtureValidationSchema.additionalProperties, false);
-  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.4");
+  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.5");
   assert.equal(validationProfilesSchema.additionalProperties, false);
   assert.equal(
     validationProfilesSchema.$defs.dependencyInstall.oneOf.length,
@@ -339,6 +339,10 @@ test("JSON Schema files declare the expected contracts", () => {
   assert.deepEqual(
     validationProfilesSchema.$defs.testRuntime.required,
     ["mounts", "commandContracts"],
+  );
+  assert.equal(
+    validationProfilesSchema.$defs.testRuntimeService.properties.kind.const,
+    "postgresql",
   );
   assert.equal(
     validationProfilesSchema.$defs.testRuntimeMount.properties.access.const,

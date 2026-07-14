@@ -174,7 +174,15 @@ test("hosted validation profiles are pinned and immutable", () => {
   );
   assert.equal(
     getValidationProfile("postgresql").testRuntime.commandContracts[0].id,
-    "postgresql-script",
+    "postgresql-load",
+  );
+  assert.equal(
+    getValidationProfile("postgresql").testRuntime.service.kind,
+    "postgresql",
+  );
+  assert.deepEqual(
+    getValidationProfile("postgresql").toolchains,
+    ["initdb", "pg_ctl", "postgres", "psql"],
   );
   assert.deepEqual(
     validateValidationProfileReference(
@@ -240,7 +248,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   };
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.4",
+      schemaVersion: "2.5",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, secondRevision],
     }),
@@ -248,7 +256,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.4",
+      schemaVersion: "2.5",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -262,7 +270,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.4",
+      schemaVersion: "2.5",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -276,7 +284,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.4",
+      schemaVersion: "2.5",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, structuredClone(validProfile)],
     }),
@@ -284,7 +292,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.4",
+      schemaVersion: "2.5",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...structuredClone(validProfile),
@@ -296,7 +304,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   const logicalProfile = structuredClone(getValidationProfile("c11-host"));
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.4",
+      schemaVersion: "2.5",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...logicalProfile,
@@ -390,5 +398,13 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   assert.throws(
     () => validateValidationProfiles(unknownRuntimeTool),
     /tool pytest is not in its profile/u,
+  );
+  const unsafeServiceCommand = structuredClone(validationProfilesDocument);
+  unsafeServiceCommand.profiles
+    .find((profile) => profile.id === "postgresql" && profile.revision === 4)
+    .testRuntime.service.startArgv[0] = "sh";
+  assert.throws(
+    () => validateValidationProfiles(unsafeServiceCommand),
+    /service startArgv is invalid/u,
   );
 });

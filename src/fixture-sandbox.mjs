@@ -31,6 +31,13 @@ import {
 } from "./fixtures.mjs";
 import { attestDependencyInstallation } from "./dependency-installation.mjs";
 import { loadTasks } from "./harness.mjs";
+import {
+  createPostgresqlServiceRunRoot,
+  postgresqlServiceEnvironment,
+  postgresqlServiceWorkspace,
+  removePostgresqlServiceRunRoot,
+  runPostgresqlService,
+} from "./postgresql-service.mjs";
 import { requireSuite } from "./suites.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
 import {
@@ -327,10 +334,11 @@ function inspectToolchain(
 }
 
 function existingSystemMounts(phase, profile) {
-  const optionalPaths = phase === "compile"
+  const serviceRuntime = profile.testRuntime?.service;
+  const optionalPaths = phase === "compile" && !serviceRuntime
     ? ["/usr", "/bin", "/lib", "/lib64", "/etc/alternatives"]
     : ["/lib", "/lib64"];
-  const requiredPaths = phase === "test"
+  const requiredPaths = phase === "test" || serviceRuntime
     ? profile.testRuntime?.mounts.map((mount) => mount.path) ?? []
     : [];
   return [...new Set([
@@ -388,6 +396,8 @@ export function buildSandboxInvocation({
   manifest,
   buildRoot,
   command,
+  serviceRoot = null,
+  serviceWritable = false,
   toolPath = null,
   systemMounts = null,
 }) {
@@ -395,6 +405,16 @@ export function buildSandboxInvocation({
     throw new TypeError(`unsupported sandbox phase: ${command.phase}`);
   }
   const validationProfile = getValidationProfile(manifest.validationProfile);
+  const serviceRuntime = validationProfile.testRuntime?.service;
+  if (
+    serviceRuntime &&
+    (typeof serviceRoot !== "string" || serviceRoot === "")
+  ) {
+    throw new TypeError("serviceRoot is required for a service profile");
+  }
+  if (typeof serviceWritable !== "boolean") {
+    throw new TypeError("serviceWritable must be boolean");
+  }
   const sandbox = validationProfile.sandbox;
   const mountedSystemPaths = systemMounts ?? existingSystemMounts(
     command.phase,
@@ -450,6 +470,11 @@ export function buildSandboxInvocation({
         "1",
       ]
       : [];
+  const serviceEnvironment = serviceRuntime?.kind === "postgresql"
+    ? Object.entries(postgresqlServiceEnvironment(
+      `${postgresqlServiceWorkspace}/socket`,
+    )).flatMap(([name, value]) => ["--setenv", name, value])
+    : [];
   const sandboxPath = [
     "node-typescript",
     "python3-pytest-hypothesis",
@@ -487,6 +512,7 @@ export function buildSandboxInvocation({
     "/tmp",
     ...profileEnvironment,
     ...dependencyEnvironment,
+    ...serviceEnvironment,
     "--size",
     String(sandbox.rootTmpfsBytes),
     "--tmpfs",
@@ -507,6 +533,15 @@ export function buildSandboxInvocation({
   );
   for (const directory of workspaceDirectories(manifest, validationProfile)) {
     sandboxArgs.push("--dir", directory);
+  }
+  if (serviceRoot !== null) {
+    sandboxArgs.push(
+      "--dir",
+      postgresqlServiceWorkspace,
+      serviceWritable ? "--bind" : "--ro-bind",
+      serviceRoot,
+      postgresqlServiceWorkspace,
+    );
   }
 
   const dependencyInstall = validationProfile.dependencyInstall;
@@ -560,7 +595,7 @@ export function buildSandboxInvocation({
     throw new TypeError(`tool path is required for ${command.id}`);
   }
   if (
-    command.phase === "test" &&
+    (command.phase === "test" || serviceRuntime) &&
     validationProfile.testRuntime &&
     !toolIsUnderRuntimeMount(executable, validationProfile)
   ) {
@@ -590,6 +625,111 @@ export function buildSandboxInvocation({
       timeout: command.timeoutMs,
     },
   };
+}
+
+function serviceInvocation(invocation, cwd) {
+  return {
+    command: invocation.command,
+    args: invocation.args,
+    cwd,
+    env: {},
+    timeoutMs: invocation.options.timeout,
+  };
+}
+
+function runPostgresqlSandboxPhase({
+  bubblewrapPath,
+  buildRoot,
+  command,
+  fixtureRoot,
+  manifest,
+  prlimitPath,
+  runPostgresqlServiceImpl,
+  toolPaths,
+}) {
+  const profile = getValidationProfile(manifest.validationProfile);
+  const service = profile.testRuntime?.service;
+  if (service?.kind !== "postgresql") {
+    throw new TypeError("PostgreSQL service profile is required");
+  }
+  const { runRoot, serviceRoot } = createPostgresqlServiceRunRoot();
+  const buildInvocation = (
+    argv,
+    id,
+    timeoutMs,
+    {
+      serviceWritable = false,
+      systemMounts = null,
+    } = {},
+  ) => buildSandboxInvocation({
+    bubblewrapPath,
+    prlimitPath,
+    fixtureRoot,
+    manifest,
+    buildRoot,
+    command: {
+      id,
+      phase: "test",
+      argv,
+      requiredTools: [argv[0]],
+      timeoutMs,
+    },
+    serviceRoot,
+    serviceWritable,
+    systemMounts,
+    toolPath: toolPaths.get(argv[0]),
+  });
+  try {
+    const candidate = buildSandboxInvocation({
+      bubblewrapPath,
+      prlimitPath,
+      fixtureRoot,
+      manifest,
+      buildRoot,
+      command,
+      serviceRoot,
+      toolPath: command.argv[0].includes("/")
+        ? null
+        : toolPaths.get(command.argv[0]),
+    });
+    const initialize = buildInvocation(
+      service.initializeArgv,
+      "postgresql-initialize",
+      service.startupTimeoutMs,
+      {
+        serviceWritable: true,
+        systemMounts: [
+          ...existingSystemMounts("test", profile),
+          "/bin",
+          "/etc/passwd",
+        ],
+      },
+    );
+    const start = buildInvocation(
+      service.startArgv,
+      "postgresql-start",
+      service.startupTimeoutMs,
+      { serviceWritable: true },
+    );
+    const ready = buildInvocation(
+      service.readyArgv,
+      "postgresql-ready",
+      Math.min(service.startupTimeoutMs, 1_000),
+    );
+    return runPostgresqlServiceImpl({
+      candidate: serviceInvocation(candidate, fixtureRoot),
+      initialize: serviceInvocation(initialize, fixtureRoot),
+      logPath: join(serviceRoot, "postgres.log"),
+      ready: serviceInvocation(ready, fixtureRoot),
+      runRoot,
+      shutdownTimeoutMs: service.shutdownTimeoutMs,
+      start: serviceInvocation(start, fixtureRoot),
+      startupTimeoutMs: service.startupTimeoutMs,
+      stop: null,
+    });
+  } finally {
+    removePostgresqlServiceRunRoot(runRoot);
+  }
 }
 
 function resultOutcome(result) {
@@ -1088,6 +1228,7 @@ export function runFixtureValidation({
   pathValue = process.env.PATH ?? "",
   resolveExecutableImpl = resolveExecutable,
   readValidationHostImpl = readValidationHost,
+  runPostgresqlServiceImpl = runPostgresqlService,
 }) {
   if (typeof taskId !== "string" || !taskIdPattern.test(taskId)) {
     throw new TypeError("taskId is invalid");
@@ -1225,23 +1366,36 @@ export function runFixtureValidation({
           break;
         }
       }
-      const invocation = buildSandboxInvocation({
-        bubblewrapPath,
-        prlimitPath,
-        fixtureRoot,
-        manifest,
-        buildRoot,
-        command,
-        toolPath: command.argv[0].includes("/")
-          ? null
-          : toolPaths.get(command.argv[0]),
-      });
       const startedAt = now();
-      const result = spawn(
-        invocation.command,
-        invocation.args,
-        invocation.options,
-      );
+      const result = validationProfileContract.testRuntime?.service
+        ? runPostgresqlSandboxPhase({
+          bubblewrapPath,
+          buildRoot,
+          command,
+          fixtureRoot,
+          manifest,
+          prlimitPath,
+          runPostgresqlServiceImpl,
+          toolPaths,
+        })
+        : (() => {
+          const invocation = buildSandboxInvocation({
+            bubblewrapPath,
+            prlimitPath,
+            fixtureRoot,
+            manifest,
+            buildRoot,
+            command,
+            toolPath: command.argv[0].includes("/")
+              ? null
+              : toolPaths.get(command.argv[0]),
+          });
+          return spawn(
+            invocation.command,
+            invocation.args,
+            invocation.options,
+          );
+        })();
       const finishedAt = now();
       phases.push(phaseResult(command, result, startedAt, finishedAt));
     }

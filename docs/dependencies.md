@@ -25,7 +25,7 @@ code. Each task references a pinned hosted runtime contract from
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
-| `postgres-pagination` | PostgreSQL server and client tools for schema, query, and `EXPLAIN` validation |
+| `postgres-pagination` | PostgreSQL 16.9 `initdb`, `pg_ctl`, `postgres`, and `psql` |
 | `testing-property-based` | Python 3.12.11, pytest 8.4.0, Hypothesis 6.135.9, and the hash-pinned pure-Python transitive closure |
 | `go-graceful-shutdown` | Go 1.24.4; only the standard library is used |
 | `rust-stream-decoder` | Rust/Cargo 1.87.0 and GCC 13.3.0 as the system linker; standard library only |
@@ -51,8 +51,9 @@ remain rejected until they define equivalent installed-tree attestation or run
 in a digest-pinned image.
 Dependency-free interpreter and service profiles may declare profile-approved
 test-runtime mounts and command prefixes. The runner supports the pinned
-`python3-stdlib` runtime; service runtimes remain scaffold-only until their
-complete execution boundary is implemented.
+`python3-stdlib` runtime and a PostgreSQL lifecycle that creates a fresh data
+directory and private Unix socket per phase. Other service runtimes remain
+scaffold-only until their complete execution boundary is implemented.
 
 Keep validator-only packages outside the root project or in a future isolated
 fixture directory. Do not add runtime dependencies to this dependency-free
@@ -137,6 +138,15 @@ trusted reference and all controlled mutations:
 
 ```bash
 npm run fixture:typescript-cache:self-test
+```
+
+The active PostgreSQL pagination fixture requires the pinned root-owned
+PostgreSQL 16.9 installation. CI builds the official source archive after
+checking its committed SHA-256, then calibrates the reference and twelve
+controlled defects:
+
+```bash
+npm run fixture:postgres-pagination:self-test
 ```
 
 The active property-based testing fixture requires the attested
