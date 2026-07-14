@@ -157,7 +157,7 @@ test("hosted validation profiles are pinned and immutable", () => {
   assert.equal(
     getValidationProfile("node-typescript-postgresql").dependencyInstall
       .installSha256,
-    "f00706c7a8fe32c9c0d49c470d648ff8a8f907349bbec0238e585f0b65ad2445",
+    "2cee5684bb6e504ccefa44d74596086cc280b1947cecd9c9ed4bfd7abdbe42ec",
   );
   assert.deepEqual(
     getValidationProfile("node-typescript-postgresql").testRuntime.mounts
