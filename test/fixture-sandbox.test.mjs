@@ -945,7 +945,7 @@ test("sandbox mounts an attested Node/PostgreSQL runtime for backend tests", (t)
 
   const postgresRoot = "/usr/local/lib/postgresql-16.9";
   const nodeRoot = "/usr/local/lib/node-22.16.0";
-  const installRoot = "/usr/local/lib/node-typescript-postgresql-4";
+  const installRoot = "/usr/local/lib/node-typescript-postgresql-4/node_modules";
   const serviceCalls = [];
   const toolPaths = {
     bwrap: "/usr/bin/bwrap",

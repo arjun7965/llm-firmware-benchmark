@@ -146,10 +146,10 @@ jobs:
             /usr/local/lib/node-typescript-4/
           sudo chown -R root:root /usr/local/lib/node-typescript-4
           sudo chmod -R go-w /usr/local/lib/node-typescript-4
-          sudo install -d /usr/local/lib/node-typescript-postgresql-4
+          sudo install -d /usr/local/lib/node-typescript-postgresql-4/node_modules
           sudo cp -a \
             validation-locks/node-typescript-postgresql-v4/node_modules/. \
-            /usr/local/lib/node-typescript-postgresql-4/
+            /usr/local/lib/node-typescript-postgresql-4/node_modules/
           sudo chown -R root:root /usr/local/lib/node-typescript-postgresql-4
           sudo chmod -R go-w /usr/local/lib/node-typescript-postgresql-4
           sudo install -d /usr/local/lib/react18-typescript-4/node_modules

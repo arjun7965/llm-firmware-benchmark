@@ -156,6 +156,11 @@ test("hosted validation profiles are pinned and immutable", () => {
   );
   assert.equal(
     getValidationProfile("node-typescript-postgresql").dependencyInstall
+      .installRoot,
+    "/usr/local/lib/node-typescript-postgresql-4/node_modules",
+  );
+  assert.equal(
+    getValidationProfile("node-typescript-postgresql").dependencyInstall
       .installSha256,
     "2cee5684bb6e504ccefa44d74596086cc280b1947cecd9c9ed4bfd7abdbe42ec",
   );
@@ -164,7 +169,7 @@ test("hosted validation profiles are pinned and immutable", () => {
       .map((mount) => mount.path),
     [
       "/usr/local/lib/node-22.16.0",
-      "/usr/local/lib/node-typescript-postgresql-4",
+      "/usr/local/lib/node-typescript-postgresql-4/node_modules",
       "/usr/local/lib/postgresql-16.9",
     ],
   );

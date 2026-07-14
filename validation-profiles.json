@@ -1401,7 +1401,7 @@
         "source": "npm",
         "lockfile": "validation-locks/node-typescript-postgresql-v4/package-lock.json",
         "sha256": "c975f6312562424a518a222301e0e0236eb118e48aacd428b63bc58681156315",
-        "installRoot": "/usr/local/lib/node-typescript-postgresql-4",
+        "installRoot": "/usr/local/lib/node-typescript-postgresql-4/node_modules",
         "installSha256": "2cee5684bb6e504ccefa44d74596086cc280b1947cecd9c9ed4bfd7abdbe42ec",
         "mountPath": "/workspace/node_modules"
       },
@@ -1412,7 +1412,7 @@
             "access": "read-only"
           },
           {
-            "path": "/usr/local/lib/node-typescript-postgresql-4",
+            "path": "/usr/local/lib/node-typescript-postgresql-4/node_modules",
             "access": "read-only"
           },
           {
