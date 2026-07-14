@@ -1,0 +1,13 @@
+{
+  "name": "node-typescript-postgresql-validation-profile",
+  "version": "4.0.0",
+  "private": true,
+  "devDependencies": {
+    "@types/express": "5.0.2",
+    "@types/node": "22.15.29",
+    "@types/pg": "8.15.4",
+    "express": "5.1.0",
+    "pg": "8.16.0",
+    "typescript": "5.8.3"
+  }
+}

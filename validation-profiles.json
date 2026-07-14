@@ -186,6 +186,73 @@
       ]
     },
     {
+      "id": "ubuntu-24-04-x86-64-node-typescript-postgresql",
+      "revision": 2,
+      "host": {
+        "operatingSystem": "ubuntu",
+        "release": "24.04",
+        "architecture": "x86_64"
+      },
+      "execution": {
+        "kind": "host"
+      },
+      "sandbox": {
+        "runtime": {
+          "name": "bubblewrap",
+          "executable": "bwrap",
+          "version": "0.9.0",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "limiter": {
+          "name": "prlimit",
+          "executable": "prlimit",
+          "version": "2.39.3",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      },
+      "toolchains": [
+        {
+          "name": "initdb",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "node",
+          "version": "22.16.0",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "pg_ctl",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "postgres",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        {
+          "name": "psql",
+          "version": "16.9",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      ]
+    },
+    {
       "id": "ubuntu-24-04-x86-64-postgresql",
       "revision": 1,
       "host": {
@@ -1257,6 +1324,206 @@
         "source": "npm",
         "lockfile": "validation-locks/node-typescript-postgresql-v3.lock.json",
         "sha256": "bd404ff3f08888d3f61863a1d9481c32e4db084b89edf3a718900fe23c031116"
+      }
+    },
+    {
+      "id": "node-typescript-postgresql",
+      "revision": 4,
+      "dependencies": [
+        {
+          "source": "npm",
+          "name": "@types/express",
+          "version": "5.0.2"
+        },
+        {
+          "source": "npm",
+          "name": "@types/node",
+          "version": "22.15.29"
+        },
+        {
+          "source": "npm",
+          "name": "@types/pg",
+          "version": "8.15.4"
+        },
+        {
+          "source": "npm",
+          "name": "express",
+          "version": "5.1.0"
+        },
+        {
+          "source": "npm",
+          "name": "pg",
+          "version": "8.16.0"
+        },
+        {
+          "source": "npm",
+          "name": "typescript",
+          "version": "5.8.3"
+        }
+      ],
+      "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-node-typescript-postgresql",
+          "revision": 2
+        }
+      ],
+      "toolchains": [
+        "initdb",
+        "node",
+        "pg_ctl",
+        "postgres",
+        "psql"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 67108864,
+        "temporaryDirectoryBytes": 67108864,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 2147483648,
+            "cpuSeconds": 60,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          },
+          "test": {
+            "addressSpaceBytes": 2147483648,
+            "cpuSeconds": 30,
+            "fileBytes": 134217728,
+            "openFiles": 256
+          }
+        }
+      },
+      "dependencyInstall": {
+        "kind": "lockfile",
+        "source": "npm",
+        "lockfile": "validation-locks/node-typescript-postgresql-v4/package-lock.json",
+        "sha256": "c975f6312562424a518a222301e0e0236eb118e48aacd428b63bc58681156315",
+        "installRoot": "/usr/local/lib/node-typescript-postgresql-4",
+        "installSha256": "2cee5684bb6e504ccefa44d74596086cc280b1947cecd9c9ed4bfd7abdbe42ec",
+        "mountPath": "/workspace/node_modules"
+      },
+      "testRuntime": {
+        "mounts": [
+          {
+            "path": "/usr/local/lib/node-22.16.0",
+            "access": "read-only"
+          },
+          {
+            "path": "/usr/local/lib/node-typescript-postgresql-4",
+            "access": "read-only"
+          },
+          {
+            "path": "/usr/local/lib/postgresql-16.9",
+            "access": "read-only"
+          }
+        ],
+        "commandContracts": [
+          {
+            "id": "typescript-compile",
+            "phase": "compile",
+            "argvPrefix": [
+              "node",
+              "starter/compile-typescript.mjs",
+              "--strict",
+              "--target",
+              "ES2022",
+              "--module",
+              "CommonJS",
+              "--moduleResolution",
+              "Node",
+              "--esModuleInterop",
+              "--lib",
+              "ES2022",
+              "--outDir",
+              "build/output",
+              "generated/orders.ts",
+              "starter/orders_api.ts",
+              "tests/public/test_orders.ts"
+            ],
+            "requiredTools": [
+              "node"
+            ]
+          },
+          {
+            "id": "node-postgresql-public-tests",
+            "phase": "test",
+            "argvPrefix": [
+              "node",
+              "build/output/tests/public/test_orders.js",
+              "generated/schema.sql"
+            ],
+            "requiredTools": [
+              "initdb",
+              "node",
+              "pg_ctl",
+              "postgres",
+              "psql"
+            ]
+          }
+        ],
+        "service": {
+          "kind": "postgresql",
+          "initializeArgv": [
+            "initdb",
+            "-D",
+            "/workspace/service/data",
+            "--username=validator",
+            "--auth-local=trust",
+            "--auth-host=reject",
+            "--encoding=UTF8",
+            "--locale=C",
+            "--no-instructions",
+            "--no-sync"
+          ],
+          "startArgv": [
+            "postgres",
+            "-D",
+            "/workspace/service/data",
+            "-k",
+            "/workspace/service/socket",
+            "-c",
+            "listen_addresses=",
+            "-c",
+            "unix_socket_permissions=0700",
+            "-c",
+            "max_connections=16",
+            "-c",
+            "shared_buffers=16MB",
+            "-c",
+            "dynamic_shared_memory_type=mmap",
+            "-c",
+            "fsync=off",
+            "-c",
+            "synchronous_commit=off",
+            "-c",
+            "full_page_writes=off",
+            "-c",
+            "log_min_messages=warning"
+          ],
+          "readyArgv": [
+            "psql",
+            "-X",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "--username=validator",
+            "-Atqc",
+            "DO $bootstrap$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'benchmark') THEN EXECUTE 'CREATE ROLE benchmark LOGIN'; END IF; END $bootstrap$; ALTER DATABASE postgres OWNER TO benchmark; ALTER ROLE validator NOLOGIN; SELECT 1"
+          ],
+          "stopArgv": [
+            "pg_ctl",
+            "-D",
+            "/workspace/service/data",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "startupTimeoutMs": 10000,
+          "shutdownTimeoutMs": 10000
+        }
       }
     },
     {

@@ -477,6 +477,7 @@ export function buildSandboxInvocation({
     : [];
   const sandboxPath = [
     "node-typescript",
+    "node-typescript-postgresql",
     "python3-pytest-hypothesis",
     "react18-typescript",
   ]

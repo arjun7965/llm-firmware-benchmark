@@ -124,6 +124,7 @@ test("hosted validation profiles are pinned and immutable", () => {
     4,
   );
   assert.equal(getValidationProfile("node-typescript").revision, 4);
+  assert.equal(getValidationProfile("node-typescript-postgresql").revision, 4);
   assert.equal(getValidationProfile("react18-typescript").revision, 4);
   assert.equal(
     getValidationProfile("node-typescript").sandbox.resourceLimits.compile
@@ -143,6 +144,29 @@ test("hosted validation profiles are pinned and immutable", () => {
     getValidationProfile("node-typescript").testRuntime.mounts.map((mount) =>
       mount.path),
     ["/usr/local/lib/node-22.16.0"],
+  );
+  assert.deepEqual(
+    getValidationProfile("node-typescript-postgresql").toolchains,
+    ["initdb", "node", "pg_ctl", "postgres", "psql"],
+  );
+  assert.equal(
+    getValidationProfile("node-typescript-postgresql").dependencyInstall
+      .mountPath,
+    "/workspace/node_modules",
+  );
+  assert.deepEqual(
+    getValidationProfile("node-typescript-postgresql").testRuntime.mounts
+      .map((mount) => mount.path),
+    [
+      "/usr/local/lib/node-22.16.0",
+      "/usr/local/lib/node-typescript-postgresql-4",
+      "/usr/local/lib/postgresql-16.9",
+    ],
+  );
+  assert.equal(
+    getValidationProfile("node-typescript-postgresql").testRuntime.service
+      .kind,
+    "postgresql",
   );
   assert.equal(
     getValidationProfile("react18-typescript").dependencyInstall.mountPath,

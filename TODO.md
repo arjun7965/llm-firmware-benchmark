@@ -112,9 +112,11 @@ record exact versions in validation reports.
   - [x] Add a profile-owned PostgreSQL 16.9 lifecycle, activate
     `postgres-pagination`, and calibrate its deterministic public tests and
     controlled mutations against a fresh cluster per phase.
-  - [ ] Attest the Node/Express/`pg` dependency tree and extend the service
-    boundary for concurrent `backend-idempotency` and
-    `webhook-replay-security` validation.
+  - [x] Attest the Node/Express/`pg` dependency tree, extend the service
+    boundary for concurrent `backend-idempotency` validation, and activate its
+    fixture with calibrated public tests and controlled mutations.
+  - [ ] Apply the Node/PostgreSQL profile to `webhook-replay-security` with
+    its own deterministic fixture, public tests, and controlled mutations.
 - [ ] Keep tasks rubric-only when deterministic execution would require
   undocumented services or introduce environment-dependent scoring.
 

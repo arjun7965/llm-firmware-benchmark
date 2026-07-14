@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/orders.ts",
+  "mutations": [
+    {
+      "id": "skips-authentication-middleware",
+      "description": "Do not install the supplied authenticated-user middleware.",
+      "find": "  app.use(authenticate);",
+      "replace": "  // authentication middleware omitted"
+    },
+    {
+      "id": "hashes-parsed-json",
+      "description": "Bind an idempotency key to parsed JSON instead of the exact request bytes.",
+      "find": "    const requestSha256 = createHash(\"sha256\")\n      .update(request.rawBody)\n      .digest(\"hex\");",
+      "replace": "    const requestSha256 = createHash(\"sha256\")\n      .update(JSON.stringify(request.body))\n      .digest(\"hex\");"
+    },
+    {
+      "id": "allows-extra-body-fields",
+      "description": "Accept JSON objects with undeclared properties.",
+      "find": "  if (keys.length !== 2 || keys[0] !== \"quantity\" || keys[1] !== \"sku\") {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "accepts-zero-quantity",
+      "description": "Treat zero as a valid order quantity.",
+      "find": "    quantity >= 1 &&",
+      "replace": "    quantity >= 0 &&"
+    },
+    {
+      "id": "turns-conflicts-into-new-claims",
+      "description": "Overwrite a conflicting idempotency row and create another order.",
+      "find": "         ON CONFLICT (user_id, idempotency_key) DO NOTHING\n         RETURNING user_id",
+      "replace": "         ON CONFLICT (user_id, idempotency_key)\n         DO UPDATE SET request_sha256 = EXCLUDED.request_sha256\n         RETURNING user_id"
+    },
+    {
+      "id": "accepts-reused-key-with-new-body",
+      "description": "Do not reject a key reused with different request bytes.",
+      "find": "        if (record.request_sha256 !== requestSha256) {",
+      "replace": "        if (Math.random() < 0) {"
+    },
+    {
+      "id": "replays-processing-record",
+      "description": "Treat an in-progress record as a completed replay.",
+      "find": "        if (record.state !== \"completed\") {",
+      "replace": "        if (Math.random() < 0) {"
+    },
+    {
+      "id": "commits-claim-before-order",
+      "description": "Commit the idempotency claim before the order insert can fail.",
+      "find": "      await client.query(\"BEGIN\");",
+      "replace": "      await client.query(\"BEGIN\");\n      await client.query(\"COMMIT\");"
+    },
+    {
+      "id": "returns-ok-for-new-order",
+      "description": "Return 200 instead of 201 for a newly created order.",
+      "find": "      return response.status(201).json(orderResponse);",
+      "replace": "      return response.status(200).json(orderResponse);"
+    },
+    {
+      "id": "returns-ok-for-replay",
+      "description": "Return 200 instead of the original 201 status for a replay.",
+      "find": "        return response.status(record.response_status).json(record.response_body);",
+      "replace": "        return response.status(200).json(record.response_body);"
+    },
+    {
+      "id": "stores-wrong-completion-status",
+      "description": "Persist a 200 status in a completed idempotency record.",
+      "find": "                response_status = 201,",
+      "replace": "                response_status = 200,"
+    }
+  ]
+}
