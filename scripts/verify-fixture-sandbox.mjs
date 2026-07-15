@@ -37,6 +37,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "interrupt-vector-configuration",
+    source: "reference/interrupt_vector.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",

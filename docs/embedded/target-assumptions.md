@@ -79,7 +79,10 @@ foreground interrupt masking, bounded RX/TX service, and write-one-to-clear
 error status. The active `spi-dma-transfer` task uses opaque SPI0/DMA0 accessors
 and a non-nested DMA IRQ; its fixture models paired full-duplex descriptors,
 caller-owned DMA buffers, status acknowledgement, and foreground interrupt
-masking.
+masking. The active `interrupt-vector-configuration` task uses a
+linker-addressed RAM table with deterministic SCB/NVIC, synchronization-barrier,
+and interrupt-mask models; it distinguishes reset-time relocation from live
+IRQ table updates.
 
 ## Planned Profiles
 
@@ -100,6 +103,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | Task ID | Target profile | Task-specific assumptions |
 | --- | --- | --- |
 | `bare-metal-timer` | `armv7m-bare-metal` | Cortex-M3; fictional TIMER0 MMIO; interrupts masked for configuration; no heap, cache, DMA, FPU, or RTOS |
+| `interrupt-vector-configuration` | `armv7m-bare-metal` | Cortex-M3; 128-byte-aligned linker-reserved RAM vector table; opaque SCB/NVIC and barrier accessors; reset starts masked; live updates preserve global interrupt state |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
 | `spi-dma-transfer` | `armv7m-bare-metal` | Cortex-M3; opaque SPI0/DMA0 accessors; non-nested DMA IRQ; caller-owned nonoverlapping DMA buffers; no data cache; foreground saves and restores global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
@@ -111,5 +115,6 @@ Profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.
 
 `npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
-and compiles the timer, UART, and SPI-DMA references for their ARMv7-M target.
+and compiles the timer, interrupt-vector, UART, and SPI-DMA references for
+their ARMv7-M target.
 This is a compile-only portability probe, not target execution.

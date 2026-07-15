@@ -14,7 +14,7 @@ partial until deterministic fixtures and calibration are available.
 
 | Capability ID | Expected evidence | Current coverage | Next representative task |
 | --- | --- | --- | --- |
-| `bare-metal` | Register access, startup, vector tables, linker and memory-map reasoning | Partial: `bare-metal-timer` | Add startup, vector-table, and linker-symbol behavior |
+| `bare-metal` | Register access, startup, vector tables, linker and memory-map reasoning | Partial: `bare-metal-timer`, `interrupt-vector-configuration` | Add linker-symbol and memory-map behavior beyond vector relocation |
 | `peripheral-drivers` | GPIO, UART, SPI, I2C, ADC, PWM, timers, DMA, watchdogs | Partial: `bare-metal-timer`, `firmware-state-machine`, `uart-interrupt-driver`, `spi-dma-transfer` | Implement an I2C controller with arbitration-loss and timeout recovery |
 | `interrupt-concurrency` | ISR ownership, atomics, critical sections, deferred work | Partial: `embedded-ring-buffer` | Repair an ISR/main race with nested-interrupt assumptions |
 | `rtos` | Tasks, queues, mutexes, events, priority inversion, bounded latency | Partial: `rtos-priority-inversion` | Diagnose and repair priority inversion across a supplied RTOS queue and mutex API |

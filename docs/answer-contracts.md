@@ -28,6 +28,7 @@ implemented and calibrated.
 | Task | Current mode | Planned executable answer contract | Reason |
 | --- | --- | --- | --- |
 | `bare-metal-timer` | Single file | Single file | One implementation unit; mocks and tests are validator-owned |
+| `interrupt-vector-configuration` | Single file | Single file | One startup/vector implementation unit; SCB/NVIC mocks and ordering tests are validator-owned |
 | `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |
 | `spi-dma-transfer` | Single file | Single file | One driver implementation unit; SPI0/DMA0 mocks and DMA IRQ tests are validator-owned |
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
