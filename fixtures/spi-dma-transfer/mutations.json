@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/spi_dma_driver.c",
+  "mutations": [
+    {
+      "id": "reject-maximum-transfer",
+      "description": "Reject the documented 32-byte DMA transfer boundary.",
+      "find": "length > SPI_DMA_MAX_TRANSFER",
+      "replace": "length >= SPI_DMA_MAX_TRANSFER"
+    },
+    {
+      "id": "leave-stale-dma-status",
+      "description": "Enable a new transaction without acknowledging stale DMA status.",
+      "find": "dma0_write_status_clear(driver->dma, DMA0_STATUS_ALL);",
+      "replace": "dma0_write_status_clear(driver->dma, 0u);"
+    },
+    {
+      "id": "leave-rx-channel-disabled",
+      "description": "Configure the receive descriptor but never enable its DMA channel.",
+      "find": "dma0_write_rx_control(driver->dma, DMA0_RX_CONTROL);",
+      "replace": "dma0_write_rx_control(driver->dma, 0u);"
+    },
+    {
+      "id": "omit-spi-dma-requests",
+      "description": "Start both DMA channels without enabling the SPI DMA request lines.",
+      "find": "SPI0_CONTROL_IDLE | SPI0_CONTROL_DMA_MASK",
+      "replace": "SPI0_CONTROL_IDLE"
+    },
+    {
+      "id": "wrong-tx-increment-direction",
+      "description": "Increment the SPI data-register destination instead of the TX buffer source.",
+      "find": "    DMA0_CHANNEL_CONTROL_SOURCE_INCREMENT |",
+      "replace": "    DMA0_CHANNEL_CONTROL_DESTINATION_INCREMENT |"
+    },
+    {
+      "id": "wrong-rx-increment-direction",
+      "description": "Increment the SPI data-register source instead of the RX buffer destination.",
+      "find": "    DMA0_CHANNEL_CONTROL_DESTINATION_INCREMENT |",
+      "replace": "    DMA0_CHANNEL_CONTROL_SOURCE_INCREMENT |"
+    },
+    {
+      "id": "finish-after-tx-only",
+      "description": "Report completion when only the TX DMA channel has completed.",
+      "find": "if (driver->tx_complete && driver->rx_complete) {",
+      "replace": "if (driver->tx_complete) {"
+    },
+    {
+      "id": "discard-dma-errors",
+      "description": "Tear down after a DMA error without making its status observable.",
+      "find": "driver->error_flags |= errors;",
+      "replace": "driver->error_flags |= 0u;"
+    },
+    {
+      "id": "treat-error-as-completion",
+      "description": "Ignore DMA error status and let simultaneous completions win.",
+      "find": "if (errors != 0u) {",
+      "replace": "if (false) {"
+    },
+    {
+      "id": "skip-status-acknowledgement",
+      "description": "Observe a DMA IRQ without write-one-to-clearing the asserted bits.",
+      "find": "dma0_write_status_clear(driver->dma, observed);",
+      "replace": "dma0_write_status_clear(driver->dma, 0u);"
+    },
+    {
+      "id": "overwrite-pending-transfer",
+      "description": "Accept a start while a transfer or result is still pending.",
+      "find": "if (!driver->busy && driver->result == SPI_DMA_RESULT_NONE) {",
+      "replace": "if (true) {"
+    },
+    {
+      "id": "skip-start-critical-section",
+      "description": "Configure shared transfer state without masking the DMA interrupt.",
+      "find": "const uint32_t start_interrupt_state = spi_dma_irq_save_disable();",
+      "replace": "const uint32_t start_interrupt_state = UINT32_C(1);"
+    },
+    {
+      "id": "unconditionally-enable-interrupts",
+      "description": "Restore the start critical section as enabled even if it was masked.",
+      "find": "spi_dma_irq_restore(start_interrupt_state);",
+      "replace": "spi_dma_irq_restore(start_interrupt_state | UINT32_C(1));"
+    },
+    {
+      "id": "leave-spi-dma-enabled-at-finish",
+      "description": "Deassert chip select while leaving SPI DMA request lines active.",
+      "find": "spi0_write_control(driver->spi, SPI0_CONTROL_IDLE);",
+      "replace": "spi0_write_control(driver->spi, SPI0_CONTROL_IDLE | SPI0_CONTROL_DMA_MASK);"
+    }
+  ]
+}

@@ -42,6 +42,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "spi-dma-transfer",
+    source: "reference/spi_dma_driver.c",
+    suite: "firmware",
+  },
+  {
     taskId: "binary-parser",
     source: "reference/binary_parser.c",
     suite: "firmware",

@@ -22,6 +22,7 @@ code. Each task references a pinned hosted runtime contract from
 | `backend-idempotency` | Node.js 22.16.0, TypeScript 5.8.3, Express 5.1.0, `pg` 8.16.0, and PostgreSQL 16.9 |
 | `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `spi-dma-transfer` | A C11 compiler plus fixture-owned opaque SPI0/DMA0 registers, DMA buffer-address translation, and an interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `rtos-priority-inversion` | A C11 compiler plus the fixture-owned deterministic RTOS priority-inheritance mock |
@@ -106,6 +107,14 @@ bank and deterministic interrupt-mask model:
 
 ```bash
 npm run fixture:uart:self-test
+```
+
+The SPI DMA transfer fixture uses `cc` with fixture-owned opaque SPI0/DMA0
+register models, deterministic full-duplex data movement, and an
+interrupt-mask model:
+
+```bash
+npm run fixture:spi-dma:self-test
 ```
 
 The trusted firmware fixture self-test requires `cc`:
