@@ -110,6 +110,11 @@ interrupt-mask models. Its public tests verify startup ordering, all table
 entries, invalid no-side-effect behavior, reinitialization, runtime IRQ-slot
 updates, stale-pending clearing, and exact interrupt restoration.
 
+The active `i2c-controller-recovery` fixture uses an opaque deterministic I2C0
+model. Its public tests verify initialization, stale-status clearing, bounded
+START/address/data ordering, terminal-result consumption, arbitration-loss
+recovery without STOP, bus-error/NACK recovery, and wrap-safe timeout aborts.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested

@@ -12,6 +12,7 @@ runFixtureMutationTests({
     "embedded-ring-buffer",
     "firmware-state-machine",
     "interrupt-vector-configuration",
+    "i2c-controller-recovery",
     "rtos-priority-inversion",
     "uart-interrupt-driver",
     "spi-dma-transfer",

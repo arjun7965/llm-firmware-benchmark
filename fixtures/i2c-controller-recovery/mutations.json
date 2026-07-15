@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/i2c_controller.c",
+  "mutations": [
+    {
+      "id": "accept-reserved-low-address",
+      "description": "Accept a reserved I2C address below the permitted seven-bit range.",
+      "find": "address < I2C_CONTROLLER_MIN_ADDRESS ||",
+      "replace": "false ||"
+    },
+    {
+      "id": "accept-reserved-high-address",
+      "description": "Accept a reserved I2C address above the permitted seven-bit range.",
+      "find": "address > I2C_CONTROLLER_MAX_ADDRESS",
+      "replace": "false"
+    },
+    {
+      "id": "accept-empty-write",
+      "description": "Start an I2C transaction without any payload bytes.",
+      "find": "length == 0u",
+      "replace": "false"
+    },
+    {
+      "id": "accept-oversized-write",
+      "description": "Permit a write longer than the bounded fixture payload.",
+      "find": "length > I2C_CONTROLLER_MAX_WRITE_BYTES",
+      "replace": "false"
+    },
+    {
+      "id": "overwrite-unconsumed-result",
+      "description": "Allow a new transaction before a terminal result is consumed.",
+      "find": "controller->result != I2C_CONTROLLER_RESULT_NONE",
+      "replace": "false"
+    },
+    {
+      "id": "leave-stale-status-before-start",
+      "description": "Issue START without clearing stale status bits first.",
+      "find": "  i2c0_write_status_clear(controller->i2c, I2C0_STATUS_ALL);\n  i2c0_write_control(\n    controller->i2c,\n    I2C0_CONTROL_ENABLE | I2C0_CONTROL_START\n  );",
+      "replace": "  i2c0_write_control(\n    controller->i2c,\n    I2C0_CONTROL_ENABLE | I2C0_CONTROL_START\n  );"
+    },
+    {
+      "id": "omit-start-command",
+      "description": "Fail to assert the START control bit for a new transaction.",
+      "find": "I2C0_CONTROL_ENABLE | I2C0_CONTROL_START",
+      "replace": "I2C0_CONTROL_ENABLE"
+    },
+    {
+      "id": "send-unshifted-address",
+      "description": "Write the seven-bit address without its write-direction bit position.",
+      "find": "(uint8_t)(controller->address << 1u)",
+      "replace": "controller->address"
+    },
+    {
+      "id": "repeat-first-payload-byte",
+      "description": "Fail to advance from the first byte after address acknowledgement.",
+      "find": "controller->next_index = 1u;",
+      "replace": "controller->next_index = 0u;"
+    },
+    {
+      "id": "complete-without-stop",
+      "description": "Report successful completion without releasing the I2C bus.",
+      "find": "    i2c0_write_control(\n      controller->i2c,\n      I2C0_CONTROL_ENABLE | I2C0_CONTROL_STOP\n    );\n    publish_result(controller, I2C_CONTROLLER_RESULT_COMPLETE);",
+      "replace": "    i2c0_write_control(controller->i2c, I2C0_CONTROL_ENABLE);\n    publish_result(controller, I2C_CONTROLLER_RESULT_COMPLETE);"
+    },
+    {
+      "id": "send-stop-after-arbitration-loss",
+      "description": "Drive STOP even though this controller has lost ownership of the bus.",
+      "find": "  i2c0_write_control(controller->i2c, I2C0_CONTROL_ENABLE);\n  publish_result(controller, I2C_CONTROLLER_RESULT_ARBITRATION_LOST);",
+      "replace": "  i2c0_write_control(\n    controller->i2c,\n    I2C0_CONTROL_ENABLE | I2C0_CONTROL_STOP\n  );\n  publish_result(controller, I2C_CONTROLLER_RESULT_ARBITRATION_LOST);"
+    },
+    {
+      "id": "let-nack-win-over-bus-error",
+      "description": "Ignore bus error priority when bus error and NACK are reported together.",
+      "find": "if ((status & I2C0_STATUS_BUS_ERROR) != 0u)",
+      "replace": "if (false)"
+    },
+    {
+      "id": "timeout-one-tick-late",
+      "description": "Time out only after rather than at the configured deadline.",
+      "find": ">=\n      I2C_CONTROLLER_TIMEOUT_MS",
+      "replace": ">\n      I2C_CONTROLLER_TIMEOUT_MS"
+    },
+    {
+      "id": "timeout-without-stop",
+      "description": "Clear timeout state without asking the peripheral to release the bus.",
+      "find": "  i2c0_write_control(\n    controller->i2c,\n    I2C0_CONTROL_ENABLE | I2C0_CONTROL_STOP\n  );\n  i2c0_write_status_clear(controller->i2c, I2C0_STATUS_ALL);\n  publish_result(controller, I2C_CONTROLLER_RESULT_TIMED_OUT);",
+      "replace": "  i2c0_write_control(controller->i2c, I2C0_CONTROL_ENABLE);\n  i2c0_write_status_clear(controller->i2c, I2C0_STATUS_ALL);\n  publish_result(controller, I2C_CONTROLLER_RESULT_TIMED_OUT);"
+    },
+    {
+      "id": "timeout-leaves-stale-status",
+      "description": "Leave latched status bits behind after the timeout abort.",
+      "find": "  i2c0_write_status_clear(controller->i2c, I2C0_STATUS_ALL);\n  publish_result(controller, I2C_CONTROLLER_RESULT_TIMED_OUT);",
+      "replace": "  i2c0_write_status_clear(controller->i2c, 0u);\n  publish_result(controller, I2C_CONTROLLER_RESULT_TIMED_OUT);"
+    }
+  ]
+}

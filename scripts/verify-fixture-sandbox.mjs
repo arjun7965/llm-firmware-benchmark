@@ -42,6 +42,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "i2c-controller-recovery",
+    source: "reference/i2c_controller.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",
