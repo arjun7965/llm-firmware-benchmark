@@ -43,6 +43,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "i2c-controller-recovery",
+    source: "fixtures/i2c-controller-recovery/reference/i2c_controller.c",
+    includes: Object.freeze([
+      "fixtures/i2c-controller-recovery/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "uart-interrupt-driver",
     source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
     includes: Object.freeze([
