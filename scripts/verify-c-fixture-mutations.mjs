@@ -12,6 +12,7 @@ runFixtureMutationTests({
     "embedded-ring-buffer",
     "firmware-state-machine",
     "rtos-priority-inversion",
+    "uart-interrupt-driver",
   ],
   tasksPath: join(repositoryRoot, "tasks.json"),
 });
