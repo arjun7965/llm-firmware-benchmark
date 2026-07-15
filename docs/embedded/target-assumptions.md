@@ -50,6 +50,20 @@ Extends `portable-c11` with deterministic host-side HAL fakes and a modulo
 advancement. A task must define whether completion remains observable until
 acknowledged and whether failed operations require explicit reset.
 
+### `generic-rtos`
+
+Extends `portable-c11` with a deterministic single-core preemptive RTOS
+simulation. Tasks must supply every task, mutex, scheduler, timeout, and
+priority-inheritance semantic needed for scoring; no vendor RTOS knowledge is
+assumed. Larger numeric priorities run first unless a task explicitly says
+otherwise. Tests may model a blocked call as a returned status when that
+behavior is fully documented.
+
+The active `rtos-priority-inversion` task supplies low-priority telemetry,
+medium-priority diagnostics, and high-priority safety task contexts. Its mock
+observes mutex creation, effective priority donation, blocked callers, and the
+next runnable task without using host threads.
+
 ### `armv7m-bare-metal`
 
 Little-endian ARMv7-M, AAPCS/EABI, single core, privileged bare-metal execution,
@@ -69,13 +83,6 @@ Little-endian RV32IMAC with ILP32 ABI, single-hart bare-metal execution, no heap
 by default, and documented mock MMIO. Tasks must state trap behavior, atomic
 extension use, alignment behavior, memory map, and timer source.
 
-### `generic-rtos`
-
-Single-core preemptive RTOS simulation with a fully supplied task, queue,
-synchronization, ISR, and time API. Tasks must define priority direction,
-scheduling policy, ISR-callable operations, timeout units, and shutdown model;
-no proprietary RTOS knowledge may be assumed.
-
 ### `embedded-linux-posix`
 
 Little-endian Linux user space using a stated POSIX and language version.
@@ -89,6 +96,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `bare-metal-timer` | `armv7m-bare-metal` | Cortex-M3; fictional TIMER0 MMIO; interrupts masked for configuration; no heap, cache, DMA, FPU, or RTOS |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
+| `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
 | `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields; CRC-16/CCITT-FALSE |
 
 Profiles become active only when a committed task supplies its fixtures,

@@ -58,6 +58,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "rtos-priority-inversion",
+    source: "reference/priority_inversion.c",
+    suite: "firmware",
+  },
+  {
     taskId: "frontend-autocomplete",
     source: "reference/Autocomplete.tsx",
     suite: "auxiliary",

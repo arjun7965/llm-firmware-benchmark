@@ -11,6 +11,7 @@ runFixtureMutationTests({
     "binary-parser",
     "embedded-ring-buffer",
     "firmware-state-machine",
+    "rtos-priority-inversion",
   ],
   tasksPath: join(repositoryRoot, "tasks.json"),
 });

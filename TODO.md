@@ -136,6 +136,9 @@ record exact versions in validation reports.
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,
   priority inversion, deadlocks, and bounded latency.
+  - [x] Start with a deterministic priority-inheritance mutex fixture for
+    low-priority telemetry, medium-priority diagnostics, and high-priority
+    safety work.
 - [ ] Add constrained-memory tasks for ring buffers, static allocation, memory
   pools, stack usage, alignment, cache coherency, and fixed-point arithmetic.
 - [ ] Add protocol tasks for framing, stateful parsing, timeouts, CRCs, CAN,

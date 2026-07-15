@@ -23,6 +23,7 @@ code. Each task references a pinned hosted runtime contract from
 | `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
+| `rtos-priority-inversion` | A C11 compiler plus the fixture-owned deterministic RTOS priority-inheritance mock |
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL 16.9 `initdb`, `pg_ctl`, `postgres`, and `psql` |
@@ -103,6 +104,13 @@ The trusted firmware fixture self-test requires `cc`:
 
 ```bash
 npm run fixture:firmware:self-test
+```
+
+The RTOS priority-inversion fixture uses the same C11 compiler and a
+fixture-owned scheduler mock:
+
+```bash
+npm run fixture:rtos:self-test
 ```
 
 The trusted ring-buffer fixture uses the same C11 compiler:
