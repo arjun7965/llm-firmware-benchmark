@@ -130,6 +130,8 @@ record exact versions in validation reports.
   memory maps, and interrupt-vector configuration.
   - [x] Start with a fictional timer peripheral using a complete mock MMIO
     register map and deterministic host-side validation.
+  - [x] Add deterministic RAM vector-table relocation with linker-address,
+    SCB/NVIC, barrier, and live IRQ-update validation.
 - [ ] Add peripheral-driver tasks for GPIO, UART, SPI, I2C, ADC, PWM, timers,
   DMA, and watchdogs using documented mock registers.
   - [x] Add an interrupt-driven UART fixture with bounded RX/TX queues,

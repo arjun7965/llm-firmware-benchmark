@@ -21,6 +21,7 @@ code. Each task references a pinned hosted runtime contract from
 | `frontend-autocomplete` | Node.js 22.16.0, TypeScript 5.8.3, React/React DOM 18.3.1, jsdom 26.1.0, Testing Library 16.3.0, and pinned type declarations |
 | `backend-idempotency` | Node.js 22.16.0, TypeScript 5.8.3, Express 5.1.0, `pg` 8.16.0, and PostgreSQL 16.9 |
 | `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `interrupt-vector-configuration` | A C11 compiler plus fixture-owned vector-table, SCB, NVIC, barrier, linker-address, and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `spi-dma-transfer` | A C11 compiler plus fixture-owned opaque SPI0/DMA0 registers, DMA buffer-address translation, and an interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
@@ -100,6 +101,13 @@ The fictional bare-metal timer fixture uses `cc` for instrumented host MMIO:
 
 ```bash
 npm run fixture:timer:self-test
+```
+
+The interrupt-vector configuration fixture uses `cc` with deterministic RAM
+table, SCB/NVIC, linker-address, barrier, and interrupt-mask models:
+
+```bash
+npm run fixture:interrupt-vector:self-test
 ```
 
 The UART interrupt-driver fixture uses `cc` with an instrumented UART0 register

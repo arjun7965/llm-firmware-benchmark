@@ -11,6 +11,7 @@ runFixtureMutationTests({
     "binary-parser",
     "embedded-ring-buffer",
     "firmware-state-machine",
+    "interrupt-vector-configuration",
     "rtos-priority-inversion",
     "uart-interrupt-driver",
     "spi-dma-transfer",

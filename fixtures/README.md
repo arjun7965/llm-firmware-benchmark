@@ -104,6 +104,12 @@ interrupt-mask boundary. Its public tests verify initialization, full-capacity
 descriptor setup, RX-before-TX ordering, stale-status acknowledgement, split
 completion, error-priority teardown, recovery, and exact interrupt restoration.
 
+The active `interrupt-vector-configuration` fixture uses a linker-addressed RAM
+vector table with deterministic SCB/NVIC, synchronization-barrier, and
+interrupt-mask models. Its public tests verify startup ordering, all table
+entries, invalid no-side-effect behavior, reinitialization, runtime IRQ-slot
+updates, stale-pending clearing, and exact interrupt restoration.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
