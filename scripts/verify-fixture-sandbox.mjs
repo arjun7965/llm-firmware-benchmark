@@ -37,6 +37,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "uart-interrupt-driver",
+    source: "reference/uart_driver.c",
+    suite: "firmware",
+  },
+  {
     taskId: "binary-parser",
     source: "reference/binary_parser.c",
     suite: "firmware",

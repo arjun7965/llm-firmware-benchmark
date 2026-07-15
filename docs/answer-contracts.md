@@ -28,6 +28,7 @@ implemented and calibrated.
 | Task | Current mode | Planned executable answer contract | Reason |
 | --- | --- | --- | --- |
 | `bare-metal-timer` | Single file | Single file | One implementation unit; mocks and tests are validator-owned |
+| `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `embedded-ring-buffer` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `firmware-state-machine` | Single file | Single file | One implementation unit; HAL, mocks, and tests are supplied |

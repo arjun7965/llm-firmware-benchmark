@@ -73,7 +73,10 @@ permitted. Vendor SDKs are unavailable unless a task supplies the required API.
 
 The active `bare-metal-timer` task selects Cortex-M3, disables interrupt nesting
 during its configuration boundary, and uses accessor-instrumented fictional
-MMIO for deterministic host validation.
+MMIO for deterministic host validation. The active `uart-interrupt-driver` task
+uses the same target profile with a non-nested UART0 IRQ; its fixture models
+foreground interrupt masking, bounded RX/TX service, and write-one-to-clear
+error status.
 
 ## Planned Profiles
 
@@ -94,6 +97,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | Task ID | Target profile | Task-specific assumptions |
 | --- | --- | --- |
 | `bare-metal-timer` | `armv7m-bare-metal` | Cortex-M3; fictional TIMER0 MMIO; interrupts masked for configuration; no heap, cache, DMA, FPU, or RTOS |
+| `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |

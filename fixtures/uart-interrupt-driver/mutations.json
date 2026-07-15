@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/uart_driver.c",
+  "mutations": [
+    {
+      "id": "enable-tx-interrupt-at-initialization",
+      "description": "Enable TX-empty interrupts before foreground code has queued a byte.",
+      "find": "UART0_CONTROL_RX_IRQ_ENABLE",
+      "replace": "UART0_CONTROL_RX_IRQ_ENABLE | UART0_CONTROL_TX_IRQ_ENABLE"
+    },
+    {
+      "id": "drop-one-transmit-slot",
+      "description": "Reserve a transmit slot instead of accepting the documented full queue capacity.",
+      "find": "driver->tx_count < UART_DRIVER_BUFFER_CAPACITY",
+      "replace": "driver->tx_count < (UART_DRIVER_BUFFER_CAPACITY - UINT8_C(1))"
+    },
+    {
+      "id": "leave-tx-interrupt-disabled",
+      "description": "Queue foreground bytes without enabling the TX-empty interrupt source.",
+      "find": "if (written != 0u) {",
+      "replace": "if (false) {"
+    },
+    {
+      "id": "leave-tx-irq-enabled-after-drain",
+      "description": "Keep taking empty TX interrupts after the final queued byte has been sent.",
+      "find": "if (driver->tx_count == 0u) {",
+      "replace": "if (false) {"
+    },
+    {
+      "id": "lose-rx-overflow-accounting",
+      "description": "Discard a full-buffer receive byte without incrementing the dropped counter.",
+      "find": "driver->rx_dropped++;",
+      "replace": "driver->rx_dropped += 0u;"
+    },
+    {
+      "id": "skip-uart-error-acknowledgement",
+      "description": "Record error status without clearing the UART write-one-to-clear bits.",
+      "find": "uart0_write_error_clear(driver->uart, errors);",
+      "replace": "uart0_write_error_clear(driver->uart, 0u);"
+    },
+    {
+      "id": "discard-uart-errors",
+      "description": "Acknowledge hardware errors but fail to make them observable to foreground code.",
+      "find": "driver->error_flags |= errors;",
+      "replace": "driver->error_flags |= 0u;"
+    },
+    {
+      "id": "skip-write-critical-section",
+      "description": "Modify the foreground TX queue without first masking the UART interrupt.",
+      "find": "const uint32_t write_interrupt_state = uart0_irq_save_disable();",
+      "replace": "const uint32_t write_interrupt_state = 1u;"
+    },
+    {
+      "id": "restore-interrupts-unconditionally",
+      "description": "Re-enable interrupts after a foreground read even when the caller had masked them.",
+      "find": "uart0_irq_restore(read_interrupt_state);",
+      "replace": "uart0_irq_restore(read_interrupt_state | UINT32_C(1));"
+    }
+  ]
+}

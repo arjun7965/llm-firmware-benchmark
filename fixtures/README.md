@@ -92,6 +92,12 @@ mock with low-priority telemetry, medium-priority diagnostics, and
 high-priority safety contexts. Its public tests verify priority donation,
 bounded safety acquisition, error propagation, and initialization recovery.
 
+The active `uart-interrupt-driver` fixture uses accessor-instrumented
+fictional UART0 MMIO with a deterministic interrupt-mask model. Its public
+tests verify initialization ordering, full-capacity RX/TX queues, bounded
+one-byte-per-direction ISR work, overflow accounting, error acknowledgement,
+and restoration of the caller's interrupt state.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested

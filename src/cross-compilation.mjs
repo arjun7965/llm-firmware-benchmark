@@ -32,6 +32,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "uart-interrupt-driver",
+    source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
+    includes: Object.freeze([
+      "fixtures/uart-interrupt-driver/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "binary-parser",
     source: "fixtures/binary-parser/reference/binary_parser.c",
     includes: Object.freeze([

@@ -132,6 +132,8 @@ record exact versions in validation reports.
     register map and deterministic host-side validation.
 - [ ] Add peripheral-driver tasks for GPIO, UART, SPI, I2C, ADC, PWM, timers,
   DMA, and watchdogs using documented mock registers.
+  - [x] Add an interrupt-driven UART fixture with bounded RX/TX queues,
+    deterministic interrupt masking, and mock-register validation.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,
