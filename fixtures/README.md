@@ -87,6 +87,11 @@ public tests authenticate exact raw bytes before JSON parsing, exercise secret
 rotation and concurrent deliveries across two app instances, and verify that
 the event and its one outbox row roll back together.
 
+The active `rtos-priority-inversion` fixture uses a fixture-owned C11 RTOS
+mock with low-priority telemetry, medium-priority diagnostics, and
+high-priority safety contexts. Its public tests verify priority donation,
+bounded safety acquisition, error propagation, and initialization recovery.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/priority_inversion.c",
+  "mutations": [
+    {
+      "id": "disable-priority-inheritance",
+      "description": "Create an ordinary mutex so a blocked safety task cannot donate priority.",
+      "find": "rtos_mutex_create(true);",
+      "replace": "rtos_mutex_create(false);"
+    },
+    {
+      "id": "short-telemetry-wait",
+      "description": "Give telemetry the short safety timeout instead of its documented wait policy.",
+      "find": "return lock_guard(guard, RTOS_WAIT_FOREVER);",
+      "replace": "return lock_guard(guard, SAFETY_LOCK_TIMEOUT_TICKS);"
+    },
+    {
+      "id": "long-safety-wait",
+      "description": "Let the safety caller wait indefinitely instead of preserving its bounded latency.",
+      "find": "return lock_guard(guard, SAFETY_LOCK_TIMEOUT_TICKS);",
+      "replace": "return lock_guard(guard, RTOS_WAIT_FOREVER);"
+    },
+    {
+      "id": "accept-uninitialized-guard",
+      "description": "Treat a guard with a cleared initialization flag as usable.",
+      "find": "return guard != NULL && guard->initialized && guard->mutex != NULL;",
+      "replace": "return guard != NULL && guard->mutex != NULL;"
+    },
+    {
+      "id": "leave-stale-mutex-after-create-failure",
+      "description": "Leave a stale mutex pointer visible when a later initialization attempt fails.",
+      "find": "  guard->mutex = NULL;\n  guard->initialized = false;\n  rtos_mutex_t *mutex = rtos_mutex_create(true);",
+      "replace": "  rtos_mutex_t *mutex = rtos_mutex_create(true);"
+    },
+    {
+      "id": "skip-rtos-unlock",
+      "description": "Report success without returning mutex ownership to the RTOS.",
+      "find": "return rtos_mutex_unlock(guard->mutex);",
+      "replace": "return RTOS_STATUS_OK;"
+    }
+  ]
+}

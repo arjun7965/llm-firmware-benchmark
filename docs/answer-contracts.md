@@ -31,6 +31,7 @@ implemented and calibrated.
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `embedded-ring-buffer` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `firmware-state-machine` | Single file | Single file | One implementation unit; HAL, mocks, and tests are supplied |
+| `rtos-priority-inversion` | Single file | Single file | One implementation unit; RTOS mock and scheduler tests are validator-owned |
 | `frontend-autocomplete` | Single file | Single file | One default-exported component module; interaction tests are validator-owned |
 | `concurrency-debug` | Single file | Single file | One repaired Python module; race tests are validator-owned |
 | `testing-property-based` | Single file | Single file | One property-test module importing the supplied implementation |
