@@ -98,6 +98,12 @@ tests verify initialization ordering, full-capacity RX/TX queues, bounded
 one-byte-per-direction ISR work, overflow accounting, error acknowledgement,
 and restoration of the caller's interrupt state.
 
+The active `spi-dma-transfer` fixture uses opaque accessor-instrumented SPI0
+and DMA0 models with deterministic full-duplex data movement and an
+interrupt-mask boundary. Its public tests verify initialization, full-capacity
+descriptor setup, RX-before-TX ordering, stale-status acknowledgement, split
+completion, error-priority teardown, recovery, and exact interrupt restoration.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested

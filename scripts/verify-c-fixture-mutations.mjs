@@ -13,6 +13,7 @@ runFixtureMutationTests({
     "firmware-state-machine",
     "rtos-priority-inversion",
     "uart-interrupt-driver",
+    "spi-dma-transfer",
   ],
   tasksPath: join(repositoryRoot, "tasks.json"),
 });

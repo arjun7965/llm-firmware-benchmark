@@ -76,7 +76,10 @@ during its configuration boundary, and uses accessor-instrumented fictional
 MMIO for deterministic host validation. The active `uart-interrupt-driver` task
 uses the same target profile with a non-nested UART0 IRQ; its fixture models
 foreground interrupt masking, bounded RX/TX service, and write-one-to-clear
-error status.
+error status. The active `spi-dma-transfer` task uses opaque SPI0/DMA0 accessors
+and a non-nested DMA IRQ; its fixture models paired full-duplex descriptors,
+caller-owned DMA buffers, status acknowledgement, and foreground interrupt
+masking.
 
 ## Planned Profiles
 
@@ -98,6 +101,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | --- | --- | --- |
 | `bare-metal-timer` | `armv7m-bare-metal` | Cortex-M3; fictional TIMER0 MMIO; interrupts masked for configuration; no heap, cache, DMA, FPU, or RTOS |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
+| `spi-dma-transfer` | `armv7m-bare-metal` | Cortex-M3; opaque SPI0/DMA0 accessors; non-nested DMA IRQ; caller-owned nonoverlapping DMA buffers; no data cache; foreground saves and restores global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
@@ -107,5 +111,5 @@ Profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.
 
 `npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
-and compiles the timer reference for its ARMv7-M target. This is a compile-only
-portability probe, not target execution.
+and compiles the timer, UART, and SPI-DMA references for their ARMv7-M target.
+This is a compile-only portability probe, not target execution.
