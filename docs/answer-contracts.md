@@ -34,6 +34,7 @@ implemented and calibrated.
 | `adc-threshold-watchdog` | Single file | Single file | One ADC threshold monitor unit; opaque status, data, and interrupt-mask mocks are validator-owned |
 | `pwm-synchronized-update` | Single file | Single file | One PWM driver unit; opaque shadow/load, fault, and interrupt-mask mocks are validator-owned |
 | `watchdog-window-recovery` | Single file | Single file | One watchdog driver unit; opaque counter, reset-cause, feed, and interrupt-mask mocks are validator-owned |
+| `timer-dma-handoff` | Single file | Single file | One timer/DMA ownership driver unit; opaque compare-stream, terminal-status, and interrupt-mask mocks are validator-owned |
 | `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |
 | `spi-dma-transfer` | Single file | Single file | One driver implementation unit; SPI0/DMA0 mocks and DMA IRQ tests are validator-owned |
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |

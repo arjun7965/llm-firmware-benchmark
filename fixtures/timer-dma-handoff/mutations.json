@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/timer_dma_handoff.c",
+  "mutations": [
+    {
+      "id": "accept-invalid-timer-configuration",
+      "description": "Accept a timer period or initial compare value outside its documented bounds.",
+      "find": "    period_ticks < UINT16_C(2) || period_ticks > TIMER0_MAX_PERIOD_TICKS ||\n    initial_compare_ticks > period_ticks",
+      "replace": "    false"
+    },
+    {
+      "id": "skip-initial-status-clear",
+      "description": "Leave stale DMA terminal status uncleared during initialization.",
+      "find": "  timer0_write_control(timer, 0u);\n  dma0_write_control(dma, 0u);\n  dma0_write_status_clear(dma, DMA0_STATUS_ALL);\n  timer0_write_period(timer, period_ticks);",
+      "replace": "  timer0_write_control(timer, 0u);\n  dma0_write_control(dma, 0u);\n  dma0_write_status_clear(dma, 0u);\n  timer0_write_period(timer, period_ticks);"
+    },
+    {
+      "id": "configure-compare-while-enabled",
+      "description": "Enable the timer before programming its initial compare shadow.",
+      "find": "  timer0_write_compare_shadow(timer, initial_compare_ticks);\n  timer0_write_control(timer, TIMER0_CONTROL_READY);",
+      "replace": "  timer0_write_control(timer, TIMER0_CONTROL_READY);\n  timer0_write_compare_shadow(timer, initial_compare_ticks);"
+    },
+    {
+      "id": "accept-out-of-range-dma-sample",
+      "description": "Start DMA with a compare sample above the configured timer period.",
+      "find": "    if (samples[index] > driver->period_ticks) return false;",
+      "replace": "    if (false) return false;"
+    },
+    {
+      "id": "leave-stale-status-before-handoff",
+      "description": "Hand timer ownership to DMA without clearing stale terminal status.",
+      "find": "  ) {\n    dma0_write_status_clear(driver->dma, DMA0_STATUS_ALL);\n    dma0_write_source(driver->dma, timer_dma_buffer_address(samples));",
+      "replace": "  ) {\n    dma0_write_status_clear(driver->dma, 0u);\n    dma0_write_source(driver->dma, timer_dma_buffer_address(samples));"
+    },
+    {
+      "id": "use-invalid-dma-destination",
+      "description": "Program DMA to a non-timer destination.",
+      "find": "      timer0_compare_dma_address(driver->timer)",
+      "replace": "      0u"
+    },
+    {
+      "id": "leave-dma-channel-disabled",
+      "description": "Configure a descriptor but never enable the DMA channel.",
+      "find": "    dma0_write_control(driver->dma, DMA0_CHANNEL_CONTROL_READY);",
+      "replace": "    dma0_write_control(driver->dma, 0u);"
+    },
+    {
+      "id": "enable-timer-requests-before-dma",
+      "description": "Enable timer DMA requests before the DMA channel owns a valid descriptor.",
+      "find": "    dma0_write_control(driver->dma, DMA0_CHANNEL_CONTROL_READY);\n    timer0_write_control(driver->timer, TIMER0_CONTROL_DMA_OWNED);",
+      "replace": "    timer0_write_control(driver->timer, TIMER0_CONTROL_DMA_OWNED);\n    dma0_write_control(driver->dma, DMA0_CHANNEL_CONTROL_READY);"
+    },
+    {
+      "id": "overwrite-active-dma-owner",
+      "description": "Accept a new handoff while DMA or a terminal result still owns state.",
+      "find": "    driver->owner == TIMER_DMA_OWNER_CPU &&\n    driver->result == TIMER_DMA_RESULT_NONE",
+      "replace": "    true"
+    },
+    {
+      "id": "skip-start-critical-section",
+      "description": "Configure shared DMA ownership state without masking the IRQ.",
+      "find": "  for (size_t index = 0u; index < sample_count; index++) {\n    if (samples[index] > driver->period_ticks) return false;\n  }\n\n  irq_state = timer_dma_irq_save_disable();",
+      "replace": "  for (size_t index = 0u; index < sample_count; index++) {\n    if (samples[index] > driver->period_ticks) return false;\n  }\n\n  irq_state = UINT32_C(1);"
+    },
+    {
+      "id": "restore-wrong-start-interrupt-state",
+      "description": "Always restore start as interrupt-enabled rather than restoring the opaque state.",
+      "find": "  timer_dma_irq_restore(irq_state);\n  return started;",
+      "replace": "  timer_dma_irq_restore(irq_state ^ irq_state);\n  return started;"
+    },
+    {
+      "id": "abort-with-dma-request-still-enabled",
+      "description": "Request channel abort without first releasing timer DMA requests.",
+      "find": "    timer0_write_control(driver->timer, TIMER0_CONTROL_READY);\n    dma0_write_control(driver->dma, DMA0_CHANNEL_CONTROL_ABORT);",
+      "replace": "    timer0_write_control(driver->timer, TIMER0_CONTROL_DMA_OWNED);\n    dma0_write_control(driver->dma, DMA0_CHANNEL_CONTROL_ABORT);"
+    },
+    {
+      "id": "omit-abort-command",
+      "description": "Mark an abort pending without asking DMA to terminate the transfer.",
+      "find": "    dma0_write_control(driver->dma, DMA0_CHANNEL_CONTROL_ABORT);",
+      "replace": "    dma0_write_control(driver->dma, 0u);"
+    },
+    {
+      "id": "allow-abort-or-complete-to-beat-error",
+      "description": "Ignore error status when multiple terminal status bits are latched.",
+      "find": "  if (errors != 0u) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "ignore-abort-completion",
+      "description": "Leave an aborted DMA transfer in its prior owner state.",
+      "find": "  if ((observed & DMA0_STATUS_ABORTED) != 0u) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "leave-complete-transfer-dma-owned",
+      "description": "Report completion without returning timer ownership to the CPU.",
+      "find": "    driver->owner = TIMER_DMA_OWNER_CPU;\n    driver->result = TIMER_DMA_RESULT_COMPLETE;",
+      "replace": "    driver->owner = TIMER_DMA_OWNER_DMA;\n    driver->result = TIMER_DMA_RESULT_COMPLETE;"
+    },
+    {
+      "id": "leave-dma-request-enabled-at-terminal-handoff",
+      "description": "Attempt a terminal handoff while retaining timer DMA requests.",
+      "find": "static void release_dma_ownership(timer_dma_t *driver) {\n  timer0_write_control(driver->timer, TIMER0_CONTROL_READY);\n  dma0_write_control(driver->dma, 0u);",
+      "replace": "static void release_dma_ownership(timer_dma_t *driver) {\n  timer0_write_control(driver->timer, TIMER0_CONTROL_DMA_OWNED);\n  dma0_write_control(driver->dma, 0u);"
+    },
+    {
+      "id": "discard-last-active-compare",
+      "description": "Lose the compare value that must be retained across abort or error recovery.",
+      "find": "  driver->last_compare_ticks = timer0_read_compare_active(driver->timer);",
+      "replace": "  driver->last_compare_ticks = 0u;"
+    },
+    {
+      "id": "recover-before-result-acknowledgement",
+      "description": "Allow recovery before the terminal result is consumed.",
+      "find": "    driver->owner == TIMER_DMA_OWNER_RECOVERY_REQUIRED &&\n    driver->result == TIMER_DMA_RESULT_NONE",
+      "replace": "    driver->owner == TIMER_DMA_OWNER_RECOVERY_REQUIRED"
+    },
+    {
+      "id": "restore-wrong-compare-after-recovery",
+      "description": "Reconfigure the timer with zero instead of the retained active compare value.",
+      "find": "    timer0_write_compare_shadow(driver->timer, driver->last_compare_ticks);",
+      "replace": "    timer0_write_compare_shadow(driver->timer, 0u);"
+    },
+    {
+      "id": "retain-recovery-required-owner",
+      "description": "Finish reconfiguration without restoring CPU ownership.",
+      "find": "    driver->owner = TIMER_DMA_OWNER_CPU;\n    recovered = true;",
+      "replace": "    driver->owner = TIMER_DMA_OWNER_RECOVERY_REQUIRED;\n    recovered = true;"
+    },
+    {
+      "id": "retain-consumed-result",
+      "description": "Return a terminal result without clearing its one-result latch.",
+      "find": "    driver->result = TIMER_DMA_RESULT_NONE;",
+      "replace": "    driver->result = result;"
+    },
+    {
+      "id": "discard-error-flags",
+      "description": "Publish an error result without retaining the DMA error cause.",
+      "find": "    driver->error_flags = errors;",
+      "replace": "    driver->error_flags = 0u;"
+    },
+    {
+      "id": "restore-wrong-result-interrupt-state",
+      "description": "Restore the result-consumption critical section as enabled regardless of its saved state.",
+      "find": "  timer_dma_irq_restore(irq_state);\n  return result;",
+      "replace": "  timer_dma_irq_restore(irq_state | UINT32_C(1));\n  return result;"
+    }
+  ]
+}

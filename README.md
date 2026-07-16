@@ -222,6 +222,11 @@ The active watchdog-window recovery fixture is calibrated with
 boundaries, persistent reset-cause handling, acknowledgement-gated recovery,
 and interrupt-state restoration against an opaque WDT0 model.
 
+The active timer-DMA ownership handoff fixture is calibrated with
+`npm run fixture:timer-dma:self-test`. It verifies descriptor ownership,
+terminal handoff priority, abort acknowledgement, retained-compare recovery,
+and interrupt-state restoration against opaque TIMER0/DMA0 models.
+
 The active frontend-autocomplete fixture is calibrated with
 `npm run fixture:frontend-autocomplete:self-test`. Deterministic jsdom
 interaction tests verify its exact debounce boundary, async race handling,

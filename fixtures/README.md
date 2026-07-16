@@ -139,6 +139,12 @@ exact foreground interrupt-state restoration. Its public tests verify boot
 recovery, early-feed rejection, reset detection, acknowledgement-gated
 recovery, and invalid-call boundaries.
 
+The active `timer-dma-handoff` fixture uses opaque deterministic TIMER0/DMA0
+models with explicit compare-stream ownership, terminal status latches, and
+exact foreground interrupt-state restoration. Its public tests verify safe
+descriptor handoff, completion ownership return, abort acknowledgement,
+retained-compare recovery, error priority, and invalid-call boundaries.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested

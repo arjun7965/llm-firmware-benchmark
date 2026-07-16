@@ -94,6 +94,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "timer-dma-handoff",
+    source: "fixtures/timer-dma-handoff/reference/timer_dma_handoff.c",
+    includes: Object.freeze([
+      "fixtures/timer-dma-handoff/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "uart-interrupt-driver",
     source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
     includes: Object.freeze([
