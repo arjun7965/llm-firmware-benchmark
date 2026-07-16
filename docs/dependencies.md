@@ -28,6 +28,7 @@ code. Each task references a pinned hosted runtime contract from
 | `pwm-synchronized-update` | A C11 compiler plus fixture-owned opaque PWM0 shadow/load, status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `watchdog-window-recovery` | A C11 compiler plus fixture-owned opaque WDT0 counter/reset-cause/feed and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `timer-dma-handoff` | A C11 compiler plus fixture-owned opaque TIMER0/DMA0 ownership, compare-stream, status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `timer-capture-overflow` | A C11 compiler plus fixture-owned opaque TIMER1 capture/compare, overflow-status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `spi-dma-transfer` | A C11 compiler plus fixture-owned opaque SPI0/DMA0 registers, DMA buffer-address translation, and an interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
@@ -159,6 +160,14 @@ recording:
 
 ```bash
 npm run fixture:timer-dma:self-test
+```
+
+The timer capture/compare overflow fixture uses `cc` with opaque TIMER1
+counter/capture/compare status, deterministic delayed-wrap stimuli, and
+interrupt-mask recording:
+
+```bash
+npm run fixture:timer-capture:self-test
 ```
 
 The UART interrupt-driver fixture uses `cc` with an instrumented UART0 register
