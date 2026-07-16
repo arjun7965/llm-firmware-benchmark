@@ -121,6 +121,12 @@ boundary. Its public tests verify initialization ordering, both edge
 directions, bounce restart, wrap-safe deadlines, retained late edges, wake
 recovery, stale-latch clearing, and exact interrupt restoration.
 
+The active `adc-threshold-watchdog` fixture uses an opaque deterministic ADC0
+model with end-of-conversion, analog-watchdog, and overrun latches. Its public
+tests verify threshold configuration, one-sample terminal handling,
+status-priority rules, wrap-safe foreground timeout, fault reset, event
+consumption, and exact interrupt restoration.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested

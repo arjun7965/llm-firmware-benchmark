@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/adc_watchdog.c",
+  "mutations": [
+    {
+      "id": "accept-reversed-threshold-window",
+      "description": "Accept a lower threshold above the upper threshold.",
+      "find": "    lower_threshold > upper_threshold ||",
+      "replace": "    lower_threshold < upper_threshold ||"
+    },
+    {
+      "id": "accept-out-of-range-threshold",
+      "description": "Ignore the 12-bit ADC sample range limit.",
+      "find": "    upper_threshold > ADC_WATCHDOG_MAX_SAMPLE",
+      "replace": "    false"
+    },
+    {
+      "id": "leave-stale-status-at-configuration",
+      "description": "Do not clear ADC status during initialization or recovery.",
+      "find": "  adc0_write_status_clear(adc, ADC0_STATUS_ALL);",
+      "replace": "  adc0_write_status_clear(adc, 0u);"
+    },
+    {
+      "id": "start-without-interrupt-exclusion",
+      "description": "Do not save and disable the caller interrupt state before start.",
+      "find": "  irq_state = adc0_irq_save_disable();\n  if (\n    driver->active || driver->faulted ||",
+      "replace": "  irq_state = 0u;\n  if (\n    driver->active || driver->faulted ||"
+    },
+    {
+      "id": "start-with-stale-status",
+      "description": "Do not clear stale completion and fault latches before conversion start.",
+      "find": "  driver->active = true;\n  adc0_write_status_clear(driver->adc, ADC0_STATUS_ALL);\n  adc0_write_control(",
+      "replace": "  driver->active = true;\n  adc0_write_status_clear(driver->adc, 0u);\n  adc0_write_control("
+    },
+    {
+      "id": "service-unrelated-status",
+      "description": "Treat an unrelated ADC status bit as a terminal conversion result.",
+      "find": "  if ((status & (ADC0_STATUS_EOC | ADC0_STATUS_AWD)) == 0u) return;",
+      "replace": "  if (status == UINT32_MAX) return;"
+    },
+    {
+      "id": "discard-conversion-sample",
+      "description": "Publish a terminal event without reading the ADC data exactly once.",
+      "find": "  sample = adc0_read_data(driver->adc);",
+      "replace": "  sample = 0u;"
+    },
+    {
+      "id": "ignore-watchdog-priority",
+      "description": "Classify an analog-watchdog event as an in-window conversion.",
+      "find": "  driver->event = (status & ADC0_STATUS_AWD) != 0u\n    ? ADC_WATCHDOG_EVENT_OUT_OF_WINDOW",
+      "replace": "  driver->event = false\n    ? ADC_WATCHDOG_EVENT_OUT_OF_WINDOW"
+    },
+    {
+      "id": "lose-overrun-priority",
+      "description": "Allow completion or watchdog handling to outrank an ADC overrun.",
+      "find": "  if ((status & ADC0_STATUS_OVERRUN) != 0u) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "leave-adc-running-after-overrun",
+      "description": "Fail to stop the ADC before clearing overrun state.",
+      "find": "  if ((status & ADC0_STATUS_OVERRUN) != 0u) {\n    adc0_write_control(driver->adc, 0u);",
+      "replace": "  if ((status & ADC0_STATUS_OVERRUN) != 0u) {\n    adc0_write_control(driver->adc, ADC0_CONTROL_READY);"
+    },
+    {
+      "id": "overrun-does-not-fault-driver",
+      "description": "Leave the driver apparently healthy after a terminal overrun.",
+      "find": "    driver->active = false;\n    driver->faulted = true;\n    driver->event = ADC_WATCHDOG_EVENT_FAULT_OVERRUN;",
+      "replace": "    driver->active = false;\n    driver->faulted = false;\n    driver->event = ADC_WATCHDOG_EVENT_FAULT_OVERRUN;"
+    },
+    {
+      "id": "accept-one-tick-late-timeout",
+      "description": "Wait one extra tick at the timeout deadline.",
+      "find": "    (uint32_t)(now_ms - driver->started_at_ms) >=\n      ADC_WATCHDOG_TIMEOUT_MS",
+      "replace": "    (uint32_t)(now_ms - driver->started_at_ms) >\n      ADC_WATCHDOG_TIMEOUT_MS"
+    },
+    {
+      "id": "break-wrap-safe-timeout",
+      "description": "Use a direct timestamp comparison instead of elapsed unsigned arithmetic.",
+      "find": "    (uint32_t)(now_ms - driver->started_at_ms) >=\n      ADC_WATCHDOG_TIMEOUT_MS",
+      "replace": "    now_ms < driver->started_at_ms + ADC_WATCHDOG_TIMEOUT_MS"
+    },
+    {
+      "id": "leave-timeout-status-latched",
+      "description": "Do not clear pending ADC status when the foreground timeout wins.",
+      "find": "    adc0_write_control(driver->adc, 0u);\n    adc0_write_status_clear(driver->adc, ADC0_STATUS_ALL);\n    driver->active = false;\n    driver->faulted = true;\n    driver->event = ADC_WATCHDOG_EVENT_FAULT_TIMEOUT;",
+      "replace": "    adc0_write_control(driver->adc, 0u);\n    adc0_write_status_clear(driver->adc, 0u);\n    driver->active = false;\n    driver->faulted = true;\n    driver->event = ADC_WATCHDOG_EVENT_FAULT_TIMEOUT;"
+    },
+    {
+      "id": "recover-without-fault",
+      "description": "Allow recovery to reconfigure a healthy ADC instance.",
+      "find": "  if (!driver->faulted) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "keep-consumed-event-pending",
+      "description": "Return an event without clearing the one-event latch.",
+      "find": "  driver->event = ADC_WATCHDOG_EVENT_NONE;\n  adc0_irq_restore(irq_state);",
+      "replace": "  driver->event = event;\n  adc0_irq_restore(irq_state);"
+    },
+    {
+      "id": "start-with-unconsumed-event",
+      "description": "Start a new conversion before the prior terminal event is consumed.",
+      "find": "    driver->event != ADC_WATCHDOG_EVENT_NONE",
+      "replace": "    false"
+    }
+  ]
+}

@@ -31,6 +31,7 @@ implemented and calibrated.
 | `interrupt-vector-configuration` | Single file | Single file | One startup/vector implementation unit; SCB/NVIC mocks and ordering tests are validator-owned |
 | `i2c-controller-recovery` | Single file | Single file | One I2C controller implementation unit; opaque I2C0 mocks and protocol-ordering tests are validator-owned |
 | `gpio-edge-debounce` | Single file | Single file | One GPIO button driver unit; opaque edge/wake and interrupt-mask mocks are validator-owned |
+| `adc-threshold-watchdog` | Single file | Single file | One ADC threshold monitor unit; opaque status, data, and interrupt-mask mocks are validator-owned |
 | `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |
 | `spi-dma-transfer` | Single file | Single file | One driver implementation unit; SPI0/DMA0 mocks and DMA IRQ tests are validator-owned |
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
