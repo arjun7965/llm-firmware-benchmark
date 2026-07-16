@@ -62,6 +62,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "watchdog-window-recovery",
+    source: "reference/watchdog_window.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",

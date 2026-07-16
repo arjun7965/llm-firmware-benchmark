@@ -133,6 +133,12 @@ latches. Its public tests verify programming order, deferred duty application,
 fault-over-update priority, last-safe-duty recovery, event consumption, and
 exact interrupt restoration.
 
+The active `watchdog-window-recovery` fixture uses an opaque deterministic
+WDT0 model with a feed window, persistent reset-cause latch, timeout reset, and
+exact foreground interrupt-state restoration. Its public tests verify boot
+recovery, early-feed rejection, reset detection, acknowledgement-gated
+recovery, and invalid-call boundaries.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
