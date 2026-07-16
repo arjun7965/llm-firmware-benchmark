@@ -104,6 +104,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "timer-capture-overflow",
+    source: "fixtures/timer-capture-overflow/reference/timer_capture.c",
+    includes: Object.freeze([
+      "fixtures/timer-capture-overflow/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "uart-interrupt-driver",
     source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
     includes: Object.freeze([

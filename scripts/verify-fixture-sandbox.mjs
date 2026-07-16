@@ -72,6 +72,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "timer-capture-overflow",
+    source: "reference/timer_capture.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",

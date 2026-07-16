@@ -148,6 +148,9 @@ record exact versions in validation reports.
     rejection, reset-cause acknowledgement, and staged reconfiguration.
   - [x] Add a timer-DMA ownership handoff fixture with terminal-result gating,
     retained-compare abort recovery, and deterministic ownership transfer.
+  - [x] Add a timer capture/compare overflow fixture with delayed-wrap
+    timestamp reconstruction, bounded compare arming, and capture overrun
+    accounting.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,

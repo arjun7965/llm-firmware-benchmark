@@ -18,6 +18,7 @@ runFixtureMutationTests({
     "pwm-synchronized-update",
     "watchdog-window-recovery",
     "timer-dma-handoff",
+    "timer-capture-overflow",
     "rtos-priority-inversion",
     "uart-interrupt-driver",
     "spi-dma-transfer",

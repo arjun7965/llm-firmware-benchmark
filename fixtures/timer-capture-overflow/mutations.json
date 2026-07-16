@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/timer_capture.c",
+  "mutations": [
+    {
+      "id": "accept-null-initialization",
+      "description": "Proceed with initialization when the caller or timer pointer is null.",
+      "find": "  if (driver == NULL || timer == NULL) return false;",
+      "replace": "  if (driver == NULL || timer == NULL) return true;"
+    },
+    {
+      "id": "leave-stale-status-at-initialization",
+      "description": "Fail to clear latched capture, overflow, and compare status before enabling TIMER1.",
+      "find": "  timer1_write_status_clear(timer, TIMER1_STATUS_ALL);",
+      "replace": "  timer1_write_status_clear(timer, 0u);"
+    },
+    {
+      "id": "leave-nonzero-compare-at-initialization",
+      "description": "Seed the compare register with an unexpected nonzero value.",
+      "find": "  timer1_write_compare(timer, 0u);",
+      "replace": "  timer1_write_compare(timer, UINT16_C(1));"
+    },
+    {
+      "id": "enable-before-initial-register-setup",
+      "description": "Enable TIMER1 before clearing status and programming the initial compare value.",
+      "find": "  timer1_write_control(timer, 0u);\n  timer1_write_status_clear(timer, TIMER1_STATUS_ALL);\n  timer1_write_compare(timer, 0u);\n  timer1_write_control(timer, TIMER1_CONTROL_READY);",
+      "replace": "  timer1_write_control(timer, 0u);\n  timer1_write_control(timer, TIMER1_CONTROL_READY);\n  timer1_write_status_clear(timer, TIMER1_STATUS_ALL);\n  timer1_write_compare(timer, 0u);"
+    },
+    {
+      "id": "accept-invalid-compare-delay",
+      "description": "Allow zero and ambiguous half-range compare delays.",
+      "find": "    !timer_capture_is_ready(driver) || delay_ticks == 0u ||\n    delay_ticks > TIMER_CAPTURE_MAX_DELAY",
+      "replace": "    !timer_capture_is_ready(driver)"
+    },
+    {
+      "id": "skip-arm-critical-section",
+      "description": "Arm a compare without preserving the foreground interrupt boundary.",
+      "find": "  irq_state = timer_capture_irq_save_disable();\n  if (!driver->compare_armed && !driver->compare_pending) {",
+      "replace": "  irq_state = UINT32_C(1);\n  if (!driver->compare_armed && !driver->compare_pending) {"
+    },
+    {
+      "id": "arm-despite-pending-timer-status",
+      "description": "Program a future compare while an unacknowledged timer event can invalidate the high word.",
+      "find": "    if ((timer1_read_status(driver->timer) & TIMER1_STATUS_ALL) == 0u) {",
+      "replace": "    if (true) {"
+    },
+    {
+      "id": "discard-current-count-when-arming",
+      "description": "Use the delay as a raw compare register value instead of adding it to the current counter.",
+      "find": "      compare_ticks = (uint16_t)(count + delay_ticks);",
+      "replace": "      compare_ticks = delay_ticks;"
+    },
+    {
+      "id": "leave-compare-irq-disabled",
+      "description": "Write a compare target without enabling the compare interrupt source.",
+      "find": "      timer1_write_control(driver->timer, TIMER1_CONTROL_COMPARE_ARMED);",
+      "replace": "      timer1_write_control(driver->timer, TIMER1_CONTROL_READY);"
+    },
+    {
+      "id": "compute-compare-deadline-without-counter",
+      "description": "Lose the current low-word count while constructing the absolute compare deadline.",
+      "find": "      driver->compare_deadline =\n        driver->overflow_ticks + (uint32_t)count + (uint32_t)delay_ticks;",
+      "replace": "      driver->compare_deadline =\n        driver->overflow_ticks + (uint32_t)delay_ticks;"
+    },
+    {
+      "id": "reverse-overflow-handoff-classification",
+      "description": "Assign simultaneous capture/overflow events to the wrong high-word epoch.",
+      "find": "  if (overflow_observed && low_word < TIMER1_COUNTER_HALF_RANGE) {",
+      "replace": "  if (overflow_observed && low_word >= TIMER1_COUNTER_HALF_RANGE) {"
+    },
+    {
+      "id": "forget-overflow-epoch-update",
+      "description": "Acknowledge overflow without advancing the software timestamp epoch.",
+      "find": "  if (overflow_observed) driver->overflow_ticks += TIMER1_COUNTER_MODULUS;",
+      "replace": "  if (false) driver->overflow_ticks += TIMER1_COUNTER_MODULUS;"
+    },
+    {
+      "id": "ignore-captured-low-word",
+      "description": "Publish a capture timestamp using zero rather than the hardware-latched count.",
+      "find": "    captured_low_word = timer1_read_capture(driver->timer);",
+      "replace": "    captured_low_word = 0u;"
+    },
+    {
+      "id": "overwrite-unconsumed-capture",
+      "description": "Replace a pending capture instead of retaining it and accounting for overrun.",
+      "find": "    if (driver->capture_pending) {\n      driver->capture_overruns++;\n    } else {",
+      "replace": "    if (false) {\n      driver->capture_overruns++;\n    } else {"
+    },
+    {
+      "id": "accept-unarmed-compare-status",
+      "description": "Turn a stale compare status into a terminal compare result without an armed deadline.",
+      "find": "    if (\n      driver->compare_armed &&\n      compare_timestamp == driver->compare_deadline\n    ) {",
+      "replace": "    if (true) {"
+    },
+    {
+      "id": "leave-compare-armed-after-fire",
+      "description": "Publish a compare result while leaving the repeating hardware source armed.",
+      "find": "      driver->compare_armed = false;",
+      "replace": "      driver->compare_armed = true;"
+    },
+    {
+      "id": "fail-to-acknowledge-observed-status",
+      "description": "Leave the status snapshot latched after ISR handling.",
+      "find": "  timer1_write_status_clear(driver->timer, observed);",
+      "replace": "  timer1_write_status_clear(driver->timer, 0u);"
+    },
+    {
+      "id": "retain-consumed-capture",
+      "description": "Return a capture timestamp without clearing its one-sample latch.",
+      "find": "    driver->capture_pending = false;",
+      "replace": "    driver->capture_pending = true;"
+    },
+    {
+      "id": "restore-wrong-compare-interrupt-state",
+      "description": "Restore compare result consumption with interrupts enabled instead of the opaque saved state.",
+      "find": "  timer_capture_irq_restore(irq_state);\n  return compared;",
+      "replace": "  timer_capture_irq_restore(irq_state ^ UINT32_C(1));\n  return compared;"
+    },
+    {
+      "id": "retain-reported-capture-overruns",
+      "description": "Expose the same capture-overrun count repeatedly instead of atomically consuming it.",
+      "find": "  driver->capture_overruns = 0u;",
+      "replace": "  driver->capture_overruns = overruns;"
+    }
+  ]
+}
