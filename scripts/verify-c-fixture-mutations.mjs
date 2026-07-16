@@ -15,6 +15,7 @@ runFixtureMutationTests({
     "i2c-controller-recovery",
     "gpio-edge-debounce",
     "adc-threshold-watchdog",
+    "pwm-synchronized-update",
     "rtos-priority-inversion",
     "uart-interrupt-driver",
     "spi-dma-transfer",

@@ -142,6 +142,8 @@ record exact versions in validation reports.
     capture, foreground debounce, and wake-up recovery.
   - [x] Add a deterministic ADC threshold/watchdog fixture with terminal-status
     priority, wrap-safe timeout, and explicit fault recovery.
+  - [x] Add a deterministic PWM synchronized-update fixture with shadow-load
+    timing, fault priority, and last-safe-duty recovery.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,

@@ -127,6 +127,12 @@ tests verify threshold configuration, one-sample terminal handling,
 status-priority rules, wrap-safe foreground timeout, fault reset, event
 consumption, and exact interrupt restoration.
 
+The active `pwm-synchronized-update` fixture uses an opaque deterministic PWM0
+model with shadow/active registers, controlled period boundaries, and fault
+latches. Its public tests verify programming order, deferred duty application,
+fault-over-update priority, last-safe-duty recovery, event consumption, and
+exact interrupt restoration.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested

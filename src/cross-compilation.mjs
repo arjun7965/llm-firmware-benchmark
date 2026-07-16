@@ -73,6 +73,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "pwm-synchronized-update",
+    source: "fixtures/pwm-synchronized-update/reference/pwm_update.c",
+    includes: Object.freeze([
+      "fixtures/pwm-synchronized-update/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "uart-interrupt-driver",
     source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
     includes: Object.freeze([
