@@ -98,6 +98,11 @@ reset-cause, configuration, feed, and interrupt-mask accessors. Its mock
 rejects early feeds by latching a deterministic reset and requires explicit
 reset-cause acknowledgement before retained-state recovery or boot service
 resumes.
+The active `timer-dma-handoff` task uses opaque TIMER0/DMA0 compare-stream,
+terminal-status, and interrupt-mask accessors. Its mock transfers one bounded
+compare value per deterministic timer boundary and requires a terminal IRQ plus
+explicit result acknowledgement before abort/error recovery returns CPU
+ownership.
 
 ## Planned Profiles
 
@@ -124,6 +129,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `adc-threshold-watchdog` | `armv7m-bare-metal` | Cortex-M3; opaque ADC0 12-bit threshold/status latches; non-nested ISR terminal handling; foreground timeout and exact interrupt-state restoration |
 | `pwm-synchronized-update` | `armv7m-bare-metal` | Cortex-M3; opaque PWM0 shadow/load and status latches; non-nested ISR fault priority; foreground updates and recovery preserve exact interrupt state |
 | `watchdog-window-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque WDT0 counter/reset-cause/feed latches; deterministic feed window and timeout reset; foreground recovery preserves exact interrupt state |
+| `timer-dma-handoff` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER0/DMA0 compare-stream ownership; non-nested DMA IRQ terminal priority; foreground abort/recovery preserves exact interrupt state |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
 | `spi-dma-transfer` | `armv7m-bare-metal` | Cortex-M3; opaque SPI0/DMA0 accessors; non-nested DMA IRQ; caller-owned nonoverlapping DMA buffers; no data cache; foreground saves and restores global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
@@ -137,6 +143,6 @@ rubric, dependency entry, and validation commands.
 `npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
 and compiles the timer, interrupt-vector, I2C-controller, GPIO-debounce,
 ADC-threshold/watchdog, PWM synchronized-update, watchdog-window recovery,
-UART, and SPI-DMA references
+timer-DMA handoff, UART, and SPI-DMA references
 for their ARMv7-M target.
 This is a compile-only portability probe, not target execution.

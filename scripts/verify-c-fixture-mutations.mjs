@@ -17,6 +17,7 @@ runFixtureMutationTests({
     "adc-threshold-watchdog",
     "pwm-synchronized-update",
     "watchdog-window-recovery",
+    "timer-dma-handoff",
     "rtos-priority-inversion",
     "uart-interrupt-driver",
     "spi-dma-transfer",

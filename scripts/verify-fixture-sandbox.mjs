@@ -67,6 +67,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "timer-dma-handoff",
+    source: "reference/timer_dma_handoff.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",

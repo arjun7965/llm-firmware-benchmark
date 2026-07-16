@@ -146,6 +146,8 @@ record exact versions in validation reports.
     timing, fault priority, and last-safe-duty recovery.
   - [x] Add a deterministic watchdog-window recovery fixture with early-feed
     rejection, reset-cause acknowledgement, and staged reconfiguration.
+  - [x] Add a timer-DMA ownership handoff fixture with terminal-result gating,
+    retained-compare abort recovery, and deterministic ownership transfer.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,

@@ -38,7 +38,8 @@ profiles introduced command contracts in revision 3; `python3-stdlib`
 revision 4 pins the relocatable runtime tree mounted by the runner, and
 `node-typescript` revision 4 adds installed-tree attestation and runtime mounts.
 `go-std` revision 4 raises its bounded temporary filesystem to 256 MiB so Go
-1.24.4 can compile the standard library inside the sandbox.
+1.24.4 can compile the standard library inside the sandbox; revision 5 raises
+the compile-phase file-descriptor limit from 128 to 256 for that toolchain.
 `react18-typescript` revision 4 pins the complete npm package-lock and installed
 tree, mounts that tree for both TypeScript compilation and jsdom tests, and
 provides each Node.js phase a 2 GiB virtual-address limit.
@@ -143,7 +144,7 @@ bootstrap superuser so candidate scripts cannot reconnect with another role.
 
 | Tasks | Validation profile |
 | --- | --- |
-| `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `embedded-ring-buffer`, `firmware-state-machine`, `gpio-edge-debounce`, `i2c-controller-recovery`, `interrupt-vector-configuration`, `pwm-synchronized-update`, `rtos-priority-inversion`, `spi-dma-transfer`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
+| `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `embedded-ring-buffer`, `firmware-state-machine`, `gpio-edge-debounce`, `i2c-controller-recovery`, `interrupt-vector-configuration`, `pwm-synchronized-update`, `rtos-priority-inversion`, `spi-dma-transfer`, `timer-dma-handoff`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
 | `frontend-autocomplete` | `react18-typescript` |
 | `backend-idempotency`, `webhook-replay-security` | `node-typescript-postgresql` |
 | `concurrency-debug` | `python3-stdlib` |
