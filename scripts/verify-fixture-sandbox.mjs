@@ -57,6 +57,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "pwm-synchronized-update",
+    source: "reference/pwm_update.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",

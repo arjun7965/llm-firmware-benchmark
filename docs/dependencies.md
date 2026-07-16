@@ -25,6 +25,7 @@ code. Each task references a pinned hosted runtime contract from
 | `i2c-controller-recovery` | A C11 compiler plus fixture-owned opaque I2C0, status, and protocol-ordering mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `gpio-edge-debounce` | A C11 compiler plus fixture-owned opaque GPIO0 edge/wake latches and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `adc-threshold-watchdog` | A C11 compiler plus fixture-owned opaque ADC0 threshold/status and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `pwm-synchronized-update` | A C11 compiler plus fixture-owned opaque PWM0 shadow/load, status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `spi-dma-transfer` | A C11 compiler plus fixture-owned opaque SPI0/DMA0 registers, DMA buffer-address translation, and an interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
@@ -133,6 +134,14 @@ latches, threshold registers, and deterministic interrupt-state recording:
 
 ```bash
 npm run fixture:adc-watchdog:self-test
+```
+
+The PWM synchronized-update fixture uses `cc` with opaque PWM0 shadow/active
+registers, period-boundary application, fault latches, and deterministic
+interrupt-state recording:
+
+```bash
+npm run fixture:pwm:self-test
 ```
 
 The UART interrupt-driver fixture uses `cc` with an instrumented UART0 register

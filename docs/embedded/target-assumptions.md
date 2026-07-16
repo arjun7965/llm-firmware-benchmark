@@ -90,6 +90,9 @@ edge capture, foreground debounce, and wake-latch recovery while preserving
 the caller's exact interrupt state. The active `adc-threshold-watchdog` task
 uses opaque ADC0 status and data accessors with 12-bit threshold monitoring,
 ISR terminal-status priority, foreground timeout, and explicit fault reset.
+The active `pwm-synchronized-update` task uses opaque PWM0 shadow/load
+accessors with period-boundary duty application, fault-over-update priority,
+and explicit last-safe-duty recovery.
 
 ## Planned Profiles
 
@@ -114,6 +117,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `i2c-controller-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque I2C0 accessor model; bounded foreground writes; deterministic START/address/data status events; arbitration-loss and wrap-safe timeout recovery |
 | `gpio-edge-debounce` | `armv7m-bare-metal` | Cortex-M3; opaque GPIO0 active-low edge/wake latches; non-nested ISR capture; foreground debounce and exact interrupt-state restoration |
 | `adc-threshold-watchdog` | `armv7m-bare-metal` | Cortex-M3; opaque ADC0 12-bit threshold/status latches; non-nested ISR terminal handling; foreground timeout and exact interrupt-state restoration |
+| `pwm-synchronized-update` | `armv7m-bare-metal` | Cortex-M3; opaque PWM0 shadow/load and status latches; non-nested ISR fault priority; foreground updates and recovery preserve exact interrupt state |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
 | `spi-dma-transfer` | `armv7m-bare-metal` | Cortex-M3; opaque SPI0/DMA0 accessors; non-nested DMA IRQ; caller-owned nonoverlapping DMA buffers; no data cache; foreground saves and restores global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
@@ -126,6 +130,6 @@ rubric, dependency entry, and validation commands.
 
 `npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
 and compiles the timer, interrupt-vector, I2C-controller, GPIO-debounce,
-ADC-threshold/watchdog, UART, and SPI-DMA references for
-their ARMv7-M target.
+ADC-threshold/watchdog, PWM synchronized-update, UART, and SPI-DMA references
+for their ARMv7-M target.
 This is a compile-only portability probe, not target execution.

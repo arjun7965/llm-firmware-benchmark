@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/pwm_update.c",
+  "mutations": [
+    {
+      "id": "accept-invalid-period-or-duty",
+      "description": "Accept a zero PWM period or a duty value above the period.",
+      "find": "    period_ticks == 0u || duty_ticks > period_ticks",
+      "replace": "    false"
+    },
+    {
+      "id": "leave-stale-status-at-configuration",
+      "description": "Do not clear PWM update and fault latches during configuration.",
+      "find": "  pwm0_write_status_clear(pwm, PWM0_STATUS_ALL);",
+      "replace": "  pwm0_write_status_clear(pwm, 0u);"
+    },
+    {
+      "id": "request-without-interrupt-exclusion",
+      "description": "Arm a duty update without first preserving the caller interrupt state.",
+      "find": "  irq_state = pwm0_irq_save_disable();\n  if (\n    driver->update_pending || driver->faulted ||",
+      "replace": "  irq_state = 0u;\n  if (\n    driver->update_pending || driver->faulted ||"
+    },
+    {
+      "id": "allow-overlapping-update",
+      "description": "Allow a second duty request while a prior shadow load is pending.",
+      "find": "    driver->update_pending || driver->faulted ||",
+      "replace": "    driver->faulted ||"
+    },
+    {
+      "id": "allow-unconsumed-event",
+      "description": "Allow a new duty update before the prior terminal event is consumed.",
+      "find": "    driver->event != PWM_UPDATE_EVENT_NONE",
+      "replace": "    false"
+    },
+    {
+      "id": "leave-stale-update-before-request",
+      "description": "Do not acknowledge a stale update latch before arming a new duty.",
+      "find": "  pwm0_write_status_clear(driver->pwm, PWM0_STATUS_UPDATE);",
+      "replace": "  pwm0_write_status_clear(driver->pwm, 0u);"
+    },
+    {
+      "id": "write-old-shadow-duty",
+      "description": "Leave the shadow compare value at the previously active duty.",
+      "find": "  pwm0_write_compare_shadow(driver->pwm, duty_ticks);",
+      "replace": "  pwm0_write_compare_shadow(driver->pwm, driver->active_duty_ticks);"
+    },
+    {
+      "id": "do-not-arm-shadow-load",
+      "description": "Write no load bits after changing the duty shadow register.",
+      "find": "  pwm0_write_load(driver->pwm, PWM0_LOAD_COMPARE);",
+      "replace": "  pwm0_write_load(driver->pwm, 0u);"
+    },
+    {
+      "id": "publish-duty-before-boundary",
+      "description": "Report a requested duty as active before the hardware boundary applies it.",
+      "find": "  driver->requested_duty_ticks = duty_ticks;",
+      "replace": "  driver->active_duty_ticks = duty_ticks;"
+    },
+    {
+      "id": "ignore-unarmed-fault",
+      "description": "Ignore a PWM fault unless a software update is pending.",
+      "find": "  if (!pwm_update_is_ready(driver) || driver->faulted) return;",
+      "replace": "  if (!pwm_update_is_ready(driver) || driver->faulted || !driver->update_pending) return;"
+    },
+    {
+      "id": "lose-fault-priority",
+      "description": "Allow a simultaneous update status to outrank a hardware fault.",
+      "find": "  if ((status & PWM0_STATUS_FAULT) != 0u) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "leave-output-enabled-on-fault",
+      "description": "Keep PWM output enabled when servicing a fault interrupt.",
+      "find": "    pwm0_write_control(driver->pwm, 0u);",
+      "replace": "    pwm0_write_control(driver->pwm, PWM0_CONTROL_READY);"
+    },
+    {
+      "id": "fault-does-not-latch",
+      "description": "Leave the driver healthy after a hardware fault.",
+      "find": "    driver->faulted = true;",
+      "replace": "    driver->faulted = false;"
+    },
+    {
+      "id": "ignore-update-status",
+      "description": "Ignore a period-boundary update status entirely.",
+      "find": "  if ((status & PWM0_STATUS_UPDATE) != 0u) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "leave-update-status-latched",
+      "description": "Acknowledge a PWM update with zero rather than its write-one-to-clear bit.",
+      "find": "    pwm0_write_status_clear(\n      driver->pwm,\n      PWM0_STATUS_UPDATE\n    );",
+      "replace": "    pwm0_write_status_clear(\n      driver->pwm,\n      0u\n    );"
+    },
+    {
+      "id": "apply-stray-update",
+      "description": "Treat a stale update status as completion without an armed request.",
+      "find": "    if (driver->update_pending) {",
+      "replace": "    if (true) {"
+    },
+    {
+      "id": "recover-while-healthy",
+      "description": "Permit recovery to reconfigure a PWM instance that has not faulted.",
+      "find": "  if (!driver->faulted) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "recover-unsafe-requested-duty",
+      "description": "Restore the last requested duty instead of the last known-safe active duty.",
+      "find": "  configure_pwm(\n    driver->pwm,\n    driver->period_ticks,\n    driver->active_duty_ticks\n  );",
+      "replace": "  configure_pwm(\n    driver->pwm,\n    driver->period_ticks,\n    driver->requested_duty_ticks\n  );"
+    },
+    {
+      "id": "retain-unsafe-request-after-recovery",
+      "description": "Do not reset the requested-duty state to the recovered safe duty.",
+      "find": "  driver->requested_duty_ticks = driver->active_duty_ticks;",
+      "replace": "  driver->requested_duty_ticks = driver->requested_duty_ticks;"
+    },
+    {
+      "id": "keep-consumed-event-pending",
+      "description": "Return an event without clearing the one-event latch.",
+      "find": "  driver->event = PWM_UPDATE_EVENT_NONE;\n  pwm0_irq_restore(irq_state);",
+      "replace": "  driver->event = event;\n  pwm0_irq_restore(irq_state);"
+    },
+    {
+      "id": "restore-wrong-interrupt-state",
+      "description": "Restore interrupts as disabled after taking an event.",
+      "find": "  event = driver->event;\n  driver->event = PWM_UPDATE_EVENT_NONE;\n  pwm0_irq_restore(irq_state);",
+      "replace": "  event = driver->event;\n  driver->event = PWM_UPDATE_EVENT_NONE;\n  pwm0_irq_restore(irq_state ^ irq_state);"
+    }
+  ]
+}

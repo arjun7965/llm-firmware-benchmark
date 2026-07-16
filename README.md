@@ -212,6 +212,11 @@ The active ADC threshold/watchdog fixture is calibrated with
 classification, bounded ISR status handling, wrap-safe timeout, explicit fault
 recovery, and exact interrupt-state restoration against an opaque ADC0 model.
 
+The active PWM synchronized-update fixture is calibrated with
+`npm run fixture:pwm:self-test`. It verifies shadow-register boundary timing,
+fault-over-update priority, last-safe-duty recovery, event gating, and exact
+interrupt-state restoration against an opaque PWM0 model.
+
 The active frontend-autocomplete fixture is calibrated with
 `npm run fixture:frontend-autocomplete:self-test`. Deterministic jsdom
 interaction tests verify its exact debounce boundary, async race handling,
