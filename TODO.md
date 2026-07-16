@@ -138,6 +138,8 @@ record exact versions in validation reports.
     deterministic interrupt masking, and mock-register validation.
   - [x] Add a deterministic I2C controller fixture with bounded writes,
     arbitration-loss release, and wrap-safe timeout recovery.
+  - [x] Add a deterministic GPIO edge/debounce fixture with active-low edge
+    capture, foreground debounce, and wake-up recovery.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,

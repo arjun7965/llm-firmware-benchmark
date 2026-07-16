@@ -84,7 +84,10 @@ linker-addressed RAM table with deterministic SCB/NVIC, synchronization-barrier,
 and interrupt-mask models; it distinguishes reset-time relocation from live
 IRQ table updates. The active `i2c-controller-recovery` task uses an opaque
 I2C0 model with deterministic status snapshots, bounded write state, and
-arbitration-loss and timeout recovery without hardware polling loops.
+arbitration-loss and timeout recovery without hardware polling loops. The
+active `gpio-edge-debounce` task uses opaque GPIO0 accessors with active-low
+edge capture, foreground debounce, and wake-latch recovery while preserving
+the caller's exact interrupt state.
 
 ## Planned Profiles
 
@@ -107,6 +110,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `bare-metal-timer` | `armv7m-bare-metal` | Cortex-M3; fictional TIMER0 MMIO; interrupts masked for configuration; no heap, cache, DMA, FPU, or RTOS |
 | `interrupt-vector-configuration` | `armv7m-bare-metal` | Cortex-M3; 128-byte-aligned linker-reserved RAM vector table; opaque SCB/NVIC and barrier accessors; reset starts masked; live updates preserve global interrupt state |
 | `i2c-controller-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque I2C0 accessor model; bounded foreground writes; deterministic START/address/data status events; arbitration-loss and wrap-safe timeout recovery |
+| `gpio-edge-debounce` | `armv7m-bare-metal` | Cortex-M3; opaque GPIO0 active-low edge/wake latches; non-nested ISR capture; foreground debounce and exact interrupt-state restoration |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
 | `spi-dma-transfer` | `armv7m-bare-metal` | Cortex-M3; opaque SPI0/DMA0 accessors; non-nested DMA IRQ; caller-owned nonoverlapping DMA buffers; no data cache; foreground saves and restores global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
@@ -118,6 +122,6 @@ Profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.
 
 `npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
-and compiles the timer, interrupt-vector, I2C-controller, UART, and SPI-DMA references for
+and compiles the timer, interrupt-vector, I2C-controller, GPIO-debounce, UART, and SPI-DMA references for
 their ARMv7-M target.
 This is a compile-only portability probe, not target execution.

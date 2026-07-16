@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/gpio_debounce.c",
+  "mutations": [
+    {
+      "id": "treat-active-low-button-as-active-high",
+      "description": "Invert the active-low button interpretation.",
+      "find": "return (gpio0_read_input(gpio) & GPIO0_BUTTON_MASK) == 0u;",
+      "replace": "return (gpio0_read_input(gpio) & GPIO0_BUTTON_MASK) != 0u;"
+    },
+    {
+      "id": "omit-falling-edge-detection",
+      "description": "Fail to configure the falling edge used for button presses.",
+      "find": "gpio0_write_falling_enable(gpio, GPIO0_BUTTON_MASK);",
+      "replace": "gpio0_write_falling_enable(gpio, 0u);"
+    },
+    {
+      "id": "enable-irq-before-initial-clear",
+      "description": "Expose normal IRQ delivery before stale edge and wake latches are cleared.",
+      "find": "  gpio0_write_irq_enable(gpio, 0u);\n  gpio0_write_wake_enable(gpio, 0u);\n  gpio0_write_rising_enable(gpio, GPIO0_BUTTON_MASK);",
+      "replace": "  gpio0_write_irq_enable(gpio, GPIO0_BUTTON_MASK);\n  gpio0_write_wake_enable(gpio, 0u);\n  gpio0_write_rising_enable(gpio, GPIO0_BUTTON_MASK);"
+    },
+    {
+      "id": "leave-initial-edge-latched",
+      "description": "Do not clear stale GPIO edge state during initialization.",
+      "find": "  gpio0_write_edge_clear(gpio, GPIO0_BUTTON_MASK);\n  gpio0_write_wake_clear(gpio, GPIO0_BUTTON_MASK);",
+      "replace": "  gpio0_write_edge_clear(gpio, 0u);\n  gpio0_write_wake_clear(gpio, GPIO0_BUTTON_MASK);"
+    },
+    {
+      "id": "service-unrelated-edge-status",
+      "description": "Treat any GPIO status bit as the configured button edge.",
+      "find": "if ((status & GPIO0_BUTTON_MASK) == 0u) return;",
+      "replace": "if (status == UINT32_MAX) return;"
+    },
+    {
+      "id": "leave-normal-irq-enabled-during-debounce",
+      "description": "Do not mask normal delivery after capturing an edge.",
+      "find": "  gpio0_write_irq_enable(driver->gpio, 0u);\n  gpio0_write_edge_clear(driver->gpio, GPIO0_BUTTON_MASK);\n  if (driver->debounce_active) return;",
+      "replace": "  gpio0_write_edge_clear(driver->gpio, GPIO0_BUTTON_MASK);\n  if (driver->debounce_active) return;"
+    },
+    {
+      "id": "leave-isr-edge-latched",
+      "description": "Fail to acknowledge the edge captured by the ISR.",
+      "find": "  gpio0_write_edge_clear(driver->gpio, GPIO0_BUTTON_MASK);\n  if (driver->debounce_active) return;",
+      "replace": "  gpio0_write_edge_clear(driver->gpio, 0u);\n  if (driver->debounce_active) return;"
+    },
+    {
+      "id": "accept-one-tick-late-debounce",
+      "description": "Wait one extra tick at the debounce boundary.",
+      "find": "      (uint32_t)(now_ms - driver->candidate_started_at_ms) <\n        GPIO_DEBOUNCE_INTERVAL_MS) {",
+      "replace": "      (uint32_t)(now_ms - driver->candidate_started_at_ms) <=\n        GPIO_DEBOUNCE_INTERVAL_MS) {"
+    },
+    {
+      "id": "break-wrap-safe-deadline",
+      "description": "Use non-wrapping timestamp comparison instead of elapsed arithmetic.",
+      "find": "      (uint32_t)(now_ms - driver->candidate_started_at_ms) <\n        GPIO_DEBOUNCE_INTERVAL_MS) {",
+      "replace": "      now_ms < driver->candidate_started_at_ms + GPIO_DEBOUNCE_INTERVAL_MS) {"
+    },
+    {
+      "id": "skip-debounce-resample",
+      "description": "Confirm the ISR candidate without sampling the pin at the deadline.",
+      "find": "  observed_pressed = button_is_pressed(driver->gpio);\n  if (observed_pressed != driver->candidate_pressed) {",
+      "replace": "  observed_pressed = driver->candidate_pressed;\n  if (observed_pressed != driver->candidate_pressed) {"
+    },
+    {
+      "id": "do-not-restart-after-bounce",
+      "description": "Keep the first edge timestamp after the observed level changes.",
+      "find": "    driver->candidate_started_at_ms = now_ms;\n    gpio0_irq_restore(irq_state);",
+      "replace": "    driver->candidate_started_at_ms = driver->candidate_started_at_ms;\n    gpio0_irq_restore(irq_state);"
+    },
+    {
+      "id": "clear-late-edge-before-rearming",
+      "description": "Discard an edge that arrived while debounce delivery was masked.",
+      "find": "  arm_normal_irq(driver);\n  gpio0_irq_restore(irq_state);\n  return event;",
+      "replace": "  gpio0_write_edge_clear(driver->gpio, GPIO0_BUTTON_MASK);\n  arm_normal_irq(driver);\n  gpio0_irq_restore(irq_state);\n  return event;"
+    },
+    {
+      "id": "allow-sleep-during-debounce",
+      "description": "Arm wake-up while a foreground debounce decision is still pending.",
+      "find": "  if (driver->debounce_active) {\n    gpio0_irq_restore(irq_state);\n    return false;\n  }",
+      "replace": "  if (false) {\n    gpio0_irq_restore(irq_state);\n    return false;\n  }"
+    },
+    {
+      "id": "leave-wake-latch-set-on-resume",
+      "description": "Fail to clear wake status before returning to normal operation.",
+      "find": "  gpio0_write_edge_clear(driver->gpio, GPIO0_BUTTON_MASK);\n  gpio0_write_wake_clear(driver->gpio, GPIO0_BUTTON_MASK);\n  observed_pressed = button_is_pressed(driver->gpio);",
+      "replace": "  gpio0_write_edge_clear(driver->gpio, GPIO0_BUTTON_MASK);\n  gpio0_write_wake_clear(driver->gpio, 0u);\n  observed_pressed = button_is_pressed(driver->gpio);"
+    },
+    {
+      "id": "rearm-before-wake-debounce",
+      "description": "Re-enable normal IRQs even though wake recovery observed a changed level.",
+      "find": "  if (observed_pressed != driver->stable_pressed) {\n    driver->candidate_pressed = observed_pressed;\n    driver->candidate_started_at_ms = now_ms;\n    driver->debounce_active = true;",
+      "replace": "  if (observed_pressed != driver->stable_pressed) {\n    driver->candidate_pressed = observed_pressed;\n    driver->candidate_started_at_ms = now_ms;\n    driver->debounce_active = false;\n    arm_normal_irq(driver);"
+    },
+    {
+      "id": "report-candidate-as-stable",
+      "description": "Expose the unsettled ISR candidate through the stable-state accessor.",
+      "find": "  pressed = driver->stable_pressed;\n  gpio0_irq_restore(irq_state);",
+      "replace": "  pressed = driver->candidate_pressed;\n  gpio0_irq_restore(irq_state);"
+    }
+  ]
+}
