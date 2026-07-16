@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.4",
+  "taskId": "adc-threshold-watchdog",
+  "targetProfile": "armv7m-bare-metal",
+  "validationProfile": "c11-host",
+  "status": "active",
+  "language": "c11",
+  "toolVersionArgs": {
+    "cc": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "c",
+    "output": "generated/answer.c"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "host-compile",
+      "phase": "compile",
+      "argv": [
+        "cc",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-Istarter",
+        "-Imocks",
+        "generated/answer.c",
+        "mocks/mock_adc_watchdog.c",
+        "tests/public/test_adc_watchdog.c",
+        "-o",
+        "build/public-tests"
+      ],
+      "requiredTools": ["cc"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "public-tests",
+      "phase": "test",
+      "argv": ["build/public-tests"],
+      "requiredTools": [],
+      "timeoutMs": 5000
+    }
+  ]
+}

@@ -52,6 +52,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "adc-threshold-watchdog",
+    source: "reference/adc_watchdog.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",

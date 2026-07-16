@@ -63,6 +63,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "adc-threshold-watchdog",
+    source: "fixtures/adc-threshold-watchdog/reference/adc_watchdog.c",
+    includes: Object.freeze([
+      "fixtures/adc-threshold-watchdog/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "uart-interrupt-driver",
     source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
     includes: Object.freeze([
