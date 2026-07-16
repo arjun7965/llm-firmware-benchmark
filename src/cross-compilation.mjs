@@ -53,6 +53,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "gpio-edge-debounce",
+    source: "fixtures/gpio-edge-debounce/reference/gpio_debounce.c",
+    includes: Object.freeze([
+      "fixtures/gpio-edge-debounce/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "uart-interrupt-driver",
     source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
     includes: Object.freeze([

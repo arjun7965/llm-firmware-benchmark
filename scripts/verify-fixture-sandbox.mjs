@@ -47,6 +47,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "gpio-edge-debounce",
+    source: "reference/gpio_debounce.c",
+    suite: "firmware",
+  },
+  {
     taskId: "uart-interrupt-driver",
     source: "reference/uart_driver.c",
     suite: "firmware",

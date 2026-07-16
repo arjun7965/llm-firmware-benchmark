@@ -115,6 +115,12 @@ model. Its public tests verify initialization, stale-status clearing, bounded
 START/address/data ordering, terminal-result consumption, arbitration-loss
 recovery without STOP, bus-error/NACK recovery, and wrap-safe timeout aborts.
 
+The active `gpio-edge-debounce` fixture uses an opaque deterministic GPIO0
+model with active-low input, edge and wake latches, and an interrupt-mask
+boundary. Its public tests verify initialization ordering, both edge
+directions, bounce restart, wrap-safe deadlines, retained late edges, wake
+recovery, stale-latch clearing, and exact interrupt restoration.
+
 The current sandbox runner accepts active fixtures for the native-binary
 profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
