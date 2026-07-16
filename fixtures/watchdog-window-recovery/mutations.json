@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/watchdog_window.c",
+  "mutations": [
+    {
+      "id": "accept-invalid-window-configuration",
+      "description": "Accept invalid watchdog timeout or window bounds.",
+      "find": "    driver == NULL || wdt == NULL || timeout_ticks < UINT16_C(2) ||\n    timeout_ticks > WATCHDOG_WINDOW_MAX_TIMEOUT_TICKS ||\n    window_open_ticks == 0u || window_open_ticks >= timeout_ticks",
+      "replace": "    driver == NULL || wdt == NULL || false"
+    },
+    {
+      "id": "ignore-boot-reset-cause",
+      "description": "Discard the reset cause observed during initialization.",
+      "find": "  reset_recovered = (wdt0_read_status(wdt) & WDT0_STATUS_RESET) != 0u;",
+      "replace": "  reset_recovered = false;"
+    },
+    {
+      "id": "leave-reset-cause-latched",
+      "description": "Do not clear the watchdog reset cause while configuring WDT0.",
+      "find": "  wdt0_write_status_clear(wdt, WDT0_STATUS_RESET);",
+      "replace": "  wdt0_write_status_clear(wdt, 0u);"
+    },
+    {
+      "id": "enable-before-configuration",
+      "description": "Fail to stop WDT0 before changing its timeout and window configuration.",
+      "find": "  wdt0_write_control(wdt, 0u);\n  wdt0_write_timeout(wdt, timeout_ticks);",
+      "replace": "  wdt0_write_control(wdt, WDT0_CONTROL_READY);\n  wdt0_write_timeout(wdt, timeout_ticks);"
+    },
+    {
+      "id": "allow-early-feed",
+      "description": "Write the hardware feed key before the configured window opens.",
+      "find": "  if (counter_ticks < driver->window_open_ticks) {",
+      "replace": "  if (driver->window_open_ticks < counter_ticks) {"
+    },
+    {
+      "id": "reject-window-boundary-feed",
+      "description": "Treat the exact window-open counter as too early.",
+      "find": "  if (counter_ticks < driver->window_open_ticks) {",
+      "replace": "  if (counter_ticks <= driver->window_open_ticks) {"
+    },
+    {
+      "id": "feed-wrong-key",
+      "description": "Use an invalid hardware key while feeding WDT0.",
+      "find": "  wdt0_write_feed(driver->wdt, WDT0_FEED_KEY);",
+      "replace": "  wdt0_write_feed(driver->wdt, 0u);"
+    },
+    {
+      "id": "ignore-reset-before-feed",
+      "description": "Proceed with normal feed handling after the hardware reset latch is set.",
+      "find": "  status = wdt0_read_status(driver->wdt) & WDT0_STATUS_RESET;\n  if (status != 0u) {\n    driver->reset_pending = true;\n    driver->event = WATCHDOG_WINDOW_EVENT_RESET_DETECTED;\n    wdt0_irq_restore(irq_state);\n    return WATCHDOG_WINDOW_FEED_RESET_DETECTED;\n  }",
+      "replace": "  status = wdt0_read_status(driver->wdt) & WDT0_STATUS_RESET;\n  if ((status & 0u) != 0u) {\n    driver->reset_pending = true;\n    driver->event = WATCHDOG_WINDOW_EVENT_RESET_DETECTED;\n    wdt0_irq_restore(irq_state);\n    return WATCHDOG_WINDOW_FEED_RESET_DETECTED;\n  }"
+    },
+    {
+      "id": "allow-feed-with-pending-event",
+      "description": "Allow a feed before reset recovery has been acknowledged.",
+      "find": "    driver->reset_pending ||\n    driver->event != WATCHDOG_WINDOW_EVENT_NONE",
+      "replace": "    false"
+    },
+    {
+      "id": "restore-disabled-after-feed",
+      "description": "Restore a disabled interrupt state after a successful feed.",
+      "find": "  wdt0_write_feed(driver->wdt, WDT0_FEED_KEY);\n  wdt0_irq_restore(irq_state);\n  return WATCHDOG_WINDOW_FEED_OK;",
+      "replace": "  wdt0_write_feed(driver->wdt, WDT0_FEED_KEY);\n  wdt0_irq_restore(irq_state ^ irq_state);\n  return WATCHDOG_WINDOW_FEED_OK;"
+    },
+    {
+      "id": "poll-does-not-report-reset",
+      "description": "Return no event even after poll observes a watchdog reset.",
+      "find": "  return status != 0u\n    ? WATCHDOG_WINDOW_EVENT_RESET_DETECTED\n    : WATCHDOG_WINDOW_EVENT_NONE;",
+      "replace": "  return WATCHDOG_WINDOW_EVENT_NONE;"
+    },
+    {
+      "id": "poll-drops-reset-state",
+      "description": "Observe a reset without latching it for recovery.",
+      "find": "  if (status != 0u) {\n    driver->reset_pending = true;\n    driver->event = WATCHDOG_WINDOW_EVENT_RESET_DETECTED;\n  }\n  wdt0_irq_restore(irq_state);\n  return status != 0u",
+      "replace": "  if (status != 0u) {\n    driver->reset_pending = false;\n    driver->event = WATCHDOG_WINDOW_EVENT_NONE;\n  }\n  wdt0_irq_restore(irq_state);\n  return status != 0u"
+    },
+    {
+      "id": "recover-while-healthy",
+      "description": "Permit recovery configuration without a detected watchdog reset.",
+      "find": "  if (\n    !driver->reset_pending ||\n    driver->event != WATCHDOG_WINDOW_EVENT_NONE\n  ) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "recover-before-acknowledgement",
+      "description": "Allow reset recovery before the reset-detected event is consumed.",
+      "find": "    !driver->reset_pending ||\n    driver->event != WATCHDOG_WINDOW_EVENT_NONE",
+      "replace": "    !driver->reset_pending"
+    },
+    {
+      "id": "recover-without-reset-latch",
+      "description": "Reconfigure WDT0 even though its reset cause is absent.",
+      "find": "  if (status == 0u) {",
+      "replace": "  if ((status & 0u) != 0u) {"
+    },
+    {
+      "id": "skip-recovery-configuration",
+      "description": "Mark recovery complete without restoring the watchdog configuration.",
+      "find": "  configure_watchdog(\n    driver->wdt,\n    driver->timeout_ticks,\n    driver->window_open_ticks\n  );",
+      "replace": "  (void)driver;"
+    },
+    {
+      "id": "retain-reset-pending-after-recovery",
+      "description": "Keep the driver in reset-pending state after WDT0 is reconfigured.",
+      "find": "  driver->reset_pending = false;\n  driver->event = WATCHDOG_WINDOW_EVENT_RESET_RECOVERED;",
+      "replace": "  driver->reset_pending = true;\n  driver->event = WATCHDOG_WINDOW_EVENT_RESET_RECOVERED;"
+    },
+    {
+      "id": "drop-recovery-event",
+      "description": "Fail to publish the recovery acknowledgement event.",
+      "find": "  driver->event = WATCHDOG_WINDOW_EVENT_RESET_RECOVERED;\n  wdt0_irq_restore(irq_state);\n  return true;",
+      "replace": "  driver->event = WATCHDOG_WINDOW_EVENT_NONE;\n  wdt0_irq_restore(irq_state);\n  return true;"
+    },
+    {
+      "id": "retain-consumed-event",
+      "description": "Return an event without clearing the one-event latch.",
+      "find": "  event = driver->event;\n  driver->event = WATCHDOG_WINDOW_EVENT_NONE;\n  wdt0_irq_restore(irq_state);",
+      "replace": "  event = driver->event;\n  driver->event = event;\n  wdt0_irq_restore(irq_state);"
+    },
+    {
+      "id": "restore-wrong-interrupt-state-after-event",
+      "description": "Restore interrupts as disabled after consuming a watchdog event.",
+      "find": "  event = driver->event;\n  driver->event = WATCHDOG_WINDOW_EVENT_NONE;\n  wdt0_irq_restore(irq_state);\n  return event;",
+      "replace": "  event = driver->event;\n  driver->event = WATCHDOG_WINDOW_EVENT_NONE;\n  wdt0_irq_restore(irq_state ^ irq_state);\n  return event;"
+    }
+  ]
+}

@@ -16,6 +16,7 @@ runFixtureMutationTests({
     "gpio-edge-debounce",
     "adc-threshold-watchdog",
     "pwm-synchronized-update",
+    "watchdog-window-recovery",
     "rtos-priority-inversion",
     "uart-interrupt-driver",
     "spi-dma-transfer",

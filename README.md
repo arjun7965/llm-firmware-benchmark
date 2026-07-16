@@ -217,6 +217,11 @@ The active PWM synchronized-update fixture is calibrated with
 fault-over-update priority, last-safe-duty recovery, event gating, and exact
 interrupt-state restoration against an opaque PWM0 model.
 
+The active watchdog-window recovery fixture is calibrated with
+`npm run fixture:watchdog-window:self-test`. It verifies exact feed-window
+boundaries, persistent reset-cause handling, acknowledgement-gated recovery,
+and interrupt-state restoration against an opaque WDT0 model.
+
 The active frontend-autocomplete fixture is calibrated with
 `npm run fixture:frontend-autocomplete:self-test`. Deterministic jsdom
 interaction tests verify its exact debounce boundary, async race handling,

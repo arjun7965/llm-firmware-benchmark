@@ -144,6 +144,8 @@ record exact versions in validation reports.
     priority, wrap-safe timeout, and explicit fault recovery.
   - [x] Add a deterministic PWM synchronized-update fixture with shadow-load
     timing, fault priority, and last-safe-duty recovery.
+  - [x] Add a deterministic watchdog-window recovery fixture with early-feed
+    rejection, reset-cause acknowledgement, and staged reconfiguration.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,

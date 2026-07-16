@@ -83,6 +83,17 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "watchdog-window-recovery",
+    source:
+      "fixtures/watchdog-window-recovery/reference/watchdog_window.c",
+    includes: Object.freeze([
+      "fixtures/watchdog-window-recovery/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "uart-interrupt-driver",
     source: "fixtures/uart-interrupt-driver/reference/uart_driver.c",
     includes: Object.freeze([
