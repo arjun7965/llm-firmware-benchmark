@@ -42,6 +42,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "linker-memory-map",
+    source: "reference/linker_memory_map.c",
+    suite: "firmware",
+  },
+  {
     taskId: "i2c-controller-recovery",
     source: "reference/i2c_controller.c",
     suite: "firmware",

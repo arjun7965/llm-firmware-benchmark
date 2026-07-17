@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/linker_memory_map.c",
+  "mutations": [
+    {
+      "id": "accept-null-initialization",
+      "description": "Report successful initialization for a null map or linker-layout pointer.",
+      "find": "  if (map == NULL || layout == NULL) return false;",
+      "replace": "  if (map == NULL || layout == NULL) return true;"
+    },
+    {
+      "id": "allow-nonflash-image-start",
+      "description": "Accept an image whose linker start symbol no longer matches the flash origin.",
+      "find": "image_start != LINKER_MEMORY_FLASH_BASE",
+      "replace": "false"
+    },
+    {
+      "id": "allow-empty-image",
+      "description": "Treat an empty flash image as a valid boot image.",
+      "find": "image_start == image_end",
+      "replace": "false"
+    },
+    {
+      "id": "allow-image-outside-flash",
+      "description": "Allow the image end symbol to extend past the documented flash range.",
+      "find": "!range_is_within(\n      image_start,\n      image_end,\n      LINKER_MEMORY_FLASH_BASE,\n      LINKER_MEMORY_FLASH_END\n    )",
+      "replace": "false"
+    },
+    {
+      "id": "allow-misaligned-image-end",
+      "description": "Skip the four-byte alignment requirement for the flash image end.",
+      "find": "!is_aligned(image_end, LINKER_MEMORY_SECTION_ALIGNMENT)",
+      "replace": "false"
+    },
+    {
+      "id": "allow-data-load-outside-image",
+      "description": "Copy initialized data from a flash range outside the linked image.",
+      "find": "!range_is_within(\n      data_load_start,\n      data_load_end,\n      image_start,\n      image_end\n    )",
+      "replace": "false"
+    },
+    {
+      "id": "allow-misaligned-data-load",
+      "description": "Skip four-byte alignment checks on the initialized-data load range.",
+      "find": "!is_aligned(data_load_start, LINKER_MEMORY_SECTION_ALIGNMENT) ||\n    !is_aligned(data_load_end, LINKER_MEMORY_SECTION_ALIGNMENT)",
+      "replace": "false"
+    },
+    {
+      "id": "allow-mismatched-data-ranges",
+      "description": "Ignore a mismatch between the flash load image and SRAM data lengths.",
+      "find": "data_load_end - data_load_start !=\n      data_ram_end - data_ram_start ||",
+      "replace": "false ||"
+    },
+    {
+      "id": "allow-data-bss-gap",
+      "description": "Accept a gap between initialized data and the BSS range.",
+      "find": "data_ram_end != bss_ram_start",
+      "replace": "false"
+    },
+    {
+      "id": "allow-misaligned-sram-sections",
+      "description": "Skip four-byte alignment checks on both writable SRAM sections.",
+      "find": "!is_aligned(data_ram_start, LINKER_MEMORY_SECTION_ALIGNMENT) ||\n    !is_aligned(data_ram_end, LINKER_MEMORY_SECTION_ALIGNMENT) ||\n    !is_aligned(bss_ram_start, LINKER_MEMORY_SECTION_ALIGNMENT) ||\n    !is_aligned(bss_ram_end, LINKER_MEMORY_SECTION_ALIGNMENT)",
+      "replace": "false"
+    },
+    {
+      "id": "allow-bss-stack-overlap",
+      "description": "Allow BSS to consume part of the reserved stack range.",
+      "find": "bss_ram_end > stack_limit",
+      "replace": "false"
+    },
+    {
+      "id": "allow-empty-stack",
+      "description": "Accept equal stack limit and stack top symbols.",
+      "find": "stack_limit == stack_top",
+      "replace": "false"
+    },
+    {
+      "id": "allow-misaligned-stack",
+      "description": "Skip the required eight-byte stack-boundary alignment check.",
+      "find": "!is_aligned(stack_limit, LINKER_MEMORY_STACK_ALIGNMENT) ||\n    !is_aligned(stack_top, LINKER_MEMORY_STACK_ALIGNMENT)",
+      "replace": "false"
+    },
+    {
+      "id": "allow-stack-outside-sram",
+      "description": "Allow a stack range that extends past the documented SRAM region.",
+      "find": "!range_is_within(\n      stack_limit,\n      stack_top,\n      LINKER_MEMORY_SRAM_BASE,\n      LINKER_MEMORY_SRAM_END\n    )",
+      "replace": "false"
+    },
+    {
+      "id": "replace-data-with-zeroes",
+      "description": "Discard the flash initializer bytes instead of reading them through the supplied accessor.",
+      "find": "const uint8_t value = linker_memory_read_flash_byte(\n      layout,\n      data_load_start + offset\n    );",
+      "replace": "const uint8_t value = 0u;"
+    },
+    {
+      "id": "write-data-to-next-byte",
+      "description": "Shift every initialized byte one address higher in SRAM.",
+      "find": "linker_memory_write_sram_byte(layout, data_ram_start + offset, value);",
+      "replace": "linker_memory_write_sram_byte(\n      layout,\n      data_ram_start + offset + UINT32_C(1),\n      value\n    );"
+    },
+    {
+      "id": "truncate-data-copy",
+      "description": "Leave the final initialized-data byte unchanged.",
+      "find": "offset < data_count",
+      "replace": "offset + UINT32_C(1) < data_count"
+    },
+    {
+      "id": "leave-bss-stale",
+      "description": "Write the old sentinel value instead of zeroing BSS.",
+      "find": "linker_memory_write_sram_byte(layout, bss_ram_start + offset, 0u);",
+      "replace": "linker_memory_write_sram_byte(\n      layout,\n      bss_ram_start + offset,\n      UINT8_C(0xa5)\n    );"
+    },
+    {
+      "id": "truncate-bss-clear",
+      "description": "Leave the final BSS byte uncleared.",
+      "find": "offset < bss_count",
+      "replace": "offset + UINT32_C(1) < bss_count"
+    },
+    {
+      "id": "leave-map-uninitialized",
+      "description": "Copy memory but fail to publish an initialized map state.",
+      "find": ".initialized = true,",
+      "replace": ".initialized = false,"
+    },
+    {
+      "id": "publish-wrong-image-end",
+      "description": "Record the image start as the image end in caller-owned state.",
+      "find": ".image_end = symbols[LINKER_MEMORY_SYMBOL_IMAGE_END],",
+      "replace": ".image_end = symbols[LINKER_MEMORY_SYMBOL_IMAGE_START],"
+    },
+    {
+      "id": "include-image-end-address",
+      "description": "Treat the exclusive image-end address as executable image memory.",
+      "find": "address < map->image_end;",
+      "replace": "address <= map->image_end;"
+    },
+    {
+      "id": "make-stack-writable",
+      "description": "Extend the writable-data query through the stack top.",
+      "find": "address < map->bss_ram_end;",
+      "replace": "address < map->stack_top;"
+    },
+    {
+      "id": "include-stack-top-address",
+      "description": "Treat the exclusive stack-top address as stack storage.",
+      "find": "address < map->stack_top;",
+      "replace": "address <= map->stack_top;"
+    }
+  ]
+}

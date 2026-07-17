@@ -212,6 +212,12 @@ The active ADC threshold/watchdog fixture is calibrated with
 classification, bounded ISR status handling, wrap-safe timeout, explicit fault
 recovery, and exact interrupt-state restoration against an opaque ADC0 model.
 
+The active linker-symbol memory-map fixture is calibrated with
+`npm run fixture:linker-memory:self-test`. It verifies reset-time linker-range
+validation, initialized-data copying, BSS clearing, no-effect rejection, and
+half-open image, writable, and stack boundaries against opaque flash/SRAM
+models.
+
 The active PWM synchronized-update fixture is calibrated with
 `npm run fixture:pwm:self-test`. It verifies shadow-register boundary timing,
 fault-over-update priority, last-safe-duty recovery, event gating, and exact

@@ -43,6 +43,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "linker-memory-map",
+    source: "fixtures/linker-memory-map/reference/linker_memory_map.c",
+    includes: Object.freeze([
+      "fixtures/linker-memory-map/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "i2c-controller-recovery",
     source: "fixtures/i2c-controller-recovery/reference/i2c_controller.c",
     includes: Object.freeze([
