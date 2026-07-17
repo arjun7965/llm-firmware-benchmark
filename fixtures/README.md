@@ -110,6 +110,11 @@ interrupt-mask models. Its public tests verify startup ordering, all table
 entries, invalid no-side-effect behavior, reinitialization, runtime IRQ-slot
 updates, stale-pending clearing, and exact interrupt restoration.
 
+The active `linker-memory-map` fixture uses opaque linker-symbol, flash, and
+SRAM models. Its public tests verify validated reset-time image/data/BSS/stack
+layout, initialized-data copying, BSS clearing, no-effect rejection, and
+half-open image, writable, and stack address boundaries.
+
 The active `i2c-controller-recovery` fixture uses an opaque deterministic I2C0
 model. Its public tests verify initialization, stale-status clearing, bounded
 START/address/data ordering, terminal-result consumption, arbitration-loss

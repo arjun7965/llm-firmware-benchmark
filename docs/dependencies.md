@@ -22,6 +22,7 @@ code. Each task references a pinned hosted runtime contract from
 | `backend-idempotency` | Node.js 22.16.0, TypeScript 5.8.3, Express 5.1.0, `pg` 8.16.0, and PostgreSQL 16.9 |
 | `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `interrupt-vector-configuration` | A C11 compiler plus fixture-owned vector-table, SCB, NVIC, barrier, linker-address, and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `linker-memory-map` | A C11 compiler plus fixture-owned opaque linker-symbol, flash, and SRAM transfer mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `i2c-controller-recovery` | A C11 compiler plus fixture-owned opaque I2C0, status, and protocol-ordering mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `gpio-edge-debounce` | A C11 compiler plus fixture-owned opaque GPIO0 edge/wake latches and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `adc-threshold-watchdog` | A C11 compiler plus fixture-owned opaque ADC0 threshold/status and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
@@ -115,6 +116,14 @@ table, SCB/NVIC, linker-address, barrier, and interrupt-mask models:
 
 ```bash
 npm run fixture:interrupt-vector:self-test
+```
+
+The linker-memory-map fixture uses `cc` with opaque linker-symbol, flash, and
+SRAM models to verify layout validation, initialized-data copying, BSS clearing,
+and address-boundary queries:
+
+```bash
+npm run fixture:linker-memory:self-test
 ```
 
 The I2C-controller recovery fixture uses `cc` with an opaque I2C0 model that

@@ -51,10 +51,10 @@ test("repository fixture scaffolds match task metadata", () => {
   assert.deepEqual(
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
-      fixtureCount: 24,
-      activeCount: 24,
+      fixtureCount: 25,
+      activeCount: 25,
       scaffoldCount: 0,
-      commandCount: 49,
+      commandCount: 51,
     },
   );
 });

@@ -126,12 +126,14 @@ record exact versions in validation reports.
 
 - [x] Define a capability matrix spanning bare-metal, RTOS, embedded Linux,
   drivers, protocols, debugging, safety, security, and optimization.
-- [ ] Add bare-metal tasks for register access, startup code, linker behavior,
+- [x] Add bare-metal tasks for register access, startup code, linker behavior,
   memory maps, and interrupt-vector configuration.
   - [x] Start with a fictional timer peripheral using a complete mock MMIO
     register map and deterministic host-side validation.
   - [x] Add deterministic RAM vector-table relocation with linker-address,
     SCB/NVIC, barrier, and live IRQ-update validation.
+  - [x] Add linker-symbol and memory-map validation for reset-time data copying,
+    BSS clearing, and image, writable, and stack address boundaries.
 - [ ] Add peripheral-driver tasks for GPIO, UART, SPI, I2C, ADC, PWM, timers,
   DMA, and watchdogs using documented mock registers.
   - [x] Add an interrupt-driven UART fixture with bounded RX/TX queues,

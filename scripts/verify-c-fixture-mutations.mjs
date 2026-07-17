@@ -12,6 +12,7 @@ runFixtureMutationTests({
     "embedded-ring-buffer",
     "firmware-state-machine",
     "interrupt-vector-configuration",
+    "linker-memory-map",
     "i2c-controller-recovery",
     "gpio-edge-debounce",
     "adc-threshold-watchdog",
