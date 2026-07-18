@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTasks } from "../src/harness.mjs";
+import { scoringModeIds } from "../src/scoring-modes.mjs";
 import { targetProfileIds } from "../src/target-profiles.mjs";
 import {
   getValidationEnvironmentRevision,
@@ -24,6 +25,9 @@ test("repository task and score documents match runtime contracts", () => {
       validationProfileByTask: new Map(
         tasks.map((task) => [task.id, task.validationProfile]),
       ),
+      scoringModeByTask: new Map(
+        tasks.map((task) => [task.id, task.scoringMode]),
+      ),
     },
   );
 
@@ -33,8 +37,11 @@ test("repository task and score documents match runtime contracts", () => {
 
 test("score validation rejects malformed runs and out-of-range values", () => {
   const valid = {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     rubric: "Scores are out of 10",
+    scoringModes: {
+      "task-one": "deterministic",
+    },
     validationContracts: {
       "task-one": {
         profile: validationProfileReference(
@@ -55,6 +62,7 @@ test("score validation rejects malformed runs and out-of-range values", () => {
   };
   const options = {
     validationProfileByTask: new Map([["task-one", "c11-host"]]),
+    scoringModeByTask: new Map([["task-one", "deterministic"]]),
   };
   const validate = (scores) => validateScores(scores, options);
 
@@ -131,6 +139,7 @@ test("score validation rejects malformed runs and out-of-range values", () => {
       validationProfileByTask: new Map([
         ["task-one", "stable-rust"],
       ]),
+      scoringModeByTask: new Map([["task-one", "deterministic"]]),
     }),
     /profile does not match task/u,
   );
@@ -148,6 +157,33 @@ test("score validation rejects malformed runs and out-of-range values", () => {
       },
     }),
     /profileSha256/u,
+  );
+
+  const rubricOnly = {
+    ...valid,
+    scoringModes: {
+      "task-one": "rubric-only",
+    },
+    validationContracts: {},
+  };
+  const rubricOnlyOptions = {
+    validationProfileByTask: new Map([["task-one", "c11-host"]]),
+    scoringModeByTask: new Map([["task-one", "rubric-only"]]),
+  };
+  assert.equal(validateScores(rubricOnly, rubricOnlyOptions), rubricOnly);
+  assert.throws(
+    () => validateScores({
+      ...rubricOnly,
+      scoringModes: { "task-one": "deterministic" },
+    }, rubricOnlyOptions),
+    /scoringModes.*does not match/u,
+  );
+  assert.throws(
+    () => validateScores({
+      ...rubricOnly,
+      validationContracts: valid.validationContracts,
+    }, rubricOnlyOptions),
+    /validationContracts.*deterministic/u,
   );
 });
 
@@ -217,6 +253,11 @@ test("JSON Schema files declare the expected contracts", () => {
     taskSchema.items.properties.validationProfile.enum,
     validationProfileIds,
   );
+  assert.ok(taskSchema.items.required.includes("scoringMode"));
+  assert.deepEqual(
+    taskSchema.items.properties.scoringMode.enum,
+    scoringModeIds,
+  );
   assert.deepEqual(
     taskSchema.items.allOf[0].then.required,
     ["targetProfile"],
@@ -231,8 +272,9 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(scoreSchema.$schema, taskSchema.$schema);
   assert.equal(scoreSchema.additionalProperties, false);
-  assert.equal(scoreSchema.properties.schemaVersion.const, "1.0");
+  assert.equal(scoreSchema.properties.schemaVersion.const, "1.1");
   assert.ok(scoreSchema.required.includes("validationContracts"));
+  assert.ok(scoreSchema.required.includes("scoringModes"));
   assert.deepEqual(
     publicResultSchema.properties.task.properties.targetProfile.enum,
     [null, ...targetProfileIds],
@@ -241,7 +283,11 @@ test("JSON Schema files declare the expected contracts", () => {
     publicResultSchema.properties.task.properties.validationProfile.enum,
     validationProfileIds,
   );
-  assert.equal(publicResultSchema.properties.schemaVersion.const, "1.3");
+  assert.equal(publicResultSchema.properties.schemaVersion.const, "1.4");
+  assert.deepEqual(
+    publicResultSchema.properties.task.properties.scoringMode.enum,
+    scoringModeIds,
+  );
   assert.deepEqual(
     publicResultSchema.properties.task.properties.suite.enum,
     ["firmware", "auxiliary"],

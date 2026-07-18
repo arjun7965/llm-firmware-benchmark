@@ -58,6 +58,7 @@ function sandboxFixture(t) {
     id: "example-task",
     category: "systems-security",
     suite: "firmware",
+    scoringMode: "deterministic",
     targetProfile: "portable-c11",
     validationProfile: "c11-host",
     prompt: "Return code.",
@@ -189,6 +190,24 @@ function typescriptCompileCommand(command) {
     requiredTools: ["tsc"],
   };
 }
+
+test("rubric-only tasks reject sandbox validation before host inspection", (t) => {
+  const fixture = sandboxFixture(t);
+  const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
+  tasks[0].scoringMode = "rubric-only";
+  tasks[0].rubricOnlyReasons = ["environment-dependent-scoring"];
+  tasks[0].rubricOnlyRationale = "The score depends on unavailable device state.";
+  writeFileSync(fixture.tasksPath, JSON.stringify(tasks));
+
+  assert.throws(
+    () => runFixtureValidation({
+      taskId: "example-task",
+      fixturesRoot: fixture.fixturesRoot,
+      tasksPath: fixture.tasksPath,
+    }),
+    /rubric-only task.*cannot use fixture validation/u,
+  );
+});
 
 test("validation host detection parses os-release without executing it", (t) => {
   const root = temporaryDirectory(t);

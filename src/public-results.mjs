@@ -13,6 +13,7 @@ import {
   requireSuite,
   resultSuite,
 } from "./suites.mjs";
+import { requireScoringMode } from "./scoring-modes.mjs";
 import { targetProfileSet } from "./target-profiles.mjs";
 import { requireValidationProfile } from "./validation-profiles.mjs";
 
@@ -166,11 +167,15 @@ export function toPublicResult(rawResult, source = JSON.stringify(rawResult)) {
 
   const answer = sanitizeText(extractAnswer(rawResult.stdout));
   const publicResult = {
-    schemaVersion: "1.3",
+    schemaVersion: "1.4",
     task: {
       id: requireString(rawResult.task, "task"),
       category: requireString(rawResult.category, "category"),
       suite: resultSuite(rawResult),
+      scoringMode: requireScoringMode(
+        rawResult.scoringMode ?? "rubric-only",
+        "scoringMode",
+      ),
       targetProfile: rawResult.targetProfile ?? null,
       validationProfile: requireValidationProfile(
         rawResult.validationProfile,
@@ -211,18 +216,20 @@ export function validatePublicResult(result) {
     "task",
   ];
   requireExactKeys(result, topLevelKeys, "public result");
-  if (result.schemaVersion !== "1.3") {
+  if (result.schemaVersion !== "1.3" && result.schemaVersion !== "1.4") {
     throw new TypeError("unsupported public result schemaVersion");
   }
+  const taskKeys = [
+    "category",
+    "id",
+    "suite",
+    "targetProfile",
+    "validationProfile",
+  ];
+  if (result.schemaVersion === "1.4") taskKeys.push("scoringMode");
   requireExactKeys(
     result.task,
-    [
-      "category",
-      "id",
-      "suite",
-      "targetProfile",
-      "validationProfile",
-    ],
+    taskKeys,
     "task",
   );
   requireExactKeys(result.model, ["id", "provider"], "model");
@@ -239,6 +246,9 @@ export function validatePublicResult(result) {
   requireString(result.task?.id, "task.id");
   requireString(result.task?.category, "task.category");
   requireSuite(result.task.suite, "task.suite");
+  if (result.schemaVersion === "1.4") {
+    requireScoringMode(result.task.scoringMode, "task.scoringMode");
+  }
   if (result.task.targetProfile !== null &&
       (typeof result.task.targetProfile !== "string" ||
        !targetProfileSet.has(result.task.targetProfile))) {

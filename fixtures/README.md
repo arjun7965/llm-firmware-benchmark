@@ -14,6 +14,11 @@ generated/     # Extracted model code; ignored
 build/         # Compiler and test output; ignored
 ```
 
+Only tasks with `scoringMode: "deterministic"` may have a fixture directory;
+every deterministic task must have one. A `rubric-only` task has no manifest,
+extraction, mutation, or sandbox contract. See
+`../docs/rubric-only-tasks.md`.
+
 Fixture-backed tasks use the single-file `markdown-fenced-code` contract by
 default. The opt-in `markdown-file-bundle` contract validates a manifest-owned
 ordered file set before an atomic directory replacement. See

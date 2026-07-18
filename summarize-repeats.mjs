@@ -14,6 +14,9 @@ const scores = loadScores(scoresPath, {
   validationProfileByTask: new Map(
     tasks.map((task) => [task.id, task.validationProfile]),
   ),
+  scoringModeByTask: new Map(
+    tasks.map((task) => [task.id, task.scoringMode]),
+  ),
 });
 const suiteByTask = new Map(
   tasks.map((task) => [task.id, task.suite]),

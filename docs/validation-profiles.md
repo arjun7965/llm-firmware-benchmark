@@ -5,6 +5,12 @@ an answer. It is required for every task and is separate from `targetProfile`,
 which records architecture, ABI, and hardware assumptions. Neither field adds
 hidden text to a model prompt.
 
+A profile does not by itself authorize executable scoring. `tasks.json` also
+declares `scoringMode`: only `deterministic` tasks may use a fixture and record
+a profile/environment validation contract. `rubric-only` tasks retain their
+profile as task context but are scored through their published rubric under the
+[rubric-only task policy](rubric-only-tasks.md).
+
 The machine-readable contracts are pinned in `validation-profiles.json` and
 validated against `schemas/validation-profiles.schema.json`.
 `src/validation-profiles.mjs` loads and enforces the registry. Tasks, fixture

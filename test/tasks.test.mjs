@@ -5,6 +5,7 @@ import {
   loadTasks,
   validateTasks,
 } from "../src/harness.mjs";
+import { scoringModeIds } from "../src/scoring-modes.mjs";
 import { validationProfileIds } from "../src/validation-profiles.mjs";
 
 test("repository tasks are valid and cover distinct categories", () => {
@@ -18,6 +19,10 @@ test("repository tasks are valid and cover distinct categories", () => {
   assert.deepEqual(
     [...new Set(tasks.map((task) => task.validationProfile))].sort(),
     validationProfileIds,
+  );
+  assert.deepEqual(
+    [...new Set(tasks.map((task) => task.scoringMode))].sort(),
+    ["deterministic"],
   );
   const profileDocumentation = readFileSync(
     new URL("../docs/validation-profiles.md", import.meta.url),
@@ -33,6 +38,7 @@ test("task validation rejects duplicate and malformed IDs", () => {
     id: "valid-task",
     category: "test",
     suite: "auxiliary",
+    scoringMode: "deterministic",
     validationProfile: "python3-stdlib",
     prompt: "Do work.",
   };
@@ -60,6 +66,7 @@ test("task validation requires nonempty categories and prompts", () => {
     () => validateTasks([{
       id: "missing-suite",
       category: "test",
+      scoringMode: "deterministic",
       validationProfile: "python3-stdlib",
       prompt: "x",
     }]),
@@ -70,6 +77,7 @@ test("task validation requires nonempty categories and prompts", () => {
       id: "invalid-suite",
       category: "test",
       suite: "primary",
+      scoringMode: "deterministic",
       validationProfile: "python3-stdlib",
       prompt: "x",
     }]),
@@ -80,6 +88,7 @@ test("task validation requires nonempty categories and prompts", () => {
       id: "extra-field",
       category: "test",
       suite: "auxiliary",
+      scoringMode: "deterministic",
       validationProfile: "python3-stdlib",
       prompt: "x",
       answer: "not part of the task contract",
@@ -93,6 +102,7 @@ test("embedded tasks require a known target profile", () => {
     id: "embedded-task",
     category: "embedded",
     suite: "firmware",
+    scoringMode: "deterministic",
     validationProfile: "c11-host",
     prompt: "Implement firmware.",
   };
@@ -120,6 +130,7 @@ test("embedded tasks require a known target profile", () => {
       id: "auxiliary-profile",
       category: "test",
       suite: "auxiliary",
+      scoringMode: "deterministic",
       validationProfile: "python3-stdlib",
       targetProfile: "armv7m-bare-metal",
       prompt: "Run a hosted test.",
@@ -140,6 +151,7 @@ test("tasks require a known validation profile", () => {
     id: "hosted-task",
     category: "test",
     suite: "auxiliary",
+    scoringMode: "deterministic",
     prompt: "Run a hosted test.",
   };
 
@@ -161,4 +173,50 @@ test("tasks require a known validation profile", () => {
     }])[0].validationProfile,
     "python3-stdlib",
   );
+});
+
+test("tasks require explicit scoring modes and rubric-only rationale", () => {
+  const task = {
+    id: "manual-task",
+    category: "review",
+    suite: "auxiliary",
+    validationProfile: "python3-stdlib",
+    prompt: "Review the implementation.",
+  };
+
+  assert.throws(
+    () => validateTasks([task]),
+    /scoringMode/,
+  );
+  assert.throws(
+    () => validateTasks([{ ...task, scoringMode: "manual" }]),
+    /scoringMode/,
+  );
+  assert.throws(
+    () => validateTasks([{
+      ...task,
+      scoringMode: "rubric-only",
+    }]),
+    /rubricOnlyReasons/,
+  );
+  assert.throws(
+    () => validateTasks([{
+      ...task,
+      scoringMode: "deterministic",
+      rubricOnlyReasons: ["undocumented-service"],
+      rubricOnlyRationale: "Not used.",
+    }]),
+    /deterministic scoringMode/,
+  );
+  const rubricOnly = validateTasks([{
+    ...task,
+    scoringMode: "rubric-only",
+    rubricOnlyReasons: [
+      "undocumented-service",
+      "environment-dependent-scoring",
+    ],
+    rubricOnlyRationale: "The service cannot be published or reproduced.",
+  }])[0];
+  assert.equal(rubricOnly.scoringMode, "rubric-only");
+  assert.deepEqual(scoringModeIds, ["deterministic", "rubric-only"]);
 });

@@ -11,6 +11,7 @@ import {
   targetProfileRequiredCategories,
   targetProfileSet,
 } from "./target-profiles.mjs";
+import { validateRubricOnlyMetadata } from "./scoring-modes.mjs";
 import { requireSuite } from "./suites.mjs";
 import { requireValidationProfile } from "./validation-profiles.mjs";
 
@@ -19,6 +20,9 @@ const taskFields = new Set([
   "category",
   "id",
   "prompt",
+  "rubricOnlyRationale",
+  "rubricOnlyReasons",
+  "scoringMode",
   "suite",
   "targetProfile",
   "validationProfile",
@@ -54,6 +58,7 @@ export function validateTasks(tasks) {
       task.validationProfile,
       `task ${task.id} validationProfile`,
     );
+    validateRubricOnlyMetadata(task, `task ${task.id}`);
     if (task.targetProfile !== undefined &&
         (typeof task.targetProfile !== "string" ||
          !targetProfileSet.has(task.targetProfile))) {
@@ -127,6 +132,7 @@ export function promptSha256(prompt) {
 
 export function hasSuccessfulResult(path, {
   expectedPromptSha256,
+  expectedScoringMode,
   expectedValidationProfile,
 } = {}) {
   if (!existsSync(path)) return false;
@@ -135,6 +141,8 @@ export function hasSuccessfulResult(path, {
     return result.exitCode === 0 &&
       (expectedPromptSha256 === undefined ||
        result.promptSha256 === expectedPromptSha256) &&
+      (expectedScoringMode === undefined ||
+       result.scoringMode === expectedScoringMode) &&
       (expectedValidationProfile === undefined ||
        result.validationProfile === expectedValidationProfile);
   } catch {
@@ -178,6 +186,7 @@ export async function executeJob({
   const currentPromptSha256 = promptSha256(job.task.prompt);
   if (hasSuccessfulResult(path, {
     expectedPromptSha256: currentPromptSha256,
+    expectedScoringMode: job.task.scoringMode,
     expectedValidationProfile: job.task.validationProfile,
   })) {
     return { status: "skipped", path };
@@ -203,6 +212,7 @@ export async function executeJob({
     task: job.task.id,
     category: job.task.category,
     suite: job.task.suite,
+    scoringMode: job.task.scoringMode,
     targetProfile: job.task.targetProfile ?? null,
     validationProfile: job.task.validationProfile,
     provider: job.provider,

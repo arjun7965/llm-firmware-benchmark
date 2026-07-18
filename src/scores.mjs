@@ -3,12 +3,14 @@ import {
   validateValidationEnvironmentReference,
   validateValidationProfileReference,
 } from "./validation-profiles.mjs";
+import { requireScoringMode } from "./scoring-modes.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const modelIdPattern = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 const runNamePattern = /^run[1-9][0-9]*$/;
 const reservedKeys = new Set([
   "rubric",
+  "scoringModes",
   "schemaVersion",
   "tasks",
   "validationContracts",
@@ -40,13 +42,32 @@ function validationProfileForTask(validationProfileByTask, task) {
   return validationProfile;
 }
 
+function scoringModeForTask(scoringModeByTask, task) {
+  if (scoringModeByTask === undefined) return "deterministic";
+
+  let scoringMode;
+  if (scoringModeByTask instanceof Map) {
+    scoringMode = scoringModeByTask.get(task);
+  } else if (
+    isObject(scoringModeByTask) &&
+    Object.hasOwn(scoringModeByTask, task)
+  ) {
+    scoringMode = scoringModeByTask[task];
+  }
+  return requireScoringMode(
+    scoringMode,
+    `configured scoringMode for scored task: ${task}`,
+  );
+}
+
 export function validateScores(scores, {
   validationProfileByTask,
+  scoringModeByTask,
 } = {}) {
   if (!isObject(scores)) {
     throw new TypeError("scores must be an object");
   }
-  if (scores.schemaVersion !== "1.0") {
+  if (scores.schemaVersion !== "1.1") {
     throw new TypeError("unsupported scores.schemaVersion");
   }
   if (typeof scores.rubric !== "string" || scores.rubric.trim() === "") {
@@ -61,15 +82,33 @@ export function validateScores(scores, {
     throw new TypeError("scores.tasks cannot contain duplicates");
   }
   if (
-    !isObject(scores.validationContracts) ||
-    Object.keys(scores.validationContracts).sort().join(",") !==
+    !isObject(scores.scoringModes) ||
+    Object.keys(scores.scoringModes).sort().join(",") !==
       [...scores.tasks].sort().join(",")
   ) {
+    throw new TypeError("scores.scoringModes must cover exactly scores.tasks");
+  }
+  const deterministicTasks = [];
+  for (const task of scores.tasks) {
+    const scoringMode = requireScoringMode(
+      scores.scoringModes[task],
+      `scores.scoringModes.${task}`,
+    );
+    if (scoringMode !== scoringModeForTask(scoringModeByTask, task)) {
+      throw new TypeError(`scores.scoringModes.${task} does not match task`);
+    }
+    if (scoringMode === "deterministic") deterministicTasks.push(task);
+  }
+  if (
+    !isObject(scores.validationContracts) ||
+    Object.keys(scores.validationContracts).sort().join(",") !==
+      [...deterministicTasks].sort().join(",")
+  ) {
     throw new TypeError(
-      "scores.validationContracts must cover exactly scores.tasks",
+      "scores.validationContracts must cover exactly deterministic tasks",
     );
   }
-  for (const task of scores.tasks) {
+  for (const task of deterministicTasks) {
     const contract = scores.validationContracts[task];
     if (
       !isObject(contract) ||
