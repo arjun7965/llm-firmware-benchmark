@@ -74,8 +74,8 @@ test("cross-compilation uses fixed argv without linking or execution", () => {
     log: () => {},
   });
 
-  assert.equal(summary.objectCount, 15);
-  assert.equal(calls.length, 16);
+  assert.equal(summary.objectCount, 16);
+  assert.equal(calls.length, 17);
   for (const call of calls.slice(1)) {
     assert.equal(call.command, "arm-none-eabi-gcc");
     assert.ok(call.args.includes("-c"));

@@ -32,6 +32,7 @@ code. Each task references a pinned hosted runtime contract from
 | `timer-capture-overflow` | A C11 compiler plus fixture-owned opaque TIMER1 capture/compare, overflow-status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `spi-dma-transfer` | A C11 compiler plus fixture-owned opaque SPI0/DMA0 registers, DMA buffer-address translation, and an interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `can-controller-recovery` | A C11 compiler plus fixture-owned opaque CAN0 mailbox/status and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `rtos-priority-inversion` | A C11 compiler plus the fixture-owned deterministic RTOS priority-inheritance mock |
@@ -192,6 +193,13 @@ interrupt-mask model:
 
 ```bash
 npm run fixture:spi-dma:self-test
+```
+
+The CAN-controller recovery fixture uses `cc` with fixture-owned opaque CAN0
+mailbox, terminal-status, bus-off, and interrupt-mask models:
+
+```bash
+npm run fixture:can:self-test
 ```
 
 The trusted firmware fixture self-test requires `cc`:

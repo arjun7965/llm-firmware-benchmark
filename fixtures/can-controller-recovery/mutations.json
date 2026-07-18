@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/can_controller.c",
+  "mutations": [
+    {
+      "id": "accept-out-of-range-identifier",
+      "description": "Accept a standard CAN identifier above the documented 11-bit maximum.",
+      "find": "frame->identifier <= CAN0_STANDARD_ID_MAX",
+      "replace": "true"
+    },
+    {
+      "id": "accept-oversized-dlc",
+      "description": "Accept a payload length above the classic CAN eight-byte bound.",
+      "find": "frame->dlc <= CAN0_MAX_DLC",
+      "replace": "true"
+    },
+    {
+      "id": "leave-stale-tx-status",
+      "description": "Start a transmission without acknowledging stale terminal TX status.",
+      "find": "    can0_write_status_clear(\n      controller->can,\n      CAN0_STATUS_TX_COMPLETE | CAN0_STATUS_TX_ERROR\n    );",
+      "replace": "    can0_write_status_clear(controller->can, 0u);"
+    },
+    {
+      "id": "send-wrong-identifier",
+      "description": "Program the transmit mailbox with a fixed identifier instead of the caller frame.",
+      "find": "can0_write_tx_identifier(controller->can, frame->identifier);",
+      "replace": "can0_write_tx_identifier(controller->can, 0u);"
+    },
+    {
+      "id": "leave-tx-interrupt-disabled",
+      "description": "Program a frame but omit the TX terminal interrupt enable.",
+      "find": "CAN0_CONTROL_ACTIVE | CAN0_CONTROL_TX_IRQ_ENABLE",
+      "replace": "CAN0_CONTROL_ACTIVE"
+    },
+    {
+      "id": "overwrite-unconsumed-result",
+      "description": "Allow a new TX request before its previous terminal result is consumed.",
+      "find": "controller->result == CAN_CONTROLLER_RESULT_NONE",
+      "replace": "true"
+    },
+    {
+      "id": "skip-irq-status-acknowledgement",
+      "description": "Observe IRQ status without acknowledging exactly the observed bits.",
+      "find": "can0_write_status_clear(controller->can, observed);",
+      "replace": "can0_write_status_clear(controller->can, 0u);"
+    },
+    {
+      "id": "let-completion-win-over-error",
+      "description": "Ignore a simultaneous TX error and report completion instead.",
+      "find": "if ((observed & CAN0_STATUS_TX_ERROR) != 0u) {",
+      "replace": "if (false) {"
+    },
+    {
+      "id": "discard-tx-error-flags",
+      "description": "Report a TX error without returning its hardware error flag.",
+      "find": "controller->error_flags |= CAN0_STATUS_TX_ERROR;",
+      "replace": "controller->error_flags |= 0u;"
+    },
+    {
+      "id": "lose-received-frame",
+      "description": "Read a received frame but fail to make it pending for the foreground consumer.",
+      "find": "controller->rx_pending = true;",
+      "replace": "controller->rx_pending = false;"
+    },
+    {
+      "id": "lose-rx-drop-accounting",
+      "description": "Drain an occupied receive mailbox without recording the software-slot overflow.",
+      "find": "controller->rx_dropped++;",
+      "replace": "controller->rx_dropped += 0u;"
+    },
+    {
+      "id": "leave-can-enabled-during-bus-off",
+      "description": "Keep the CAN controller active after a bus-off terminal IRQ.",
+      "find": "  controller->state = CAN_CONTROLLER_STATE_BUS_OFF;\n  controller->error_flags |= CAN0_STATUS_BUS_OFF;\n  controller->result = CAN_CONTROLLER_RESULT_BUS_OFF;\n  can0_write_control(controller->can, 0u);",
+      "replace": "  controller->state = CAN_CONTROLLER_STATE_BUS_OFF;\n  controller->error_flags |= CAN0_STATUS_BUS_OFF;\n  controller->result = CAN_CONTROLLER_RESULT_BUS_OFF;\n  can0_write_control(controller->can, CAN0_CONTROL_ACTIVE);"
+    },
+    {
+      "id": "hide-bus-off-result",
+      "description": "Enter bus-off state without publishing the terminal result to foreground code.",
+      "find": "controller->result = CAN_CONTROLLER_RESULT_BUS_OFF;",
+      "replace": "controller->result = CAN_CONTROLLER_RESULT_NONE;"
+    },
+    {
+      "id": "recover-before-ready",
+      "description": "Reconfigure the controller while hardware still reports bus-off or no recovery-ready indication.",
+      "find": "      (status & (CAN0_STATUS_BUS_OFF | CAN0_STATUS_RECOVERY_READY)) ==\n        CAN0_STATUS_RECOVERY_READY",
+      "replace": "      (status & CAN0_STATUS_RECOVERY_READY) != 0u"
+    },
+    {
+      "id": "skip-foreground-send-critical-section",
+      "description": "Modify TX state without first masking the non-nested CAN IRQ.",
+      "find": "  const uint32_t previous_interrupt_state = can0_irq_save_disable();\n  bool sent = false;",
+      "replace": "  const uint32_t previous_interrupt_state = 0u;\n  bool sent = false;"
+    },
+    {
+      "id": "restore-receive-interrupts-unconditionally",
+      "description": "Re-enable interrupts after taking a received frame even when they were already masked.",
+      "find": "    controller->received = (can_frame_t){ 0 };\n    controller->rx_pending = false;\n  }\n  can0_irq_restore(previous_interrupt_state);\n  return received;",
+      "replace": "    controller->received = (can_frame_t){ 0 };\n    controller->rx_pending = false;\n  }\n  can0_irq_restore(previous_interrupt_state | UINT32_C(1));\n  return received;"
+    }
+  ]
+}

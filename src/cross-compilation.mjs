@@ -144,6 +144,16 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "can-controller-recovery",
+    source: "fixtures/can-controller-recovery/reference/can_controller.c",
+    includes: Object.freeze([
+      "fixtures/can-controller-recovery/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "binary-parser",
     source: "fixtures/binary-parser/reference/binary_parser.c",
     includes: Object.freeze([

@@ -79,7 +79,10 @@ foreground interrupt masking, bounded RX/TX service, and write-one-to-clear
 error status. The active `spi-dma-transfer` task uses opaque SPI0/DMA0 accessors
 and a non-nested DMA IRQ; its fixture models paired full-duplex descriptors,
 caller-owned DMA buffers, status acknowledgement, and foreground interrupt
-masking. The active `interrupt-vector-configuration` task uses a
+masking. The active `can-controller-recovery` task uses opaque CAN0 accessors
+and a non-nested CAN IRQ; its fixture models one bounded software RX slot,
+TX terminal results, bus-off containment, recovery-ready gating, and exact
+foreground interrupt restoration. The active `interrupt-vector-configuration` task uses a
 linker-addressed RAM table with deterministic SCB/NVIC, synchronization-barrier,
 and interrupt-mask models; it distinguishes reset-time relocation from live
 IRQ table updates. The active `linker-memory-map` task uses opaque linker
@@ -141,6 +144,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `timer-capture-overflow` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER1 16-bit capture/compare and overflow latches; non-nested timestamp handoff IRQ; foreground arming/consumption preserves exact interrupt state |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
 | `spi-dma-transfer` | `armv7m-bare-metal` | Cortex-M3; opaque SPI0/DMA0 accessors; non-nested DMA IRQ; caller-owned nonoverlapping DMA buffers; no data cache; foreground saves and restores global interrupt state |
+| `can-controller-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque CAN0 accessors; non-nested CAN IRQ; one classic-CAN RX slot and TX request; foreground preserves global interrupt state; bus-off recovery needs a supplied ready indication |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
@@ -152,6 +156,6 @@ rubric, dependency entry, and validation commands.
 `npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
 and compiles the timer, interrupt-vector, linker-memory-map, I2C-controller, GPIO-debounce,
 ADC-threshold/watchdog, PWM synchronized-update, watchdog-window recovery,
-timer-DMA handoff, timer capture/compare overflow, UART, and SPI-DMA references
+timer-DMA handoff, timer capture/compare overflow, UART, SPI-DMA, and CAN-controller references
 for their ARMv7-M target.
 This is a compile-only portability probe, not target execution.

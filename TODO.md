@@ -134,7 +134,7 @@ record exact versions in validation reports.
     SCB/NVIC, barrier, and live IRQ-update validation.
   - [x] Add linker-symbol and memory-map validation for reset-time data copying,
     BSS clearing, and image, writable, and stack address boundaries.
-- [ ] Add peripheral-driver tasks for GPIO, UART, SPI, I2C, ADC, PWM, timers,
+- [x] Add peripheral-driver tasks for GPIO, UART, SPI, I2C, ADC, PWM, timers,
   DMA, and watchdogs using documented mock registers.
   - [x] Add an interrupt-driven UART fixture with bounded RX/TX queues,
     deterministic interrupt masking, and mock-register validation.
@@ -148,11 +148,15 @@ record exact versions in validation reports.
     timing, fault priority, and last-safe-duty recovery.
   - [x] Add a deterministic watchdog-window recovery fixture with early-feed
     rejection, reset-cause acknowledgement, and staged reconfiguration.
+  - [x] Add a deterministic SPI DMA fixture with full-duplex descriptor
+    ordering, split terminal completion, and error teardown.
   - [x] Add a timer-DMA ownership handoff fixture with terminal-result gating,
     retained-compare abort recovery, and deterministic ownership transfer.
   - [x] Add a timer capture/compare overflow fixture with delayed-wrap
     timestamp reconstruction, bounded compare arming, and capture overrun
     accounting.
+  - [x] Add a deterministic CAN controller fixture with one-slot mailbox
+    ownership, bus-off containment, and recovery-ready gating.
 - [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,
