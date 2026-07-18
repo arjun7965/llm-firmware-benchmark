@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/queue_semaphore.c",
+  "mutations": [
+    {
+      "id": "initial-token-present",
+      "description": "Create the counting semaphore with a false initial token.",
+      "find": "SENSOR_QUEUE_CAPACITY,\n    0u",
+      "replace": "SENSOR_QUEUE_CAPACITY,\n    1u"
+    },
+    {
+      "id": "give-before-send",
+      "description": "Expose a semaphore token before the queue contains the sample.",
+      "find": "const rtos_status_t status = rtos_queue_send(pipeline->queue, sample, 0u);\n  if (status != RTOS_STATUS_OK) return status;\n  return rtos_semaphore_give(pipeline->available);",
+      "replace": "const rtos_status_t status = rtos_semaphore_give(pipeline->available);\n  if (status != RTOS_STATUS_OK) return status;\n  return rtos_queue_send(pipeline->queue, sample, 0u);"
+    },
+    {
+      "id": "receive-before-take",
+      "description": "Read a queue item before acquiring its matching semaphore token.",
+      "find": "const rtos_status_t status = rtos_semaphore_take(\n    pipeline->available,\n    WORKER_WAIT_TIMEOUT_TICKS\n  );\n  if (status != RTOS_STATUS_OK) return status;\n  return rtos_queue_receive(pipeline->queue, sample, 0u);",
+      "replace": "const rtos_status_t status = rtos_queue_receive(pipeline->queue, sample, 0u);\n  if (status != RTOS_STATUS_OK) return status;\n  return rtos_semaphore_take(pipeline->available, WORKER_WAIT_TIMEOUT_TICKS);"
+    },
+    {
+      "id": "unbounded-worker-wait",
+      "description": "Allow the worker to wait forever instead of preserving the three-tick latency bound.",
+      "find": "WORKER_WAIT_TIMEOUT_TICKS",
+      "replace": "RTOS_WAIT_FOREVER"
+    },
+    {
+      "id": "accept-uninitialized-pipeline",
+      "description": "Treat a cleared initialization flag as a usable pipeline.",
+      "find": "pipeline != NULL && pipeline->initialized &&",
+      "replace": "pipeline != NULL &&"
+    },
+    {
+      "id": "publish-after-full",
+      "description": "Signal the semaphore even when the queue rejected a full send.",
+      "find": "if (status != RTOS_STATUS_OK) return status;\n  return rtos_semaphore_give(pipeline->available);",
+      "replace": "if (status != RTOS_STATUS_OK) return rtos_semaphore_give(pipeline->available);\n  return rtos_semaphore_give(pipeline->available);"
+    }
+  ]
+}

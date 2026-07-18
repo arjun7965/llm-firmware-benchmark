@@ -191,6 +191,13 @@ public C fixtures against their trusted references and confirm that every
 controlled C mutation is rejected. Use `npm run test:mutations` to run only
 the mutation checks.
 
+The RTOS fixtures are calibrated with `npm run fixture:rtos:self-test`,
+`npm run fixture:rtos-scheduler:self-test`, `npm run fixture:rtos-queue:self-test`,
+and `npm run fixture:rtos-events:self-test`. Together they cover
+priority-inheritance mutexes, rate-monotonic release scheduling, queue/counting-
+semaphore handoff, event-flag consumption, bounded waits, and deadlock-safe
+mutex ordering through deterministic C11 mocks.
+
 The active Rust stream-decoder fixture is calibrated with
 `npm run fixture:rust-decoder:self-test` and validated in CI under pinned
 Rust/Cargo 1.87.0 with its attested GCC 13.3.0 linker.

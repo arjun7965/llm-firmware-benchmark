@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/event_flags_deadlock.c",
+  "mutations": [
+    {
+      "id": "accept-uninitialized-supervisor",
+      "description": "Treat a supervisor with a cleared initialized flag as usable.",
+      "find": "supervisor != NULL && supervisor->initialized &&",
+      "replace": "supervisor != NULL &&"
+    },
+    {
+      "id": "wait-forever-for-event",
+      "description": "Remove the two-tick event wait bound.",
+      "find": "SUPERVISOR_EVENT_WAIT_TICKS",
+      "replace": "RTOS_WAIT_FOREVER"
+    },
+    {
+      "id": "retain-consumed-events",
+      "description": "Leave returned event bits set instead of clearing them on exit.",
+      "find": "false,\n    true,\n    SUPERVISOR_EVENT_WAIT_TICKS",
+      "replace": "false,\n    false,\n    SUPERVISOR_EVENT_WAIT_TICKS"
+    },
+    {
+      "id": "lock-actuator-first",
+      "description": "Invert the globally documented configuration-before-actuator lock order.",
+      "find": "supervisor->configuration,\n    CONFIGURATION_LOCK_TIMEOUT_TICKS",
+      "replace": "supervisor->actuator,\n    CONFIGURATION_LOCK_TIMEOUT_TICKS"
+    },
+    {
+      "id": "wait-forever-for-configuration-lock",
+      "description": "Permit an unbounded configuration mutex wait.",
+      "find": "supervisor->configuration,\n    CONFIGURATION_LOCK_TIMEOUT_TICKS",
+      "replace": "supervisor->configuration,\n    RTOS_WAIT_FOREVER"
+    },
+    {
+      "id": "leak-first-lock-on-contention",
+      "description": "Leave the configuration lock held when actuator acquisition times out.",
+      "find": "if (status != RTOS_STATUS_OK) {\n    (void) rtos_mutex_unlock(supervisor->configuration);\n    return status;\n  }",
+      "replace": "if (status != RTOS_STATUS_OK) {\n    return status;\n  }"
+    },
+    {
+      "id": "discard-actuator-unlock-failure",
+      "description": "Hide an actuator unlock error after still attempting configuration cleanup.",
+      "find": "if (actuator_unlock_status != RTOS_STATUS_OK) return actuator_unlock_status;\n  return configuration_unlock_status;",
+      "replace": "if (actuator_unlock_status != RTOS_STATUS_OK) return configuration_unlock_status;\n  return configuration_unlock_status;"
+    }
+  ]
+}
