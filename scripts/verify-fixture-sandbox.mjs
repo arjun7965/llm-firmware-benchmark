@@ -128,6 +128,21 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "rtos-periodic-scheduler",
+    source: "reference/periodic_scheduler.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "rtos-queue-semaphore",
+    source: "reference/queue_semaphore.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "rtos-event-flags-deadlock",
+    source: "reference/event_flags_deadlock.c",
+    suite: "firmware",
+  },
+  {
     taskId: "frontend-autocomplete",
     source: "reference/Autocomplete.tsx",
     suite: "auxiliary",

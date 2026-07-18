@@ -64,6 +64,15 @@ medium-priority diagnostics, and high-priority safety task contexts. Its mock
 observes mutex creation, effective priority donation, blocked callers, and the
 next runnable task without using host threads.
 
+The active `rtos-periodic-scheduler` task supplies fixed control and telemetry
+periods, relative deadlines, and a wrap-safe bounded release model. The active
+`rtos-queue-semaphore` task supplies a four-item FIFO with a matching counting
+semaphore and an exact worker wait bound. The active
+`rtos-event-flags-deadlock` task supplies an event group, any-bit clear-on-exit
+wait semantics, and configuration-before-actuator mutex order with bounded
+contention cleanup. Each fixture defines the complete observable RTOS behavior
+needed for its score without vendor RTOS knowledge.
+
 ### `armv7m-bare-metal`
 
 Little-endian ARMv7-M, AAPCS/EABI, single core, privileged bare-metal execution,
@@ -155,6 +164,9 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
+| `rtos-periodic-scheduler` | `generic-rtos` | Deterministic control-before-telemetry releases, fresh relative deadlines, late-period collapse, and wrap-safe ticks |
+| `rtos-queue-semaphore` | `generic-rtos` | Four-item FIFO paired with a four-token counting semaphore; immediate producer operations and a three-tick worker wait |
+| `rtos-event-flags-deadlock` | `generic-rtos` | Any-bit event consumption with clear-on-exit; configuration-before-actuator mutex order and one-tick lock bounds |
 | `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields; CRC-16/CCITT-FALSE |
 
 Profiles become active only when a committed task supplies its fixtures,

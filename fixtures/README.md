@@ -97,6 +97,15 @@ mock with low-priority telemetry, medium-priority diagnostics, and
 high-priority safety contexts. Its public tests verify priority donation,
 bounded safety acquisition, error propagation, and initialization recovery.
 
+The active `rtos-periodic-scheduler` fixture models deterministic
+rate-monotonic control and telemetry releases with fresh relative deadlines,
+late-dispatch collapse, failure retry, and wrap-safe ticks. The active
+`rtos-queue-semaphore` fixture models a four-item FIFO and matching counting
+semaphore, checking send/give and take/receive order, capacity, and bounded
+worker waits. The active `rtos-event-flags-deadlock` fixture models event-bit
+consumption plus one global configuration-before-actuator mutex order, bounded
+contention, and cleanup after apply failures.
+
 The active `uart-interrupt-driver` fixture uses accessor-instrumented
 fictional UART0 MMIO with a deterministic interrupt-mask model. Its public
 tests verify initialization ordering, full-capacity RX/TX queues, bounded

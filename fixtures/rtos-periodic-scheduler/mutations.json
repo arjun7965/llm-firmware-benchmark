@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/periodic_scheduler.c",
+  "mutations": [
+    {
+      "id": "unbounded-catch-up",
+      "description": "Advance from the stale release tick, allowing one late dispatch to remain repeatedly due.",
+      "find": "*next_release = now_ticks + period_ticks;",
+      "replace": "*next_release = *next_release + period_ticks;"
+    },
+    {
+      "id": "period-as-deadline",
+      "description": "Give a released task its period as a deadline instead of the required bounded relative deadline.",
+      "find": "now_ticks + deadline_ticks",
+      "replace": "now_ticks + period_ticks + (deadline_ticks - deadline_ticks)"
+    },
+    {
+      "id": "skip-release-retry",
+      "description": "Advance a failed task's next release and silently skip its retry.",
+      "find": "if (status != RTOS_STATUS_OK) return status;\n\n  *next_release = now_ticks + period_ticks;",
+      "replace": "if (status != RTOS_STATUS_OK) {\n    *next_release = now_ticks + period_ticks;\n    return status;\n  }\n\n  *next_release = now_ticks + period_ticks;"
+    },
+    {
+      "id": "release-telemetry-first",
+      "description": "Give lower-priority telemetry precedence when both releases are due.",
+      "find": "&scheduler->next_control_release,\n    now_ticks,\n    CONTROL_PERIOD_TICKS,\n    CONTROL_DEADLINE_TICKS,\n    RTOS_SCHEDULED_TASK_CONTROL",
+      "replace": "&scheduler->next_telemetry_release,\n    now_ticks,\n    TELEMETRY_PERIOD_TICKS,\n    TELEMETRY_DEADLINE_TICKS,\n    RTOS_SCHEDULED_TASK_TELEMETRY"
+    },
+    {
+      "id": "accept-uninitialized-scheduler",
+      "description": "Treat a cleared initialization flag as a valid dispatch state.",
+      "find": "scheduler == NULL || !scheduler->initialized",
+      "replace": "scheduler == NULL"
+    }
+  ]
+}

@@ -161,7 +161,7 @@ record exact versions in validation reports.
   sections, race conditions, ISR-safe APIs, and deferred work.
   - [x] Add deterministic nested-priority IRQ coalescing with atomic deferred
     work publication, foreground reconfiguration, and exact mask restoration.
-- [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,
+- [x] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,
   priority inversion, deadlocks, and bounded latency.
   - [x] Start with a deterministic priority-inheritance mutex fixture for
     low-priority telemetry, medium-priority diagnostics, and high-priority

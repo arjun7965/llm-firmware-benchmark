@@ -37,6 +37,9 @@ code. Each task references a pinned hosted runtime contract from
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `rtos-priority-inversion` | A C11 compiler plus the fixture-owned deterministic RTOS priority-inheritance mock |
+| `rtos-periodic-scheduler` | A C11 compiler plus the fixture-owned deterministic RTOS release/deadline mock |
+| `rtos-queue-semaphore` | A C11 compiler plus fixture-owned fixed-capacity RTOS queue and counting-semaphore mocks |
+| `rtos-event-flags-deadlock` | A C11 compiler plus fixture-owned RTOS event-flag and ordered-mutex mocks |
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL 16.9 `initdb`, `pg_ctl`, `postgres`, and `psql` |
@@ -224,6 +227,15 @@ fixture-owned scheduler mock:
 
 ```bash
 npm run fixture:rtos:self-test
+```
+
+The RTOS periodic scheduler, queue/semaphore, and event-flag/deadlock fixtures
+use the same C11 compiler with fixture-owned deterministic RTOS boundaries:
+
+```bash
+npm run fixture:rtos-scheduler:self-test
+npm run fixture:rtos-queue:self-test
+npm run fixture:rtos-events:self-test
 ```
 
 The trusted ring-buffer fixture uses the same C11 compiler:
