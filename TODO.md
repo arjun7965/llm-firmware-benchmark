@@ -166,8 +166,19 @@ record exact versions in validation reports.
   - [x] Start with a deterministic priority-inheritance mutex fixture for
     low-priority telemetry, medium-priority diagnostics, and high-priority
     safety work.
-- [ ] Add constrained-memory tasks for ring buffers, static allocation, memory
+- [x] Add constrained-memory tasks for ring buffers, static allocation, memory
   pools, stack usage, alignment, cache coherency, and fixed-point arithmetic.
+  - [x] Retain deterministic lock-free ring-buffer coverage for ISR/main-loop
+    ownership, full capacity, and counter wraparound.
+  - [x] Add a static fixed-block memory-pool fixture with embedded allocation
+    metadata, 16-byte alignment, exhaustion, exact release validation, and
+    reinitialization.
+  - [x] Add a cache-coherency DMA fixture with 32-byte range expansion,
+    four-byte buffer alignment, ordered TX/RX maintenance, busy retry, and
+    terminal cleanup.
+  - [x] Add a fixed-point stack-budget fixture with Q1.15/Q8.8 arithmetic,
+    signed tie rounding, saturation, an eight-byte-aligned stack watermark,
+    and bounded batch processing.
 - [ ] Add protocol tasks for framing, stateful parsing, timeouts, CRCs, CAN,
   Modbus, BLE-style packets, and malformed-input recovery.
 - [ ] Add reliability tasks for watchdog recovery, brownouts, fault handlers,

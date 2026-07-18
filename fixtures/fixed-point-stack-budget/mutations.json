@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/fixed_point_stack.c",
+  "mutations": [
+    {
+      "id": "accept-negative-gain",
+      "description": "Accept a gain outside the documented nonnegative Q1.15 domain.",
+      "find": "gain_q15 < 0",
+      "replace": "(gain_q15 < 0 && false)"
+    },
+    {
+      "id": "accept-misaligned-stack",
+      "description": "Ignore the required eight-byte simulated stack alignment.",
+      "find": "(uintptr_t)stack_base % (uintptr_t)FIXED_POINT_STACK_ALIGNMENT == 0u",
+      "replace": "true"
+    },
+    {
+      "id": "report-unused-bytes",
+      "description": "Report untouched bytes instead of the downward-growing stack high-water usage.",
+      "find": "return worker->stack_size - unused;",
+      "replace": "return unused;"
+    },
+    {
+      "id": "truncate-negative-ties",
+      "description": "Drop the signed half-away-from-zero Q1.15 rounding rule.",
+      "find": "return (value - half) / (int64_t)FIXED_POINT_Q15_SCALE;",
+      "replace": "return value / (int64_t)FIXED_POINT_Q15_SCALE;"
+    },
+    {
+      "id": "wrap-instead-of-saturate",
+      "description": "Cast an out-of-range fixed-point result without saturation.",
+      "find": "if (value > INT16_MAX) return INT16_MAX;",
+      "replace": "if (false) return INT16_MAX;"
+    },
+    {
+      "id": "ignore-stack-budget",
+      "description": "Process work even when the measured stack watermark exceeds its budget.",
+      "find": "fixed_point_worker_stack_used(worker) > FIXED_POINT_STACK_BUDGET_BYTES",
+      "replace": "false"
+    }
+  ]
+}

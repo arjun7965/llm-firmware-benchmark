@@ -198,6 +198,15 @@ priority-inheritance mutexes, rate-monotonic release scheduling, queue/counting-
 semaphore handoff, event-flag consumption, bounded waits, and deadlock-safe
 mutex ordering through deterministic C11 mocks.
 
+The constrained-memory fixtures are calibrated with
+`npm run fixture:ring-buffer:self-test`,
+`npm run fixture:static-memory-pool:self-test`,
+`npm run fixture:dma-cache:self-test`, and
+`npm run fixture:fixed-point:self-test`. Together they cover lock-free
+caller-owned ring storage, deterministic static block allocation and alignment,
+noncoherent DMA cache-line maintenance, and fixed-point processing under an
+explicit stack high-water budget.
+
 The active Rust stream-decoder fixture is calibrated with
 `npm run fixture:rust-decoder:self-test` and validated in CI under pinned
 Rust/Cargo 1.87.0 with its attested GCC 13.3.0 linker.

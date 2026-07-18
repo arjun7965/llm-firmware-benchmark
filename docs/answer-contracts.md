@@ -45,6 +45,9 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `interrupt-deferred-work` | Single file | Single file | One atomic ISR-to-foreground dispatcher unit; nested-priority latch and interrupt-mask tests are validator-owned |
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `embedded-ring-buffer` | Single file | Single file | One implementation unit; headers and tests are supplied |
+| `static-memory-pool` | Single file | Single file | One fixed-block allocator implementation unit; embedded storage and tests are supplied |
+| `fixed-point-stack-budget` | Single file | Single file | One Q-format worker implementation unit; simulated stack watermark and tests are supplied |
+| `dma-cache-coherency` | Single file | Single file | One cache/DMA ordering implementation unit; opaque deterministic cache/DMA mock and tests are supplied |
 | `firmware-state-machine` | Single file | Single file | One implementation unit; HAL, mocks, and tests are supplied |
 | `rtos-priority-inversion` | Single file | Single file | One implementation unit; RTOS mock and scheduler tests are validator-owned |
 | `rtos-periodic-scheduler` | Single file | Single file | One rate-monotonic release implementation unit; RTOS release mock and deadline tests are validator-owned |

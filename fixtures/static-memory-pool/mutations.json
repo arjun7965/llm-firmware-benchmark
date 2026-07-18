@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/static_memory_pool.c",
+  "mutations": [
+    {
+      "id": "allocate-same-block",
+      "description": "Return the first free slot without marking it allocated.",
+      "find": "pool->allocated[index] = true;",
+      "replace": "pool->allocated[index] = false;"
+    },
+    {
+      "id": "allow-interior-release",
+      "description": "Accept pointers that are not at a block boundary.",
+      "find": "offset % (uintptr_t)STATIC_MEMORY_POOL_BLOCK_SIZE != 0u",
+      "replace": "false"
+    },
+    {
+      "id": "release-unallocated-block",
+      "description": "Treat an unallocated block as releasable.",
+      "find": "if (!pool->allocated[index]) return false;",
+      "replace": "if (false) return false;"
+    },
+    {
+      "id": "never-free-block",
+      "description": "Leave a released block unavailable.",
+      "find": "pool->allocated[index] = false;\n  return true;",
+      "replace": "pool->allocated[index] = true;\n  return true;"
+    },
+    {
+      "id": "accept-uninitialized-pool",
+      "description": "Allow allocation from an object before initialization.",
+      "find": "return pool != NULL && pool->initialized;",
+      "replace": "return pool != NULL;"
+    },
+    {
+      "id": "skip-reinitialization-reset",
+      "description": "Leave allocations live when the caller reinitializes the pool.",
+      "find": "pool->allocated[index] = 0u;",
+      "replace": "pool->allocated[index] = pool->allocated[index];"
+    }
+  ]
+}

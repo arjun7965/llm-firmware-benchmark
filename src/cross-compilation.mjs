@@ -179,6 +179,30 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "static-memory-pool",
+    source: "fixtures/static-memory-pool/reference/static_memory_pool.c",
+    includes: Object.freeze([
+      "fixtures/static-memory-pool/starter",
+    ]),
+  }),
+  Object.freeze({
+    id: "fixed-point-stack-budget",
+    source: "fixtures/fixed-point-stack-budget/reference/fixed_point_stack.c",
+    includes: Object.freeze([
+      "fixtures/fixed-point-stack-budget/starter",
+    ]),
+  }),
+  Object.freeze({
+    id: "dma-cache-coherency",
+    source: "fixtures/dma-cache-coherency/reference/dma_cache_transfer.c",
+    includes: Object.freeze([
+      "fixtures/dma-cache-coherency/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "firmware-state-machine",
     source:
       "fixtures/firmware-state-machine/reference/firmware_state_machine.c",

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/dma_cache_transfer.c",
+  "mutations": [
+    {
+      "id": "skip-tx-clean",
+      "description": "Start transmit DMA without cleaning its cache-line range.",
+      "find": "dma_cache_clean_by_address((const void *)cache_address, cache_length);",
+      "replace": "(void)cache_address;"
+    },
+    {
+      "id": "accept-misaligned-buffer",
+      "description": "Accept a DMA buffer that does not meet the four-byte alignment contract.",
+      "find": "if (address % (uintptr_t)DMA_BUFFER_ALIGNMENT != 0u) return false;",
+      "replace": "if (false) return false;"
+    },
+    {
+      "id": "skip-pre-rx-invalidate",
+      "description": "Start receive DMA without invalidating dirty cache lines first.",
+      "find": "dma_cache_invalidate_by_address((void *)cache_address, cache_length);\n  status = dma_cache_start_rx(buffer, length);",
+      "replace": "status = dma_cache_start_rx(buffer, length);"
+    },
+    {
+      "id": "drop-rx-state-while-busy",
+      "description": "Forget an in-flight receive transfer after a nonterminal busy status.",
+      "find": "if (status == DMA_CACHE_STATUS_BUSY) return status;",
+      "replace": "if (status == DMA_CACHE_STATUS_BUSY) { clear_rx_state(transfer); return status; }"
+    },
+    {
+      "id": "skip-post-rx-invalidate",
+      "description": "Expose completed receive data without a post-DMA cache invalidation.",
+      "find": "dma_cache_invalidate_by_address((void *)cache_address, cache_length);\n  clear_rx_state(transfer);",
+      "replace": "clear_rx_state(transfer);"
+    },
+    {
+      "id": "retain-failed-rx-state",
+      "description": "Leave a terminally failed receive transfer active.",
+      "find": "clear_rx_state(transfer);\n    return status;",
+      "replace": "return status;"
+    }
+  ]
+}

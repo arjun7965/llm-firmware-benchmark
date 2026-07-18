@@ -118,6 +118,21 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "static-memory-pool",
+    source: "reference/static_memory_pool.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "fixed-point-stack-budget",
+    source: "reference/fixed_point_stack.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "dma-cache-coherency",
+    source: "reference/dma_cache_transfer.c",
+    suite: "firmware",
+  },
+  {
     taskId: "firmware-state-machine",
     source: "reference/firmware_state_machine.c",
     suite: "firmware",

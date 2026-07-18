@@ -106,6 +106,13 @@ worker waits. The active `rtos-event-flags-deadlock` fixture models event-bit
 consumption plus one global configuration-before-actuator mutex order, bounded
 contention, and cleanup after apply failures.
 
+The active constrained-memory fixtures retain `embedded-ring-buffer` for
+lock-free caller-owned ring storage, add `static-memory-pool` for 16-byte-
+aligned fixed blocks and deterministic exhaustion/reuse, add
+`dma-cache-coherency` for cache-line rounded noncoherent DMA ordering, and add
+`fixed-point-stack-budget` for Q-format arithmetic with a caller-owned stack
+watermark and bounded batch processing.
+
 The active `uart-interrupt-driver` fixture uses accessor-instrumented
 fictional UART0 MMIO with a deterministic interrupt-mask model. Its public
 tests verify initialization ordering, full-capacity RX/TX queues, bounded
