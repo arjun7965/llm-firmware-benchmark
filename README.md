@@ -66,12 +66,16 @@ BENCHMARK_MODELS_FILE=/path/to/models.json npm run benchmark
 ## Tasks and Results
 
 `tasks.json` defines the shared prompts. Each task has a stable lowercase ID,
-category, explicit `firmware` or `auxiliary` suite, `validationProfile`, prompt,
-and optional `targetProfile`. Firmware-suite tasks require a recognized target
-profile. The harness writes one record per task/model pair under `results/`.
+category, explicit `firmware` or `auxiliary` suite, `scoringMode`,
+`validationProfile`, prompt, and optional `targetProfile`. Firmware-suite tasks
+require a recognized target profile. The harness writes one record per
+task/model pair under `results/`.
 
-Firmware tasks are the primary suite. Auxiliary tasks may rely on manual or
-external validation.
+Firmware tasks are the primary suite. A `deterministic` task has a
+fixture-owned validator; a `rubric-only` task is manually scored with its
+published rubric because a reproducible validator would require an undocumented
+service or environment-dependent evidence. See
+[`docs/rubric-only-tasks.md`](docs/rubric-only-tasks.md).
 
 Select a subset or override execution controls without editing configuration:
 
@@ -90,9 +94,10 @@ values. Suite and task filters intersect. `--models-file` and `--tasks-file`
 select alternate input documents. Run `npm run benchmark -- --help` or
 `npm run benchmark:repeats -- --help` for the complete interface.
 
-Raw records include the validation and target profiles plus a SHA-256 of the
-task prompt. A changed prompt or validation profile invalidates result reuse
-and prevents stale answers from entering fixture extraction.
+Raw records include the scoring mode, validation and target profiles, plus a
+SHA-256 of the task prompt. A changed prompt, scoring mode, or validation
+profile invalidates result reuse and prevents stale answers from entering
+fixture extraction.
 
 Raw outputs are intentionally Git-ignored because generated text can contain
 credentials, session metadata, or local paths. Keep raw runs private and publish
@@ -129,9 +134,10 @@ requirements such as score-array lengths. Firmware-suite tasks use the shared
 `firmware-v1` dimensions in `docs/benchmarks/firmware-scoring.md`. Summaries
 report combined totals and separate firmware and auxiliary totals using the
 task registry; set `BENCHMARK_TASKS_FILE` when scoring an alternate task file.
-Each score document pins logical-profile and concrete-environment revisions
-and SHA-256 values per task. The summarizer verifies those references against
-the task registry before comparing models or runs.
+Each score document pins the scoring mode for every task and logical-profile
+and concrete-environment revisions and SHA-256 values for deterministic tasks.
+The summarizer verifies those references against the task registry before
+comparing models or runs.
 
 Embedded and firmware expansion is governed by
 `docs/embedded/capability-matrix.md` and reusable target profiles in

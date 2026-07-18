@@ -52,9 +52,11 @@ requirements from concrete execution environments. Together they fix tool
 versions, package versions, sandbox policy, and resource limits. Validation
 reports record both contract fingerprints, resolved versions, compile flags,
 and commands. Use the same exact profile and environment IDs, revisions, and
-SHA-256 values for all models in a comparison. The repeat-score contract pins
-one compatible profile/environment pair per scored task and verifies the
-profile ID against the task registry.
+SHA-256 values for all models in a deterministic comparison. The repeat-score
+contract pins one compatible profile/environment pair per deterministic scored
+task and verifies the profile ID against the task registry. Tasks explicitly
+classified as rubric-only do not receive a validation contract; see
+`docs/rubric-only-tasks.md`.
 Profiles with npm or PyPI dependencies additionally pin committed lockfiles
 under `validation-locks/`; startup verifies their SHA-256 and package set.
 Those lockfiles are stored with LF line endings and normalized before hashing

@@ -23,6 +23,7 @@ const tasks = [
     id: "task-one",
     category: "test",
     suite: "auxiliary",
+    scoringMode: "deterministic",
     validationProfile: "python3-stdlib",
     prompt: "First prompt",
   },
@@ -30,6 +31,7 @@ const tasks = [
     id: "task-two",
     category: "test",
     suite: "auxiliary",
+    scoringMode: "deterministic",
     validationProfile: "python3-stdlib",
     prompt: "Second prompt",
   },
@@ -93,6 +95,9 @@ test("successful results are reusable while failures and malformed files are not
   assert.equal(hasSuccessfulResult(success, {
     expectedValidationProfile: "python3-stdlib",
   }), false);
+  assert.equal(hasSuccessfulResult(success, {
+    expectedScoringMode: "deterministic",
+  }), false);
   assert.equal(hasSuccessfulResult(failure), false);
   assert.equal(hasSuccessfulResult(malformed), false);
   assert.equal(hasSuccessfulResult(join(root, "missing.json")), false);
@@ -153,6 +158,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
   assert.equal(persisted.task, "task-one");
   assert.equal(persisted.suite, "firmware");
   assert.equal(persisted.targetProfile, "portable-c11");
+  assert.equal(persisted.scoringMode, "deterministic");
   assert.equal(persisted.validationProfile, "c11-host");
   assert.equal(persisted.provider, "fake");
   assert.equal(persisted.modelName, "alpha");
@@ -168,6 +174,7 @@ test("executeJob skips an existing successful result without generating", async 
   writeFileSync(path, JSON.stringify({
     exitCode: 0,
     promptSha256: promptSha256(job.task.prompt),
+    scoringMode: job.task.scoringMode,
     validationProfile: job.task.validationProfile,
   }));
 
@@ -184,6 +191,7 @@ test("executeJob skips an existing successful result without generating", async 
   writeFileSync(path, JSON.stringify({
     exitCode: 0,
     promptSha256: "0".repeat(64),
+    scoringMode: job.task.scoringMode,
     validationProfile: job.task.validationProfile,
   }));
   const refreshed = await executeJob({

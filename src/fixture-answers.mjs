@@ -508,10 +508,16 @@ export function extractFixtureAnswer({
   const tasks = loadTasks(tasksPath);
   const task = tasks.find((item) => item.id === result.task);
   if (!task) throw new TypeError(`result task is unknown: ${result.task}`);
+  if (task.scoringMode !== "deterministic") {
+    throw new TypeError(
+      `rubric-only task ${task.id} cannot use fixture answer extraction`,
+    );
+  }
   if (
     result.category !== task.category ||
     resultSuite(result) !== task.suite ||
     result.targetProfile !== (task.targetProfile ?? null) ||
+    result.scoringMode !== task.scoringMode ||
     result.validationProfile !== task.validationProfile
   ) {
     throw new TypeError("result task metadata does not match tasks.json");

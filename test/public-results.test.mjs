@@ -25,6 +25,7 @@ function rawResult(stdout) {
     task: "example-task",
     category: "testing",
     suite: "firmware",
+    scoringMode: "deterministic",
     targetProfile: "portable-c11",
     validationProfile: "c11-host",
     provider: "ncode",
@@ -98,9 +99,10 @@ test("public result allowlists fields and extracts NCode answer text", () => {
   const result = toPublicResult(raw);
   const serialized = JSON.stringify(result);
 
-  assert.equal(result.schemaVersion, "1.3");
+  assert.equal(result.schemaVersion, "1.4");
   assert.equal(result.answer, "A legitimate answer.");
   assert.equal(result.task.suite, "firmware");
+  assert.equal(result.task.scoringMode, "deterministic");
   assert.equal(result.task.targetProfile, "portable-c11");
   assert.equal(result.task.validationProfile, "c11-host");
   assert.equal(result.publication.reviewRequired, false);
@@ -214,6 +216,16 @@ test("public result validation rejects extra fields", () => {
       ...result,
       task: {
         ...result.task,
+        scoringMode: "manual",
+      },
+    }),
+    /scoringMode/,
+  );
+  assert.throws(
+    () => validatePublicResult({
+      ...result,
+      task: {
+        ...result.task,
         validationProfile: "unknown-profile",
       },
     }),
@@ -245,12 +257,14 @@ test("legacy results infer suite metadata and export safely", () => {
   const raw = rawResult("Legacy answer.");
   delete raw.provider;
   delete raw.suite;
+  delete raw.scoringMode;
   delete raw.targetProfile;
 
   const result = toPublicResult(raw);
 
   assert.equal(result.model.provider, "unknown");
   assert.equal(result.task.suite, "auxiliary");
+  assert.equal(result.task.scoringMode, "rubric-only");
   assert.equal(result.task.targetProfile, null);
   assert.equal(result.task.validationProfile, "c11-host");
   assert.equal(result.answer, "Legacy answer.");
@@ -267,4 +281,17 @@ test("legacy results infer suite metadata and export safely", () => {
   delete profileBackedRaw.suite;
   const profileBackedResult = toPublicResult(profileBackedRaw);
   assert.equal(profileBackedResult.task.suite, "firmware");
+
+  const legacyPublicResult = {
+    ...result,
+    schemaVersion: "1.3",
+    task: {
+      ...result.task,
+    },
+  };
+  delete legacyPublicResult.task.scoringMode;
+  assert.equal(
+    validatePublicResult(legacyPublicResult),
+    legacyPublicResult,
+  );
 });

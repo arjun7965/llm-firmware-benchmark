@@ -117,7 +117,7 @@ record exact versions in validation reports.
     fixture with calibrated public tests and controlled mutations.
   - [x] Apply the Node/PostgreSQL profile to `webhook-replay-security` with
     its own deterministic fixture, public tests, and controlled mutations.
-- [ ] Keep tasks rubric-only when deterministic execution would require
+- [x] Keep tasks rubric-only when deterministic execution would require
   undocumented services or introduce environment-dependent scoring.
 
 ## Embedded and Firmware Benchmark Expansion

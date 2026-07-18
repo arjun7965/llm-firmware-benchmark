@@ -1246,6 +1246,9 @@ export function runFixtureValidation({
   const tasks = loadTasks(tasksPath);
   const task = tasks.find((item) => item.id === taskId);
   if (!task) throw new TypeError(`unknown fixture task: ${taskId}`);
+  if (task.scoringMode !== "deterministic") {
+    throw new TypeError(`rubric-only task ${taskId} cannot use fixture validation`);
+  }
 
   const fixtureRoot = resolve(root, taskId);
   requireContained(root, fixtureRoot, "fixture path");

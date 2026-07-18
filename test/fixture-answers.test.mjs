@@ -48,6 +48,7 @@ function fixtureRepository(t) {
     id: "example-task",
     category: "systems-security",
     suite: "firmware",
+    scoringMode: "deterministic",
     targetProfile: "portable-c11",
     validationProfile: "c11-host",
     prompt: examplePrompt,
@@ -113,6 +114,7 @@ function writeResult(root, overrides = {}) {
     task: "example-task",
     category: "systems-security",
     suite: "firmware",
+    scoringMode: "deterministic",
     targetProfile: "portable-c11",
     validationProfile: "c11-host",
     exitCode: 0,
@@ -417,6 +419,26 @@ test("fixture extraction requires matching success and explicit overwrite", (t) 
       "utf8",
     ),
     "int replacement = 1;\n",
+  );
+});
+
+test("rubric-only tasks reject fixture answer extraction", (t) => {
+  const repository = fixtureRepository(t);
+  const tasks = JSON.parse(readFileSync(repository.tasksPath, "utf8"));
+  tasks[0].scoringMode = "rubric-only";
+  tasks[0].rubricOnlyReasons = ["undocumented-service"];
+  tasks[0].rubricOnlyRationale = "The required service cannot be reproduced.";
+  writeFileSync(repository.tasksPath, JSON.stringify(tasks));
+
+  assert.throws(
+    () => extractFixtureAnswer({
+      resultPath: writeResult(repository.root, {
+        scoringMode: "rubric-only",
+      }),
+      fixturesRoot: repository.fixturesRoot,
+      tasksPath: repository.tasksPath,
+    }),
+    /rubric-only task.*cannot use fixture answer extraction/u,
   );
 });
 

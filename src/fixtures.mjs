@@ -14,6 +14,7 @@ import {
   sandboxProfileBlockReason,
   validationProfileCommandContract,
 } from "./validation-profiles.mjs";
+import { requireScoringMode } from "./scoring-modes.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const identifierPattern = /^[a-z][a-z0-9-]*$/;
@@ -110,6 +111,14 @@ function requireSafeRelativePath(value, name) {
 export function validateFixtureManifest(manifest, task) {
   requireExactFields(manifest, manifestFields, "fixture manifest");
   requireObject(task, "fixture task");
+  if (
+    requireScoringMode(
+      task.scoringMode,
+      `fixture task ${task.id} scoringMode`,
+    ) !== "deterministic"
+  ) {
+    throw new TypeError(`rubric-only task ${task.id} cannot define a fixture`);
+  }
   if (manifest.schemaVersion !== "1.4") {
     throw new TypeError("unsupported fixture schemaVersion");
   }
@@ -422,8 +431,10 @@ export function validateFixtureRepository({
   );
   const tasks = loadTasks(tasksPath);
   const tasksById = new Map(tasks.map((task) => [task.id, task]));
-  const requiredTaskIds = new Set(
-    tasks.filter((task) => task.targetProfile).map((task) => task.id),
+  const deterministicTaskIds = new Set(
+    tasks
+      .filter((task) => task.scoringMode === "deterministic")
+      .map((task) => task.id),
   );
   const fixtureTaskIds = new Set();
   let commandCount = 0;
@@ -455,7 +466,7 @@ export function validateFixtureRepository({
     if (manifest.status === "scaffold") scaffoldCount++;
   }
 
-  for (const taskId of requiredTaskIds) {
+  for (const taskId of deterministicTaskIds) {
     if (!fixtureTaskIds.has(taskId)) {
       throw new TypeError(`task ${taskId} is missing a fixture directory`);
     }

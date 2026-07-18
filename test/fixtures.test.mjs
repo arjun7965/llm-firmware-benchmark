@@ -1,4 +1,12 @@
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { loadTasks } from "../src/harness.mjs";
@@ -10,6 +18,12 @@ import {
 
 const fixturesRoot = new URL("../fixtures/", import.meta.url);
 const tasksPath = new URL("../tasks.json", import.meta.url);
+
+function temporaryDirectory(t) {
+  const path = mkdtempSync(join(tmpdir(), "fixture-policy-test-"));
+  t.after(() => rmSync(path, { recursive: true, force: true }));
+  return path;
+}
 
 function ringBufferFixture() {
   return JSON.parse(
@@ -108,6 +122,65 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
       },
     }, task),
     /under generated/,
+  );
+});
+
+test("fixture eligibility follows the task scoring mode", (t) => {
+  const task = loadTasks(tasksPath)
+    .find((item) => item.id === "embedded-ring-buffer");
+  const manifest = ringBufferFixture();
+
+  assert.throws(
+    () => validateFixtureManifest({ ...manifest }, {
+      ...task,
+      scoringMode: "rubric-only",
+      rubricOnlyReasons: ["undocumented-service"],
+      rubricOnlyRationale: "The required service cannot be reproduced.",
+    }),
+    /rubric-only task.*cannot define a fixture/u,
+  );
+
+  const root = temporaryDirectory(t);
+  const fixturesRoot = join(root, "fixtures");
+  const temporaryTasksPath = join(root, "tasks.json");
+  mkdirSync(fixturesRoot);
+  const baseTask = {
+    id: "policy-task",
+    category: "review",
+    suite: "auxiliary",
+    validationProfile: "python3-stdlib",
+    prompt: "Review this answer.",
+  };
+
+  writeFileSync(temporaryTasksPath, JSON.stringify([{
+    ...baseTask,
+    scoringMode: "deterministic",
+  }]));
+  assert.throws(
+    () => validateFixtureRepository({
+      fixturesRoot,
+      tasksPath: temporaryTasksPath,
+    }),
+    /policy-task is missing a fixture directory/u,
+  );
+
+  writeFileSync(temporaryTasksPath, JSON.stringify([{
+    ...baseTask,
+    scoringMode: "rubric-only",
+    rubricOnlyReasons: ["environment-dependent-scoring"],
+    rubricOnlyRationale: "The result depends on an unavailable customer state.",
+  }]));
+  assert.deepEqual(
+    validateFixtureRepository({
+      fixturesRoot,
+      tasksPath: temporaryTasksPath,
+    }),
+    {
+      fixtureCount: 0,
+      activeCount: 0,
+      scaffoldCount: 0,
+      commandCount: 0,
+    },
   );
 });
 

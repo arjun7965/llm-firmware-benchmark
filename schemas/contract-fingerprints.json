@@ -17,10 +17,12 @@
   },
   "public-result.schema.json": {
     "1.2": "d605eb330bb656ad89106e390d720596cdcb0d9cd3fc44e5c2a131241cd5b9ed",
-    "1.3": "8e57a9a184badd3e463bf15132c955d6aab988097adfedf23bcb6b5815d3a23e"
+    "1.3": "8e57a9a184badd3e463bf15132c955d6aab988097adfedf23bcb6b5815d3a23e",
+    "1.4": "e7f50dd80f18ce2b6323466a8797ca5fb35d62815e90110e09604ec93d378602"
   },
   "repeat-scores.schema.json": {
-    "1.0": "fc4e4b09556b267f53b0af7285105c54dec1024bffe232c97dd58d0332a4e83b"
+    "1.0": "fc4e4b09556b267f53b0af7285105c54dec1024bffe232c97dd58d0332a4e83b",
+    "1.1": "cfff86b793f6cf2d6285ba43f91f3772bb19c172dc1c3257834626f9e7278656"
   },
   "validation-profiles.schema.json": {
     "1.0": "5bcb54e68e36d82a0cc19ec74f1c79a358b1d0a77b0e94b3b887e45f437fd652",

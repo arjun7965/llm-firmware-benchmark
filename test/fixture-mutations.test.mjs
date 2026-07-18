@@ -411,6 +411,7 @@ chmodSync(output, 0o700);
     id: "baseline-collision",
     category: "embedded",
     suite: "firmware",
+    scoringMode: "deterministic",
     validationProfile: "c11-host",
     targetProfile: "portable-c11",
     prompt: "Implement value.",

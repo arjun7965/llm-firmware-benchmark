@@ -65,6 +65,29 @@ test("every task has a documented answer-contract decision", () => {
   );
 });
 
+test("rubric-only task policy is documented and task metadata is complete", () => {
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+  const policy = readFileSync(
+    new URL("../docs/rubric-only-tasks.md", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(policy, /^# Rubric-Only Task Policy$/mu);
+  assert.match(policy, /Undocumented service/u);
+  assert.match(policy, /Environment-dependent scoring/u);
+  assert.match(policy, /"rubricOnlyReasons"/u);
+  for (const task of tasks) {
+    assert.ok(
+      ["deterministic", "rubric-only"].includes(task.scoringMode),
+      `task ${task.id} must declare a scoring mode`,
+    );
+    if (task.scoringMode === "rubric-only") {
+      assert.ok(task.rubricOnlyReasons.length > 0);
+      assert.ok(task.rubricOnlyRationale.trim() !== "");
+    }
+  }
+});
+
 test("fixture-backed prompts match their declared answer contract", () => {
   const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
 

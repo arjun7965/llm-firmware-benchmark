@@ -25,6 +25,7 @@ values. The append-only `validation-profile-fingerprints.json` file prevents
 published profile or environment revisions from being modified without
 detection.
 
-`repeat-scores.schema.json` records one pinned profile/environment pair per
-scored task. Runtime validation additionally checks the pair against the task
-registry because JSON Schema cannot express that cross-document relationship.
+`repeat-scores.schema.json` records a scoring mode for every scored task and a
+pinned profile/environment pair for each deterministic task. Runtime validation
+additionally checks those values against the task registry because JSON Schema
+cannot express that cross-document relationship.

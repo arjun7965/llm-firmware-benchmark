@@ -21,9 +21,11 @@ files.
 
 ## Task Decisions
 
-The **current mode** describes behavior in the repository today. Auxiliary
-tasks without fixtures remain rubric-only until their planned contract is
-implemented and calibrated.
+The **current mode** describes behavior in the repository today. `scoringMode`
+in `tasks.json` separately records whether a task has deterministic fixture
+evidence or is intentionally rubric-only. A rubric-only task has no executable
+answer contract or fixture until it is reclassified and calibrated under the
+[rubric-only task policy](rubric-only-tasks.md).
 
 | Task | Current mode | Planned executable answer contract | Reason |
 | --- | --- | --- | --- |
