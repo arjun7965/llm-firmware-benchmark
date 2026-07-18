@@ -97,6 +97,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "interrupt-deferred-work",
+    source: "reference/deferred_work.c",
+    suite: "firmware",
+  },
+  {
     taskId: "binary-parser",
     source: "reference/binary_parser.c",
     suite: "firmware",

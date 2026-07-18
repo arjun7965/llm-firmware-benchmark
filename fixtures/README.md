@@ -111,6 +111,12 @@ TX error priority, one-slot RX draining/overflow accounting, bus-off
 containment, recovery-ready gating, result consumption, and exact interrupt
 restoration.
 
+The active `interrupt-deferred-work` fixture uses an opaque volatile interrupt
+latch with two priority-ordered ISR sources and deterministic nested-preemption
+injection. Its public tests verify atomic source-bit publication, source-local
+acknowledgement, deferred-work coalescing, stale-latch clearing, foreground
+reconfiguration, and exact interrupt-state restoration.
+
 The active `interrupt-vector-configuration` fixture uses a linker-addressed RAM
 vector table with deterministic SCB/NVIC, synchronization-barrier, and
 interrupt-mask models. Its public tests verify startup ordering, all table

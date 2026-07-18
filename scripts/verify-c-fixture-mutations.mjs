@@ -24,6 +24,7 @@ runFixtureMutationTests({
     "uart-interrupt-driver",
     "spi-dma-transfer",
     "can-controller-recovery",
+    "interrupt-deferred-work",
   ],
   tasksPath: join(repositoryRoot, "tasks.json"),
 });

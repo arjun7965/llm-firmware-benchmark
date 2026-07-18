@@ -113,6 +113,12 @@ The active `timer-capture-overflow` task uses opaque TIMER1 counter, capture,
 compare, overflow-status, and interrupt-mask accessors. Its non-nested IRQ
 reconstructs timestamps across at most one delayed 16-bit wrap, while bounded
 foreground compare arming preserves the exact caller interrupt state.
+The active `interrupt-deferred-work` task uses an opaque volatile interrupt
+latch with low- and high-priority sources. Its high IRQ can preempt its low IRQ,
+so C11 atomic source-bit publication preserves both deferred work requests while
+foreground source configuration preserves the exact global interrupt state. Its
+opaque latch address map is outside the contract; only compiler-generated C11
+atomic exclusive accesses are permitted.
 
 ## Planned Profiles
 
@@ -145,6 +151,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
 | `spi-dma-transfer` | `armv7m-bare-metal` | Cortex-M3; opaque SPI0/DMA0 accessors; non-nested DMA IRQ; caller-owned nonoverlapping DMA buffers; no data cache; foreground saves and restores global interrupt state |
 | `can-controller-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque CAN0 accessors; non-nested CAN IRQ; one classic-CAN RX slot and TX request; foreground preserves global interrupt state; bus-off recovery needs a supplied ready indication |
+| `interrupt-deferred-work` | `armv7m-bare-metal` | Cortex-M3; opaque address-map-free volatile two-priority interrupt latch; high IRQ may preempt low IRQ; lock-free C11 atomic deferred source bits may use compiler-generated exclusive accesses; foreground source configuration preserves global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
@@ -156,6 +163,7 @@ rubric, dependency entry, and validation commands.
 `npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
 and compiles the timer, interrupt-vector, linker-memory-map, I2C-controller, GPIO-debounce,
 ADC-threshold/watchdog, PWM synchronized-update, watchdog-window recovery,
-timer-DMA handoff, timer capture/compare overflow, UART, SPI-DMA, and CAN-controller references
+timer-DMA handoff, timer capture/compare overflow, UART, SPI-DMA, CAN-controller,
+and interrupt-deferred-work references
 for their ARMv7-M target.
 This is a compile-only portability probe, not target execution.
