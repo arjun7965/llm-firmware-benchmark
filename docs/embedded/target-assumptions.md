@@ -35,6 +35,11 @@ No packed-struct, unaligned-access, or compiler-extension assumptions are
 allowed. Endianness-sensitive data must be decoded explicitly. Host GCC or Clang
 may be used with warnings enabled; sanitizers are optional validation aids.
 
+The active `static-memory-pool` task uses caller-owned, 16-byte-aligned embedded
+storage and deterministic allocation-map transitions. The active
+`fixed-point-stack-budget` task uses a caller-owned eight-byte-aligned simulated
+stack watermark, an explicit 64-byte budget, and Q1.15/Q8.8 integer arithmetic.
+
 ### `c11-lock-free-spsc`
 
 Extends `portable-c11` with one single-core interrupt producer and one main-loop
@@ -128,6 +133,10 @@ so C11 atomic source-bit publication preserves both deferred work requests while
 foreground source configuration preserves the exact global interrupt state. Its
 opaque latch address map is outside the contract; only compiler-generated C11
 atomic exclusive accesses are permitted.
+The active `dma-cache-coherency` task is a documented Cortex-M7 override: it
+uses fixture-owned noncoherent-cache maintenance and DMA calls, 32-byte cache
+lines, four-byte DMA-buffer alignment, and one receive-transfer slot without
+direct cache-register access.
 
 ## Planned Profiles
 
@@ -150,6 +159,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `bare-metal-timer` | `armv7m-bare-metal` | Cortex-M3; fictional TIMER0 MMIO; interrupts masked for configuration; no heap, cache, DMA, FPU, or RTOS |
 | `interrupt-vector-configuration` | `armv7m-bare-metal` | Cortex-M3; 128-byte-aligned linker-reserved RAM vector table; opaque SCB/NVIC and barrier accessors; reset starts masked; live updates preserve global interrupt state |
 | `linker-memory-map` | `armv7m-bare-metal` | Cortex-M3; opaque flash/SRAM and linker-symbol model; validated reset-time image/data/BSS/stack layout; data copy and BSS clear; no concurrency, heap, cache, DMA, FPU, or RTOS |
+| `dma-cache-coherency` | `armv7m-bare-metal` | Cortex-M7 override; opaque noncoherent 32-byte cache maintenance and DMA boundary; four-byte buffers; one receive-transfer slot; no direct cache registers |
 | `i2c-controller-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque I2C0 accessor model; bounded foreground writes; deterministic START/address/data status events; arbitration-loss and wrap-safe timeout recovery |
 | `gpio-edge-debounce` | `armv7m-bare-metal` | Cortex-M3; opaque GPIO0 active-low edge/wake latches; non-nested ISR capture; foreground debounce and exact interrupt-state restoration |
 | `adc-threshold-watchdog` | `armv7m-bare-metal` | Cortex-M3; opaque ADC0 12-bit threshold/status latches; non-nested ISR terminal handling; foreground timeout and exact interrupt-state restoration |
@@ -162,6 +172,8 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `can-controller-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque CAN0 accessors; non-nested CAN IRQ; one classic-CAN RX slot and TX request; foreground preserves global interrupt state; bus-off recovery needs a supplied ready indication |
 | `interrupt-deferred-work` | `armv7m-bare-metal` | Cortex-M3; opaque address-map-free volatile two-priority interrupt latch; high IRQ may preempt low IRQ; lock-free C11 atomic deferred source bits may use compiler-generated exclusive accesses; foreground source configuration preserves global interrupt state |
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
+| `static-memory-pool` | `portable-c11` | Caller-owned four-block embedded pool; 16-byte alignment; deterministic exhaustion, exact release validation, and reinitialization |
+| `fixed-point-stack-budget` | `portable-c11` | Caller-owned eight-byte-aligned simulated downward stack; 64-byte high-water limit; Q1.15 gain, Q8.8 offset, signed rounding, and saturation |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
 | `rtos-periodic-scheduler` | `generic-rtos` | Deterministic control-before-telemetry releases, fresh relative deadlines, late-period collapse, and wrap-safe ticks |
@@ -176,6 +188,6 @@ rubric, dependency entry, and validation commands.
 and compiles the timer, interrupt-vector, linker-memory-map, I2C-controller, GPIO-debounce,
 ADC-threshold/watchdog, PWM synchronized-update, watchdog-window recovery,
 timer-DMA handoff, timer capture/compare overflow, UART, SPI-DMA, CAN-controller,
-and interrupt-deferred-work references
+interrupt-deferred-work, and DMA cache-coherency references
 for their ARMv7-M target.
 This is a compile-only portability probe, not target execution.

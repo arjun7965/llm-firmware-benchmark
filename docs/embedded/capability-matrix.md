@@ -19,7 +19,7 @@ partial until deterministic fixtures and calibration are available.
 | `interrupt-concurrency` | ISR ownership, atomics, critical sections, deferred work | Covered: `embedded-ring-buffer`, `interrupt-deferred-work` | Extend to priority-aware payload ownership with bounded ISR work |
 | `rtos` | Tasks, queues, mutexes, events, priority inversion, bounded latency | Covered: `rtos-periodic-scheduler`, `rtos-queue-semaphore`, `rtos-priority-inversion`, `rtos-event-flags-deadlock` | Add a multi-core affinity and interrupt-to-task handoff task after the single-core contracts are calibrated |
 | `embedded-linux` | POSIX devices, threads, processes, signals, and constrained services | Gap | Implement a resilient serial service with shutdown and reconnect behavior |
-| `constrained-memory` | Static allocation, pools, stack bounds, alignment, cache and DMA rules | Partial: `embedded-ring-buffer` | Build a fixed-block allocator with deterministic exhaustion behavior |
+| `constrained-memory` | Static allocation, pools, stack bounds, alignment, cache and DMA rules | Covered: `embedded-ring-buffer`, `static-memory-pool`, `fixed-point-stack-budget`, `dma-cache-coherency` | Add a memory-region partitioning task only after calibrating allocator fragmentation variants |
 | `protocols` | Framing, parsers, CRCs, timeouts, CAN, Modbus, and malformed input | Partial: `binary-parser`, `can-controller-recovery` | Implement a streaming CAN transport reassembler with timeout recovery |
 | `reliability` | Watchdogs, brownouts, fault recovery, persistent state, safe mode | Partial: `firmware-state-machine` | Design idempotent boot recovery around interrupted persistent writes |
 | `boot-update` | Image validation, rollback, version policy, interrupted updates | Gap | Implement dual-slot update selection using a supplied flash model |
@@ -27,7 +27,7 @@ partial until deterministic fixtures and calibration are available.
 | `debugging` | Diagnostics, traces, register dumps, map files, and disassembly | Gap | Diagnose a hard fault from a supplied exception frame and map excerpt |
 | `language-safety` | Undefined behavior, integer conversion, ownership, RAII, portability | Partial: `embedded-ring-buffer`, `binary-parser` | Review mixed C/C++ MMIO code for lifetime and aliasing defects |
 | `firmware-security` | Untrusted input, debug access, updates, secrets, MPU, fault injection | Partial: `binary-parser` | Harden a boot command parser and debug-unlock policy |
-| `resource-optimization` | Code size, RAM, stack, energy, and bounded execution tradeoffs | Partial: `embedded-ring-buffer` | Optimize a fixed-point filter under explicit error and cycle budgets |
+| `resource-optimization` | Code size, RAM, stack, energy, and bounded execution tradeoffs | Partial: `embedded-ring-buffer`, `fixed-point-stack-budget` | Optimize a fixed-point filter under explicit error and cycle budgets |
 
 ## Selection Policy
 

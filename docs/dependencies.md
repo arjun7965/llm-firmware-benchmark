@@ -35,6 +35,9 @@ code. Each task references a pinned hosted runtime contract from
 | `can-controller-recovery` | A C11 compiler plus fixture-owned opaque CAN0 mailbox/status and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `interrupt-deferred-work` | A C11 compiler plus fixture-owned opaque nested-priority interrupt-latch and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
+| `static-memory-pool` | A C11 compiler with `<stdalign.h>` and `<stdint.h>` support; no runtime mock or allocator dependency |
+| `fixed-point-stack-budget` | A C11 compiler with fixed-width integer support and `-Wvla` diagnostics; no runtime mock or floating-point dependency |
+| `dma-cache-coherency` | A C11 compiler plus fixture-owned cache-maintenance/DMA ordering mock; `arm-none-eabi-gcc` is optional for Cortex-M7-compatible ARMv7-M compile-only validation |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `rtos-priority-inversion` | A C11 compiler plus the fixture-owned deterministic RTOS priority-inheritance mock |
 | `rtos-periodic-scheduler` | A C11 compiler plus the fixture-owned deterministic RTOS release/deadline mock |
@@ -242,6 +245,16 @@ The trusted ring-buffer fixture uses the same C11 compiler:
 
 ```bash
 npm run fixture:ring-buffer:self-test
+```
+
+The constrained-memory fixtures use the same C11 compiler; the DMA
+cache-coherency fixture also uses its fixture-owned deterministic cache/DMA
+ordering mock:
+
+```bash
+npm run fixture:static-memory-pool:self-test
+npm run fixture:dma-cache:self-test
+npm run fixture:fixed-point:self-test
 ```
 
 The trusted binary-parser fixture also requires `cc`:
