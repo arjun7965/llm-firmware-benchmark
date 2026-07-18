@@ -157,8 +157,10 @@ record exact versions in validation reports.
     accounting.
   - [x] Add a deterministic CAN controller fixture with one-slot mailbox
     ownership, bus-off containment, and recovery-ready gating.
-- [ ] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
+- [x] Add interrupt and concurrency tasks covering `volatile`, atomics, critical
   sections, race conditions, ISR-safe APIs, and deferred work.
+  - [x] Add deterministic nested-priority IRQ coalescing with atomic deferred
+    work publication, foreground reconfiguration, and exact mask restoration.
 - [ ] Add RTOS tasks for scheduling, queues, mutexes, semaphores, event flags,
   priority inversion, deadlocks, and bounded latency.
   - [x] Start with a deterministic priority-inheritance mutex fixture for

@@ -154,6 +154,17 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "interrupt-deferred-work",
+    source:
+      "fixtures/interrupt-deferred-work/reference/deferred_work.c",
+    includes: Object.freeze([
+      "fixtures/interrupt-deferred-work/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "binary-parser",
     source: "fixtures/binary-parser/reference/binary_parser.c",
     includes: Object.freeze([

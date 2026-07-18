@@ -40,6 +40,7 @@ implemented and calibrated.
 | `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |
 | `spi-dma-transfer` | Single file | Single file | One driver implementation unit; SPI0/DMA0 mocks and DMA IRQ tests are validator-owned |
 | `can-controller-recovery` | Single file | Single file | One CAN0 controller implementation unit; mailbox, bus-off, and interrupt-mask tests are validator-owned |
+| `interrupt-deferred-work` | Single file | Single file | One atomic ISR-to-foreground dispatcher unit; nested-priority latch and interrupt-mask tests are validator-owned |
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `embedded-ring-buffer` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `firmware-state-machine` | Single file | Single file | One implementation unit; HAL, mocks, and tests are supplied |

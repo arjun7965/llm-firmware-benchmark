@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/deferred_work.c",
+  "mutations": [
+    {
+      "id": "enable-sources-during-initialization",
+      "description": "Enable interrupt sources before the dispatcher has cleared stale status.",
+      "find": "interrupt_work_write_enable(latch, 0u);",
+      "replace": "interrupt_work_write_enable(latch, INTERRUPT_WORK_SOURCE_MASK);"
+    },
+    {
+      "id": "leave-stale-status-at-initialization",
+      "description": "Initialize without acknowledging stale interrupt latch state.",
+      "find": "interrupt_work_write_status_clear(latch, INTERRUPT_WORK_SOURCE_MASK);",
+      "replace": "interrupt_work_write_status_clear(latch, 0u);"
+    },
+    {
+      "id": "accept-unknown-source-bits",
+      "description": "Accept a foreground configuration mask containing an unknown source bit.",
+      "find": "(sources & ~INTERRUPT_WORK_SOURCE_MASK) != 0u",
+      "replace": "false"
+    },
+    {
+      "id": "skip-configuration-critical-section",
+      "description": "Change source-enable state without first masking both IRQ priorities.",
+      "find": "const uint32_t interrupt_state = interrupt_work_irq_save_disable();",
+      "replace": "const uint32_t interrupt_state = 0u;"
+    },
+    {
+      "id": "leave-source-enabled-while-reconfiguring",
+      "description": "Skip the temporary source-disable write during foreground reconfiguration.",
+      "find": "interrupt_work_write_enable(dispatcher->latch, 0u);",
+      "replace": "interrupt_work_write_enable(dispatcher->latch, sources);"
+    },
+    {
+      "id": "retain-stale-status-on-reconfigure",
+      "description": "Enable a new source configuration without clearing stale latch bits.",
+      "find": "  interrupt_work_write_status_clear(\n    dispatcher->latch,\n    INTERRUPT_WORK_SOURCE_MASK\n  );",
+      "replace": "  interrupt_work_write_status_clear(dispatcher->latch, 0u);"
+    },
+    {
+      "id": "restore-interrupts-as-enabled",
+      "description": "Fail to restore the exact preexisting foreground interrupt state.",
+      "find": "interrupt_work_irq_restore(interrupt_state);",
+      "replace": "interrupt_work_irq_restore(interrupt_state | UINT32_C(1));"
+    },
+    {
+      "id": "clear-other-source-in-low-irq",
+      "description": "Acknowledge every source from an ISR instead of only its own observed source.",
+      "find": "interrupt_work_write_status_clear(dispatcher->latch, observed);",
+      "replace": "interrupt_work_write_status_clear(\n    dispatcher->latch,\n    INTERRUPT_WORK_SOURCE_MASK\n  );"
+    },
+    {
+      "id": "replace-atomic-merge-with-store",
+      "description": "Overwrite a nested ISR's deferred source instead of atomically merging it.",
+      "find": "  (void) atomic_fetch_or_explicit(\n    &dispatcher->pending_sources,\n    (uint_fast32_t) observed,\n    memory_order_release\n  );",
+      "replace": "  atomic_store_explicit(\n    &dispatcher->pending_sources,\n    (uint_fast32_t) observed,\n    memory_order_release\n  );"
+    },
+    {
+      "id": "take-does-not-claim-pending-work",
+      "description": "Read the deferred source bits without atomically clearing the claimed work.",
+      "find": "  return (uint32_t) atomic_exchange_explicit(\n    &dispatcher->pending_sources,\n    0u,\n    memory_order_acq_rel\n  );",
+      "replace": "  return (uint32_t) atomic_load_explicit(\n    &dispatcher->pending_sources,\n    memory_order_acquire\n  );"
+    },
+    {
+      "id": "discard-pending-work-on-reconfigure",
+      "description": "Lose work that an ISR already deferred when source configuration changes.",
+      "find": "dispatcher->enabled_sources = sources;",
+      "replace": "atomic_store_explicit(\n    &dispatcher->pending_sources,\n    0u,\n    memory_order_release\n  );\n  dispatcher->enabled_sources = sources;"
+    }
+  ]
+}

@@ -33,6 +33,7 @@ code. Each task references a pinned hosted runtime contract from
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `spi-dma-transfer` | A C11 compiler plus fixture-owned opaque SPI0/DMA0 registers, DMA buffer-address translation, and an interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `can-controller-recovery` | A C11 compiler plus fixture-owned opaque CAN0 mailbox/status and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `interrupt-deferred-work` | A C11 compiler plus fixture-owned opaque nested-priority interrupt-latch and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |
 | `rtos-priority-inversion` | A C11 compiler plus the fixture-owned deterministic RTOS priority-inheritance mock |
@@ -200,6 +201,14 @@ mailbox, terminal-status, bus-off, and interrupt-mask models:
 
 ```bash
 npm run fixture:can:self-test
+```
+
+The interrupt deferred-work fixture uses `cc` with fixture-owned opaque
+two-priority latch, deterministic nested-IRQ injection, C11 atomics, and an
+exact interrupt-mask model:
+
+```bash
+npm run fixture:interrupt-work:self-test
 ```
 
 The trusted firmware fixture self-test requires `cc`:
