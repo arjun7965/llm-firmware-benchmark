@@ -23,6 +23,7 @@ runFixtureMutationTests({
     "rtos-priority-inversion",
     "uart-interrupt-driver",
     "spi-dma-transfer",
+    "can-controller-recovery",
   ],
   tasksPath: join(repositoryRoot, "tasks.json"),
 });

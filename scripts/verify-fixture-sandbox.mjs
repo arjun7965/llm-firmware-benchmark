@@ -92,6 +92,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "can-controller-recovery",
+    source: "reference/can_controller.c",
+    suite: "firmware",
+  },
+  {
     taskId: "binary-parser",
     source: "reference/binary_parser.c",
     suite: "firmware",

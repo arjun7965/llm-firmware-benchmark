@@ -144,7 +144,7 @@ bootstrap superuser so candidate scripts cannot reconnect with another role.
 
 | Tasks | Validation profile |
 | --- | --- |
-| `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `embedded-ring-buffer`, `firmware-state-machine`, `gpio-edge-debounce`, `i2c-controller-recovery`, `interrupt-vector-configuration`, `linker-memory-map`, `pwm-synchronized-update`, `rtos-priority-inversion`, `spi-dma-transfer`, `timer-capture-overflow`, `timer-dma-handoff`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
+| `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `can-controller-recovery`, `embedded-ring-buffer`, `firmware-state-machine`, `gpio-edge-debounce`, `i2c-controller-recovery`, `interrupt-vector-configuration`, `linker-memory-map`, `pwm-synchronized-update`, `rtos-priority-inversion`, `spi-dma-transfer`, `timer-capture-overflow`, `timer-dma-handoff`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
 | `frontend-autocomplete` | `react18-typescript` |
 | `backend-idempotency`, `webhook-replay-security` | `node-typescript-postgresql` |
 | `concurrency-debug` | `python3-stdlib` |

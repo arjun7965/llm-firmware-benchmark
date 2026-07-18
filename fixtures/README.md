@@ -104,6 +104,13 @@ interrupt-mask boundary. Its public tests verify initialization, full-capacity
 descriptor setup, RX-before-TX ordering, stale-status acknowledgement, split
 completion, error-priority teardown, recovery, and exact interrupt restoration.
 
+The active `can-controller-recovery` fixture uses an opaque deterministic CAN0
+mailbox and status model with a non-nested interrupt boundary. Its public tests
+verify classic-CAN frame bounds, initialization and mailbox programming order,
+TX error priority, one-slot RX draining/overflow accounting, bus-off
+containment, recovery-ready gating, result consumption, and exact interrupt
+restoration.
+
 The active `interrupt-vector-configuration` fixture uses a linker-addressed RAM
 vector table with deterministic SCB/NVIC, synchronization-barrier, and
 interrupt-mask models. Its public tests verify startup ordering, all table
