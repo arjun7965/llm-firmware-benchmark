@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/ble_advertising_reassembly.c",
+  "mutations": [
+    {
+      "id": "invert-sequence-check",
+      "description": "Reject the required continuation sequence number.",
+      "find": "fragment->sequence != receiver->next_sequence",
+      "replace": "fragment->sequence == receiver->next_sequence"
+    },
+    {
+      "id": "reject-exact-capacity",
+      "description": "Reject fragments that exactly fill the bounded buffer.",
+      "find": "fragment->data_length >\n      BLE_ADV_MAX_DATA_BYTES - receiver->data_length",
+      "replace": "fragment->data_length >=\n      BLE_ADV_MAX_DATA_BYTES - receiver->data_length"
+    },
+    {
+      "id": "delay-timeout-deadline",
+      "description": "Require one more millisecond before reassembly expires.",
+      "find": "if (elapsed < BLE_ADV_REASSEMBLY_TIMEOUT_MS) {",
+      "replace": "if (elapsed <= BLE_ADV_REASSEMBLY_TIMEOUT_MS) {"
+    },
+    {
+      "id": "accept-missing-ad-field",
+      "description": "Accept advertising data with only one required field.",
+      "find": "if (!flags_found || !name_found) return false;",
+      "replace": "if (!flags_found && !name_found) return false;"
+    },
+    {
+      "id": "accept-duplicate-flags",
+      "description": "Allow duplicate BLE flags AD structures.",
+      "find": "if (flags_found || value_length != 1u) return false;",
+      "replace": "if (flags_found && value_length != 1u) return false;"
+    },
+    {
+      "id": "retain-terminal-result",
+      "description": "Leave a consumed report result pending.",
+      "find": "receiver->result = BLE_ADV_RESULT_NONE;",
+      "replace": "receiver->result = result;"
+    }
+  ]
+}

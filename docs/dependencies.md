@@ -44,6 +44,9 @@ code. Each task references a pinned hosted runtime contract from
 | `rtos-queue-semaphore` | A C11 compiler plus fixture-owned fixed-capacity RTOS queue and counting-semaphore mocks |
 | `rtos-event-flags-deadlock` | A C11 compiler plus fixture-owned RTOS event-flag and ordered-mutex mocks |
 | `binary-parser` | A C11 compiler; sanitizers are recommended for executable tests |
+| `modbus-rtu-receiver` | A C11 compiler with fixed-width integer support; no runtime mock or serial dependency |
+| `can-transport-reassembly` | A C11 compiler with fixed-width integer support; no CAN controller, transport stack, or runtime mock dependency |
+| `ble-advertising-reassembly` | A C11 compiler with fixed-width integer support; no BLE radio, stack, or runtime mock dependency |
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL 16.9 `initdb`, `pg_ctl`, `postgres`, and `psql` |
 | `testing-property-based` | Python 3.12.11, pytest 8.4.0, Hypothesis 6.135.9, and the hash-pinned pure-Python transitive closure |

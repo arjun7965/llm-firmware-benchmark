@@ -150,7 +150,7 @@ bootstrap superuser so candidate scripts cannot reconnect with another role.
 
 | Tasks | Validation profile |
 | --- | --- |
-| `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `can-controller-recovery`, `dma-cache-coherency`, `embedded-ring-buffer`, `firmware-state-machine`, `fixed-point-stack-budget`, `gpio-edge-debounce`, `i2c-controller-recovery`, `interrupt-deferred-work`, `interrupt-vector-configuration`, `linker-memory-map`, `pwm-synchronized-update`, `rtos-event-flags-deadlock`, `rtos-periodic-scheduler`, `rtos-priority-inversion`, `rtos-queue-semaphore`, `spi-dma-transfer`, `static-memory-pool`, `timer-capture-overflow`, `timer-dma-handoff`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
+| `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `ble-advertising-reassembly`, `can-controller-recovery`, `can-transport-reassembly`, `dma-cache-coherency`, `embedded-ring-buffer`, `firmware-state-machine`, `fixed-point-stack-budget`, `gpio-edge-debounce`, `i2c-controller-recovery`, `interrupt-deferred-work`, `interrupt-vector-configuration`, `linker-memory-map`, `modbus-rtu-receiver`, `pwm-synchronized-update`, `rtos-event-flags-deadlock`, `rtos-periodic-scheduler`, `rtos-priority-inversion`, `rtos-queue-semaphore`, `spi-dma-transfer`, `static-memory-pool`, `timer-capture-overflow`, `timer-dma-handoff`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
 | `frontend-autocomplete` | `react18-typescript` |
 | `backend-idempotency`, `webhook-replay-security` | `node-typescript-postgresql` |
 | `concurrency-debug` | `python3-stdlib` |

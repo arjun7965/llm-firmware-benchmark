@@ -107,6 +107,21 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "modbus-rtu-receiver",
+    source: "reference/modbus_rtu_receiver.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "can-transport-reassembly",
+    source: "reference/can_transport_reassembly.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "ble-advertising-reassembly",
+    source: "reference/ble_advertising_reassembly.c",
+    suite: "firmware",
+  },
+  {
     taskId: "concurrency-debug",
     source: "reference/pool.py",
     suite: "auxiliary",

@@ -9,6 +9,9 @@ runFixtureMutationTests({
   taskIds: [
     "bare-metal-timer",
     "binary-parser",
+    "modbus-rtu-receiver",
+    "can-transport-reassembly",
+    "ble-advertising-reassembly",
     "embedded-ring-buffer",
     "static-memory-pool",
     "fixed-point-stack-budget",

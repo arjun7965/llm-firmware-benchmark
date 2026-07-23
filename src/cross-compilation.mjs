@@ -172,6 +172,27 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "modbus-rtu-receiver",
+    source: "fixtures/modbus-rtu-receiver/reference/modbus_rtu_receiver.c",
+    includes: Object.freeze([
+      "fixtures/modbus-rtu-receiver/starter",
+    ]),
+  }),
+  Object.freeze({
+    id: "can-transport-reassembly",
+    source: "fixtures/can-transport-reassembly/reference/can_transport_reassembly.c",
+    includes: Object.freeze([
+      "fixtures/can-transport-reassembly/starter",
+    ]),
+  }),
+  Object.freeze({
+    id: "ble-advertising-reassembly",
+    source: "fixtures/ble-advertising-reassembly/reference/ble_advertising_reassembly.c",
+    includes: Object.freeze([
+      "fixtures/ble-advertising-reassembly/starter",
+    ]),
+  }),
+  Object.freeze({
     id: "embedded-ring-buffer",
     source: "fixtures/embedded-ring-buffer/reference/ring_buffer.c",
     includes: Object.freeze([

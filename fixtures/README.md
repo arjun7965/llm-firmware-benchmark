@@ -113,6 +113,12 @@ aligned fixed blocks and deterministic exhaustion/reuse, add
 `fixed-point-stack-budget` for Q-format arithmetic with a caller-owned stack
 watermark and bounded batch processing.
 
+The active protocol fixtures add Modbus RTU silence-framed stateful request
+decoding with CRC recovery, bounded segmented classic-CAN transport payloads
+with sequence/DLC/timeout checks, and advertiser-bound BLE-style fragments with
+defensive advertising-data parsing. They complement the existing stateless
+binary parser and controller-level CAN recovery fixtures.
+
 The active `uart-interrupt-driver` fixture uses accessor-instrumented
 fictional UART0 MMIO with a deterministic interrupt-mask model. Its public
 tests verify initialization ordering, full-capacity RX/TX queues, bounded
