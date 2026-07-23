@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/modbus_rtu_receiver.c",
+  "mutations": [
+    {
+      "id": "delay-silence-deadline",
+      "description": "Require one tick more than the documented RTU silence interval.",
+      "find": "if (elapsed < MODBUS_RTU_SILENCE_TICKS) {",
+      "replace": "if (elapsed <= MODBUS_RTU_SILENCE_TICKS) {"
+    },
+    {
+      "id": "drop-oversize-terminal-result",
+      "description": "Reject a ninth byte without publishing malformed input.",
+      "find": "if (receiver->frame_length >= MODBUS_RTU_REQUEST_BYTES) {\n    finish(receiver, MODBUS_RTU_RESULT_MALFORMED);\n    return true;\n  }",
+      "replace": "if (receiver->frame_length >= MODBUS_RTU_REQUEST_BYTES) {\n    return false;\n  }"
+    },
+    {
+      "id": "invert-crc-validation",
+      "description": "Accept an invalid Modbus CRC and reject the valid one.",
+      "find": "if (encoded_crc != calculated_crc) {",
+      "replace": "if (encoded_crc == calculated_crc) {"
+    },
+    {
+      "id": "reject-minimum-address",
+      "description": "Reject the documented minimum unicast address.",
+      "find": "unit_address < MODBUS_RTU_MIN_ADDRESS",
+      "replace": "unit_address <= MODBUS_RTU_MIN_ADDRESS"
+    },
+    {
+      "id": "accept-zero-read-count",
+      "description": "Treat a zero Modbus read-register count as valid.",
+      "find": "value == 0u || value > MODBUS_RTU_MAX_READ_REGISTERS",
+      "replace": "value == 1u || value > MODBUS_RTU_MAX_READ_REGISTERS"
+    },
+    {
+      "id": "retain-terminal-result",
+      "description": "Leave a consumed result pending and block recovery.",
+      "find": "receiver->result = MODBUS_RTU_RESULT_NONE;",
+      "replace": "receiver->result = result;"
+    }
+  ]
+}

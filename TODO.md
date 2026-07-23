@@ -179,8 +179,14 @@ record exact versions in validation reports.
   - [x] Add a fixed-point stack-budget fixture with Q1.15/Q8.8 arithmetic,
     signed tie rounding, saturation, an eight-byte-aligned stack watermark,
     and bounded batch processing.
-- [ ] Add protocol tasks for framing, stateful parsing, timeouts, CRCs, CAN,
+- [x] Add protocol tasks for framing, stateful parsing, timeouts, CRCs, CAN,
   Modbus, BLE-style packets, and malformed-input recovery.
+  - [x] Add a Modbus RTU byte receiver with silence framing, CRC-16, bounded
+    request validation, and terminal recovery.
+  - [x] Add a classic-CAN transport reassembler with exact frame sequencing,
+    DLC validation, bounded payloads, and wrap-safe timeout recovery.
+  - [x] Add a BLE-style advertising fragment reassembler with advertiser
+    binding, nested AD parsing, capacity limits, and malformed recovery.
 - [ ] Add reliability tasks for watchdog recovery, brownouts, fault handlers,
   persistent state, idempotent initialization, and safe-mode operation.
 - [ ] Add bootloader and update tasks covering image validation, rollback,

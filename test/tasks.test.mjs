@@ -14,7 +14,7 @@ test("repository tasks are valid and cover distinct categories", () => {
   assert.ok(tasks.length >= 12);
   assert.equal(new Set(tasks.map((task) => task.id)).size, tasks.length);
   assert.ok(new Set(tasks.map((task) => task.category)).size >= 8);
-  assert.equal(tasks.filter((task) => task.suite === "firmware").length, 24);
+  assert.equal(tasks.filter((task) => task.suite === "firmware").length, 27);
   assert.equal(tasks.filter((task) => task.suite === "auxiliary").length, 9);
   assert.deepEqual(
     [...new Set(tasks.map((task) => task.validationProfile))].sort(),

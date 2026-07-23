@@ -180,14 +180,19 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `rtos-queue-semaphore` | `generic-rtos` | Four-item FIFO paired with a four-token counting semaphore; immediate producer operations and a three-tick worker wait |
 | `rtos-event-flags-deadlock` | `generic-rtos` | Any-bit event consumption with clear-on-exit; configuration-before-actuator mutex order and one-tick lock bounds |
 | `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields; CRC-16/CCITT-FALSE |
+| `modbus-rtu-receiver` | `portable-c11` | Caller-owned eight-byte Modbus RTU request buffer; four-tick silence framing; reflected CRC-16; wrap-safe byte timestamps |
+| `can-transport-reassembly` | `portable-c11` | Complete classic-CAN frames above a separate controller; one 24-byte segmented message; strict source, sequence, DLC, and timeout contract |
+| `ble-advertising-reassembly` | `portable-c11` | Caller-owned 24-byte BLE-style fragment buffer; advertiser binding; ordered fragments; deterministic AD length/type/value parsing and expiry |
 
 Profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.
 
-`npm run cross:check` compiles trusted portable references for ARMv7-M and RV32
-and compiles the timer, interrupt-vector, linker-memory-map, I2C-controller, GPIO-debounce,
+`npm run cross:check` compiles trusted portable references, including the
+binary parser, Modbus RTU receiver, CAN transport reassembler, and BLE
+advertising reassembler, for ARMv7-M and RV32. It also compiles the timer,
+interrupt-vector, linker-memory-map, I2C-controller, GPIO-debounce,
 ADC-threshold/watchdog, PWM synchronized-update, watchdog-window recovery,
-timer-DMA handoff, timer capture/compare overflow, UART, SPI-DMA, CAN-controller,
-interrupt-deferred-work, and DMA cache-coherency references
+timer-DMA handoff, timer capture/compare overflow, UART, SPI-DMA,
+CAN-controller, interrupt-deferred-work, and DMA cache-coherency references
 for their ARMv7-M target.
 This is a compile-only portability probe, not target execution.

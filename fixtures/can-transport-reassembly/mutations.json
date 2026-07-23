@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/can_transport_reassembly.c",
+  "mutations": [
+    {
+      "id": "invert-source-id-check",
+      "description": "Reject the configured transport CAN identifier.",
+      "find": "frame->identifier != CAN_TRANSPORT_DATA_ID",
+      "replace": "frame->identifier == CAN_TRANSPORT_DATA_ID"
+    },
+    {
+      "id": "accept-wrong-consecutive-dlc",
+      "description": "Reject valid final consecutive-frame lengths and accept malformed ones.",
+      "find": "const uint8_t expected_dlc = (uint8_t)(payload_length + 1u);\n    if (frame->dlc != expected_dlc) {",
+      "replace": "const uint8_t expected_dlc = (uint8_t)(payload_length + 1u);\n    if (frame->dlc == expected_dlc) {"
+    },
+    {
+      "id": "invert-sequence-check",
+      "description": "Reject the required consecutive-frame sequence number.",
+      "find": "if (sequence != receiver->next_sequence) {",
+      "replace": "if (sequence == receiver->next_sequence) {"
+    },
+    {
+      "id": "reject-minimum-first-frame",
+      "description": "Reject an eight-byte multi-frame message.",
+      "find": "declared_length < 8u",
+      "replace": "declared_length <= 8u"
+    },
+    {
+      "id": "delay-timeout-deadline",
+      "description": "Time out one millisecond later than documented.",
+      "find": "if (elapsed < CAN_TRANSPORT_TIMEOUT_MS) {",
+      "replace": "if (elapsed <= CAN_TRANSPORT_TIMEOUT_MS) {"
+    },
+    {
+      "id": "retain-terminal-result",
+      "description": "Leave a consumed terminal result pending.",
+      "find": "receiver->result = CAN_TRANSPORT_RESULT_NONE;",
+      "replace": "receiver->result = result;"
+    }
+  ]
+}
