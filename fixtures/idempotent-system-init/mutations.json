@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/idempotent_system_init.c",
+  "mutations": [
+    {
+      "id": "accept-invalid-peripheral-mask",
+      "description": "Accept a zero or out-of-range peripheral configuration mask.",
+      "find": "    config->peripheral_mask != 0u &&\n    (config->peripheral_mask & ~SYSTEM0_PERIPHERAL_MASK_ALL) == 0u;",
+      "replace": "    config->peripheral_mask == 0u &&\n    (config->peripheral_mask & ~SYSTEM0_PERIPHERAL_MASK_ALL) == 0u;"
+    },
+    {
+      "id": "ignore-initialization-config-conflict",
+      "description": "Treat different initialized configuration as idempotent.",
+      "find": "      state->system != system || state->persistent != persistent ||\n      !configs_equal(&state->config, config)",
+      "replace": "      state->system != system && state->persistent != persistent &&\n      !configs_equal(&state->config, config)"
+    },
+    {
+      "id": "lose-safe-mode-persistence",
+      "description": "Enter the hardware safe state without retaining the safe-mode latch.",
+      "find": "    state->persistent->successful_boots,\n    true\n  );\n  state->safe_mode = true;",
+      "replace": "    state->persistent->successful_boots,\n    false\n  );\n  state->safe_mode = true;"
+    },
+    {
+      "id": "allow-resume-before-entry-event-consumption",
+      "description": "Resume system operation while the safe-mode entry event is pending.",
+      "find": "if (!state->safe_mode || state->event != SYSTEM_INIT_EVENT_NONE) {",
+      "replace": "if (!state->safe_mode || false) {"
+    },
+    {
+      "id": "ignore-corrupt-safe-record-on-resume",
+      "description": "Resume after the retained safe-mode record fails integrity validation.",
+      "find": "if (!persistent_is_valid(state->persistent)) {",
+      "replace": "if (false) {"
+    },
+    {
+      "id": "restore-interrupts-disabled-after-event",
+      "description": "Lose the caller's interrupt state while consuming a lifecycle event.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_NONE;\n  system0_irq_restore(irq_state);\n  return event;",
+      "replace": "  state->event = SYSTEM_INIT_EVENT_NONE;\n  system0_irq_restore(irq_state ^ irq_state);\n  return event;"
+    }
+  ]
+}

@@ -184,6 +184,11 @@ exact foreground interrupt-state restoration. Its public tests verify boot
 recovery, early-feed rejection, reset detection, acknowledgement-gated
 recovery, and invalid-call boundaries.
 
+The active reliability fixtures add PWR0 brownout containment with retained
+safe-mode state and hysteresis, fault-frame crash capture with checksum-protected
+records and explicit clearing, and SYSTEM0 idempotent initialization with
+conflict rejection and retained safe boot behavior.
+
 The active `timer-dma-handoff` fixture uses opaque deterministic TIMER0/DMA0
 models with explicit compare-stream ownership, terminal status latches, and
 exact foreground interrupt-state restoration. Its public tests verify safe

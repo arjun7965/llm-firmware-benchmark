@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/brownout_safe_mode.c",
+  "mutations": [
+    {
+      "id": "ignore-brownout-input",
+      "description": "Ignore both the hardware brownout latch and low supply measurement.",
+      "find": "return (status & PWR0_STATUS_BROWNOUT) != 0u || supply_mv <= low_mv;",
+      "replace": "return (status & 0u) != 0u || supply_mv < low_mv;"
+    },
+    {
+      "id": "enable-load-on-brownout",
+      "description": "Leave the load enabled when polling detects brownout.",
+      "find": "if (brownout_active) {\n    pwr0_write_load_control(manager->pwr, PWR0_LOAD_SAFE);",
+      "replace": "if (brownout_active) {\n    pwr0_write_load_control(manager->pwr, PWR0_LOAD_ENABLED);"
+    },
+    {
+      "id": "do-not-latch-persistent-safe-mode",
+      "description": "Record a brownout without retaining the safe-mode latch.",
+      "find": "        increment_count(manager->persistent->brownout_count),\n        true",
+      "replace": "        increment_count(manager->persistent->brownout_count),\n        false"
+    },
+    {
+      "id": "allow-resume-with-entry-event-pending",
+      "description": "Allow unsafe resumption before the brownout entry event is consumed.",
+      "find": "    manager->persistent->safe_mode == 0u ||\n    manager->event != BROWNOUT_EVENT_NONE",
+      "replace": "    manager->persistent->safe_mode == 0u ||\n    false"
+    },
+    {
+      "id": "reject-exact-recovery-boundary",
+      "description": "Require the supply to exceed rather than meet the recovery threshold.",
+      "find": "supply_mv < manager->recovery_mv",
+      "replace": "supply_mv <= manager->recovery_mv"
+    },
+    {
+      "id": "restore-interrupts-disabled-after-event",
+      "description": "Lose the caller's exact interrupt state after event consumption.",
+      "find": "  manager->event = BROWNOUT_EVENT_NONE;\n  pwr0_irq_restore(irq_state);\n  return event;",
+      "replace": "  manager->event = BROWNOUT_EVENT_NONE;\n  pwr0_irq_restore(irq_state ^ irq_state);\n  return event;"
+    }
+  ]
+}

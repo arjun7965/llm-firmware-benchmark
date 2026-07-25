@@ -28,6 +28,9 @@ code. Each task references a pinned hosted runtime contract from
 | `adc-threshold-watchdog` | A C11 compiler plus fixture-owned opaque ADC0 threshold/status and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `pwm-synchronized-update` | A C11 compiler plus fixture-owned opaque PWM0 shadow/load, status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `watchdog-window-recovery` | A C11 compiler plus fixture-owned opaque WDT0 counter/reset-cause/feed and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `brownout-safe-mode` | A C11 compiler plus fixture-owned opaque PWR0 brownout/supply/load and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `fault-crash-record` | A C11 compiler plus fixture-owned opaque FAULT0 status/control and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `idempotent-system-init` | A C11 compiler plus fixture-owned opaque SYSTEM0 configuration and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `timer-dma-handoff` | A C11 compiler plus fixture-owned opaque TIMER0/DMA0 ownership, compare-stream, status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `timer-capture-overflow` | A C11 compiler plus fixture-owned opaque TIMER1 capture/compare, overflow-status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
@@ -174,6 +177,15 @@ reset-cause, feed-window, and interrupt-mask recording:
 
 ```bash
 npm run fixture:watchdog-window:self-test
+```
+
+The reliability fixtures use `cc` with deterministic PWR0 brownout/load,
+FAULT0 crash-status/control, and SYSTEM0 initialization mocks:
+
+```bash
+npm run fixture:brownout:self-test
+npm run fixture:fault-crash:self-test
+npm run fixture:idempotent-init:self-test
 ```
 
 The timer-DMA ownership handoff fixture uses `cc` with opaque TIMER0/DMA0
