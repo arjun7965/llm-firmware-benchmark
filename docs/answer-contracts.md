@@ -40,6 +40,8 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `brownout-safe-mode` | Single file | Single file | One brownout containment unit; opaque supply/load and retained-state tests are validator-owned |
 | `fault-crash-record` | Single file | Single file | One fault capture unit; opaque status/control and retained crash-record tests are validator-owned |
 | `idempotent-system-init` | Single file | Single file | One reset-time initialization unit; opaque configuration and retained safe-mode tests are validator-owned |
+| `secure-boot-image-validation` | Single file | Single file | One signed-image admission unit; opaque BOOT0 measurement, signature, target, and recovery tests are validator-owned |
+| `dual-slot-update-recovery` | Single file | Single file | One update journal unit; opaque FLASH0 erase, program, verify, target, and interrupt-mask tests are validator-owned |
 | `timer-dma-handoff` | Single file | Single file | One timer/DMA ownership driver unit; opaque compare-stream, terminal-status, and interrupt-mask mocks are validator-owned |
 | `timer-capture-overflow` | Single file | Single file | One timer capture/compare driver unit; opaque counter, capture, compare, overflow-status, and interrupt-mask mocks are validator-owned |
 | `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |

@@ -134,6 +134,28 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "secure-boot-image-validation",
+    source:
+      "fixtures/secure-boot-image-validation/reference/secure_boot_image_validation.c",
+    includes: Object.freeze([
+      "fixtures/secure-boot-image-validation/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
+    id: "dual-slot-update-recovery",
+    source:
+      "fixtures/dual-slot-update-recovery/reference/dual_slot_update_recovery.c",
+    includes: Object.freeze([
+      "fixtures/dual-slot-update-recovery/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "timer-dma-handoff",
     source: "fixtures/timer-dma-handoff/reference/timer_dma_handoff.c",
     includes: Object.freeze([

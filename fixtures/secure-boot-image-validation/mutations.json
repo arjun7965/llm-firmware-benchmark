@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/secure_boot_image_validation.c",
+  "mutations": [
+    {
+      "id": "skip-structural-validation",
+      "description": "Accept a readable image header without enforcing its structural constraints.",
+      "find": "!boot0_read_header(boot->boot, slot, &header) ||\n    !header_is_valid(&header)",
+      "replace": "!boot0_read_header(boot->boot, slot, &header) ||\n    (header_is_valid(&header) && false)"
+    },
+    {
+      "id": "allow-stale-version",
+      "description": "Allow an image below the configured minimum firmware version.",
+      "find": "header.firmware_version < boot->minimum_version",
+      "replace": "false"
+    },
+    {
+      "id": "accept-digest-mismatch",
+      "description": "Treat a measured digest mismatch as valid.",
+      "find": "measured_digest != header.image_digest",
+      "replace": "false"
+    },
+    {
+      "id": "ignore-signature-failure",
+      "description": "Continue even when the immutable signature verifier rejects the image.",
+      "find": "  if (!boot0_verify_signature(\n    boot->boot,\n    slot,\n    measured_digest,\n    header.signature_tag\n  )) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "unlock-recovery-after-rejection",
+      "description": "Expose normal boot behavior after an image rejection.",
+      "find": "boot0_write_recovery_lock(boot->boot, BOOT0_RECOVERY_LOCKED);",
+      "replace": "boot0_write_recovery_lock(boot->boot, BOOT0_RECOVERY_UNLOCKED);"
+    },
+    {
+      "id": "accept-non-thumb-entry",
+      "description": "Accept an ARM-state or malformed entry address on Cortex-M.",
+      "find": "(header->entry_address & UINT32_C(1)) == 0u",
+      "replace": "false"
+    }
+  ]
+}

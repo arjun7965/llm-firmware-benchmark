@@ -27,6 +27,8 @@ runFixtureMutationTests({
     "brownout-safe-mode",
     "fault-crash-record",
     "idempotent-system-init",
+    "secure-boot-image-validation",
+    "dual-slot-update-recovery",
     "timer-dma-handoff",
     "timer-capture-overflow",
     "rtos-priority-inversion",
