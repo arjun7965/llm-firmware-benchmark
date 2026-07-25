@@ -104,6 +104,36 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "brownout-safe-mode",
+    source: "fixtures/brownout-safe-mode/reference/brownout_safe_mode.c",
+    includes: Object.freeze([
+      "fixtures/brownout-safe-mode/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
+    id: "fault-crash-record",
+    source: "fixtures/fault-crash-record/reference/fault_crash_record.c",
+    includes: Object.freeze([
+      "fixtures/fault-crash-record/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
+    id: "idempotent-system-init",
+    source: "fixtures/idempotent-system-init/reference/idempotent_system_init.c",
+    includes: Object.freeze([
+      "fixtures/idempotent-system-init/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "timer-dma-handoff",
     source: "fixtures/timer-dma-handoff/reference/timer_dma_handoff.c",
     includes: Object.freeze([

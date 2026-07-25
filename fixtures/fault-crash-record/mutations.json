@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/fault_crash_record.c",
+  "mutations": [
+    {
+      "id": "accept-corrupt-retained-record",
+      "description": "Trust a retained record without verifying its checksum.",
+      "find": "return record->magic == FAULT_RECORD_MAGIC &&\n    record->checksum == record_checksum(record);",
+      "replace": "return record->magic == FAULT_RECORD_MAGIC;"
+    },
+    {
+      "id": "leave-outputs-enabled-in-handler",
+      "description": "Fail to force the safe output state after fault status capture.",
+      "find": "  status = fault0_read_status(capture->fault) & FAULT0_STATUS_ALL;\n  fault0_write_control(capture->fault, FAULT0_CONTROL_SAFE);",
+      "replace": "  status = fault0_read_status(capture->fault) & FAULT0_STATUS_ALL;\n  fault0_write_control(capture->fault, FAULT0_CONTROL_NORMAL);"
+    },
+    {
+      "id": "store-link-register-as-program-counter",
+      "description": "Corrupt the captured fault program counter.",
+      "find": ".program_counter = frame->program_counter,",
+      "replace": ".program_counter = frame->link_register,"
+    },
+    {
+      "id": "do-not-acknowledge-fault-status",
+      "description": "Leave a captured hardware fault latch uncleared.",
+      "find": "fault0_write_status_clear(capture->fault, status);",
+      "replace": "fault0_write_status_clear(capture->fault, 0u);"
+    },
+    {
+      "id": "allow-clear-before-event-consumption",
+      "description": "Permit recovery while the retained or captured event is still pending.",
+      "find": "    !capture->faulted || capture->event != FAULT_EVENT_NONE ||\n    !record_is_valid(capture->record)",
+      "replace": "    !capture->faulted || false ||\n    !record_is_valid(capture->record)"
+    },
+    {
+      "id": "retain-consumed-event",
+      "description": "Leave a taken fault event pending and block explicit recovery.",
+      "find": "  capture->event = FAULT_EVENT_NONE;\n  fault0_irq_restore(irq_state);\n  return event;",
+      "replace": "  capture->event = event;\n  fault0_irq_restore(irq_state);\n  return event;"
+    }
+  ]
+}

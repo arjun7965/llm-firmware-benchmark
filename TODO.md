@@ -187,8 +187,16 @@ record exact versions in validation reports.
     DLC validation, bounded payloads, and wrap-safe timeout recovery.
   - [x] Add a BLE-style advertising fragment reassembler with advertiser
     binding, nested AD parsing, capacity limits, and malformed recovery.
-- [ ] Add reliability tasks for watchdog recovery, brownouts, fault handlers,
+- [x] Add reliability tasks for watchdog recovery, brownouts, fault handlers,
   persistent state, idempotent initialization, and safe-mode operation.
+  - [x] Retain the watchdog-window recovery fixture for reset-cause detection,
+    acknowledgement-gated recovery, and safe feeding.
+  - [x] Add brownout containment with retained state, hysteretic resume, and
+    explicit safe-mode lifecycle.
+  - [x] Add fault-frame crash capture with checksum-protected persistent
+    records, safe containment, and gated clearing.
+  - [x] Add idempotent system initialization with conflict rejection and a
+    retained safe-mode bootstrap path.
 - [ ] Add bootloader and update tasks covering image validation, rollback,
   interrupted updates, version checks, and secure-boot boundaries.
 - [ ] Add power-management and real-time tasks involving sleep states, wake

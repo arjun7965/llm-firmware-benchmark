@@ -37,6 +37,9 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `adc-threshold-watchdog` | Single file | Single file | One ADC threshold monitor unit; opaque status, data, and interrupt-mask mocks are validator-owned |
 | `pwm-synchronized-update` | Single file | Single file | One PWM driver unit; opaque shadow/load, fault, and interrupt-mask mocks are validator-owned |
 | `watchdog-window-recovery` | Single file | Single file | One watchdog driver unit; opaque counter, reset-cause, feed, and interrupt-mask mocks are validator-owned |
+| `brownout-safe-mode` | Single file | Single file | One brownout containment unit; opaque supply/load and retained-state tests are validator-owned |
+| `fault-crash-record` | Single file | Single file | One fault capture unit; opaque status/control and retained crash-record tests are validator-owned |
+| `idempotent-system-init` | Single file | Single file | One reset-time initialization unit; opaque configuration and retained safe-mode tests are validator-owned |
 | `timer-dma-handoff` | Single file | Single file | One timer/DMA ownership driver unit; opaque compare-stream, terminal-status, and interrupt-mask mocks are validator-owned |
 | `timer-capture-overflow` | Single file | Single file | One timer capture/compare driver unit; opaque counter, capture, compare, overflow-status, and interrupt-mask mocks are validator-owned |
 | `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |

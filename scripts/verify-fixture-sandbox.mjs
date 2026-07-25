@@ -72,6 +72,21 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "brownout-safe-mode",
+    source: "reference/brownout_safe_mode.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "fault-crash-record",
+    source: "reference/fault_crash_record.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "idempotent-system-init",
+    source: "reference/idempotent_system_init.c",
+    suite: "firmware",
+  },
+  {
     taskId: "timer-dma-handoff",
     source: "reference/timer_dma_handoff.c",
     suite: "firmware",

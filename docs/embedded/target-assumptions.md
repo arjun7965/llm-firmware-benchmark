@@ -165,6 +165,9 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `adc-threshold-watchdog` | `armv7m-bare-metal` | Cortex-M3; opaque ADC0 12-bit threshold/status latches; non-nested ISR terminal handling; foreground timeout and exact interrupt-state restoration |
 | `pwm-synchronized-update` | `armv7m-bare-metal` | Cortex-M3; opaque PWM0 shadow/load and status latches; non-nested ISR fault priority; foreground updates and recovery preserve exact interrupt state |
 | `watchdog-window-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque WDT0 counter/reset-cause/feed latches; deterministic feed window and timeout reset; foreground recovery preserves exact interrupt state |
+| `brownout-safe-mode` | `armv7m-bare-metal` | Cortex-M3; opaque PWR0 brownout/supply/load model; caller-owned checksum-protected backup state; explicit hysteretic safe-mode recovery |
+| `fault-crash-record` | `armv7m-bare-metal` | Cortex-M3; non-nested fault-frame capture; opaque FAULT0 containment/status model; checksum-protected retained crash record and foreground recovery |
+| `idempotent-system-init` | `armv7m-bare-metal` | Cortex-M3; opaque SYSTEM0 SAFE/clock/mask/READY configuration; caller-zeroed lifecycle state and retained safe-mode record |
 | `timer-dma-handoff` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER0/DMA0 compare-stream ownership; non-nested DMA IRQ terminal priority; foreground abort/recovery preserves exact interrupt state |
 | `timer-capture-overflow` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER1 16-bit capture/compare and overflow latches; non-nested timestamp handoff IRQ; foreground arming/consumption preserves exact interrupt state |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
@@ -192,7 +195,8 @@ binary parser, Modbus RTU receiver, CAN transport reassembler, and BLE
 advertising reassembler, for ARMv7-M and RV32. It also compiles the timer,
 interrupt-vector, linker-memory-map, I2C-controller, GPIO-debounce,
 ADC-threshold/watchdog, PWM synchronized-update, watchdog-window recovery,
-timer-DMA handoff, timer capture/compare overflow, UART, SPI-DMA,
+brownout safe-mode, fault crash-record, idempotent system-init, timer-DMA
+handoff, timer capture/compare overflow, UART, SPI-DMA,
 CAN-controller, interrupt-deferred-work, and DMA cache-coherency references
 for their ARMv7-M target.
 This is a compile-only portability probe, not target execution.
