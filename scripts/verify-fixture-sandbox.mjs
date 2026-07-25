@@ -87,6 +87,16 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "secure-boot-image-validation",
+    source: "reference/secure_boot_image_validation.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "dual-slot-update-recovery",
+    source: "reference/dual_slot_update_recovery.c",
+    suite: "firmware",
+  },
+  {
     taskId: "timer-dma-handoff",
     source: "reference/timer_dma_handoff.c",
     suite: "firmware",

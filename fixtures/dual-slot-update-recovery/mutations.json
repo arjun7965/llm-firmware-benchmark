@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/dual_slot_update_recovery.c",
+  "mutations": [
+    {
+      "id": "allow-equal-version-update",
+      "description": "Allow a candidate that does not advance the confirmed version.",
+      "find": "candidate_version <= manager->record->confirmed_version",
+      "replace": "candidate_version < manager->record->confirmed_version"
+    },
+    {
+      "id": "overwrite-confirmed-slot",
+      "description": "Allow an update to erase and write the currently confirmed slot.",
+      "find": "target_slot == (update_slot_t)manager->record->confirmed_slot",
+      "replace": "false"
+    },
+    {
+      "id": "retain-below-factory-version",
+      "description": "Trust a retained confirmed version below the immutable factory floor.",
+      "find": "record->confirmed_version < factory_version",
+      "replace": "false"
+    },
+    {
+      "id": "skip-final-candidate-verification",
+      "description": "Mark a staged candidate as trial-ready without a successful verifier result.",
+      "find": "  if (!flash0_verify_slot(\n    manager->flash,\n    (update_slot_t)manager->record->candidate_slot,\n    manager->record->candidate_version\n  )) {",
+      "replace": "  if (false) {"
+    },
+    {
+      "id": "do-not-record-trial-attempt",
+      "description": "Leave a trial candidate eligible for repeated boots after selecting it.",
+      "find": "        UPDATE_PHASE_ATTEMPTED\n      );\n      flash0_write_boot_slot(manager->flash, candidate_slot);",
+      "replace": "        UPDATE_PHASE_TRIAL\n      );\n      flash0_write_boot_slot(manager->flash, candidate_slot);"
+    },
+    {
+      "id": "boot-interrupted-candidate",
+      "description": "Select an interrupted writing slot instead of the confirmed rollback slot.",
+      "find": "    case UPDATE_PHASE_WRITING:\n      write_idle(manager->record, confirmed_slot, confirmed_version);\n      flash0_erase_slot(manager->flash, candidate_slot);\n      flash0_write_boot_slot(manager->flash, confirmed_slot);",
+      "replace": "    case UPDATE_PHASE_WRITING:\n      write_idle(manager->record, confirmed_slot, confirmed_version);\n      flash0_erase_slot(manager->flash, candidate_slot);\n      flash0_write_boot_slot(manager->flash, candidate_slot);"
+    },
+    {
+      "id": "keep-old-confirmed-version",
+      "description": "Discard the confirmed trial candidate rather than promoting its slot and version.",
+      "find": "  write_idle(\n    manager->record,\n    (update_slot_t)manager->record->candidate_slot,\n    manager->record->candidate_version\n  );",
+      "replace": "  write_idle(\n    manager->record,\n    (update_slot_t)manager->record->confirmed_slot,\n    manager->record->confirmed_version\n  );"
+    },
+    {
+      "id": "lose-interrupt-state-after-event",
+      "description": "Restore interrupts disabled after consuming an update lifecycle event.",
+      "find": "  manager->event = UPDATE_EVENT_NONE;\n  flash0_irq_restore(irq_state);\n  return event;",
+      "replace": "  manager->event = UPDATE_EVENT_NONE;\n  flash0_irq_restore(irq_state ^ irq_state);\n  return event;"
+    }
+  ]
+}

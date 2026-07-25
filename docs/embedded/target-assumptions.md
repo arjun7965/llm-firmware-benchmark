@@ -118,6 +118,14 @@ reset-cause, configuration, feed, and interrupt-mask accessors. Its mock
 rejects early feeds by latching a deterministic reset and requires explicit
 reset-cause acknowledgement before retained-state recovery or boot service
 resumes.
+The active `secure-boot-image-validation` task uses opaque BOOT0
+header, measurement, signature, boot-target, and recovery-lock accessors. The
+candidate never receives raw image bytes or trusted keys, and the target is
+selected only after structure, version, digest, and immutable signature checks.
+The active `dual-slot-update-recovery` task uses opaque FLASH0 erase,
+word-program, verify, boot-target, and interrupt-mask accessors. It models a
+caller-owned checksum-protected journal, strict version progression, safe
+interrupted-update fallback, and a one-boot trial before confirmation.
 The active `timer-dma-handoff` task uses opaque TIMER0/DMA0 compare-stream,
 terminal-status, and interrupt-mask accessors. Its mock transfers one bounded
 compare value per deterministic timer boundary and requires a terminal IRQ plus
@@ -168,6 +176,8 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `brownout-safe-mode` | `armv7m-bare-metal` | Cortex-M3; opaque PWR0 brownout/supply/load model; caller-owned checksum-protected backup state; explicit hysteretic safe-mode recovery |
 | `fault-crash-record` | `armv7m-bare-metal` | Cortex-M3; non-nested fault-frame capture; opaque FAULT0 containment/status model; checksum-protected retained crash record and foreground recovery |
 | `idempotent-system-init` | `armv7m-bare-metal` | Cortex-M3; opaque SYSTEM0 SAFE/clock/mask/READY configuration; caller-zeroed lifecycle state and retained safe-mode record |
+| `secure-boot-image-validation` | `armv7m-bare-metal` | Cortex-M3; opaque BOOT0 header/measurement/signature/target/recovery model; immutable verifier and no raw image/key access |
+| `dual-slot-update-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque FLASH0 dual-slot erase/program/verify/target model; retained journal, strict version progression, one-boot trial, and foreground interrupt restoration |
 | `timer-dma-handoff` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER0/DMA0 compare-stream ownership; non-nested DMA IRQ terminal priority; foreground abort/recovery preserves exact interrupt state |
 | `timer-capture-overflow` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER1 16-bit capture/compare and overflow latches; non-nested timestamp handoff IRQ; foreground arming/consumption preserves exact interrupt state |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |

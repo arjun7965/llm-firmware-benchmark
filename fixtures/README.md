@@ -189,6 +189,11 @@ safe-mode state and hysteresis, fault-frame crash capture with checksum-protecte
 records and explicit clearing, and SYSTEM0 idempotent initialization with
 conflict rejection and retained safe boot behavior.
 
+The active boot/update fixtures add BOOT0 signed-image admission with strict
+structural, version, digest, and signature gates, plus FLASH0 dual-slot staging
+with a retained journal, interrupted-update fallback, one-boot trials, explicit
+confirmation, and rollback.
+
 The active `timer-dma-handoff` fixture uses opaque deterministic TIMER0/DMA0
 models with explicit compare-stream ownership, terminal status latches, and
 exact foreground interrupt-state restoration. Its public tests verify safe

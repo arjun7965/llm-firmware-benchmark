@@ -31,6 +31,8 @@ code. Each task references a pinned hosted runtime contract from
 | `brownout-safe-mode` | A C11 compiler plus fixture-owned opaque PWR0 brownout/supply/load and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `fault-crash-record` | A C11 compiler plus fixture-owned opaque FAULT0 status/control and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `idempotent-system-init` | A C11 compiler plus fixture-owned opaque SYSTEM0 configuration and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `secure-boot-image-validation` | A C11 compiler plus fixture-owned opaque BOOT0 header, measurement, signature, boot-target, and recovery-lock mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `dual-slot-update-recovery` | A C11 compiler plus fixture-owned opaque FLASH0 dual-slot erase/program/verify/boot-target and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `timer-dma-handoff` | A C11 compiler plus fixture-owned opaque TIMER0/DMA0 ownership, compare-stream, status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `timer-capture-overflow` | A C11 compiler plus fixture-owned opaque TIMER1 capture/compare, overflow-status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `uart-interrupt-driver` | A C11 compiler plus the fixture-owned UART0 MMIO and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
@@ -187,6 +189,12 @@ npm run fixture:brownout:self-test
 npm run fixture:fault-crash:self-test
 npm run fixture:idempotent-init:self-test
 ```
+
+The boot/update fixtures use `cc` with deterministic BOOT0 image admission and
+FLASH0 dual-slot update mocks:
+
+    npm run fixture:secure-boot:self-test
+    npm run fixture:dual-slot-update:self-test
 
 The timer-DMA ownership handoff fixture uses `cc` with opaque TIMER0/DMA0
 register models, deterministic compare-stream boundaries, and interrupt-mask

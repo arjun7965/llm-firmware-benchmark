@@ -197,8 +197,13 @@ record exact versions in validation reports.
     records, safe containment, and gated clearing.
   - [x] Add idempotent system initialization with conflict rejection and a
     retained safe-mode bootstrap path.
-- [ ] Add bootloader and update tasks covering image validation, rollback,
+- [x] Add bootloader and update tasks covering image validation, rollback,
   interrupted updates, version checks, and secure-boot boundaries.
+  - [x] Add signed-image admission with structural, version, digest, and
+    immutable signature checks before an explicit boot-target transfer.
+  - [x] Add dual-slot staged updates with strict version progression,
+    checksum-protected journal recovery, one-boot trials, confirmation, and
+    rollback after interruption or an unconfirmed trial.
 - [ ] Add power-management and real-time tasks involving sleep states, wake
   sources, clock changes, deadlines, jitter, and execution budgets.
 - [ ] Add debugging tasks based on compiler diagnostics, traces, register dumps,
