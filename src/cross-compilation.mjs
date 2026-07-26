@@ -156,6 +156,17 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "low-power-wake-clock",
+    source:
+      "fixtures/low-power-wake-clock/reference/low_power_wake_clock.c",
+    includes: Object.freeze([
+      "fixtures/low-power-wake-clock/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "timer-dma-handoff",
     source: "fixtures/timer-dma-handoff/reference/timer_dma_handoff.c",
     includes: Object.freeze([

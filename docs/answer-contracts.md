@@ -42,6 +42,7 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `idempotent-system-init` | Single file | Single file | One reset-time initialization unit; opaque configuration and retained safe-mode tests are validator-owned |
 | `secure-boot-image-validation` | Single file | Single file | One signed-image admission unit; opaque BOOT0 measurement, signature, target, and recovery tests are validator-owned |
 | `dual-slot-update-recovery` | Single file | Single file | One update journal unit; opaque FLASH0 erase, program, verify, target, and interrupt-mask tests are validator-owned |
+| `low-power-wake-clock` | Single file | Single file | One low-power transition unit; opaque PWRCLK0 wake, clock, sleep, and interrupt-mask tests are validator-owned |
 | `timer-dma-handoff` | Single file | Single file | One timer/DMA ownership driver unit; opaque compare-stream, terminal-status, and interrupt-mask mocks are validator-owned |
 | `timer-capture-overflow` | Single file | Single file | One timer capture/compare driver unit; opaque counter, capture, compare, overflow-status, and interrupt-mask mocks are validator-owned |
 | `uart-interrupt-driver` | Single file | Single file | One driver implementation unit; UART0 mock and interrupt tests are validator-owned |
@@ -59,6 +60,7 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `firmware-state-machine` | Single file | Single file | One implementation unit; HAL, mocks, and tests are supplied |
 | `rtos-priority-inversion` | Single file | Single file | One implementation unit; RTOS mock and scheduler tests are validator-owned |
 | `rtos-periodic-scheduler` | Single file | Single file | One rate-monotonic release implementation unit; RTOS release mock and deadline tests are validator-owned |
+| `real-time-deadline-budget` | Single file | Single file | One timing-guard implementation unit; RTOS begin/finish/violation tests are validator-owned |
 | `rtos-queue-semaphore` | Single file | Single file | One producer/worker handoff implementation unit; queue/semaphore mock and FIFO/token tests are validator-owned |
 | `rtos-event-flags-deadlock` | Single file | Single file | One supervisor coordination implementation unit; event/mutex mock and lock-order tests are validator-owned |
 | `frontend-autocomplete` | Single file | Single file | One default-exported component module; interaction tests are validator-owned |

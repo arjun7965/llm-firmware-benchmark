@@ -29,6 +29,8 @@ runFixtureMutationTests({
     "idempotent-system-init",
     "secure-boot-image-validation",
     "dual-slot-update-recovery",
+    "low-power-wake-clock",
+    "real-time-deadline-budget",
     "timer-dma-handoff",
     "timer-capture-overflow",
     "rtos-priority-inversion",

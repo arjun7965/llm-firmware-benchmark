@@ -97,6 +97,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "low-power-wake-clock",
+    source: "reference/low_power_wake_clock.c",
+    suite: "firmware",
+  },
+  {
     taskId: "timer-dma-handoff",
     source: "reference/timer_dma_handoff.c",
     suite: "firmware",
@@ -185,6 +190,11 @@ const references = [
   {
     taskId: "rtos-periodic-scheduler",
     source: "reference/periodic_scheduler.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "real-time-deadline-budget",
+    source: "reference/real_time_guard.c",
     suite: "firmware",
   },
   {
