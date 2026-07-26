@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/real_time_guard.c",
+  "mutations": [
+    {
+      "id": "release-telemetry-before-control",
+      "description": "Try lower-priority telemetry before a due control release.",
+      "find": "    REALTIME_TASK_CONTROL,\n    &guard->next_control_release,",
+      "replace": "    REALTIME_TASK_TELEMETRY,\n    &guard->next_telemetry_release,"
+    },
+    {
+      "id": "reject-maximum-jitter",
+      "description": "Treat a release at the stated maximum jitter as late.",
+      "find": "  if (jitter > max_jitter_for(task)) {",
+      "replace": "  if (jitter >= max_jitter_for(task)) {"
+    },
+    {
+      "id": "deadline-from-actual-start",
+      "description": "Derive an absolute deadline from the delayed dispatch rather than the nominal release.",
+      "find": "  status = realtime_rtos_begin(\n    task,\n    nominal_release,\n    nominal_release + deadline_for(task)\n  );",
+      "replace": "  status = realtime_rtos_begin(\n    task,\n    nominal_release,\n    now_ticks + deadline_for(task)\n  );"
+    },
+    {
+      "id": "advance-after-begin-failure",
+      "description": "Silently discard a failed RTOS start instead of retaining it for retry.",
+      "find": "  if (status != RTOS_STATUS_OK) return REALTIME_STATUS_RTOS_ERROR;\n\n  *next_release = now_ticks + period_for(task);",
+      "replace": "  if (status != RTOS_STATUS_OK) {\n    *next_release = now_ticks + period_for(task);\n    return REALTIME_STATUS_RTOS_ERROR;\n  }\n\n  *next_release = now_ticks + period_for(task);"
+    },
+    {
+      "id": "reject-exact-budget",
+      "description": "Report a budget fault when work consumes exactly its permitted budget.",
+      "find": "  if (elapsed > execution_budget_for(guard->active_task)) {",
+      "replace": "  if (elapsed >= execution_budget_for(guard->active_task)) {"
+    },
+    {
+      "id": "reject-exact-deadline",
+      "description": "Treat completion exactly at the nominal deadline as late.",
+      "find": "  return now_ticks != target_ticks && tick_has_reached(now_ticks, target_ticks);",
+      "replace": "  return tick_has_reached(now_ticks, target_ticks);"
+    },
+    {
+      "id": "break-wrap-safe-release-check",
+      "description": "Use a non-wrapping timestamp comparison for releases.",
+      "find": "  return (uint32_t)(now_ticks - target_ticks) < UINT32_C(0x80000000);",
+      "replace": "  return now_ticks >= target_ticks;"
+    },
+    {
+      "id": "clear-after-failed-finish",
+      "description": "Forget active work when the RTOS finish callback fails.",
+      "find": "  status = realtime_rtos_finish(guard->active_task);\n  if (status != RTOS_STATUS_OK) return REALTIME_STATUS_RTOS_ERROR;\n  clear_active(guard);",
+      "replace": "  status = realtime_rtos_finish(guard->active_task);\n  if (status != RTOS_STATUS_OK) {\n    clear_active(guard);\n    return REALTIME_STATUS_RTOS_ERROR;\n  }\n  clear_active(guard);"
+    },
+    {
+      "id": "misreport-deadline-as-budget",
+      "description": "Classify a nominal-deadline miss as an execution-budget violation.",
+      "find": "      REALTIME_VIOLATION_DEADLINE,\n      guard->active_release,",
+      "replace": "      REALTIME_VIOLATION_BUDGET,\n      guard->active_release,"
+    }
+  ]
+}

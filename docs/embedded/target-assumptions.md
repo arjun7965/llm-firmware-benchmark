@@ -78,6 +78,11 @@ wait semantics, and configuration-before-actuator mutex order with bounded
 contention cleanup. Each fixture defines the complete observable RTOS behavior
 needed for its score without vendor RTOS knowledge.
 
+The active `real-time-deadline-budget` task supplies control-first periodic
+releases, nominal-release deadlines, exact jitter and execution-budget
+boundaries, and finite begin/finish retry semantics through a deterministic
+RTOS boundary.
+
 ### `armv7m-bare-metal`
 
 Little-endian ARMv7-M, AAPCS/EABI, single core, privileged bare-metal execution,
@@ -126,6 +131,10 @@ The active `dual-slot-update-recovery` task uses opaque FLASH0 erase,
 word-program, verify, boot-target, and interrupt-mask accessors. It models a
 caller-owned checksum-protected journal, strict version progression, safe
 interrupted-update fallback, and a one-boot trial before confirmation.
+The active `low-power-wake-clock` task uses opaque PWRCLK0 wake, clock, sleep,
+and interrupt-mask accessors. It models RTC/GPIO/UART wake latches, deep-mode
+UART exclusion, a 4 MHz sleep clock, and exact restoration of the 48 MHz run
+clock after a configured wake source.
 The active `timer-dma-handoff` task uses opaque TIMER0/DMA0 compare-stream,
 terminal-status, and interrupt-mask accessors. Its mock transfers one bounded
 compare value per deterministic timer boundary and requires a terminal IRQ plus
@@ -178,6 +187,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `idempotent-system-init` | `armv7m-bare-metal` | Cortex-M3; opaque SYSTEM0 SAFE/clock/mask/READY configuration; caller-zeroed lifecycle state and retained safe-mode record |
 | `secure-boot-image-validation` | `armv7m-bare-metal` | Cortex-M3; opaque BOOT0 header/measurement/signature/target/recovery model; immutable verifier and no raw image/key access |
 | `dual-slot-update-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque FLASH0 dual-slot erase/program/verify/target model; retained journal, strict version progression, one-boot trial, and foreground interrupt restoration |
+| `low-power-wake-clock` | `armv7m-bare-metal` | Cortex-M3; opaque PWRCLK0 RTC/GPIO/UART wake latches, 4 MHz deep-sleep clock, 48 MHz run-clock restoration, and foreground interrupt preservation |
 | `timer-dma-handoff` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER0/DMA0 compare-stream ownership; non-nested DMA IRQ terminal priority; foreground abort/recovery preserves exact interrupt state |
 | `timer-capture-overflow` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER1 16-bit capture/compare and overflow latches; non-nested timestamp handoff IRQ; foreground arming/consumption preserves exact interrupt state |
 | `uart-interrupt-driver` | `armv7m-bare-metal` | Cortex-M3; fictional UART0 MMIO; non-nested UART IRQ; caller-owned eight-byte RX/TX buffers; foreground saves and restores global interrupt state |
@@ -190,6 +200,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
 | `rtos-periodic-scheduler` | `generic-rtos` | Deterministic control-before-telemetry releases, fresh relative deadlines, late-period collapse, and wrap-safe ticks |
+| `real-time-deadline-budget` | `generic-rtos` | Deterministic control-first releases, nominal deadlines, bounded jitter and execution budgets, and begin/finish retry behavior |
 | `rtos-queue-semaphore` | `generic-rtos` | Four-item FIFO paired with a four-token counting semaphore; immediate producer operations and a three-tick worker wait |
 | `rtos-event-flags-deadlock` | `generic-rtos` | Any-bit event consumption with clear-on-exit; configuration-before-actuator mutex order and one-tick lock bounds |
 | `binary-parser` | `portable-c11` | Untrusted unaligned bytes; explicit little-endian fields; CRC-16/CCITT-FALSE |

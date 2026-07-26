@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/low_power_wake_clock.c",
+  "mutations": [
+    {
+      "id": "allow-uart-deep-wake",
+      "description": "Allow UART wake even though the deep-sleep oscillator cannot support it.",
+      "find": "  return mode != POWER_SLEEP_MODE_DEEP ||\n    (wake_mask & PWRCLK0_WAKE_UART) == 0u;",
+      "replace": "  return mode == POWER_SLEEP_MODE_DEEP || wake_mask != 0u;"
+    },
+    {
+      "id": "retain-stale-wake-latches",
+      "description": "Do not clear stale wake latches before enabling the next sleep configuration.",
+      "find": "  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_wake_clear(manager->registers, PWRCLK0_WAKE_ALL);\n  pwrclk0_write_clock(manager->registers, clock);",
+      "replace": "  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_wake_clear(manager->registers, 0u);\n  pwrclk0_write_clock(manager->registers, clock);"
+    },
+    {
+      "id": "never-select-sleep-clock",
+      "description": "Keep the run clock selected for a deep-sleep transition.",
+      "find": "  clock = mode == POWER_SLEEP_MODE_DEEP\n    ? PWRCLK0_CLOCK_SLEEP\n    : PWRCLK0_CLOCK_RUN;",
+      "replace": "  clock = PWRCLK0_CLOCK_RUN;"
+    },
+    {
+      "id": "enter-before-wake-enable",
+      "description": "Program the idle/deep state before its wake sources are armed.",
+      "find": "  pwrclk0_write_wake_enable(manager->registers, wake_mask);\n  pwrclk0_write_sleep_mode(manager->registers, hardware_sleep_mode(mode));",
+      "replace": "  pwrclk0_write_sleep_mode(manager->registers, hardware_sleep_mode(mode));\n  pwrclk0_write_wake_enable(manager->registers, wake_mask);"
+    },
+    {
+      "id": "exit-on-unconfigured-latch",
+      "description": "Treat every raw wake latch as an enabled wake source.",
+      "find": "  observed = pwrclk0_read_wake_status(manager->registers) & manager->wake_mask;",
+      "replace": "  observed = pwrclk0_read_wake_status(manager->registers);"
+    },
+    {
+      "id": "leave-wake-enabled-on-resume",
+      "description": "Fail to disable wake sources while returning to normal operation.",
+      "find": "  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_clock(manager->registers, PWRCLK0_CLOCK_RUN);\n  pwrclk0_write_wake_clear(manager->registers, observed);",
+      "replace": "  pwrclk0_write_wake_enable(manager->registers, manager->wake_mask);\n  pwrclk0_write_clock(manager->registers, PWRCLK0_CLOCK_RUN);\n  pwrclk0_write_wake_clear(manager->registers, observed);"
+    },
+    {
+      "id": "fail-to-restore-run-clock",
+      "description": "Leave the low-frequency clock selected after a valid deep wake.",
+      "find": "  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_clock(manager->registers, PWRCLK0_CLOCK_RUN);\n  pwrclk0_write_wake_clear(manager->registers, observed);",
+      "replace": "  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_clock(manager->registers, PWRCLK0_CLOCK_SLEEP);\n  pwrclk0_write_wake_clear(manager->registers, observed);"
+    },
+    {
+      "id": "prefer-rtc-over-gpio",
+      "description": "Report RTC before the specified higher-priority GPIO wake source.",
+      "find": "  if ((observed & PWRCLK0_WAKE_GPIO) != 0u) return POWER_WAKE_GPIO;\n  if ((observed & PWRCLK0_WAKE_RTC) != 0u) return POWER_WAKE_RTC;",
+      "replace": "  if ((observed & PWRCLK0_WAKE_RTC) != 0u) return POWER_WAKE_RTC;\n  if ((observed & PWRCLK0_WAKE_GPIO) != 0u) return POWER_WAKE_GPIO;"
+    }
+  ]
+}

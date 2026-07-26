@@ -204,8 +204,12 @@ record exact versions in validation reports.
   - [x] Add dual-slot staged updates with strict version progression,
     checksum-protected journal recovery, one-boot trials, confirmation, and
     rollback after interruption or an unconfirmed trial.
-- [ ] Add power-management and real-time tasks involving sleep states, wake
+- [x] Add power-management and real-time tasks involving sleep states, wake
   sources, clock changes, deadlines, jitter, and execution budgets.
+  - [x] Add low-power idle/deep sleep arming with source filtering, stale-latch
+    clearing, and 4 MHz/48 MHz clock transition recovery.
+  - [x] Add fixed-priority real-time release guard coverage for nominal
+    deadlines, jitter boundaries, execution budgets, retry, and wraparound.
 - [ ] Add debugging tasks based on compiler diagnostics, traces, register dumps,
   map files, disassembly, and deliberately defective firmware.
 - [ ] Add embedded C and C++ review tasks covering undefined behavior, integer

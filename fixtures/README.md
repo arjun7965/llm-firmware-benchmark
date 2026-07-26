@@ -194,6 +194,11 @@ structural, version, digest, and signature gates, plus FLASH0 dual-slot staging
 with a retained journal, interrupted-update fallback, one-boot trials, explicit
 confirmation, and rollback.
 
+The active power/real-time fixtures add PWRCLK0 idle/deep sleep wake arming
+with source filtering and low-frequency clock restoration, plus a deterministic
+RTOS guard for fixed-priority releases, nominal deadlines, jitter limits, and
+execution budgets.
+
 The active `timer-dma-handoff` fixture uses opaque deterministic TIMER0/DMA0
 models with explicit compare-stream ownership, terminal status latches, and
 exact foreground interrupt-state restoration. Its public tests verify safe
