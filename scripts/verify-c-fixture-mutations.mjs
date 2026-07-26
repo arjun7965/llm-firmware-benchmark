@@ -31,6 +31,7 @@ runFixtureMutationTests({
     "dual-slot-update-recovery",
     "low-power-wake-clock",
     "real-time-deadline-budget",
+    "resilient-serial-service",
     "timer-dma-handoff",
     "timer-capture-overflow",
     "rtos-priority-inversion",

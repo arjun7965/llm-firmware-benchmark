@@ -54,6 +54,7 @@ code. Each task references a pinned hosted runtime contract from
 | `modbus-rtu-receiver` | A C11 compiler with fixed-width integer support; no runtime mock or serial dependency |
 | `can-transport-reassembly` | A C11 compiler with fixed-width integer support; no CAN controller, transport stack, or runtime mock dependency |
 | `ble-advertising-reassembly` | A C11 compiler with fixed-width integer support; no BLE radio, stack, or runtime mock dependency |
+| `resilient-serial-service` | GCC/`cc` 13.3.0 with C11, GNU/Linux `pipe2`, and POSIX.1-2008 headers; fixture-owned wrappers simulate serial, signal, poll, and termios behavior without a physical device |
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL 16.9 `initdb`, `pg_ctl`, `postgres`, and `psql` |
 | `testing-property-based` | Python 3.12.11, pytest 8.4.0, Hypothesis 6.135.9, and the hash-pinned pure-Python transitive closure |
@@ -258,6 +259,14 @@ The trusted firmware fixture self-test requires `cc`:
 
 ```bash
 npm run fixture:firmware:self-test
+```
+
+The resilient embedded-Linux serial-service fixture uses `cc` with GNU/Linux
+and POSIX headers. Its fixture-owned wrappers provide deterministic serial
+device, signal, poll, and termios behavior:
+
+```bash
+npm run fixture:serial-service:self-test
 ```
 
 The RTOS priority-inversion fixture uses the same C11 compiler and a

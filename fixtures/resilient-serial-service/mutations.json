@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/resilient_serial_service.c",
+  "mutations": [
+    {
+      "id": "accept-empty-device-path",
+      "description": "Accept an empty device path instead of rejecting it before OS setup.",
+      "find": "device_path == NULL || device_path[0] == '\\0' || consumer == NULL",
+      "replace": "device_path == NULL || false || consumer == NULL"
+    },
+    {
+      "id": "blocking-wake-pipe",
+      "description": "Create the signal wake pipe without nonblocking behavior.",
+      "find": "pipe2(wake_pipe, O_NONBLOCK | O_CLOEXEC)",
+      "replace": "pipe2(wake_pipe, O_CLOEXEC)"
+    },
+    {
+      "id": "blocking-serial-device",
+      "description": "Open the serial device without nonblocking behavior.",
+      "find": "O_RDWR | O_NOCTTY | O_NONBLOCK | O_CLOEXEC",
+      "replace": "O_RDWR | O_NOCTTY | O_CLOEXEC"
+    },
+    {
+      "id": "signal-does-not-request-stop",
+      "description": "Wake the service from a signal without publishing the stop request.",
+      "find": "  stop_requested = 1;\n  if (fd >= 0) {",
+      "replace": "  stop_requested = 0;\n  if (fd >= 0) {"
+    },
+    {
+      "id": "signal-does-not-wake-poll",
+      "description": "Set the stop flag but skip the async-signal-safe self-pipe write.",
+      "find": "  if (fd >= 0) {\n    (void)write(fd, &byte, 1u);\n  }",
+      "replace": "  if (false && fd >= 0) {\n    (void)write(fd, &byte, 1u);\n  }"
+    },
+    {
+      "id": "signal-clobbers-errno",
+      "description": "Return from the signal handler without restoring the interrupted errno value.",
+      "find": "  errno = saved_errno;\n}",
+      "replace": "  errno = saved_errno + 1;\n}"
+    },
+    {
+      "id": "restart-blocking-calls",
+      "description": "Install handlers with SA_RESTART instead of leaving blocking calls interruptible.",
+      "find": "  action.sa_flags = 0;",
+      "replace": "  action.sa_flags = SA_RESTART;"
+    },
+    {
+      "id": "ignore-sigterm",
+      "description": "Install the second handler for SIGINT again and leave SIGTERM unchanged.",
+      "find": "  if (sigaction(SIGTERM, &action, &old_terminate_action) != 0) {",
+      "replace": "  if (sigaction(SIGINT, &action, &old_terminate_action) != 0) {"
+    },
+    {
+      "id": "configure-9600-baud",
+      "description": "Configure 9600 baud instead of the required 115200 baud.",
+      "find": "    cfsetispeed(&attributes, B115200) != 0 ||\n    cfsetospeed(&attributes, B115200) != 0",
+      "replace": "    cfsetispeed(&attributes, B9600) != 0 ||\n    cfsetospeed(&attributes, B9600) != 0"
+    },
+    {
+      "id": "retain-canonical-input",
+      "description": "Leave canonical line processing enabled on the serial device.",
+      "find": "  attributes.c_lflag &= (tcflag_t)~(\n    ECHO |\n    ECHONL |\n    ICANON |\n    ISIG |\n    IEXTEN\n  );",
+      "replace": "  attributes.c_lflag &= (tcflag_t)~(\n    ECHO |\n    ECHONL |\n    ISIG |\n    IEXTEN\n  );"
+    },
+    {
+      "id": "configure-seven-data-bits",
+      "description": "Configure seven data bits instead of raw 8N1.",
+      "find": "  attributes.c_cflag |= CS8 | CLOCAL | CREAD;",
+      "replace": "  attributes.c_cflag |= CS7 | CLOCAL | CREAD;"
+    },
+    {
+      "id": "retry-permission-errors",
+      "description": "Retry a permanent permission failure instead of returning an OS error.",
+      "find": "  return error_number == ENOENT ||\n    error_number == ENODEV ||",
+      "replace": "  return error_number == EACCES ||\n    error_number == ENOENT ||\n    error_number == ENODEV ||"
+    },
+    {
+      "id": "wrong-initial-backoff",
+      "description": "Start reconnect delays at 200 ms instead of 100 ms.",
+      "find": "  int reconnect_delay_ms = SERIAL_SERVICE_RECONNECT_INITIAL_MS;",
+      "replace": "  int reconnect_delay_ms = SERIAL_SERVICE_RECONNECT_INITIAL_MS * 2;"
+    },
+    {
+      "id": "uncapped-backoff",
+      "description": "Allow reconnect delays to grow beyond the 1600 ms cap.",
+      "find": "        if (reconnect_delay_ms < SERIAL_SERVICE_RECONNECT_MAX_MS) {\n          reconnect_delay_ms *= 2;\n          if (reconnect_delay_ms > SERIAL_SERVICE_RECONNECT_MAX_MS) {\n            reconnect_delay_ms = SERIAL_SERVICE_RECONNECT_MAX_MS;\n          }\n        }",
+      "replace": "        reconnect_delay_ms *= 2;"
+    },
+    {
+      "id": "do-not-reset-backoff",
+      "description": "Keep the maximum delay after a successful connection.",
+      "find": "      reconnect_delay_ms = SERIAL_SERVICE_RECONNECT_INITIAL_MS;",
+      "replace": "      reconnect_delay_ms = SERIAL_SERVICE_RECONNECT_MAX_MS;"
+    },
+    {
+      "id": "accept-broken-wake-pipe-during-backoff",
+      "description": "Treat an unexpected self-pipe event during reconnect wait as graceful shutdown.",
+      "find": "        if (wait_result > 0) {\n          result = SERIAL_SERVICE_OS_ERROR;\n          break;\n        }",
+      "replace": "        if (wait_result > 0) {\n          break;\n        }"
+    },
+    {
+      "id": "ignore-broken-wake-pipe-while-connected",
+      "description": "Ignore terminal self-pipe events while the serial device is connected.",
+      "find": "      if ((wake_events & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) != 0) {",
+      "replace": "      if (false && (wake_events & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) != 0) {"
+    },
+    {
+      "id": "ignore-device-hangup",
+      "description": "Leave a hung-up device connected instead of entering reconnect backoff.",
+      "find": "      if ((serial_events & (POLLERR | POLLHUP | POLLNVAL)) != 0) {",
+      "replace": "      if ((serial_events & (POLLERR | POLLNVAL)) != 0) {"
+    },
+    {
+      "id": "treat-eagain-as-fatal",
+      "description": "Turn a transient nonblocking read into a terminal OS error.",
+      "find": "          errno != EAGAIN &&\n          errno != EWOULDBLOCK &&\n          errno != EINTR",
+      "replace": "          errno == EAGAIN ||\n          errno != EWOULDBLOCK ||\n          errno != EINTR"
+    },
+    {
+      "id": "ignore-consumer-failure",
+      "description": "Continue service operation after the downstream consumer rejects data.",
+      "find": "          if (!consumer(buffer, (size_t)count, context)) {",
+      "replace": "          if (false && !consumer(buffer, (size_t)count, context)) {"
+    },
+    {
+      "id": "process-data-after-stop",
+      "description": "Process ready serial data even after the signal stop flag is observed.",
+      "find": "      if (stop_requested != 0) break;\n      if (poll_result < 0) {",
+      "replace": "      if (false && stop_requested != 0) break;\n      if (poll_result < 0) {"
+    },
+    {
+      "id": "halve-read-buffer",
+      "description": "Read only half of the declared bounded chunk on each readiness event.",
+      "find": "const ssize_t count = read(serial_fd, buffer, sizeof(buffer));",
+      "replace": "const ssize_t count = read(serial_fd, buffer, sizeof(buffer) / 2u);"
+    },
+    {
+      "id": "ignore-read-eof",
+      "description": "Keep an EOF device connected instead of reconnecting.",
+      "find": "        } else if (count == 0) {",
+      "replace": "        } else if (count == -2) {"
+    },
+    {
+      "id": "do-not-restore-sigterm",
+      "description": "Restore SIGINT twice and leave the previous SIGTERM action displaced.",
+      "find": "    (void)sigaction(SIGTERM, &old_terminate_action, NULL);",
+      "replace": "    (void)sigaction(SIGINT, &old_terminate_action, NULL);"
+    }
+  ]
+}

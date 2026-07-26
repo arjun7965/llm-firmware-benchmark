@@ -199,6 +199,12 @@ with source filtering and low-frequency clock restoration, plus a deterministic
 RTOS guard for fixed-priority releases, nominal deadlines, jitter limits, and
 execution budgets.
 
+The active `resilient-serial-service` fixture redirects GNU/Linux and POSIX
+device, signal, polling, and termios calls into a deterministic script. Its
+public tests cover raw 115200-8N1 configuration, bounded callback delivery,
+async-signal-safe self-pipe shutdown, handler restoration, hot-unplug recovery,
+transient versus fatal errors, and capped/resetting reconnect backoff.
+
 The active `timer-dma-handoff` fixture uses opaque deterministic TIMER0/DMA0
 models with explicit compare-stream ownership, terminal status latches, and
 exact foreground interrupt-state restoration. Its public tests verify safe
