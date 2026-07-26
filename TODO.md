@@ -166,6 +166,11 @@ record exact versions in validation reports.
   - [x] Start with a deterministic priority-inheritance mutex fixture for
     low-priority telemetry, medium-priority diagnostics, and high-priority
     safety work.
+- [x] Add an embedded-Linux task for POSIX devices, signals, constrained
+  services, graceful shutdown, and reconnect behavior.
+  - [x] Add a deterministic resilient serial-service fixture with raw termios
+    configuration, async-signal-safe self-pipe shutdown, bounded reads, and
+    capped reconnect backoff.
 - [x] Add constrained-memory tasks for ring buffers, static allocation, memory
   pools, stack usage, alignment, cache coherency, and fixed-point arithmetic.
   - [x] Retain deterministic lock-free ring-buffer coverage for ISR/main-loop

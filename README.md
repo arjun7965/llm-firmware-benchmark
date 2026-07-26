@@ -229,6 +229,12 @@ The active webhook replay security fixture is calibrated with
 raw request bytes, verifies secret rotation and cross-instance replay behavior,
 and rolls back the event with its outbox action on a PostgreSQL failure.
 
+The active resilient serial-service fixture is calibrated with
+`npm run fixture:serial-service:self-test`. It deterministically wraps
+GNU/Linux and POSIX device, signal, polling, and termios calls to verify raw
+115200-8N1 setup, bounded delivery, graceful SIGINT/SIGTERM shutdown, expected
+device-loss recovery, and capped reconnect backoff without physical hardware.
+
 The active ADC threshold/watchdog fixture is calibrated with
 `npm run fixture:adc-watchdog:self-test`. It verifies 12-bit threshold
 classification, bounded ISR status handling, wrap-safe timeout, explicit fault

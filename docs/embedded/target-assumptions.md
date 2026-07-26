@@ -155,6 +155,21 @@ uses fixture-owned noncoherent-cache maintenance and DMA calls, 32-byte cache
 lines, four-byte DMA-buffer alignment, and one receive-transfer slot without
 direct cache-register access.
 
+### `embedded-linux-posix`
+
+Little-endian Linux user space using a task-stated POSIX and language version.
+Tasks define device interfaces, permissions, thread/process model, signal
+behavior, filesystem durability assumptions, and service resource limits.
+
+The active `resilient-serial-service` task uses C11 plus Linux `pipe2` and
+POSIX.1-2008 device, polling, signal, and termios interfaces. One main-thread
+service instance owns a nonblocking serial descriptor and self-pipe, forwards
+bounded 64-byte reads, restores prior SIGINT/SIGTERM actions, and reconnects
+after expected device loss with signal-responsive 100-to-1600 ms backoff.
+Fixture-owned call redirection makes device loss and signals deterministic;
+there is no physical serial device, heap, thread, child process, MMIO, DMA,
+cache, durability, or hard real-time assumption.
+
 ## Planned Profiles
 
 ### `rv32-bare-metal`
@@ -162,12 +177,6 @@ direct cache-register access.
 Little-endian RV32IMAC with ILP32 ABI, single-hart bare-metal execution, no heap
 by default, and documented mock MMIO. Tasks must state trap behavior, atomic
 extension use, alignment behavior, memory map, and timer source.
-
-### `embedded-linux-posix`
-
-Little-endian Linux user space using a stated POSIX and language version.
-Tasks must define device interfaces, permissions, thread/process model, signal
-behavior, filesystem durability assumptions, and service resource limits.
 
 ## Current Task Mapping
 
@@ -207,6 +216,7 @@ behavior, filesystem durability assumptions, and service resource limits.
 | `modbus-rtu-receiver` | `portable-c11` | Caller-owned eight-byte Modbus RTU request buffer; four-tick silence framing; reflected CRC-16; wrap-safe byte timestamps |
 | `can-transport-reassembly` | `portable-c11` | Complete classic-CAN frames above a separate controller; one 24-byte segmented message; strict source, sequence, DLC, and timeout contract |
 | `ble-advertising-reassembly` | `portable-c11` | Caller-owned 24-byte BLE-style fragment buffer; advertiser binding; ordered fragments; deterministic AD length/type/value parsing and expiry |
+| `resilient-serial-service` | `embedded-linux-posix` | C11/POSIX single-thread service; nonblocking raw 115200-8N1 device; SIGINT/SIGTERM self-pipe; bounded callback delivery; capped reconnect backoff |
 
 Profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.

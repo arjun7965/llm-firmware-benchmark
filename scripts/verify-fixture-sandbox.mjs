@@ -198,6 +198,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "resilient-serial-service",
+    source: "reference/resilient_serial_service.c",
+    suite: "firmware",
+  },
+  {
     taskId: "rtos-queue-semaphore",
     source: "reference/queue_semaphore.c",
     suite: "firmware",
