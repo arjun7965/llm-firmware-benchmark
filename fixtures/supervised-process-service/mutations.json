@@ -15,6 +15,12 @@
       "replace": "false"
     },
     {
+      "id": "reject-maximum-message-count",
+      "description": "Reject the declared maximum of eight messages.",
+      "find": "message_count > SUPERVISED_SERVICE_MAX_MESSAGES",
+      "replace": "message_count >= SUPERVISED_SERVICE_MAX_MESSAGES"
+    },
+    {
       "id": "accept-zero-sequence",
       "description": "Allow the reserved zero sequence number.",
       "find": "messages[index].sequence == 0u ||",
@@ -25,6 +31,12 @@
       "description": "Allow an empty IPC payload.",
       "find": "messages[index].length == 0u ||",
       "replace": "false ||"
+    },
+    {
+      "id": "reject-maximum-payload",
+      "description": "Reject the declared maximum 32-byte payload.",
+      "find": "messages[index].length > SUPERVISED_SERVICE_PAYLOAD_BYTES",
+      "replace": "messages[index].length >= SUPERVISED_SERVICE_PAYLOAD_BYTES"
     },
     {
       "id": "accept-duplicate-sequence",
@@ -99,6 +111,12 @@
       "replace": "(decode_u32_le(&ack[1]) != expected_sequence && false) ||"
     },
     {
+      "id": "ignore-ack-type",
+      "description": "Accept a six-byte record that is not an acknowledgement.",
+      "find": "    ack[0] != ACK_TYPE ||",
+      "replace": "    false ||"
+    },
+    {
       "id": "accept-invalid-ack-status",
       "description": "Accept an acknowledgement status outside accepted/rejected.",
       "find": "(ack[5] != ACK_ACCEPTED && ack[5] != ACK_REJECTED)",
@@ -159,22 +177,58 @@
       "replace": "return error_number == EAGAIN || error_number == ENOMEM || error_number == EACCES;"
     },
     {
+      "id": "treat-spawn-enomem-as-fatal",
+      "description": "Treat the declared retryable ENOMEM spawn failure as fatal.",
+      "find": "return error_number == EAGAIN || error_number == ENOMEM;",
+      "replace": "return error_number == EAGAIN;"
+    },
+    {
+      "id": "treat-channel-would-block-as-fatal",
+      "description": "Do not restart after send or receive reports EAGAIN/EWOULDBLOCK.",
+      "find": "  return error_number == EAGAIN ||\n    error_number == EWOULDBLOCK ||",
+      "replace": "  return false ||\n    false ||"
+    },
+    {
+      "id": "treat-interrupted-channel-as-fatal",
+      "description": "Do not restart after send or receive reports EINTR.",
+      "find": "    error_number == EINTR ||",
+      "replace": "    false ||"
+    },
+    {
       "id": "treat-broken-channel-as-fatal",
       "description": "Do not restart after the worker closes its IPC channel.",
       "find": "    error_number == EINTR ||\n    error_number == EPIPE ||",
       "replace": "    error_number == EINTR ||\n    false ||"
     },
     {
+      "id": "treat-reset-channel-as-fatal",
+      "description": "Do not restart after send or receive reports ECONNRESET.",
+      "find": "    error_number == ECONNRESET ||",
+      "replace": "    false ||"
+    },
+    {
+      "id": "treat-unconnected-channel-as-fatal",
+      "description": "Do not restart after send or receive reports ENOTCONN.",
+      "find": "    error_number == ENOTCONN;",
+      "replace": "    false;"
+    },
+    {
       "id": "ignore-pidfd-exit",
       "description": "Ignore readiness from the worker pidfd.",
-      "find": "  return (events->pid_events & (POLLIN | terminal)) != 0;",
-      "replace": "  return (events->pid_events & (POLLIN | terminal)) != 0 && false;"
+      "find": "  return (events->pid_events & POLLIN) != 0;",
+      "replace": "  return (events->pid_events & POLLIN) != 0 && false;"
+    },
+    {
+      "id": "ignore-invalid-pidfd",
+      "description": "Treat an invalid pidfd as an ordinary channel-side worker failure.",
+      "find": "  if (pidfd_failed(&events)) {\n    errno = EIO;\n    return -1;\n  }\n  if (channel_failed(&events) || (events.channel_events & POLLOUT) == 0) {",
+      "replace": "  if (false && pidfd_failed(&events)) {\n    errno = EIO;\n    return -1;\n  }\n  if (channel_failed(&events) || (events.channel_events & POLLOUT) == 0) {"
     },
     {
       "id": "drop-unacknowledged-message",
       "description": "Advance the input index before restarting a failed worker.",
-      "find": "    child_ready = operation_result == 5;\n    if (!stop_child",
-      "replace": "    ++message_index;\n    child_ready = operation_result == 5;\n    if (!stop_child"
+      "find": "    child_ready = operation_result == 5;\n    {\n      const bool child_stopped",
+      "replace": "    ++message_index;\n    child_ready = operation_result == 5;\n    {\n      const bool child_stopped"
     },
     {
       "id": "accept-short-send",
@@ -195,16 +249,40 @@
       "replace": "if (kill(pid, SIGKILL) != 0 && errno != ESRCH)"
     },
     {
+      "id": "abandon-cleanup-after-sigterm-error",
+      "description": "Stop cleanup immediately after SIGTERM fails instead of still polling and reaping.",
+      "find": "    if (kill(pid, SIGTERM) != 0 && errno != ESRCH) cleanup_ok = false;",
+      "replace": "    if (kill(pid, SIGTERM) != 0 && errno != ESRCH) return false;"
+    },
+    {
       "id": "never-force-hung-worker",
       "description": "Do not escalate to SIGKILL after the grace timeout.",
       "find": "    if (wait_result <= 0) {\n      if (kill(pid, SIGKILL)",
       "replace": "    if (false && wait_result <= 0) {\n      if (kill(pid, SIGKILL)"
     },
     {
+      "id": "ignore-grace-poll-failure",
+      "description": "Treat an interrupted or failed graceful-shutdown poll as successful cleanup.",
+      "find": "    if (wait_result < 0) cleanup_ok = false;",
+      "replace": "    if (false && wait_result < 0) cleanup_ok = false;"
+    },
+    {
       "id": "do-not-reap-child",
       "description": "Leave the terminated worker as a zombie.",
-      "find": "  if (!reap_child(pid)) return false;",
-      "replace": "  if (false && !reap_child(pid)) return false;"
+      "find": "  if (!reap_child(pid)) cleanup_ok = false;",
+      "replace": "  if (false && !reap_child(pid)) cleanup_ok = false;"
+    },
+    {
+      "id": "retry-failed-child-cleanup",
+      "description": "Leave failed cleanup marked active so outer cleanup signals or reaps the child again.",
+      "find": "      child_pid = -1;\n      close_if_open(&channel_fd);",
+      "replace": "      if (child_stopped) child_pid = -1;\n      close_if_open(&channel_fd);"
+    },
+    {
+      "id": "ignore-stop-during-restart-delay",
+      "description": "Turn a signal-interrupted restart delay into an OS error instead of a clean stop.",
+      "find": "        if (stop_requested != 0) break;\n        if (wait_result < 0) {",
+      "replace": "        if (false && stop_requested != 0) break;\n        if (wait_result < 0) {"
     },
     {
       "id": "do-not-restore-sigterm",

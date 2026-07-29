@@ -115,20 +115,20 @@ static bool reap_child(pid_t pid) {
 
 static bool stop_child(pid_t pid, int pidfd, bool child_ready) {
   int wait_result;
-  bool wait_failed = false;
+  bool cleanup_ok = true;
 
   if (!child_ready) {
-    if (kill(pid, SIGTERM) != 0 && errno != ESRCH) return false;
+    if (kill(pid, SIGTERM) != 0 && errno != ESRCH) cleanup_ok = false;
     wait_result = poll_pidfd(pidfd, SUPERVISED_SERVICE_SHUTDOWN_GRACE_MS);
-    if (wait_result < 0 && errno != EINTR) wait_failed = true;
+    if (wait_result < 0) cleanup_ok = false;
     if (wait_result <= 0) {
-      if (kill(pid, SIGKILL) != 0 && errno != ESRCH) return false;
+      if (kill(pid, SIGKILL) != 0 && errno != ESRCH) cleanup_ok = false;
       wait_result = poll_pidfd(pidfd, SUPERVISED_SERVICE_KILL_TIMEOUT_MS);
-      if (wait_result <= 0) return false;
+      if (wait_result <= 0) cleanup_ok = false;
     }
   }
-  if (!reap_child(pid)) return false;
-  return !wait_failed;
+  if (!reap_child(pid)) cleanup_ok = false;
+  return cleanup_ok;
 }
 
 static int poll_restart_delay(int wake_fd, int timeout_ms) {
@@ -187,9 +187,13 @@ static int poll_worker(
 }
 
 static bool worker_exited(const worker_events_t *events) {
+  return (events->pid_events & POLLIN) != 0;
+}
+
+static bool pidfd_failed(const worker_events_t *events) {
   const short terminal = POLLERR | POLLHUP | POLLNVAL;
 
-  return (events->pid_events & (POLLIN | terminal)) != 0;
+  return (events->pid_events & terminal) != 0;
 }
 
 static bool channel_failed(const worker_events_t *events) {
@@ -248,6 +252,10 @@ static int send_request(
     return -1;
   }
   if (worker_exited(&events)) return 5;
+  if (pidfd_failed(&events)) {
+    errno = EIO;
+    return -1;
+  }
   if (channel_failed(&events) || (events.channel_events & POLLOUT) == 0) {
     return 2;
   }
@@ -289,6 +297,10 @@ static int receive_ack(
     return -1;
   }
   if (worker_exited(&events)) return 5;
+  if (pidfd_failed(&events)) {
+    errno = EIO;
+    return -1;
+  }
   if (channel_failed(&events)) return 2;
   if ((events.channel_events & POLLIN) == 0) {
     errno = EIO;
@@ -448,13 +460,17 @@ supervised_service_result_t supervised_service_run(
     }
 
     child_ready = operation_result == 5;
-    if (!stop_child(child_pid, pidfd, child_ready)) {
-      result = SUPERVISED_SERVICE_OS_ERROR;
-      break;
+    {
+      const bool child_stopped = stop_child(child_pid, pidfd, child_ready);
+
+      child_pid = -1;
+      close_if_open(&channel_fd);
+      close_if_open(&pidfd);
+      if (!child_stopped) {
+        result = SUPERVISED_SERVICE_OS_ERROR;
+        break;
+      }
     }
-    child_pid = -1;
-    close_if_open(&channel_fd);
-    close_if_open(&pidfd);
     if (restart_count == SUPERVISED_SERVICE_MAX_RESTARTS) {
       result = SUPERVISED_SERVICE_RESTART_LIMIT;
       break;

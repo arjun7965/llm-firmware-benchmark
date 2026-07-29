@@ -260,6 +260,61 @@ static bool test_sends_bounded_frames_and_cleans_up(void) {
   return true;
 }
 
+static bool test_accepts_maximum_message_and_payload_bounds(void) {
+  uint8_t payload[SUPERVISED_SERVICE_PAYLOAD_BYTES];
+  supervised_service_message_t messages[SUPERVISED_SERVICE_MAX_MESSAGES];
+  size_t index;
+
+  for (index = 0u; index < sizeof(payload); ++index) {
+    payload[index] = (uint8_t)(0xa0u + index);
+  }
+  for (index = 0u; index < SUPERVISED_SERVICE_MAX_MESSAGES; ++index) {
+    messages[index] = message(
+      (uint32_t)(0x100u + index),
+      payload,
+      sizeof(payload)
+    );
+  }
+
+  mock_supervisor_reset();
+  queue_spawn(1501, 85, 86);
+  for (index = 0u; index < SUPERVISED_SERVICE_MAX_MESSAGES; ++index) {
+    queue_successful_message(messages[index].sequence);
+  }
+  queue_graceful_cleanup();
+
+  ASSERT(
+    supervised_service_run(
+      "/worker",
+      messages,
+      SUPERVISED_SERVICE_MAX_MESSAGES
+    ) == SUPERVISED_SERVICE_OK
+  );
+  ASSERT(
+    mock_supervisor_send_call_count() ==
+      SUPERVISED_SERVICE_MAX_MESSAGES
+  );
+  for (index = 0u; index < SUPERVISED_SERVICE_MAX_MESSAGES; ++index) {
+    const mock_supervisor_io_call_t sent =
+      mock_supervisor_send_call(index);
+
+    ASSERT(
+      sent.length ==
+        6u + SUPERVISED_SERVICE_PAYLOAD_BYTES
+    );
+    ASSERT(decode_u32(&sent.data[1]) == messages[index].sequence);
+    ASSERT(sent.data[5] == SUPERVISED_SERVICE_PAYLOAD_BYTES);
+    ASSERT(
+      memcmp(
+        &sent.data[6],
+        payload,
+        SUPERVISED_SERVICE_PAYLOAD_BYTES
+      ) == 0
+    );
+  }
+  return true;
+}
+
 static bool test_restarts_and_resends_unacknowledged_message(void) {
   const uint8_t payload[] = {1u, 2u, 3u, 4u};
   const supervised_service_message_t input =
@@ -397,19 +452,22 @@ static bool test_successful_ack_resets_restart_policy(void) {
   return true;
 }
 
-static bool test_retryable_spawn_and_channel_errors_recover(void) {
+static bool exercise_retryable_channel_error(
+  int error_number,
+  bool fail_send
+) {
   const uint8_t payload = 8u;
   const supervised_service_message_t input = message(33u, &payload, 1u);
 
   mock_supervisor_reset();
-  mock_supervisor_queue_spawn((mock_supervisor_spawn_step_t){
-    .result = -1,
-    .error_number = EAGAIN,
-  });
-  queue_timeout();
   queue_spawn(5001, 131, 132);
   queue_worker_ready(POLLOUT);
-  mock_supervisor_queue_send(-1, EPIPE);
+  if (fail_send) {
+    mock_supervisor_queue_send(-1, error_number);
+  } else {
+    queue_worker_ready(POLLIN);
+    mock_supervisor_queue_recv(NULL, 0u, -1, error_number);
+  }
   queue_child_exit();
   queue_timeout();
   queue_spawn(5002, 133, 134);
@@ -420,9 +478,81 @@ static bool test_retryable_spawn_and_channel_errors_recover(void) {
     supervised_service_run("/worker", &input, 1u) ==
       SUPERVISED_SERVICE_OK
   );
-  ASSERT(mock_supervisor_spawn_call_count() == 3u);
+  ASSERT(mock_supervisor_spawn_call_count() == 2u);
   ASSERT(mock_supervisor_send_call_count() == 2u);
   ASSERT(mock_supervisor_kill_call_count() == 2u);
+  return true;
+}
+
+static bool test_retryable_spawn_and_channel_errors_recover(void) {
+  const uint8_t payload = 8u;
+  const supervised_service_message_t input = message(33u, &payload, 1u);
+  const int channel_errors[] = {
+    EAGAIN,
+    EWOULDBLOCK,
+    EINTR,
+    EPIPE,
+    ECONNRESET,
+    ENOTCONN,
+  };
+  size_t index;
+
+  mock_supervisor_reset();
+  mock_supervisor_queue_spawn((mock_supervisor_spawn_step_t){
+    .result = -1,
+    .error_number = EAGAIN,
+  });
+  queue_timeout();
+  mock_supervisor_queue_spawn((mock_supervisor_spawn_step_t){
+    .result = -1,
+    .error_number = ENOMEM,
+  });
+  queue_timeout();
+  queue_spawn(5101, 131, 132);
+  queue_successful_message(input.sequence);
+  queue_graceful_cleanup();
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_OK
+  );
+  ASSERT(mock_supervisor_spawn_call_count() == 3u);
+
+  for (index = 0u;
+       index < sizeof(channel_errors) / sizeof(channel_errors[0]);
+       ++index) {
+    ASSERT(exercise_retryable_channel_error(channel_errors[index], true));
+    ASSERT(exercise_retryable_channel_error(channel_errors[index], false));
+  }
+
+  mock_supervisor_reset();
+  queue_spawn(5201, 135, 136);
+  queue_timeout();
+  queue_child_exit();
+  queue_timeout();
+  queue_spawn(5202, 137, 138);
+  queue_successful_message(input.sequence);
+  queue_graceful_cleanup();
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_OK
+  );
+  ASSERT(mock_supervisor_send_call_count() == 1u);
+
+  mock_supervisor_reset();
+  queue_spawn(5301, 139, 140);
+  queue_worker_ready(POLLOUT);
+  queue_worker_ready(POLLIN);
+  mock_supervisor_queue_recv(NULL, 0u, 0, 0);
+  queue_child_exit();
+  queue_timeout();
+  queue_spawn(5302, 141, 142);
+  queue_successful_message(input.sequence);
+  queue_graceful_cleanup();
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_OK
+  );
+  ASSERT(mock_supervisor_send_call_count() == 2u);
   return true;
 }
 
@@ -534,6 +664,23 @@ static bool test_protocol_and_worker_rejections_are_terminal(void) {
   ASSERT(mock_supervisor_spawn_call_count() == 1u);
 
   mock_supervisor_reset();
+  malformed[0] = TEST_REQUEST_TYPE;
+  queue_spawn(6002, 143, 144);
+  queue_worker_ready(POLLOUT);
+  queue_worker_ready(POLLIN);
+  mock_supervisor_queue_recv(
+    malformed,
+    6u,
+    6,
+    0
+  );
+  queue_graceful_cleanup();
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_PROTOCOL_ERROR
+  );
+
+  mock_supervisor_reset();
   queue_spawn(6002, 143, 144);
   queue_worker_ready(POLLOUT);
   queue_ack(input.sequence + 1u, 0u);
@@ -619,6 +766,20 @@ static bool test_stop_signal_has_priority_and_preserves_errno(void) {
   );
   ASSERT(mock_supervisor_wake_write_count() == 1u);
   ASSERT(mock_supervisor_signal_handler_errno() == 777);
+
+  mock_supervisor_reset();
+  queue_spawn(7003, 155, 156);
+  queue_worker_ready(POLLOUT);
+  queue_timeout();
+  queue_child_exit();
+  queue_poll(-1, EINTR, 0, 0, 0, SIGTERM);
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_OK
+  );
+  ASSERT(mock_supervisor_spawn_call_count() == 1u);
+  ASSERT(mock_supervisor_kill_call_count() == 1u);
+  ASSERT(mock_supervisor_wake_write_count() == 1u);
   return true;
 }
 
@@ -661,12 +822,13 @@ static bool test_shutdown_failures_report_os_error_and_preserve_primary(void) {
   queue_spawn(8101, 163, 164);
   queue_successful_message(input.sequence);
   mock_supervisor_queue_kill(-1, EPERM);
+  queue_child_exit();
   ASSERT(
     supervised_service_run("/worker", &input, 1u) ==
       SUPERVISED_SERVICE_OS_ERROR
   );
   ASSERT(mock_supervisor_kill_call_count() == 1u);
-  ASSERT(mock_supervisor_wait_call_count() == 0u);
+  ASSERT(mock_supervisor_wait_call_count() == 1u);
 
   mock_supervisor_reset();
   queue_spawn(8102, 165, 166);
@@ -695,14 +857,39 @@ static bool test_shutdown_failures_report_os_error_and_preserve_primary(void) {
 
   mock_supervisor_reset();
   queue_spawn(8104, 169, 170);
+  queue_successful_message(input.sequence);
+  queue_poll(-1, EINTR, 0, 0, 0, 0);
+  queue_child_exit();
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_OS_ERROR
+  );
+  ASSERT(mock_supervisor_kill_call_count() == 2u);
+  ASSERT(mock_supervisor_wait_call_count() == 1u);
+
+  mock_supervisor_reset();
+  queue_spawn(8105, 171, 172);
   queue_worker_ready(POLLOUT);
   queue_ack(input.sequence, 1u);
   mock_supervisor_queue_kill(-1, EPERM);
+  queue_child_exit();
   ASSERT(
     supervised_service_run("/worker", &input, 1u) ==
       SUPERVISED_SERVICE_WORKER_REJECTED
   );
   ASSERT(mock_supervisor_kill_call_count() == 1u);
+  ASSERT(mock_supervisor_wait_call_count() == 1u);
+
+  mock_supervisor_reset();
+  queue_spawn(8106, 173, 174);
+  queue_poll(1, 0, 0, POLLIN, 0, 0);
+  mock_supervisor_queue_waitpid(-1, ECHILD, 0);
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_OS_ERROR
+  );
+  ASSERT(mock_supervisor_kill_call_count() == 0u);
+  ASSERT(mock_supervisor_wait_call_count() == 1u);
   return true;
 }
 
@@ -769,7 +956,7 @@ static bool test_unexpected_wake_and_fatal_poll_errors_fail_closed(void) {
   ASSERT(mock_supervisor_send_call_count() == 0u);
 
   mock_supervisor_reset();
-  queue_spawn(9002, 173, 174);
+  queue_spawn(9002, 175, 176);
   queue_poll(-1, EBADF, 0, 0, 0, 0);
   queue_graceful_cleanup();
   ASSERT(
@@ -777,6 +964,18 @@ static bool test_unexpected_wake_and_fatal_poll_errors_fail_closed(void) {
       SUPERVISED_SERVICE_OS_ERROR
   );
   ASSERT(mock_supervisor_send_call_count() == 0u);
+
+  mock_supervisor_reset();
+  queue_spawn(9003, 177, 178);
+  queue_poll(1, 0, 0, POLLNVAL, POLLOUT, 0);
+  queue_graceful_cleanup();
+  ASSERT(
+    supervised_service_run("/worker", &input, 1u) ==
+      SUPERVISED_SERVICE_OS_ERROR
+  );
+  ASSERT(mock_supervisor_send_call_count() == 0u);
+  ASSERT(mock_supervisor_kill_call_count() == 1u);
+  ASSERT(mock_supervisor_wait_call_count() == 1u);
   return true;
 }
 
@@ -796,6 +995,10 @@ int main(void) {
     {
       "send bounded frames and clean up",
       test_sends_bounded_frames_and_cleans_up,
+    },
+    {
+      "accept maximum message and payload bounds",
+      test_accepts_maximum_message_and_payload_bounds,
     },
     {
       "restart and resend unacknowledged message",
