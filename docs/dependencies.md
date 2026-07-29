@@ -55,6 +55,7 @@ code. Each task references a pinned hosted runtime contract from
 | `can-transport-reassembly` | A C11 compiler with fixed-width integer support; no CAN controller, transport stack, or runtime mock dependency |
 | `ble-advertising-reassembly` | A C11 compiler with fixed-width integer support; no BLE radio, stack, or runtime mock dependency |
 | `resilient-serial-service` | GCC/`cc` 13.3.0 with C11, GNU/Linux `pipe2`, and POSIX.1-2008 headers; fixture-owned wrappers simulate serial, signal, poll, and termios behavior without a physical device |
+| `supervised-process-service` | GCC/`cc` 13.3.0 with C11, GNU/Linux pidfd/`pipe2`/`SOCK_SEQPACKET`, and POSIX.1-2008 process headers; fixture-owned wrappers simulate launch, IPC, exit, signals, termination, and reaping without a real child |
 | `concurrency-debug` | Python 3.12.11 using only its standard library |
 | `postgres-pagination` | PostgreSQL 16.9 `initdb`, `pg_ctl`, `postgres`, and `psql` |
 | `testing-property-based` | Python 3.12.11, pytest 8.4.0, Hypothesis 6.135.9, and the hash-pinned pure-Python transitive closure |
@@ -267,6 +268,15 @@ device, signal, poll, and termios behavior:
 
 ```bash
 npm run fixture:serial-service:self-test
+```
+
+The supervised embedded-Linux process-service fixture uses `cc` with Linux and
+POSIX process headers. Its supplied launch boundary and fixture-owned wrappers
+make pidfd exit, bounded IPC, retry, signal, and forced-shutdown behavior
+deterministic:
+
+```bash
+npm run fixture:process-supervisor:self-test
 ```
 
 The RTOS priority-inversion fixture uses the same C11 compiler and a

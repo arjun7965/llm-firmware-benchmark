@@ -64,6 +64,7 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `rtos-queue-semaphore` | Single file | Single file | One producer/worker handoff implementation unit; queue/semaphore mock and FIFO/token tests are validator-owned |
 | `rtos-event-flags-deadlock` | Single file | Single file | One supervisor coordination implementation unit; event/mutex mock and lock-order tests are validator-owned |
 | `resilient-serial-service` | Single file | Single file | One C11/POSIX service module; device, signal, reconnect, and lifecycle tests are validator-owned |
+| `supervised-process-service` | Single file | Single file | One C11/Linux supervisor module; process, pidfd, bounded IPC, restart, and shutdown tests are validator-owned |
 | `frontend-autocomplete` | Single file | Single file | One default-exported component module; interaction tests are validator-owned |
 | `concurrency-debug` | Single file | Single file | One repaired Python module; race tests are validator-owned |
 | `testing-property-based` | Single file | Single file | One property-test module importing the supplied implementation |

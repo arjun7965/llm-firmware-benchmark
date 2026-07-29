@@ -170,6 +170,15 @@ Fixture-owned call redirection makes device loss and signals deterministic;
 there is no physical serial device, heap, thread, child process, MMIO, DMA,
 cache, durability, or hard real-time assumption.
 
+The active `supervised-process-service` task uses C11 plus Linux pidfd,
+`pipe2`, and nonblocking `SOCK_SEQPACKET` IPC with POSIX signal, poll,
+termination, and reaping behavior. One main-thread supervisor owns one child,
+pidfd, channel, self-pipe, and in-flight message. A supplied launch adapter
+encapsulates fork/exec descriptor hygiene; fixture-owned redirection scripts
+exit, malformed replies, timeouts, signals, and shutdown without a real child.
+Delivery is at least once until a matching acknowledgement, consecutive
+restarts are capped, and graceful shutdown has a bounded forced-kill fallback.
+
 ## Planned Profiles
 
 ### `rv32-bare-metal`
@@ -217,6 +226,7 @@ extension use, alignment behavior, memory map, and timer source.
 | `can-transport-reassembly` | `portable-c11` | Complete classic-CAN frames above a separate controller; one 24-byte segmented message; strict source, sequence, DLC, and timeout contract |
 | `ble-advertising-reassembly` | `portable-c11` | Caller-owned 24-byte BLE-style fragment buffer; advertiser binding; ordered fragments; deterministic AD length/type/value parsing and expiry |
 | `resilient-serial-service` | `embedded-linux-posix` | C11/POSIX single-thread service; nonblocking raw 115200-8N1 device; SIGINT/SIGTERM self-pipe; bounded callback delivery; capped reconnect backoff |
+| `supervised-process-service` | `embedded-linux-posix` | C11/Linux single-thread supervisor; supplied safe launcher; one pidfd and bounded sequence-preserving IPC channel; at-least-once resend; capped restart and shutdown policy |
 
 Profiles become active only when a committed task supplies its fixtures,
 rubric, dependency entry, and validation commands.
