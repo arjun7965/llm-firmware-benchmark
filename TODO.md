@@ -171,6 +171,9 @@ record exact versions in validation reports.
   - [x] Add a deterministic resilient serial-service fixture with raw termios
     configuration, async-signal-safe self-pipe shutdown, bounded reads, and
     capped reconnect backoff.
+  - [x] Add a supervised process-service fixture with bounded `SOCK_SEQPACKET`
+    IPC, pidfd exit detection, at-least-once resend, capped restart policy, and
+    bounded SIGTERM-to-SIGKILL shutdown.
 - [x] Add constrained-memory tasks for ring buffers, static allocation, memory
   pools, stack usage, alignment, cache coherency, and fixed-point arithmetic.
   - [x] Retain deterministic lock-free ring-buffer coverage for ISR/main-loop

@@ -235,6 +235,12 @@ GNU/Linux and POSIX device, signal, polling, and termios calls to verify raw
 115200-8N1 setup, bounded delivery, graceful SIGINT/SIGTERM shutdown, expected
 device-loss recovery, and capped reconnect backoff without physical hardware.
 
+The active supervised process-service fixture is calibrated with
+`npm run fixture:process-supervisor:self-test`. It deterministically scripts a
+supplied worker launcher plus Linux/POSIX pidfd, bounded `SOCK_SEQPACKET`,
+signal, termination, and reaping calls to verify at-least-once delivery,
+restart exhaustion/reset, and bounded graceful-to-forced shutdown.
+
 The active ADC threshold/watchdog fixture is calibrated with
 `npm run fixture:adc-watchdog:self-test`. It verifies 12-bit threshold
 classification, bounded ISR status handling, wrap-safe timeout, explicit fault

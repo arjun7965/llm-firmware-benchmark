@@ -1,0 +1,294 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/supervised_process_service.c",
+  "mutations": [
+    {
+      "id": "accept-empty-worker-path",
+      "description": "Accept an empty worker path instead of rejecting it before OS setup.",
+      "find": "worker_path == NULL ||\n    worker_path[0] == '\\0' ||",
+      "replace": "worker_path == NULL ||\n    false ||"
+    },
+    {
+      "id": "accept-too-many-messages",
+      "description": "Allow a caller to exceed the fixed message-count bound.",
+      "find": "message_count > SUPERVISED_SERVICE_MAX_MESSAGES",
+      "replace": "false"
+    },
+    {
+      "id": "reject-maximum-message-count",
+      "description": "Reject the declared maximum of eight messages.",
+      "find": "message_count > SUPERVISED_SERVICE_MAX_MESSAGES",
+      "replace": "message_count >= SUPERVISED_SERVICE_MAX_MESSAGES"
+    },
+    {
+      "id": "accept-zero-sequence",
+      "description": "Allow the reserved zero sequence number.",
+      "find": "messages[index].sequence == 0u ||",
+      "replace": "false ||"
+    },
+    {
+      "id": "accept-empty-payload",
+      "description": "Allow an empty IPC payload.",
+      "find": "messages[index].length == 0u ||",
+      "replace": "false ||"
+    },
+    {
+      "id": "reject-maximum-payload",
+      "description": "Reject the declared maximum 32-byte payload.",
+      "find": "messages[index].length > SUPERVISED_SERVICE_PAYLOAD_BYTES",
+      "replace": "messages[index].length >= SUPERVISED_SERVICE_PAYLOAD_BYTES"
+    },
+    {
+      "id": "accept-duplicate-sequence",
+      "description": "Allow ambiguous duplicate message sequence numbers.",
+      "find": "if (messages[index].sequence == messages[previous].sequence) {",
+      "replace": "if (false) {"
+    },
+    {
+      "id": "blocking-wake-pipe",
+      "description": "Create the signal wake pipe without nonblocking behavior.",
+      "find": "pipe2(wake_pipe, O_NONBLOCK | O_CLOEXEC)",
+      "replace": "pipe2(wake_pipe, O_CLOEXEC)"
+    },
+    {
+      "id": "signal-does-not-request-stop",
+      "description": "Wake the poll loop without publishing the stop request.",
+      "find": "  stop_requested = 1;\n  if (fd >= 0) {",
+      "replace": "  stop_requested = 0;\n  if (fd >= 0) {"
+    },
+    {
+      "id": "signal-does-not-wake-poll",
+      "description": "Set the stop flag but omit the best-effort self-pipe write.",
+      "find": "  if (fd >= 0) {\n    (void)write(fd, &byte, 1u);\n  }",
+      "replace": "  if (false && fd >= 0) {\n    (void)write(fd, &byte, 1u);\n  }"
+    },
+    {
+      "id": "signal-clobbers-errno",
+      "description": "Return from the signal handler without restoring errno.",
+      "find": "  errno = saved_errno;\n}",
+      "replace": "  errno = saved_errno + 1;\n}"
+    },
+    {
+      "id": "restart-blocking-calls",
+      "description": "Install handlers with SA_RESTART and hide stop interruptions.",
+      "find": "  action.sa_flags = 0;",
+      "replace": "  action.sa_flags = SA_RESTART;"
+    },
+    {
+      "id": "ignore-sigterm",
+      "description": "Install the second handler for SIGINT again.",
+      "find": "  if (sigaction(SIGTERM, &action, &old_terminate_action) != 0) {",
+      "replace": "  if (sigaction(SIGINT, &action, &old_terminate_action) != 0) {"
+    },
+    {
+      "id": "wrong-request-type",
+      "description": "Send an acknowledgement type instead of a request type.",
+      "find": "#define REQUEST_TYPE 0x51u",
+      "replace": "#define REQUEST_TYPE 0x41u"
+    },
+    {
+      "id": "big-endian-request-sequence",
+      "description": "Encode request sequence numbers in the wrong byte order.",
+      "find": "  output[0] = (uint8_t)value;\n  output[1] = (uint8_t)(value >> 8);\n  output[2] = (uint8_t)(value >> 16);\n  output[3] = (uint8_t)(value >> 24);",
+      "replace": "  output[0] = (uint8_t)(value >> 24);\n  output[1] = (uint8_t)(value >> 16);\n  output[2] = (uint8_t)(value >> 8);\n  output[3] = (uint8_t)value;"
+    },
+    {
+      "id": "omit-msg-nosignal",
+      "description": "Allow a broken channel send to raise SIGPIPE.",
+      "find": "send(channel_fd, frame, frame_length, MSG_NOSIGNAL)",
+      "replace": "send(channel_fd, frame, frame_length, 0)"
+    },
+    {
+      "id": "omit-msg-trunc",
+      "description": "Fail to detect an oversized SOCK_SEQPACKET acknowledgement.",
+      "find": "recv(channel_fd, ack, sizeof(ack), MSG_TRUNC)",
+      "replace": "recv(channel_fd, ack, sizeof(ack), 0)"
+    },
+    {
+      "id": "ignore-ack-sequence",
+      "description": "Accept an acknowledgement for a different message.",
+      "find": "decode_u32_le(&ack[1]) != expected_sequence ||",
+      "replace": "(decode_u32_le(&ack[1]) != expected_sequence && false) ||"
+    },
+    {
+      "id": "ignore-ack-type",
+      "description": "Accept a six-byte record that is not an acknowledgement.",
+      "find": "    ack[0] != ACK_TYPE ||",
+      "replace": "    false ||"
+    },
+    {
+      "id": "accept-invalid-ack-status",
+      "description": "Accept an acknowledgement status outside accepted/rejected.",
+      "find": "(ack[5] != ACK_ACCEPTED && ack[5] != ACK_REJECTED)",
+      "replace": "false"
+    },
+    {
+      "id": "treat-rejection-as-accepted",
+      "description": "Advance after the worker explicitly rejects a message.",
+      "find": "return ack[5] == ACK_ACCEPTED ? 0 : 4;",
+      "replace": "return 0;"
+    },
+    {
+      "id": "process-ack-events-after-stop",
+      "description": "Process simultaneous worker events after the stop flag is observed.",
+      "find": "  ssize_t received;\n\n  if (stop_requested != 0) return 1;",
+      "replace": "  ssize_t received;\n\n  if (false && stop_requested != 0) return 1;"
+    },
+    {
+      "id": "wrong-ack-timeout",
+      "description": "Use half the declared bounded IPC timeout.",
+      "find": "    SUPERVISED_SERVICE_ACK_TIMEOUT_MS,\n    &events\n  );\n  ssize_t sent;",
+      "replace": "    SUPERVISED_SERVICE_ACK_TIMEOUT_MS / 2,\n    &events\n  );\n  ssize_t sent;"
+    },
+    {
+      "id": "wrong-initial-restart-delay",
+      "description": "Start restart backoff at 200 ms instead of 100 ms.",
+      "find": "  int restart_delay_ms = SUPERVISED_SERVICE_RESTART_INITIAL_MS;",
+      "replace": "  int restart_delay_ms = SUPERVISED_SERVICE_RESTART_INITIAL_MS * 2;"
+    },
+    {
+      "id": "cap-restart-delay-too-early",
+      "description": "Cap consecutive restart delays at 200 ms instead of 400 ms.",
+      "find": "        if (restart_delay_ms < SUPERVISED_SERVICE_RESTART_MAX_MS) {\n          restart_delay_ms *= 2;\n          if (restart_delay_ms > SUPERVISED_SERVICE_RESTART_MAX_MS) {\n            restart_delay_ms = SUPERVISED_SERVICE_RESTART_MAX_MS;\n          }\n        }",
+      "replace": "        if (restart_delay_ms < SUPERVISED_SERVICE_RESTART_MAX_MS / 2) {\n          restart_delay_ms *= 2;\n        }"
+    },
+    {
+      "id": "do-not-reset-restart-delay",
+      "description": "Keep maximum backoff after an accepted acknowledgement.",
+      "find": "      restart_delay_ms = SUPERVISED_SERVICE_RESTART_INITIAL_MS;",
+      "replace": "      restart_delay_ms = SUPERVISED_SERVICE_RESTART_MAX_MS;"
+    },
+    {
+      "id": "do-not-reset-restart-count",
+      "description": "Keep the restart budget exhausted after worker recovery.",
+      "find": "      restart_count = 0u;",
+      "replace": "      restart_count = SUPERVISED_SERVICE_MAX_RESTARTS;"
+    },
+    {
+      "id": "allow-extra-restart",
+      "description": "Permit a fourth restart after four consecutive worker failures.",
+      "find": "    if (restart_count == SUPERVISED_SERVICE_MAX_RESTARTS) {\n      result = SUPERVISED_SERVICE_RESTART_LIMIT;",
+      "replace": "    if (restart_count > SUPERVISED_SERVICE_MAX_RESTARTS) {\n      result = SUPERVISED_SERVICE_RESTART_LIMIT;"
+    },
+    {
+      "id": "retry-permission-denial",
+      "description": "Treat a permanent spawn permission error as retryable.",
+      "find": "return error_number == EAGAIN || error_number == ENOMEM;",
+      "replace": "return error_number == EAGAIN || error_number == ENOMEM || error_number == EACCES;"
+    },
+    {
+      "id": "treat-spawn-enomem-as-fatal",
+      "description": "Treat the declared retryable ENOMEM spawn failure as fatal.",
+      "find": "return error_number == EAGAIN || error_number == ENOMEM;",
+      "replace": "return error_number == EAGAIN;"
+    },
+    {
+      "id": "treat-channel-would-block-as-fatal",
+      "description": "Do not restart after send or receive reports EAGAIN/EWOULDBLOCK.",
+      "find": "  return error_number == EAGAIN ||\n    error_number == EWOULDBLOCK ||",
+      "replace": "  return false ||\n    false ||"
+    },
+    {
+      "id": "treat-interrupted-channel-as-fatal",
+      "description": "Do not restart after send or receive reports EINTR.",
+      "find": "    error_number == EINTR ||",
+      "replace": "    false ||"
+    },
+    {
+      "id": "treat-broken-channel-as-fatal",
+      "description": "Do not restart after the worker closes its IPC channel.",
+      "find": "    error_number == EINTR ||\n    error_number == EPIPE ||",
+      "replace": "    error_number == EINTR ||\n    false ||"
+    },
+    {
+      "id": "treat-reset-channel-as-fatal",
+      "description": "Do not restart after send or receive reports ECONNRESET.",
+      "find": "    error_number == ECONNRESET ||",
+      "replace": "    false ||"
+    },
+    {
+      "id": "treat-unconnected-channel-as-fatal",
+      "description": "Do not restart after send or receive reports ENOTCONN.",
+      "find": "    error_number == ENOTCONN;",
+      "replace": "    false;"
+    },
+    {
+      "id": "ignore-pidfd-exit",
+      "description": "Ignore readiness from the worker pidfd.",
+      "find": "  return (events->pid_events & POLLIN) != 0;",
+      "replace": "  return (events->pid_events & POLLIN) != 0 && false;"
+    },
+    {
+      "id": "ignore-invalid-pidfd",
+      "description": "Treat an invalid pidfd as an ordinary channel-side worker failure.",
+      "find": "  if (pidfd_failed(&events)) {\n    errno = EIO;\n    return -1;\n  }\n  if (channel_failed(&events) || (events.channel_events & POLLOUT) == 0) {",
+      "replace": "  if (false && pidfd_failed(&events)) {\n    errno = EIO;\n    return -1;\n  }\n  if (channel_failed(&events) || (events.channel_events & POLLOUT) == 0) {"
+    },
+    {
+      "id": "drop-unacknowledged-message",
+      "description": "Advance the input index before restarting a failed worker.",
+      "find": "    child_ready = operation_result == 5;\n    {\n      const bool child_stopped",
+      "replace": "    ++message_index;\n    child_ready = operation_result == 5;\n    {\n      const bool child_stopped"
+    },
+    {
+      "id": "accept-short-send",
+      "description": "Treat a truncated request record as successfully sent.",
+      "find": "  if (sent != (ssize_t)frame_length) {",
+      "replace": "  if (sent < 0) {"
+    },
+    {
+      "id": "send-half-payload",
+      "description": "Truncate each request payload.",
+      "find": "  return REQUEST_HEADER_BYTES + message->length;",
+      "replace": "  return REQUEST_HEADER_BYTES + message->length / 2u;"
+    },
+    {
+      "id": "skip-graceful-shutdown",
+      "description": "Send SIGKILL immediately instead of requesting graceful termination.",
+      "find": "if (kill(pid, SIGTERM) != 0 && errno != ESRCH)",
+      "replace": "if (kill(pid, SIGKILL) != 0 && errno != ESRCH)"
+    },
+    {
+      "id": "abandon-cleanup-after-sigterm-error",
+      "description": "Stop cleanup immediately after SIGTERM fails instead of still polling and reaping.",
+      "find": "    if (kill(pid, SIGTERM) != 0 && errno != ESRCH) cleanup_ok = false;",
+      "replace": "    if (kill(pid, SIGTERM) != 0 && errno != ESRCH) return false;"
+    },
+    {
+      "id": "never-force-hung-worker",
+      "description": "Do not escalate to SIGKILL after the grace timeout.",
+      "find": "    if (wait_result <= 0) {\n      if (kill(pid, SIGKILL)",
+      "replace": "    if (false && wait_result <= 0) {\n      if (kill(pid, SIGKILL)"
+    },
+    {
+      "id": "ignore-grace-poll-failure",
+      "description": "Treat an interrupted or failed graceful-shutdown poll as successful cleanup.",
+      "find": "    if (wait_result < 0) cleanup_ok = false;",
+      "replace": "    if (false && wait_result < 0) cleanup_ok = false;"
+    },
+    {
+      "id": "do-not-reap-child",
+      "description": "Leave the terminated worker as a zombie.",
+      "find": "  if (!reap_child(pid)) cleanup_ok = false;",
+      "replace": "  if (false && !reap_child(pid)) cleanup_ok = false;"
+    },
+    {
+      "id": "retry-failed-child-cleanup",
+      "description": "Leave failed cleanup marked active so outer cleanup signals or reaps the child again.",
+      "find": "      child_pid = -1;\n      close_if_open(&channel_fd);",
+      "replace": "      if (child_stopped) child_pid = -1;\n      close_if_open(&channel_fd);"
+    },
+    {
+      "id": "ignore-stop-during-restart-delay",
+      "description": "Turn a signal-interrupted restart delay into an OS error instead of a clean stop.",
+      "find": "        if (stop_requested != 0) break;\n        if (wait_result < 0) {",
+      "replace": "        if (false && stop_requested != 0) break;\n        if (wait_result < 0) {"
+    },
+    {
+      "id": "do-not-restore-sigterm",
+      "description": "Restore SIGINT twice and leave the prior SIGTERM action displaced.",
+      "find": "    (void)sigaction(SIGTERM, &old_terminate_action, NULL);",
+      "replace": "    (void)sigaction(SIGINT, &old_terminate_action, NULL);"
+    }
+  ]
+}

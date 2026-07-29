@@ -205,6 +205,13 @@ public tests cover raw 115200-8N1 configuration, bounded callback delivery,
 async-signal-safe self-pipe shutdown, handler restoration, hot-unplug recovery,
 transient versus fatal errors, and capped/resetting reconnect backoff.
 
+The active `supervised-process-service` fixture redirects a supplied worker
+launcher plus Linux/POSIX pidfd, sequence-preserving IPC, signal, polling,
+termination, and reaping calls into a deterministic script. Its public tests
+cover exact bounded request/ack records, at-least-once resend, exit and timeout
+recovery, capped/resetting restart backoff, signal priority, protocol rejection,
+zombie-free cleanup, and bounded SIGTERM-to-SIGKILL escalation.
+
 The active `timer-dma-handoff` fixture uses opaque deterministic TIMER0/DMA0
 models with explicit compare-stream ownership, terminal status latches, and
 exact foreground interrupt-state restoration. Its public tests verify safe

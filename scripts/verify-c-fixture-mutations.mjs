@@ -32,6 +32,7 @@ runFixtureMutationTests({
     "low-power-wake-clock",
     "real-time-deadline-budget",
     "resilient-serial-service",
+    "supervised-process-service",
     "timer-dma-handoff",
     "timer-capture-overflow",
     "rtos-priority-inversion",

@@ -203,6 +203,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "supervised-process-service",
+    source: "reference/supervised_process_service.c",
+    suite: "firmware",
+  },
+  {
     taskId: "rtos-queue-semaphore",
     source: "reference/queue_semaphore.c",
     suite: "firmware",
