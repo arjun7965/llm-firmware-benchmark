@@ -1,0 +1,8 @@
+Linker map excerpt:
+
+ .text.hard_fault_log_store
+                0x08000530       0x00000012 hard_fault_log.o
+ .text.telemetry_task
+                0x080006d0       0x00000034 telemetry.o
+ .bss.crash_log
+                0x20001fe0       0x00000020 crash_log.o

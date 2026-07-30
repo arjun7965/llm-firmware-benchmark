@@ -23,6 +23,7 @@ code. Each task references a pinned hosted runtime contract from
 | `bare-metal-timer` | A C11 compiler for host MMIO tests; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `interrupt-vector-configuration` | A C11 compiler plus fixture-owned vector-table, SCB, NVIC, barrier, linker-address, and interrupt-mask mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `linker-memory-map` | A C11 compiler plus fixture-owned opaque linker-symbol, flash, and SRAM transfer mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `cortex-m-hard-fault-debug` | A C11 compiler plus fixture-supplied immutable Cortex-M3 frame, register, map, disassembly, and source evidence; `arm-none-eabi-gcc` is optional for compile-only validation |
 | `i2c-controller-recovery` | A C11 compiler plus fixture-owned opaque I2C0, status, and protocol-ordering mocks; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `gpio-edge-debounce` | A C11 compiler plus fixture-owned opaque GPIO0 edge/wake latches and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `adc-threshold-watchdog` | A C11 compiler plus fixture-owned opaque ADC0 threshold/status and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
@@ -146,6 +147,14 @@ and address-boundary queries:
 
 ```bash
 npm run fixture:linker-memory:self-test
+```
+
+The Cortex-M hard-fault debugging fixture uses `cc` to validate an exact
+diagnosis derived from supplied crash evidence and the one-past log-store
+repair:
+
+```bash
+npm run fixture:hard-fault-debug:self-test
 ```
 
 The I2C-controller recovery fixture uses `cc` with an opaque I2C0 model that

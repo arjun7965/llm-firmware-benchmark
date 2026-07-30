@@ -1,0 +1,204 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/hard_fault_debug.c",
+  "mutations": [
+    {
+      "id": "accept-null-diagnosis",
+      "description": "Report success for a null diagnosis output.",
+      "find": "  if (diagnosis == NULL) return false;",
+      "replace": "  if (diagnosis == NULL) return true;"
+    },
+    {
+      "id": "report-unknown-primary-cause",
+      "description": "Fail to identify the precise data-bus write.",
+      "find": ".primary_cause = HARD_FAULT_CAUSE_PRECISE_DATA_BUS_WRITE,",
+      "replace": ".primary_cause = HARD_FAULT_CAUSE_UNKNOWN,"
+    },
+    {
+      "id": "report-unknown-instruction",
+      "description": "Fail to classify the faulting indexed word store.",
+      "find": ".instruction = HARD_FAULT_INSTRUCTION_INDEXED_WORD_STORE,",
+      "replace": ".instruction = HARD_FAULT_INSTRUCTION_UNKNOWN,"
+    },
+    {
+      "id": "report-unknown-repair",
+      "description": "Omit the exact boundary repair.",
+      "find": ".repair = HARD_FAULT_REPAIR_REJECT_INDEX_AT_CAPACITY,",
+      "replace": ".repair = HARD_FAULT_REPAIR_UNKNOWN,"
+    },
+    {
+      "id": "use-msp-frame",
+      "description": "Report the handler MSP instead of the PSP selected by EXC_RETURN.",
+      "find": ".stack_pointer = UINT32_C(0x20000fc0),",
+      "replace": ".stack_pointer = UINT32_C(0x20000f00),"
+    },
+    {
+      "id": "normalize-stacked-lr",
+      "description": "Lose the raw Thumb bit from the captured stacked LR.",
+      "find": ".stacked_lr = UINT32_C(0x080006e9),",
+      "replace": ".stacked_lr = UINT32_C(0x080006e8),"
+    },
+    {
+      "id": "advance-fault-pc",
+      "description": "Attribute the precise fault to the instruction after the store.",
+      "find": ".fault_pc = UINT32_C(0x08000536),",
+      "replace": ".fault_pc = UINT32_C(0x0800053a),"
+    },
+    {
+      "id": "use-object-start-as-fault-address",
+      "description": "Ignore BFAR and report the object base as the fault address.",
+      "find": ".fault_address = UINT32_C(0x20002000),",
+      "replace": ".fault_address = UINT32_C(0x20001fe0),"
+    },
+    {
+      "id": "mis-symbolize-fault-function",
+      "description": "Use the caller symbol for the faulting function.",
+      "find": ".function_start = UINT32_C(0x08000530),",
+      "replace": ".function_start = UINT32_C(0x080006d0),"
+    },
+    {
+      "id": "wrong-fault-function-offset",
+      "description": "Report the store at the wrong function offset.",
+      "find": ".function_offset = UINT32_C(0x00000006),",
+      "replace": ".function_offset = UINT32_C(0x00000004),"
+    },
+    {
+      "id": "keep-thumb-bit-in-return-address",
+      "description": "Fail to normalize the stacked LR for map symbolization.",
+      "find": ".caller_return_address = UINT32_C(0x080006e8),",
+      "replace": ".caller_return_address = UINT32_C(0x080006e9),"
+    },
+    {
+      "id": "mis-symbolize-caller",
+      "description": "Attribute the caller return address to the faulting function.",
+      "find": ".caller_function_start = UINT32_C(0x080006d0),",
+      "replace": ".caller_function_start = UINT32_C(0x08000530),"
+    },
+    {
+      "id": "wrong-caller-offset",
+      "description": "Report the normalized return at the wrong caller offset.",
+      "find": ".caller_offset = UINT32_C(0x00000018),",
+      "replace": ".caller_offset = UINT32_C(0x00000019),"
+    },
+    {
+      "id": "shift-object-start",
+      "description": "Use an incorrect linker-map base for crash_log.",
+      "find": ".object_start = UINT32_C(0x20001fe0),",
+      "replace": ".object_start = UINT32_C(0x20001fe4),"
+    },
+    {
+      "id": "include-one-past-object",
+      "description": "Treat the one-past BFAR address as part of crash_log.",
+      "find": ".object_end = UINT32_C(0x20002000),",
+      "replace": ".object_end = UINT32_C(0x20002004),"
+    },
+    {
+      "id": "report-byte-store",
+      "description": "Report a byte access instead of the disassembled word store.",
+      "find": ".access_width_bytes = UINT32_C(4),",
+      "replace": ".access_width_bytes = UINT32_C(1),"
+    },
+    {
+      "id": "report-last-valid-index",
+      "description": "Blame index seven instead of the captured one-past index.",
+      "find": ".offending_index = UINT32_C(8),",
+      "replace": ".offending_index = UINT32_C(7),"
+    },
+    {
+      "id": "report-nine-word-capacity",
+      "description": "Misread the declared and mapped log capacity.",
+      "find": ".capacity = HARD_FAULT_LOG_WORDS,",
+      "replace": ".capacity = HARD_FAULT_LOG_WORDS + 1u,"
+    },
+    {
+      "id": "report-wrong-store-value",
+      "description": "Use the wrong stacked source-register value.",
+      "find": ".stored_value = UINT32_C(0xdeadbeef),",
+      "replace": ".stored_value = UINT32_C(0xdeadbeee),"
+    },
+    {
+      "id": "ignore-forced-escalation",
+      "description": "Ignore HFSR.FORCED.",
+      "find": ".forced_escalation = true,",
+      "replace": ".forced_escalation = false,"
+    },
+    {
+      "id": "claim-busfault-enabled",
+      "description": "Misread the clear SHCSR.BUSFAULTENA bit.",
+      "find": ".bus_fault_enabled = false,",
+      "replace": ".bus_fault_enabled = true,"
+    },
+    {
+      "id": "ignore-valid-bfar",
+      "description": "Ignore CFSR.BFARVALID.",
+      "find": ".fault_address_valid = true,",
+      "replace": ".fault_address_valid = false,"
+    },
+    {
+      "id": "treat-precise-pc-as-unreliable",
+      "description": "Ignore CFSR.PRECISERR and discard the stacked PC.",
+      "find": ".stacked_pc_precise = true,",
+      "replace": ".stacked_pc_precise = false,"
+    },
+    {
+      "id": "return-to-handler-mode",
+      "description": "Misdecode EXC_RETURN as a return to Handler mode.",
+      "find": ".return_to_thread = true,",
+      "replace": ".return_to_thread = false,"
+    },
+    {
+      "id": "select-main-stack",
+      "description": "Misdecode EXC_RETURN as selecting MSP.",
+      "find": ".used_psp = true,",
+      "replace": ".used_psp = false,"
+    },
+    {
+      "id": "claim-extended-frame",
+      "description": "Misdecode the Cortex-M3 basic exception frame.",
+      "find": ".basic_frame = true,",
+      "replace": ".basic_frame = false,"
+    },
+    {
+      "id": "preserve-stale-store-value",
+      "description": "Leave one output field stale instead of replacing the diagnosis.",
+      "find": ".stored_value = UINT32_C(0xdeadbeef),",
+      "replace": ".stored_value = diagnosis->stored_value,"
+    },
+    {
+      "id": "accept-null-log",
+      "description": "Report success for a null log.",
+      "find": "  if (log == NULL || index >= HARD_FAULT_LOG_WORDS) return false;",
+      "replace": "  if (log == NULL) return true;\n  if (index >= HARD_FAULT_LOG_WORDS) return false;"
+    },
+    {
+      "id": "accept-one-past-index",
+      "description": "Retain the original off-by-one upper-bound defect.",
+      "find": "index >= HARD_FAULT_LOG_WORDS",
+      "replace": "index > HARD_FAULT_LOG_WORDS"
+    },
+    {
+      "id": "reject-last-valid-index",
+      "description": "Reject the final valid log word.",
+      "find": "index >= HARD_FAULT_LOG_WORDS",
+      "replace": "index >= HARD_FAULT_LOG_WORDS - 1u"
+    },
+    {
+      "id": "write-adjacent-slot",
+      "description": "Store the value in a neighboring valid slot.",
+      "find": "  log->words[index] = value;",
+      "replace": "  log->words[index == 0u ? 1u : index - 1u] = value;"
+    },
+    {
+      "id": "write-corrupt-value",
+      "description": "Store a modified value instead of the caller's word.",
+      "find": "  log->words[index] = value;",
+      "replace": "  log->words[index] = value ^ UINT32_C(1);"
+    },
+    {
+      "id": "skip-valid-store",
+      "description": "Report success without repairing the requested log word.",
+      "find": "  log->words[index] = value;\n  return true;",
+      "replace": "  (void)value;\n  return true;"
+    }
+  ]
+}

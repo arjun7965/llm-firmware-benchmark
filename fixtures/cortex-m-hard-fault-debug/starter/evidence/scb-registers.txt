@@ -1,0 +1,12 @@
+SCB register snapshot:
+HFSR  = 0x40000000
+CFSR  = 0x00008200
+BFAR  = 0x20002000
+MMFAR = 0xE000ED34
+SHCSR = 0x00000000
+
+Relevant ARMv7-M definitions:
+HFSR.FORCED       = 1 << 30
+CFSR.PRECISERR    = 1 << 9
+CFSR.BFARVALID    = 1 << 15
+SHCSR.BUSFAULTENA = 1 << 17
