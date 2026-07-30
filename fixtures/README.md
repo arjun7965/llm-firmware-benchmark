@@ -155,6 +155,12 @@ SRAM models. Its public tests verify validated reset-time image/data/BSS/stack
 layout, initialized-data copying, BSS clearing, no-effect rejection, and
 half-open image, writable, and stack address boundaries.
 
+The active `cortex-m-hard-fault-debug` fixture supplies an immutable Cortex-M3
+exception frame, SCB register snapshot, linker map, disassembly, and defective
+source excerpt. Its public tests verify the exact cross-evidence diagnosis,
+Thumb-address symbolization, one-past effective address, and repaired log-store
+boundaries without requiring target hardware.
+
 The active `i2c-controller-recovery` fixture uses an opaque deterministic I2C0
 model. Its public tests verify initialization, stale-status clearing, bounded
 START/address/data ordering, terminal-result consumption, arbitration-loss

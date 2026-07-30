@@ -47,6 +47,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "cortex-m-hard-fault-debug",
+    source: "reference/hard_fault_debug.c",
+    suite: "firmware",
+  },
+  {
     taskId: "i2c-controller-recovery",
     source: "reference/i2c_controller.c",
     suite: "firmware",

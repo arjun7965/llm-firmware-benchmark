@@ -53,6 +53,17 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "cortex-m-hard-fault-debug",
+    source:
+      "fixtures/cortex-m-hard-fault-debug/reference/hard_fault_debug.c",
+    includes: Object.freeze([
+      "fixtures/cortex-m-hard-fault-debug/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "i2c-controller-recovery",
     source: "fixtures/i2c-controller-recovery/reference/i2c_controller.c",
     includes: Object.freeze([

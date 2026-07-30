@@ -252,6 +252,11 @@ validation, initialized-data copying, BSS clearing, no-effect rejection, and
 half-open image, writable, and stack boundaries against opaque flash/SRAM
 models.
 
+The active Cortex-M hard-fault debugging fixture is calibrated with
+`npm run fixture:hard-fault-debug:self-test`. It verifies a precise BusFault
+diagnosis across a supplied exception frame, SCB snapshot, map, disassembly,
+and defective source, then checks the exact one-past boundary repair.
+
 The active PWM synchronized-update fixture is calibrated with
 `npm run fixture:pwm:self-test`. It verifies shadow-register boundary timing,
 fault-over-update priority, last-safe-duty recovery, event gating, and exact

@@ -220,6 +220,8 @@ record exact versions in validation reports.
     deadlines, jitter boundaries, execution budgets, retry, and wraparound.
 - [ ] Add debugging tasks based on compiler diagnostics, traces, register dumps,
   map files, disassembly, and deliberately defective firmware.
+  - [x] Add deterministic Cortex-M hard-fault diagnosis from an exception
+    frame, SCB snapshot, linker map, disassembly, and one-past source defect.
 - [ ] Add embedded C and C++ review tasks covering undefined behavior, integer
   conversion, ownership, RAII, portability, and MISRA-style constraints.
 - [ ] Add firmware-security tasks for untrusted input, debug interfaces, secret

@@ -1,0 +1,13 @@
+08000530 <hard_fault_log_store>:
+ 8000530: b130       cbz     r0, 800053e <hard_fault_log_store+0xe>
+ 8000532: 2a08       cmp     r2, #8
+ 8000534: d803       bhi.n   800053e <hard_fault_log_store+0xe>
+ 8000536: f840 1022  str.w   r1, [r0, r2, lsl #2]
+ 800053a: 2001       movs    r0, #1
+ 800053c: 4770       bx      lr
+ 800053e: 2000       movs    r0, #0
+ 8000540: 4770       bx      lr
+
+080006d0 <telemetry_task>:
+ 80006e4: f7ff ff24  bl      8000530 <hard_fault_log_store>
+ 80006e8: 2800       cmp     r0, #0

@@ -1,0 +1,15 @@
+Cortex-M3 exception entry
+EXC_RETURN = 0xFFFFFFFD
+MSP        = 0x20000F00
+PSP        = 0x20000FC0
+CONTROL    = 0x00000002
+
+Basic frame at PSP:
+r0   = 0x20001FE0
+r1   = 0xDEADBEEF
+r2   = 0x00000008
+r3   = 0x00000008
+r12  = 0x00000000
+lr   = 0x080006E9
+pc   = 0x08000536
+xPSR = 0x01000000
