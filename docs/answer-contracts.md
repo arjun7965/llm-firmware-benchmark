@@ -33,6 +33,7 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `interrupt-vector-configuration` | Single file | Single file | One startup/vector implementation unit; SCB/NVIC mocks and ordering tests are validator-owned |
 | `linker-memory-map` | Single file | Single file | One reset-time map implementation unit; opaque linker-symbol and flash/SRAM mocks are validator-owned |
 | `cortex-m-hard-fault-debug` | Single file | Single file | One diagnosis-and-repair C unit; immutable exception, register, map, disassembly, and defective-source evidence is supplied |
+| `compiler-trace-regression-debug` | Single file | Single file | One diagnosis-and-repair C unit; immutable compiler diagnostic, execution trace, and defective-source evidence is supplied |
 | `i2c-controller-recovery` | Single file | Single file | One I2C controller implementation unit; opaque I2C0 mocks and protocol-ordering tests are validator-owned |
 | `gpio-edge-debounce` | Single file | Single file | One GPIO button driver unit; opaque edge/wake and interrupt-mask mocks are validator-owned |
 | `adc-threshold-watchdog` | Single file | Single file | One ADC threshold monitor unit; opaque status, data, and interrupt-mask mocks are validator-owned |

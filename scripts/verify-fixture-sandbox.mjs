@@ -52,6 +52,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "compiler-trace-regression-debug",
+    source: "reference/compiler_trace_debug.c",
+    suite: "firmware",
+  },
+  {
     taskId: "i2c-controller-recovery",
     source: "reference/i2c_controller.c",
     suite: "firmware",

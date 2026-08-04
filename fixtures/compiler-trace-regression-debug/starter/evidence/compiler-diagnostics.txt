@@ -1,0 +1,6 @@
+arm-none-eabi-gcc -std=c11 -Wall -Wextra -Wconversion -Werror -mcpu=cortex-m3 -mthumb -c defective_source.c
+
+defective_source.c:16:5: error: conversion from 'uint32_t' to 'uint8_t' may change value [-Werror=conversion]
+   16 |     transfer->total_bytes - transfer->next_offset_bytes;
+      |     ^~~~~~~~
+cc1: all warnings being treated as errors

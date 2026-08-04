@@ -161,6 +161,12 @@ source excerpt. Its public tests verify the exact cross-evidence diagnosis,
 Thumb-address symbolization, one-past effective address, and repaired log-store
 boundaries without requiring target hardware.
 
+The active `compiler-trace-regression-debug` fixture supplies an immutable
+compiler narrowing diagnostic, DMA-planner execution trace, and defective
+source excerpt. Its public tests verify the exact cross-evidence diagnosis,
+full-width remaining-byte arithmetic, bounded chunk sequences, state
+invariants, and stable completion without accessing DMA hardware.
+
 The active `i2c-controller-recovery` fixture uses an opaque deterministic I2C0
 model. Its public tests verify initialization, stale-status clearing, bounded
 START/address/data ordering, terminal-result consumption, arbitration-loss

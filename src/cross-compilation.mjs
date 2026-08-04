@@ -64,6 +64,17 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "compiler-trace-regression-debug",
+    source:
+      "fixtures/compiler-trace-regression-debug/reference/compiler_trace_debug.c",
+    includes: Object.freeze([
+      "fixtures/compiler-trace-regression-debug/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "i2c-controller-recovery",
     source: "fixtures/i2c-controller-recovery/reference/i2c_controller.c",
     includes: Object.freeze([
