@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/compiler_trace_debug.c",
+  "mutations": [
+    {
+      "id": "accept-null-diagnosis",
+      "description": "Report success for a null diagnosis output.",
+      "find": "  if (diagnosis == NULL) return false;",
+      "replace": "  if (diagnosis == NULL) return true;"
+    },
+    {
+      "id": "report-unknown-cause",
+      "description": "Fail to identify the uint8_t remaining-byte truncation.",
+      "find": ".primary_cause = COMPILER_TRACE_CAUSE_UINT8_REMAINING_TRUNCATION,",
+      "replace": ".primary_cause = COMPILER_TRACE_CAUSE_UNKNOWN,"
+    },
+    {
+      "id": "report-unknown-repair",
+      "description": "Omit the required uint32_t arithmetic repair.",
+      "find": ".repair = COMPILER_TRACE_REPAIR_KEEP_REMAINING_UINT32,",
+      "replace": ".repair = COMPILER_TRACE_REPAIR_UNKNOWN,"
+    },
+    {
+      "id": "report-wrong-diagnostic-line",
+      "description": "Attribute the compiler diagnostic to the wrong source line.",
+      "find": ".diagnostic_line = UINT32_C(16),",
+      "replace": ".diagnostic_line = UINT32_C(15),"
+    },
+    {
+      "id": "report-wrong-transfer-size",
+      "description": "Report the wrong captured transfer length.",
+      "find": ".transfer_bytes = UINT32_C(320),",
+      "replace": ".transfer_bytes = UINT32_C(256),"
+    },
+    {
+      "id": "report-wrong-first-chunk",
+      "description": "Report a first chunk inconsistent with the trace.",
+      "find": ".first_chunk_bytes = UINT32_C(64),",
+      "replace": ".first_chunk_bytes = UINT32_C(63),"
+    },
+    {
+      "id": "report-wrong-divergent-offset",
+      "description": "Place the first divergence at the wrong transfer offset.",
+      "find": ".divergent_offset_bytes = UINT32_C(64),",
+      "replace": ".divergent_offset_bytes = UINT32_C(0),"
+    },
+    {
+      "id": "report-nonzero-observed-remaining",
+      "description": "Ignore the zero remaining count shown in the defective trace.",
+      "find": ".observed_remaining_bytes = UINT32_C(0),",
+      "replace": ".observed_remaining_bytes = UINT32_C(255),"
+    },
+    {
+      "id": "report-wrong-expected-remaining",
+      "description": "Miscompute the 320 minus 64 remaining-byte count.",
+      "find": ".expected_remaining_bytes = UINT32_C(256),",
+      "replace": ".expected_remaining_bytes = UINT32_C(255),"
+    },
+    {
+      "id": "report-wrong-source-width",
+      "description": "Treat the uint32_t source expression as 16 bits wide.",
+      "find": ".source_width_bits = UINT32_C(32),",
+      "replace": ".source_width_bits = UINT32_C(16),"
+    },
+    {
+      "id": "report-wrong-narrowed-width",
+      "description": "Treat the uint8_t destination as 16 bits wide.",
+      "find": ".narrowed_width_bits = UINT32_C(8),",
+      "replace": ".narrowed_width_bits = UINT32_C(16),"
+    },
+    {
+      "id": "ignore-conversion-warning",
+      "description": "Fail to report the compiler's value-changing conversion warning.",
+      "find": ".conversion_warning = true,",
+      "replace": ".conversion_warning = false,"
+    },
+    {
+      "id": "ignore-premature-completion",
+      "description": "Fail to classify the trace termination as premature.",
+      "find": ".premature_completion = true,",
+      "replace": ".premature_completion = false,"
+    },
+    {
+      "id": "accept-null-transfer-init",
+      "description": "Report successful initialization for a null state pointer.",
+      "find": "  if (\n    transfer == NULL ||\n    total_bytes == 0u ||",
+      "replace": "  if (transfer == NULL) return true;\n  if (\n    total_bytes == 0u ||"
+    },
+    {
+      "id": "accept-zero-transfer",
+      "description": "Allow an empty transfer.",
+      "find": "    total_bytes == 0u ||\n    total_bytes > COMPILER_TRACE_MAX_TRANSFER_BYTES\n  ) return false;",
+      "replace": "    total_bytes > COMPILER_TRACE_MAX_TRANSFER_BYTES\n  ) return false;"
+    },
+    {
+      "id": "accept-oversized-transfer",
+      "description": "Allow a transfer above the documented maximum.",
+      "find": "    total_bytes > COMPILER_TRACE_MAX_TRANSFER_BYTES\n  ) return false;\n\n  *transfer",
+      "replace": "    false\n  ) return false;\n\n  *transfer"
+    },
+    {
+      "id": "initialize-at-end",
+      "description": "Initialize the next offset to the transfer end.",
+      "find": ".next_offset_bytes = 0u,\n    .initialized = true,",
+      "replace": ".next_offset_bytes = total_bytes,\n    .initialized = true,"
+    },
+    {
+      "id": "initialize-as-complete",
+      "description": "Mark a fresh transfer complete before any chunk is planned.",
+      "find": ".initialized = true,\n    .complete = false,",
+      "replace": ".initialized = true,\n    .complete = true,"
+    },
+    {
+      "id": "accept-uninitialized-state",
+      "description": "Plan chunks for state that was never initialized.",
+      "find": "  if (!transfer->initialized) return false;",
+      "replace": "  if (transfer->initialized && false) return false;"
+    },
+    {
+      "id": "accept-offset-past-end",
+      "description": "Skip the invariant that prevents unsigned underflow.",
+      "find": "  if (transfer->next_offset_bytes > transfer->total_bytes) return false;",
+      "replace": "  if (false) return false;"
+    },
+    {
+      "id": "ignore-completion-invariant",
+      "description": "Accept mismatched complete and next-offset state.",
+      "find": "  return transfer->complete ==\n    (transfer->next_offset_bytes == transfer->total_bytes);",
+      "replace": "  return true;"
+    },
+    {
+      "id": "repeat-uint8-truncation",
+      "description": "Keep remaining bytes in uint8_t and reproduce the regression.",
+      "find": "  uint32_t remaining_bytes;",
+      "replace": "  uint8_t remaining_bytes;"
+    },
+    {
+      "id": "use-63-byte-maximum",
+      "description": "Use a chunk limit one byte below the contract.",
+      "find": "    ? COMPILER_TRACE_DMA_MAX_CHUNK_BYTES\n    : remaining_bytes;",
+      "replace": "    ? COMPILER_TRACE_DMA_MAX_CHUNK_BYTES - UINT32_C(1)\n    : remaining_bytes;"
+    },
+    {
+      "id": "always-use-maximum-chunk",
+      "description": "Overrun short final transfers by always planning 64 bytes.",
+      "find": "  chunk_bytes = remaining_bytes > COMPILER_TRACE_DMA_MAX_CHUNK_BYTES\n    ? COMPILER_TRACE_DMA_MAX_CHUNK_BYTES\n    : remaining_bytes;",
+      "replace": "  chunk_bytes = COMPILER_TRACE_DMA_MAX_CHUNK_BYTES;"
+    },
+    {
+      "id": "report-next-offset",
+      "description": "Publish the end rather than the start offset for each descriptor.",
+      "find": ".offset_bytes = transfer->next_offset_bytes,",
+      "replace": ".offset_bytes = transfer->next_offset_bytes + chunk_bytes,"
+    },
+    {
+      "id": "never-mark-final-chunk",
+      "description": "Fail to identify the final descriptor.",
+      "find": ".final_chunk = chunk_bytes == remaining_bytes,",
+      "replace": ".final_chunk = false,"
+    },
+    {
+      "id": "leave-chunk-output-stale",
+      "description": "Advance state without publishing the planned descriptor.",
+      "find": "  *chunk = planned;",
+      "replace": "  (void)planned;"
+    },
+    {
+      "id": "do-not-advance-offset",
+      "description": "Return the same chunk indefinitely.",
+      "find": "  transfer->next_offset_bytes += chunk_bytes;",
+      "replace": "  transfer->next_offset_bytes += 0u;"
+    },
+    {
+      "id": "complete-after-first-chunk",
+      "description": "Mark every planned chunk as terminal.",
+      "find": "  transfer->complete = transfer->next_offset_bytes == transfer->total_bytes;",
+      "replace": "  transfer->complete = true;"
+    },
+    {
+      "id": "return-complete-for-ready-chunk",
+      "description": "Return terminal status while publishing a descriptor.",
+      "find": "  return COMPILER_TRACE_RESULT_CHUNK_READY;",
+      "replace": "  return COMPILER_TRACE_RESULT_COMPLETE;"
+    },
+    {
+      "id": "overwrite-output-after-completion",
+      "description": "Mutate the caller's output on an idempotent complete call.",
+      "find": "  if (transfer->complete) return COMPILER_TRACE_RESULT_COMPLETE;",
+      "replace": "  if (transfer->complete) {\n    *chunk = (compiler_trace_chunk_t){0};\n    return COMPILER_TRACE_RESULT_COMPLETE;\n  }"
+    }
+  ]
+}

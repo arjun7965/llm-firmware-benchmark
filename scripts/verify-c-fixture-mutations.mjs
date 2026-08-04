@@ -20,6 +20,7 @@ runFixtureMutationTests({
     "interrupt-vector-configuration",
     "linker-memory-map",
     "cortex-m-hard-fault-debug",
+    "compiler-trace-regression-debug",
     "i2c-controller-recovery",
     "gpio-edge-debounce",
     "adc-threshold-watchdog",

@@ -1,0 +1,14 @@
+Captured release-build trace for total_bytes=320:
+
+step  event                 offset  local remaining  chunk  complete
+0     initialized          0       -                -      false
+1     chunk ready          0       64               64     false
+2     planner re-entered   64      0                -      false
+3     completion returned  64      0                -      true
+
+Expected at step 2:
+  remaining = 320 - 64 = 256
+  next chunk = { offset_bytes=64, length_bytes=64, final_chunk=false }
+
+The DMA completion trace contains only the first 64-byte descriptor. No DMA
+hardware error, cancellation, reset, or concurrent state mutation occurred.

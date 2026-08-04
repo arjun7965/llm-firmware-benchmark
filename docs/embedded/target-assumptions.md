@@ -110,6 +110,10 @@ data, BSS, and stack layout before copying data and clearing BSS. The active
 `cortex-m-hard-fault-debug` task uses a supplied Cortex-M3 exception frame, SCB
 snapshot, linker map, disassembly, and defective source to derive one fixed
 diagnosis and repair without accessing live hardware. The active
+`compiler-trace-regression-debug` task uses a supplied compiler narrowing
+diagnostic, DMA-planner execution trace, and defective source to derive one
+fixed diagnosis and a full-width chunk-planning repair without accessing DMA
+hardware. The active
 `i2c-controller-recovery` task uses an opaque
 I2C0 model with deterministic status snapshots, bounded write state, and
 arbitration-loss and timeout recovery without hardware polling loops. The
@@ -198,6 +202,7 @@ extension use, alignment behavior, memory map, and timer source.
 | `interrupt-vector-configuration` | `armv7m-bare-metal` | Cortex-M3; 128-byte-aligned linker-reserved RAM vector table; opaque SCB/NVIC and barrier accessors; reset starts masked; live updates preserve global interrupt state |
 | `linker-memory-map` | `armv7m-bare-metal` | Cortex-M3; opaque flash/SRAM and linker-symbol model; validated reset-time image/data/BSS/stack layout; data copy and BSS clear; no concurrency, heap, cache, DMA, FPU, or RTOS |
 | `cortex-m-hard-fault-debug` | `armv7m-bare-metal` | Cortex-M3; immutable PSP exception frame, SCB status, map, disassembly, and defective source; precise forced BusFault diagnosis and one-past log repair; no live hardware access |
+| `compiler-trace-regression-debug` | `armv7m-bare-metal` | Cortex-M3; immutable compiler narrowing diagnostic, DMA-planner execution trace, and defective source; exact truncation diagnosis and full-width bounded chunk repair; no live hardware access |
 | `dma-cache-coherency` | `armv7m-bare-metal` | Cortex-M7 override; opaque noncoherent 32-byte cache maintenance and DMA boundary; four-byte buffers; one receive-transfer slot; no direct cache registers |
 | `i2c-controller-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque I2C0 accessor model; bounded foreground writes; deterministic START/address/data status events; arbitration-loss and wrap-safe timeout recovery |
 | `gpio-edge-debounce` | `armv7m-bare-metal` | Cortex-M3; opaque GPIO0 active-low edge/wake latches; non-nested ISR capture; foreground debounce and exact interrupt-state restoration |
@@ -239,7 +244,7 @@ rubric, dependency entry, and validation commands.
 binary parser, Modbus RTU receiver, CAN transport reassembler, and BLE
 advertising reassembler, for ARMv7-M and RV32. It also compiles the timer,
 interrupt-vector, linker-memory-map, Cortex-M hard-fault diagnosis and repair,
-I2C-controller, GPIO-debounce,
+compiler/trace regression diagnosis and repair, I2C-controller, GPIO-debounce,
 ADC-threshold/watchdog, PWM synchronized-update, watchdog-window recovery,
 brownout safe-mode, fault crash-record, idempotent system-init, timer-DMA
 handoff, timer capture/compare overflow, UART, SPI-DMA,
