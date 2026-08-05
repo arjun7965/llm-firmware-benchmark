@@ -1212,6 +1212,7 @@ export const validationProfileSet = new Set(validationProfileIds);
 export const validationEnvironmentSet = new Set(validationEnvironmentIds);
 export const sandboxRunnableValidationProfileIds = Object.freeze([
   "c11-host",
+  "cpp17-host",
   "go-std",
   "node-typescript",
   "node-typescript-postgresql",

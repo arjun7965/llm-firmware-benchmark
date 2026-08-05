@@ -113,6 +113,12 @@ aligned fixed blocks and deterministic exhaustion/reuse, add
 `fixed-point-stack-budget` for Q-format arithmetic with a caller-owned stack
 watermark and bounded batch processing.
 
+The active `mixed-c-cpp-mmio-safety-review` fixture compiles its opaque C11
+MMIO mock separately from the C++17 answer and tests. Immutable defective
+evidence drives fixed-line language-safety findings; ordered accessor calls,
+checked transfer-count conversion, move-only RAII cleanup, self-move, and two
+independent peripheral instances are validated by public tests and mutations.
+
 The active protocol fixtures add Modbus RTU silence-framed stateful request
 decoding with CRC recovery, bounded segmented classic-CAN transport payloads
 with sequence/DLC/timeout checks, and advertiser-bound BLE-style fragments with

@@ -18,3 +18,4 @@ jobs:
         with:
           node-version: 22
       - run: npm run test:c
+      - run: npm run test:cpp

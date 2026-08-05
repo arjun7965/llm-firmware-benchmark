@@ -837,7 +837,7 @@ export function validateFixtureValidationReport(report) {
     "validationEnvironment",
   ];
   requireExactKeys(report, topLevelKeys, "fixture validation report");
-  if (report.schemaVersion !== "1.6") {
+  if (!["1.6", "1.7"].includes(report.schemaVersion)) {
     throw new TypeError("unsupported fixture validation report version");
   }
   if (
@@ -894,6 +894,14 @@ export function validateFixtureValidationReport(report) {
     report.validationProfile,
     "fixture validation validationProfile",
   );
+  if (
+    report.validationProfile === "cpp17-host" &&
+    report.schemaVersion !== "1.7"
+  ) {
+    throw new TypeError(
+      "cpp17-host fixture validation reports require schemaVersion 1.7",
+    );
+  }
   const validationProfileContract = getValidationProfileRevision(
     report.validationProfile,
     report.validationProfileRevision,
@@ -1412,7 +1420,7 @@ export function runFixtureValidation({
     }
 
     const report = {
-      schemaVersion: "1.6",
+      schemaVersion: "1.7",
       taskId,
       answerFiles: answerSummary.files,
       answerSha256: answerSummary.sha256,

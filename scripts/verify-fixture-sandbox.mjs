@@ -183,6 +183,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "mixed-c-cpp-mmio-safety-review",
+    source: "reference/mmio_safety_review.cpp",
+    suite: "firmware",
+  },
+  {
     taskId: "dma-cache-coherency",
     source: "reference/dma_cache_transfer.c",
     suite: "firmware",
@@ -315,7 +320,7 @@ try {
       );
     }
     if (
-      report.schemaVersion !== "1.6" ||
+      report.schemaVersion !== "1.7" ||
       report.suite !== reference.suite ||
       report.validationProfile !== validationProfile.id ||
       report.validationProfileRevision !== validationProfile.revision ||

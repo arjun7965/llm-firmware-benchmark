@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "1.5",
+  "taskId": "mixed-c-cpp-mmio-safety-review",
+  "targetProfile": "armv7m-bare-metal",
+  "validationProfile": "cpp17-host",
+  "status": "active",
+  "language": "cpp17",
+  "toolVersionArgs": {
+    "cc": ["--version"],
+    "c++": ["--version"]
+  },
+  "answer": {
+    "format": "markdown-fenced-code",
+    "language": "cpp",
+    "output": "generated/answer.cpp"
+  },
+  "paths": {
+    "starter": "starter",
+    "mocks": "mocks",
+    "publicTests": "tests/public",
+    "reference": "reference",
+    "scripts": "scripts",
+    "generated": "generated",
+    "build": "build"
+  },
+  "commands": [
+    {
+      "id": "compile-mock",
+      "phase": "compile",
+      "argv": [
+        "cc",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-Wcast-qual",
+        "-Istarter",
+        "-Imocks",
+        "-c",
+        "mocks/mock_mmio_safety.c",
+        "-o",
+        "build/mock_mmio_safety.o"
+      ],
+      "requiredTools": ["cc"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "cpp17-answer-compile",
+      "phase": "compile",
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-Wconversion",
+        "-Wsign-conversion",
+        "-Wold-style-cast",
+        "-Wshadow",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-Istarter",
+        "-c",
+        "generated/answer.cpp",
+        "-o",
+        "build/answer.o"
+      ],
+      "requiredTools": ["c++"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "cpp17-test-compile",
+      "phase": "compile",
+      "argv": [
+        "c++",
+        "-std=c++17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-pedantic",
+        "-Wconversion",
+        "-Wsign-conversion",
+        "-Wold-style-cast",
+        "-Wshadow",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-Istarter",
+        "-Imocks",
+        "-c",
+        "tests/public/test_mmio_safety_review.cpp",
+        "-o",
+        "build/test_mmio_safety_review.o"
+      ],
+      "requiredTools": ["c++"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "cpp17-link",
+      "phase": "compile",
+      "argv": [
+        "c++",
+        "build/answer.o",
+        "build/test_mmio_safety_review.o",
+        "build/mock_mmio_safety.o",
+        "-o",
+        "build/public-tests"
+      ],
+      "requiredTools": ["c++"],
+      "timeoutMs": 30000
+    },
+    {
+      "id": "public-tests",
+      "phase": "test",
+      "argv": ["build/public-tests"],
+      "requiredTools": [],
+      "timeoutMs": 5000
+    }
+  ]
+}

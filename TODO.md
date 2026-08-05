@@ -224,8 +224,10 @@ record exact versions in validation reports.
     frame, SCB snapshot, linker map, disassembly, and one-past source defect.
   - [x] Add deterministic compiler-narrowing diagnosis from a warning,
     DMA-planner execution trace, and premature-completion source defect.
-- [ ] Add embedded C and C++ review tasks covering undefined behavior, integer
+- [x] Add embedded C and C++ review tasks covering undefined behavior, integer
   conversion, ownership, RAII, portability, and MISRA-style constraints.
+  - [x] Add deterministic mixed C/C++ MMIO evidence review with lifetime,
+    aliasing, checked conversion, opaque-accessor, and move-only RAII checks.
 - [ ] Add firmware-security tasks for untrusted input, debug interfaces, secret
   handling, update authentication, memory protection, and fault injection.
 

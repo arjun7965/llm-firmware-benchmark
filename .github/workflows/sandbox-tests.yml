@@ -28,7 +28,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
-            apparmor-profiles bubblewrap bzip2 curl gcc libc6-dev make \
+            apparmor-profiles bubblewrap bzip2 curl gcc g++ libc6-dev make \
             util-linux
       - name: Install pinned root-owned PostgreSQL runtime
         run: |

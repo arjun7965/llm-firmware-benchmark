@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/mmio_safety_review.cpp",
+  "mutations": [
+    {
+      "id": "omit-dangling-reference-finding",
+      "description": "Do not report the escaped local MMIO owner.",
+      "find": "    true, 17u,",
+      "replace": "    false, 17u,"
+    },
+    {
+      "id": "report-wrong-aliasing-line",
+      "description": "Report an incompatible-overlay finding at the wrong source line.",
+      "find": "    true, 21u,",
+      "replace": "    true, 20u,"
+    },
+    {
+      "id": "accept-null-diagnosis-output",
+      "description": "Claim success for a null diagnosis output.",
+      "find": "  if (findings == nullptr) return false;",
+      "replace": "  if (findings == nullptr) return true;"
+    },
+    {
+      "id": "accept-zero-transfer",
+      "description": "Allow a zero-length transfer to reach MMIO setup.",
+      "find": "count == 0u",
+      "replace": "false"
+    },
+    {
+      "id": "allow-unchecked-narrowing",
+      "description": "Permit a count beyond the documented 4095 maximum.",
+      "find": "count > maximum_transfer_count",
+      "replace": "count > 65535u"
+    },
+    {
+      "id": "truncate-valid-256-count",
+      "description": "Narrow a valid 256-count transfer to an incorrect byte-sized value.",
+      "find": "static_cast<std::uint16_t>(count)",
+      "replace": "static_cast<std::uint16_t>(count & 255u)"
+    },
+    {
+      "id": "omit-stale-terminal-clear",
+      "description": "Leave stale terminal status uncleared before starting.",
+      "find": "mmio_write_status_clear(registers, MMIO_STATUS_TERMINAL);",
+      "replace": "mmio_write_status_clear(registers, 0u);"
+    },
+    {
+      "id": "write-count-before-clear",
+      "description": "Program transfer count before clearing terminal status.",
+      "find": "  mmio_write_status_clear(registers, MMIO_STATUS_TERMINAL);\n  mmio_write_transfer_count(registers, checked_count);",
+      "replace": "  mmio_write_transfer_count(registers, checked_count);\n  mmio_write_status_clear(registers, MMIO_STATUS_TERMINAL);"
+    },
+    {
+      "id": "allow-second-start",
+      "description": "Allow a second start while the transfer owner is active.",
+      "find": "if (active_) return mmio_transfer_result::busy;",
+      "replace": "if (false) return mmio_transfer_result::busy;"
+    },
+    {
+      "id": "double-read-status",
+      "description": "Read status twice during one poll operation.",
+      "find": "const std::uint32_t terminal = status & MMIO_STATUS_TERMINAL;",
+      "replace": "const std::uint32_t terminal = (status & MMIO_STATUS_TERMINAL) | (mmio_read_status(registers_) & 0u);"
+    },
+    {
+      "id": "complete-pending-transfer",
+      "description": "Treat a pending status snapshot as terminal completion.",
+      "find": "if (terminal == 0u) return mmio_transfer_result::pending;",
+      "replace": "if (terminal == 0u) return mmio_transfer_result::completed;"
+    },
+    {
+      "id": "do-not-ack-terminal-status",
+      "description": "Fail to acknowledge exactly the asserted terminal bits.",
+      "find": "mmio_write_status_clear(registers_, terminal);",
+      "replace": "mmio_write_status_clear(registers_, 0u);"
+    },
+    {
+      "id": "clear-unrelated-status",
+      "description": "Acknowledge unrelated status bits observed with completion.",
+      "find": "mmio_write_status_clear(registers_, terminal);",
+      "replace": "mmio_write_status_clear(registers_, status);"
+    },
+    {
+      "id": "leave-terminal-transfer-enabled",
+      "description": "Leave control enabled after terminal completion or error.",
+      "find": "  mmio_write_status_clear(registers_, terminal);\n  mmio_write_control(registers_, MMIO_CONTROL_DISABLED);",
+      "replace": "  mmio_write_status_clear(registers_, terminal);\n  mmio_write_control(registers_, MMIO_CONTROL_START);"
+    },
+    {
+      "id": "return-completed-for-hardware-error",
+      "description": "Discard the hardware-error result classification.",
+      "find": "? mmio_transfer_result::hardware_error",
+      "replace": "? mmio_transfer_result::completed"
+    },
+    {
+      "id": "cancel-without-disable",
+      "description": "Release active ownership without disabling the peripheral.",
+      "find": "  if (active_) {\n    mmio_write_control(registers_, MMIO_CONTROL_DISABLED);",
+      "replace": "  if (active_) {\n    mmio_write_control(registers_, MMIO_CONTROL_START);"
+    },
+    {
+      "id": "move-drops-active-ownership",
+      "description": "Construct a moved-to owner that no longer represents the active transfer.",
+      "find": ": registers_(other.registers_), count_(other.count_), active_(other.active_) {",
+      "replace": ": registers_(other.registers_), count_(other.count_), active_(false) {"
+    },
+    {
+      "id": "move-assignment-leaks-destination",
+      "description": "Overwrite a destination owner without releasing its active transfer.",
+      "find": "    cancel();\n    registers_ = other.registers_;",
+      "replace": "    registers_ = other.registers_;"
+    },
+    {
+      "id": "self-move-loses-owner",
+      "description": "Make self-move assignment perform cleanup and leave itself inert.",
+      "find": "if (this != &other)",
+      "replace": "if (true)"
+    },
+    {
+      "id": "destructor-omits-cleanup",
+      "description": "Make destruction leak an active hardware transfer.",
+      "find": "mmio_transfer_t::~mmio_transfer_t() noexcept {\n  cancel();\n}",
+      "replace": "mmio_transfer_t::~mmio_transfer_t() noexcept {\n}"
+    }
+  ]
+}

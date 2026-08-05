@@ -167,7 +167,7 @@ export function toPublicResult(rawResult, source = JSON.stringify(rawResult)) {
 
   const answer = sanitizeText(extractAnswer(rawResult.stdout));
   const publicResult = {
-    schemaVersion: "1.4",
+    schemaVersion: "1.5",
     task: {
       id: requireString(rawResult.task, "task"),
       category: requireString(rawResult.category, "category"),
@@ -216,7 +216,7 @@ export function validatePublicResult(result) {
     "task",
   ];
   requireExactKeys(result, topLevelKeys, "public result");
-  if (result.schemaVersion !== "1.3" && result.schemaVersion !== "1.4") {
+  if (!["1.3", "1.4", "1.5"].includes(result.schemaVersion)) {
     throw new TypeError("unsupported public result schemaVersion");
   }
   const taskKeys = [
@@ -226,7 +226,9 @@ export function validatePublicResult(result) {
     "targetProfile",
     "validationProfile",
   ];
-  if (result.schemaVersion === "1.4") taskKeys.push("scoringMode");
+  if (["1.4", "1.5"].includes(result.schemaVersion)) {
+    taskKeys.push("scoringMode");
+  }
   requireExactKeys(
     result.task,
     taskKeys,
@@ -246,7 +248,7 @@ export function validatePublicResult(result) {
   requireString(result.task?.id, "task.id");
   requireString(result.task?.category, "task.category");
   requireSuite(result.task.suite, "task.suite");
-  if (result.schemaVersion === "1.4") {
+  if (["1.4", "1.5"].includes(result.schemaVersion)) {
     requireScoringMode(result.task.scoringMode, "task.scoringMode");
   }
   if (result.task.targetProfile !== null &&
@@ -258,6 +260,12 @@ export function validatePublicResult(result) {
     result.task.validationProfile,
     "task.validationProfile",
   );
+  if (
+    result.task.validationProfile === "cpp17-host" &&
+    result.schemaVersion !== "1.5"
+  ) {
+    throw new TypeError("cpp17-host public results require schemaVersion 1.5");
+  }
   if (result.task.suite === "firmware" &&
       result.task.targetProfile === null) {
     throw new TypeError("firmware task requires a targetProfile");

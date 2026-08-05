@@ -131,6 +131,7 @@ function fakeToolVersion(command, args, options) {
   }
   const versions = {
     bwrap: "bubblewrap 0.9.0",
+    "c++": "c++ (Ubuntu) 13.3.0",
     cc: "cc (Ubuntu) 13.3.0",
     node: "v22.16.0",
     prlimit: "prlimit from util-linux 2.39.3",
@@ -1190,9 +1191,17 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.6");
+  assert.equal(report.schemaVersion, "1.7");
   assert.equal(report.suite, "firmware");
   assert.equal(report.validationProfile, "c11-host");
+  assert.throws(
+    () => validateFixtureValidationReport({
+      ...report,
+      schemaVersion: "1.6",
+      validationProfile: "cpp17-host",
+    }),
+    /cpp17-host fixture validation reports require schemaVersion 1\.7/u,
+  );
   assert.equal(report.validationProfileRevision, 2);
   assert.match(report.validationProfileSha256, /^[a-f0-9]{64}$/u);
   assert.deepEqual(report.validationEnvironment.host, {
@@ -1453,6 +1462,105 @@ test("sandbox validation records successful compile and test phases", (t) => {
     }),
     /validation host does not match exactly one supported environment/u,
   );
+});
+
+test("cpp17-host validation attests both C and C++ toolchains", (t) => {
+  const fixture = sandboxFixture(t);
+  const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
+  tasks[0].targetProfile = "armv7m-bare-metal";
+  tasks[0].validationProfile = "cpp17-host";
+  writeFileSync(fixture.tasksPath, JSON.stringify(tasks));
+
+  const manifest = {
+    ...fixture.manifest,
+    schemaVersion: "1.5",
+    targetProfile: "armv7m-bare-metal",
+    validationProfile: "cpp17-host",
+    language: "cpp17",
+    toolVersionArgs: {
+      "c++": ["--version"],
+      cc: ["--version"],
+    },
+    answer: {
+      ...fixture.manifest.answer,
+      language: "cpp",
+      output: "generated/answer.cpp",
+    },
+    commands: [
+      {
+        id: "c-compile",
+        phase: "compile",
+        argv: ["cc", "-c", "generated/answer.cpp", "-o", "build/c-proof.o"],
+        requiredTools: ["cc"],
+        timeoutMs: 30_000,
+      },
+      {
+        id: "cpp-compile",
+        phase: "compile",
+        argv: ["c++", "-c", "generated/answer.cpp", "-o", "build/tests"],
+        requiredTools: ["c++"],
+        timeoutMs: 30_000,
+      },
+      {
+        id: "public-tests",
+        phase: "test",
+        argv: ["build/tests"],
+        requiredTools: [],
+        timeoutMs: 5_000,
+      },
+    ],
+  };
+  writeFileSync(
+    join(fixture.fixtureRoot, "generated", "answer.cpp"),
+    "int answer() { return 0; }\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "manifest.json"),
+    JSON.stringify(manifest),
+  );
+
+  const calls = [];
+  const { report } = runFixtureValidation({
+    taskId: "example-task",
+    fixturesRoot: fixture.fixturesRoot,
+    tasksPath: fixture.tasksPath,
+    resolveExecutableImpl: fakeExecutable,
+    readValidationHostImpl: matchingValidationHost,
+    spawnTool: fakeToolVersion,
+    now: deterministicNow(),
+    spawn: (command, args, options) => {
+      calls.push({ command, args, options });
+      const buildDestination = args.findIndex(
+        (value, index) =>
+          value === "/workspace/build" &&
+          args[index - 2] === "--bind",
+      );
+      if (calls.length === 2 && buildDestination > 0) {
+        const executable = join(args[buildDestination - 1], "tests");
+        writeFileSync(executable, "");
+        chmodSync(executable, 0o700);
+      }
+      return {
+        status: 0,
+        signal: null,
+        stdout: "ok\n",
+        stderr: "",
+      };
+    },
+  });
+
+  assert.equal(report.success, true);
+  assert.equal(report.schemaVersion, "1.7");
+  assert.equal(report.validationProfile, "cpp17-host");
+  assert.deepEqual(
+    report.toolchains.map((toolchain) => toolchain.name),
+    ["c++", "cc"],
+  );
+  assert.deepEqual(
+    report.phases.map((phase) => phase.argv[0]),
+    ["cc", "c++", "build/tests"],
+  );
+  assert.equal(calls.length, 3);
 });
 
 test("sandbox validation records and mounts every bundle file", (t) => {

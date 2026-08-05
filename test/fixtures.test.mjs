@@ -65,10 +65,10 @@ test("repository fixture scaffolds match task metadata", () => {
   assert.deepEqual(
     validateFixtureRepository({ fixturesRoot, tasksPath }),
     {
-      fixtureCount: 47,
-      activeCount: 47,
+      fixtureCount: 48,
+      activeCount: 48,
       scaffoldCount: 0,
-      commandCount: 97,
+      commandCount: 102,
     },
   );
 });
@@ -79,6 +79,17 @@ test("fixture validation rejects profile mismatch and unsafe paths", () => {
   const manifest = ringBufferFixture();
 
   assert.equal(validateFixtureManifest(manifest, task), manifest);
+  assert.throws(
+    () => validateFixtureManifest({
+      ...manifest,
+      schemaVersion: "1.4",
+      validationProfile: "cpp17-host",
+    }, {
+      ...task,
+      validationProfile: "cpp17-host",
+    }),
+    /cpp17-host requires fixture schemaVersion 1\.5/u,
+  );
   assert.throws(
     () => validateFixtureManifest({
       ...manifest,

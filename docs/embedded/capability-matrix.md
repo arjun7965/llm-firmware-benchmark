@@ -25,7 +25,7 @@ partial until deterministic fixtures and calibration are available.
 | `boot-update` | Image validation, rollback, version policy, interrupted updates | Covered: `secure-boot-image-validation`, `dual-slot-update-recovery` | Calibrate anti-rollback storage and multi-image dependency variants across model families |
 | `power-real-time` | Sleep, wake sources, clocks, deadlines, jitter, execution budgets | Covered: `low-power-wake-clock`, `real-time-deadline-budget` | Calibrate combined clock-transition and multi-rate workload variants across model families |
 | `debugging` | Diagnostics, traces, register dumps, map files, and disassembly | Covered: `cortex-m-hard-fault-debug`, `compiler-trace-regression-debug` | Calibrate crash and non-crash diagnostic variants across model families |
-| `language-safety` | Undefined behavior, integer conversion, ownership, RAII, portability | Partial: `embedded-ring-buffer`, `binary-parser` | Review mixed C/C++ MMIO code for lifetime and aliasing defects |
+| `language-safety` | Undefined behavior, integer conversion, ownership, RAII, portability | Covered: `mixed-c-cpp-mmio-safety-review`, `embedded-ring-buffer`, `binary-parser`; fixed-line mixed C/C++ MMIO diagnosis, checked conversion, opaque ABI, and move-only RAII cleanup | Add an interrupt-safe C/C++ ownership review with explicitly modelled ISR interleavings |
 | `firmware-security` | Untrusted input, debug access, updates, secrets, MPU, fault injection | Partial: `binary-parser` | Harden a boot command parser and debug-unlock policy |
 | `resource-optimization` | Code size, RAM, stack, energy, and bounded execution tradeoffs | Partial: `embedded-ring-buffer`, `fixed-point-stack-budget` | Optimize a fixed-point filter under explicit error and cycle budgets |
 
