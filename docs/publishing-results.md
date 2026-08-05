@@ -33,7 +33,7 @@ Raw records created before target profiles were introduced export with
 `task.targetProfile: null`. Do not infer a current profile for historical
 records; rerun the task if profile-bearing provenance is required.
 
-Raw records without `validationProfile` cannot be exported under the v1.4
+Raw records without `validationProfile` cannot be exported under the v1.4+
 contract. Rerun them to establish hosted-environment provenance.
 
 Raw records created before suite metadata was introduced infer `firmware` only
@@ -44,7 +44,7 @@ Raw records created before scoring-mode metadata export as `rubric-only`.
 Re-run them before presenting their output as deterministic validation
 evidence.
 
-The canonical public-result schema and all new exports use v1.4.
+The canonical public-result schema and all new exports use v1.5.
 
 ## Review Checklist
 

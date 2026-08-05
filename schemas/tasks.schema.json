@@ -113,6 +113,7 @@
       "validationProfile": {
         "enum": [
           "c11-host",
+          "cpp17-host",
           "go-std",
           "node-typescript",
           "node-typescript-postgresql",

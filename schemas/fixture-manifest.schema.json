@@ -18,7 +18,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1.4"
+      "const": "1.5"
     },
     "taskId": {
       "type": "string",
@@ -40,6 +40,7 @@
     "validationProfile": {
       "enum": [
         "c11-host",
+        "cpp17-host",
         "go-std",
         "node-typescript",
         "node-typescript-postgresql",

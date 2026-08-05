@@ -51,6 +51,7 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `spi-dma-transfer` | Single file | Single file | One driver implementation unit; SPI0/DMA0 mocks and DMA IRQ tests are validator-owned |
 | `can-controller-recovery` | Single file | Single file | One CAN0 controller implementation unit; mailbox, bus-off, and interrupt-mask tests are validator-owned |
 | `interrupt-deferred-work` | Single file | Single file | One atomic ISR-to-foreground dispatcher unit; nested-priority latch and interrupt-mask tests are validator-owned |
+| `mixed-c-cpp-mmio-safety-review` | Single file | Single file | One C++17 review-and-owner implementation unit; immutable defective evidence, opaque C MMIO mock, and tests are validator-owned |
 | `binary-parser` | Single file | Single file | One implementation unit; headers and tests are supplied |
 | `modbus-rtu-receiver` | Single file | Single file | One bounded Modbus RTU byte receiver; timestamps and request tests are validator-owned |
 | `can-transport-reassembly` | Single file | Single file | One classic-CAN transport reassembler; complete-frame and deadline tests are validator-owned |

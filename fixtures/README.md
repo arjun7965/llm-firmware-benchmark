@@ -113,6 +113,12 @@ aligned fixed blocks and deterministic exhaustion/reuse, add
 `fixed-point-stack-budget` for Q-format arithmetic with a caller-owned stack
 watermark and bounded batch processing.
 
+The active `mixed-c-cpp-mmio-safety-review` fixture compiles its opaque C11
+MMIO mock separately from the C++17 answer and tests. Immutable defective
+evidence drives fixed-line language-safety findings; ordered accessor calls,
+checked transfer-count conversion, move-only RAII cleanup, self-move, and two
+independent peripheral instances are validated by public tests and mutations.
+
 The active protocol fixtures add Modbus RTU silence-framed stateful request
 decoding with CRC recovery, bounded segmented classic-CAN transport payloads
 with sequence/DLC/timeout checks, and advertiser-bound BLE-style fragments with
@@ -238,7 +244,7 @@ wrap, stale-status acknowledgement, retained capture behavior, and overrun
 accounting.
 
 The current sandbox runner accepts active fixtures for the native-binary
-profiles `c11-host`, `go-std`, and `stable-rust`, the dependency-free
+profiles `c11-host`, `cpp17-host`, `go-std`, and `stable-rust`, the dependency-free
 `python3-stdlib` interpreter profile, and the runtime-attested
 `node-typescript`, `node-typescript-postgresql`, `python3-pytest-hypothesis`,
 `postgresql`, and `react18-typescript` profiles. Other dependency-bearing and
@@ -246,9 +252,10 @@ service fixtures must remain scaffolds until their exact
 packages and test runtimes can be verified, mounted, and executed in the test
 namespace.
 
-Fixture manifests use schema version 1.4; public result records remain at
-version 1.3. Validation reports use version 1.6, and mutation catalogs use
-version 1.3.
+Fixture manifests use schema version 1.5; legacy 1.4 manifests remain
+accepted. Public result records are emitted at version 1.5, with legacy 1.3
+and 1.4 records still accepted. Validation reports are emitted at version
+1.7, with legacy 1.6 reports accepted. Mutation catalogs use version 1.3.
 
 Run `npm run fixtures:check` to validate task/profile references, manifests,
 safe paths, and tracked directory structure. This command validates fixture

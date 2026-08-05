@@ -62,6 +62,7 @@ policies require no network and an isolated filesystem.
 | Profile | Pinned toolchains | Pinned packages | Test command contract |
 | --- | --- | --- | --- |
 | `c11-host` | GCC/`cc` 13.3.0 | None | Native `build/` executable |
+| `cpp17-host` | GCC/`cc` and `c++` 13.3.0 | None | C11 mock object linked with a C++17 native `build/` executable |
 | `go-std` | Go 1.24.4 | None; standard library only | Native `build/` executable |
 | `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | `tsc` compile and Node.js public-test commands |
 | `node-typescript-postgresql` | Node.js 22.16.0, PostgreSQL 16.9 | Express 5.1.0, `pg` 8.16.0, TypeScript 5.8.3, and types | Validator-owned TypeScript compile launcher plus Node.js public tests over a fresh private PostgreSQL socket |
@@ -135,7 +136,7 @@ and registry integrity values; the installed-tree hash additionally pins file
 contents, modes, paths, and directory layout. Dependency profiles without
 these runtime fields continue to fail closed before tools are resolved or
 executed. Standard-library-only profiles are not automatically eligible: the
-test sandbox supports native binaries produced by `c11-host`, `go-std`, and
+test sandbox supports native binaries produced by `c11-host`, `cpp17-host`, `go-std`, and
 `stable-rust`, plus approved interpreter commands for `python3-stdlib`,
 `python3-pytest-hypothesis`, `node-typescript`, `postgresql`, and
 `node-typescript-postgresql`, and `react18-typescript`. PostgreSQL-backed
@@ -153,6 +154,7 @@ bootstrap superuser so candidate scripts cannot reconnect with another role.
 | `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `ble-advertising-reassembly`, `brownout-safe-mode`, `can-controller-recovery`, `can-transport-reassembly`, `compiler-trace-regression-debug`, `cortex-m-hard-fault-debug`, `dma-cache-coherency`, `embedded-ring-buffer`, `fault-crash-record`, `firmware-state-machine`, `fixed-point-stack-budget`, `gpio-edge-debounce`, `i2c-controller-recovery`, `idempotent-system-init`, `interrupt-deferred-work`, `interrupt-vector-configuration`, `linker-memory-map`, `modbus-rtu-receiver`, `pwm-synchronized-update`, `resilient-serial-service`, `rtos-event-flags-deadlock`, `rtos-periodic-scheduler`, `rtos-priority-inversion`, `rtos-queue-semaphore`, `spi-dma-transfer`, `static-memory-pool`, `supervised-process-service`, `timer-capture-overflow`, `timer-dma-handoff`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
 | `secure-boot-image-validation`, `dual-slot-update-recovery` | `c11-host` |
 | `low-power-wake-clock`, `real-time-deadline-budget` | `c11-host` |
+| `mixed-c-cpp-mmio-safety-review` | `cpp17-host` |
 | `frontend-autocomplete` | `react18-typescript` |
 | `backend-idempotency`, `webhook-replay-security` | `node-typescript-postgresql` |
 | `concurrency-debug` | `python3-stdlib` |

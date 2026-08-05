@@ -119,7 +119,7 @@ export function validateFixtureManifest(manifest, task) {
   ) {
     throw new TypeError(`rubric-only task ${task.id} cannot define a fixture`);
   }
-  if (manifest.schemaVersion !== "1.4") {
+  if (!["1.4", "1.5"].includes(manifest.schemaVersion)) {
     throw new TypeError("unsupported fixture schemaVersion");
   }
   requireString(manifest.taskId, "fixture taskId", taskIdPattern);
@@ -137,6 +137,12 @@ export function validateFixtureManifest(manifest, task) {
     manifest.validationProfile,
     `fixture ${task.id} validationProfile`,
   );
+  if (
+    manifest.validationProfile === "cpp17-host" &&
+    manifest.schemaVersion !== "1.5"
+  ) {
+    throw new TypeError("cpp17-host requires fixture schemaVersion 1.5");
+  }
   if (manifest.validationProfile !== task.validationProfile) {
     throw new TypeError(
       `fixture ${task.id} validationProfile does not match tasks.json`,

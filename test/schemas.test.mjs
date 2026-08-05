@@ -283,7 +283,7 @@ test("JSON Schema files declare the expected contracts", () => {
     publicResultSchema.properties.task.properties.validationProfile.enum,
     validationProfileIds,
   );
-  assert.equal(publicResultSchema.properties.schemaVersion.const, "1.4");
+  assert.equal(publicResultSchema.properties.schemaVersion.const, "1.5");
   assert.deepEqual(
     publicResultSchema.properties.task.properties.scoringMode.enum,
     scoringModeIds,
@@ -305,7 +305,7 @@ test("JSON Schema files declare the expected contracts", () => {
     fixtureSchema.properties.validationProfile.enum,
     validationProfileIds,
   );
-  assert.equal(fixtureSchema.properties.schemaVersion.const, "1.4");
+  assert.equal(fixtureSchema.properties.schemaVersion.const, "1.5");
   assert.equal(
     fixtureSchema.properties.toolVersionArgs.additionalProperties.minItems,
     1,
@@ -345,7 +345,7 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(
     fixtureValidationSchema.properties.schemaVersion.const,
-    "1.6",
+    "1.7",
   );
   assert.equal(
     fixtureValidationSchema.properties.validationProfileRevision.minimum,

@@ -99,12 +99,23 @@ test("public result allowlists fields and extracts NCode answer text", () => {
   const result = toPublicResult(raw);
   const serialized = JSON.stringify(result);
 
-  assert.equal(result.schemaVersion, "1.4");
+  assert.equal(result.schemaVersion, "1.5");
   assert.equal(result.answer, "A legitimate answer.");
   assert.equal(result.task.suite, "firmware");
   assert.equal(result.task.scoringMode, "deterministic");
   assert.equal(result.task.targetProfile, "portable-c11");
   assert.equal(result.task.validationProfile, "c11-host");
+  assert.throws(
+    () => validatePublicResult({
+      ...result,
+      schemaVersion: "1.4",
+      task: {
+        ...result.task,
+        validationProfile: "cpp17-host",
+      },
+    }),
+    /cpp17-host public results require schemaVersion 1\.5/u,
+  );
   assert.equal(result.publication.reviewRequired, false);
   assert.equal(serialized.includes(uuid), false);
   assert.equal(serialized.includes("modelId"), false);

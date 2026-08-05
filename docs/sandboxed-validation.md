@@ -98,7 +98,7 @@ Each run writes ignored machine-readable output to:
 fixtures/<task-id>/build/validation-report.json
 ```
 
-The report follows `schemas/fixture-validation-report.schema.json` version 1.6.
+The report follows `schemas/fixture-validation-report.schema.json` version 1.7.
 It records every extracted file's path, byte length, and SHA-256 plus the direct
 single-file or canonical bundle SHA-256. It also records the logical
 validation-profile revision and contract SHA-256, concrete environment revision
