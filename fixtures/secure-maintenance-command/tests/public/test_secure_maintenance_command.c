@@ -224,6 +224,56 @@ static bool test_policy_malformed_and_unaligned_rejection(void) {
   return true;
 }
 
+static bool check_update_structural_rejection(
+  const uint8_t *frame,
+  size_t length
+) {
+  secure_maintenance_t maintenance = { 0 };
+  size_t before;
+
+  CHECK(initialize(&maintenance));
+  mock_sec0_set_update_verdict(true);
+  before = mock_sec0_event_count();
+  CHECK(secure_maintenance_process(&maintenance, frame, length, 0u) ==
+    SECURE_MAINTENANCE_RESULT_DENIED);
+  CHECK(maintenance.update_sequence == 0u);
+  CHECK(!maintenance.update_authorized);
+  CHECK(!mock_sec0_update_written());
+  CHECK(mock_sec0_event_count() == before + 3u);
+  CHECK(mock_sec0_event_at(before) == MOCK_SEC0_EVENT_DEBUG_GATE);
+  CHECK(mock_sec0_event_at(before + 1u) == MOCK_SEC0_EVENT_UPDATE_GATE);
+  CHECK(mock_sec0_event_at(before + 2u) == MOCK_SEC0_EVENT_UPDATE_REVOKE);
+  CHECK(mock_sec0_update_gate() == SEC0_DEBUG_GATE_LOCKED);
+  CHECK(!mock_sec0_invalid_access());
+  return true;
+}
+
+static bool test_update_structural_rejection(void) {
+  uint8_t frame[SEC0_UPDATE_FRAME_BYTES + 1u] = { 0 };
+
+  update_frame(frame, 1u);
+  put32(frame, 0u, SEC0_UPDATE_MAGIC ^ UINT32_C(1));
+  CHECK(check_update_structural_rejection(
+    frame, SEC0_UPDATE_FRAME_BYTES));
+
+  update_frame(frame, 1u);
+  CHECK(check_update_structural_rejection(frame, 23u));
+
+  update_frame(frame, 1u);
+  CHECK(check_update_structural_rejection(frame, 25u));
+
+  update_frame(frame, 1u);
+  frame[12] = 1u;
+  CHECK(check_update_structural_rejection(
+    frame, SEC0_UPDATE_FRAME_BYTES));
+
+  update_frame(frame, 1u);
+  frame[13] = 1u;
+  CHECK(check_update_structural_rejection(
+    frame, SEC0_UPDATE_FRAME_BYTES));
+  return true;
+}
+
 static bool test_authentication_failure_lockout_and_sequence_commit(void) {
   secure_maintenance_t maintenance = { 0 };
   uint8_t frame[SEC0_DEBUG_FRAME_BYTES] = { 0 };
@@ -332,6 +382,7 @@ int main(void) {
   const struct { const char *name; bool (*run)(void); } tests[] = {
     { "exact frames and replay", test_exact_frames_and_independent_replay },
     { "policy and malformed input", test_policy_malformed_and_unaligned_rejection },
+    { "update structural rejection", test_update_structural_rejection },
     { "authentication lockout", test_authentication_failure_lockout_and_sequence_commit },
     { "deadline expiry", test_expiry_and_wrap_safe_deadline },
     { "update and invalid API", test_update_policy_and_invalid_api },
