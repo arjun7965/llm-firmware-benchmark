@@ -34,6 +34,8 @@ code. Each task references a pinned hosted runtime contract from
 | `fault-crash-record` | A C11 compiler plus fixture-owned opaque FAULT0 status/control and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `idempotent-system-init` | A C11 compiler plus fixture-owned opaque SYSTEM0 configuration and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `secure-boot-image-validation` | A C11 compiler plus fixture-owned opaque BOOT0 header, measurement, signature, boot-target, and recovery-lock mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `secure-maintenance-command` | A C11 compiler plus fixture-owned opaque SEC0 lifecycle, challenge, verifier, and gate mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
+| `mpu-fault-containment` | A C11 compiler plus fixture-owned opaque MPU0/security-controller region, barrier, fault, and interrupt-state mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `dual-slot-update-recovery` | A C11 compiler plus fixture-owned opaque FLASH0 dual-slot erase/program/verify/boot-target and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `low-power-wake-clock` | A C11 compiler plus fixture-owned opaque PWRCLK0 wake, clock, sleep, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
 | `timer-dma-handoff` | A C11 compiler plus fixture-owned opaque TIMER0/DMA0 ownership, compare-stream, status, and interrupt-mask mock; `arm-none-eabi-gcc` is optional for Cortex-M3 compile-only validation |
@@ -215,11 +217,14 @@ npm run fixture:fault-crash:self-test
 npm run fixture:idempotent-init:self-test
 ```
 
-The boot/update fixtures use `cc` with deterministic BOOT0 image admission and
-FLASH0 dual-slot update mocks:
+The boot/update/security fixtures use `cc` with deterministic BOOT0 image
+admission, SEC0 maintenance authorization, MPU0 fault containment, and FLASH0
+dual-slot update mocks:
 
 ```bash
 npm run fixture:secure-boot:self-test
+npm run fixture:secure-maintenance:self-test
+npm run fixture:mpu-fault:self-test
 npm run fixture:dual-slot-update:self-test
 ```
 

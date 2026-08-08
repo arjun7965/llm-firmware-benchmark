@@ -43,6 +43,8 @@ answer contract or fixture until it is reclassified and calibrated under the
 | `fault-crash-record` | Single file | Single file | One fault capture unit; opaque status/control and retained crash-record tests are validator-owned |
 | `idempotent-system-init` | Single file | Single file | One reset-time initialization unit; opaque configuration and retained safe-mode tests are validator-owned |
 | `secure-boot-image-validation` | Single file | Single file | One signed-image admission unit; opaque BOOT0 measurement, signature, target, and recovery tests are validator-owned |
+| `secure-maintenance-command` | Single file | Single file | One untrusted boot/recovery command unit; opaque SEC0 lifecycle, challenge, debug/update verifier, and gate tests are validator-owned |
+| `mpu-fault-containment` | Single file | Single file | One MPU initialization and fault-containment unit; opaque MPU0/security-controller region, fault, barrier, and interrupt-state tests are validator-owned |
 | `dual-slot-update-recovery` | Single file | Single file | One update journal unit; opaque FLASH0 erase, program, verify, target, and interrupt-mask tests are validator-owned |
 | `low-power-wake-clock` | Single file | Single file | One low-power transition unit; opaque PWRCLK0 wake, clock, sleep, and interrupt-mask tests are validator-owned |
 | `timer-dma-handoff` | Single file | Single file | One timer/DMA ownership driver unit; opaque compare-stream, terminal-status, and interrupt-mask mocks are validator-owned |

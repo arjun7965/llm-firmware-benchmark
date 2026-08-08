@@ -167,6 +167,28 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "secure-maintenance-command",
+    source:
+      "fixtures/secure-maintenance-command/reference/secure_maintenance_command.c",
+    includes: Object.freeze([
+      "fixtures/secure-maintenance-command/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
+    id: "mpu-fault-containment",
+    source:
+      "fixtures/mpu-fault-containment/reference/mpu_fault_containment.c",
+    includes: Object.freeze([
+      "fixtures/mpu-fault-containment/starter",
+    ]),
+    targetIds: Object.freeze([
+      "armv7m-bare-metal",
+    ]),
+  }),
+  Object.freeze({
     id: "dual-slot-update-recovery",
     source:
       "fixtures/dual-slot-update-recovery/reference/dual_slot_update_recovery.c",

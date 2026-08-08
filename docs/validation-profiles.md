@@ -152,7 +152,7 @@ bootstrap superuser so candidate scripts cannot reconnect with another role.
 | Tasks | Validation profile |
 | --- | --- |
 | `adc-threshold-watchdog`, `bare-metal-timer`, `binary-parser`, `ble-advertising-reassembly`, `brownout-safe-mode`, `can-controller-recovery`, `can-transport-reassembly`, `compiler-trace-regression-debug`, `cortex-m-hard-fault-debug`, `dma-cache-coherency`, `embedded-ring-buffer`, `fault-crash-record`, `firmware-state-machine`, `fixed-point-stack-budget`, `gpio-edge-debounce`, `i2c-controller-recovery`, `idempotent-system-init`, `interrupt-deferred-work`, `interrupt-vector-configuration`, `linker-memory-map`, `modbus-rtu-receiver`, `pwm-synchronized-update`, `resilient-serial-service`, `rtos-event-flags-deadlock`, `rtos-periodic-scheduler`, `rtos-priority-inversion`, `rtos-queue-semaphore`, `spi-dma-transfer`, `static-memory-pool`, `supervised-process-service`, `timer-capture-overflow`, `timer-dma-handoff`, `uart-interrupt-driver`, `watchdog-window-recovery` | `c11-host` |
-| `secure-boot-image-validation`, `dual-slot-update-recovery` | `c11-host` |
+| `secure-boot-image-validation`, `secure-maintenance-command`, `mpu-fault-containment`, `dual-slot-update-recovery` | `c11-host` |
 | `low-power-wake-clock`, `real-time-deadline-budget` | `c11-host` |
 | `mixed-c-cpp-mmio-safety-review` | `cpp17-host` |
 | `frontend-autocomplete` | `react18-typescript` |
