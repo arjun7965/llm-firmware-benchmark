@@ -230,6 +230,10 @@ record exact versions in validation reports.
     aliasing, checked conversion, opaque-accessor, and move-only RAII checks.
 - [ ] Add firmware-security tasks for untrusted input, debug interfaces, secret
   handling, update authentication, memory protection, and fault injection.
+  - [ ] Finish calibration of deterministic `secure-maintenance-command` and
+    `mpu-fault-containment` fixtures, including self-contained prompts,
+    observable fail-closed tests, and compile-valid mutations; mark complete
+    only after the full validation suite and constrained benchmark smoke runs.
 
 ### Harness and Evaluation
 

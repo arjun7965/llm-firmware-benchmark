@@ -134,6 +134,17 @@ The active `secure-boot-image-validation` task uses opaque BOOT0
 header, measurement, signature, boot-target, and recovery-lock accessors. The
 candidate never receives raw image bytes or trusted keys, and the target is
 selected only after structure, version, digest, and immutable signature checks.
+The active `secure-maintenance-command` task uses opaque SEC0 lifecycle,
+physical-presence, challenge, debug-verifier, update-verifier, and gate
+accessors. SEC0 supplies the configured immutable verifier verdict unchanged;
+tags and digests are not local cryptographic inputs. It models exact unaligned little-endian frames, independent
+non-wrapping replay domains, wrap-safe challenge expiry, generic denial,
+fixed authentication lockout, and a candidate-invisible device secret.
+The active `mpu-fault-containment` task uses opaque MPU0 and security-controller
+accessors. It models Cortex-M3-aligned flash, SRAM, privileged key-vault, and
+highest-priority stack-guard regions, safe-first barriers/readback, deterministic
+fault latches, containment-before-clear IRQ handling, and reboot-only recovery;
+it does not model DMA or physical fault resistance.
 The active `dual-slot-update-recovery` task uses opaque FLASH0 erase,
 word-program, verify, boot-target, and interrupt-mask accessors. It models a
 caller-owned checksum-protected journal, strict version progression, safe
@@ -213,6 +224,8 @@ extension use, alignment behavior, memory map, and timer source.
 | `fault-crash-record` | `armv7m-bare-metal` | Cortex-M3; non-nested fault-frame capture; opaque FAULT0 containment/status model; checksum-protected retained crash record and foreground recovery |
 | `idempotent-system-init` | `armv7m-bare-metal` | Cortex-M3; opaque SYSTEM0 SAFE/clock/mask/READY configuration; caller-zeroed lifecycle state and retained safe-mode record |
 | `secure-boot-image-validation` | `armv7m-bare-metal` | Cortex-M3; opaque BOOT0 header/measurement/signature/target/recovery model; immutable verifier and no raw image/key access |
+| `secure-maintenance-command` | `armv7m-bare-metal` | Cortex-M3; opaque SEC0 lifecycle/presence/challenge/verifier/gate model; exact unaligned little-endian frames, replay domains, lockout, and secret boundary |
+| `mpu-fault-containment` | `armv7m-bare-metal` | Cortex-M3; opaque MPU0/security-controller model; four aligned regions, safe-first readback, deterministic fault latches, containment-before-clear, and reboot-only recovery |
 | `dual-slot-update-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque FLASH0 dual-slot erase/program/verify/target model; retained journal, strict version progression, one-boot trial, and foreground interrupt restoration |
 | `low-power-wake-clock` | `armv7m-bare-metal` | Cortex-M3; opaque PWRCLK0 RTC/GPIO/UART wake latches, 4 MHz deep-sleep clock, 48 MHz run-clock restoration, and foreground interrupt preservation |
 | `timer-dma-handoff` | `armv7m-bare-metal` | Cortex-M3; opaque TIMER0/DMA0 compare-stream ownership; non-nested DMA IRQ terminal priority; foreground abort/recovery preserves exact interrupt state |

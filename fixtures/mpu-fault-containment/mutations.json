@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/mpu_fault_containment.c",
+  "mutations": [
+    { "id": "enter-ready-before-readback", "description": "Leave normal mode marked ready after a readback or fault failure.", "find": "containment->ready = false;\n  containment->contained = true;\n  return false;", "replace": "containment->ready = true;\n  containment->contained = true;\n  return false;" },
+    { "id": "omit-sram-xn", "description": "Make SRAM executable.", "find": ".execute_never = MPU0_XN_SRAM", "replace": ".execute_never = false" },
+    { "id": "expose-key-vault", "description": "Permit unprivileged key-vault access.", "find": ".permissions = MPU0_PERM_KEY_VAULT", "replace": ".permissions = MPU0_PERM_SRAM" },
+    { "id": "weaken-stack-guard", "description": "Give the stack guard normal SRAM permissions.", "find": ".permissions = MPU0_PERM_STACK_GUARD", "replace": ".permissions = MPU0_PERM_SRAM" },
+    { "id": "reverse-priority", "description": "Reverse the region priority order.", "find": ".priority = 3u", "replace": ".priority = 0u" },
+    { "id": "accept-unverified-region-readback", "description": "Accept a wrong region configuration without enforcing the readback verdict.", "find": "!read_ok || !same_config(&actual, &expected)", "replace": "!read_ok || (same_config(&actual, &expected) && false)" },
+    { "id": "ignore-preconfiguration-fault", "description": "Clear a pre-latched fault without containment before programming.", "find": "faults = mpu0_read_fault_status(mpu);\n  if (faults != 0u) return fail_closed(containment, faults);\n\n  mpu0_disable(mpu);", "replace": "faults = mpu0_read_fault_status(mpu);\n  mpu0_clear_faults(mpu, faults);\n  faults = 0u;\n  if (faults != 0u) return fail_closed(containment, faults);\n\n  mpu0_disable(mpu);" },
+    { "id": "ignore-post-enable-fault", "description": "Ignore a fault latched after enabling the MPU.", "find": "read_ok = mpu0_read_enabled(mpu);\n  faults = mpu0_read_fault_status(mpu);\n  if (faults != 0u) return fail_closed(containment, faults);", "replace": "read_ok = mpu0_read_enabled(mpu);\n  faults = mpu0_read_fault_status(mpu);\n  if (false) return fail_closed(containment, faults);" },
+    { "id": "clear-before-containment", "description": "Clear runtime evidence before containment.", "find": "secctl_contain_fault(containment->security, observed);\n  mpu0_clear_faults(containment->mpu, observed);", "replace": "mpu0_clear_faults(containment->mpu, observed);\n  secctl_contain_fault(containment->security, observed);" },
+    { "id": "omit-secret-lock", "description": "Fail to seal sensitive services first.", "find": "secctl_seal_secrets(security);", "replace": "(void)security;" },
+    { "id": "ignore-simultaneous-bits", "description": "Clear only one runtime fault bit.", "find": "mpu0_clear_faults(containment->mpu, observed);", "replace": "mpu0_clear_faults(containment->mpu, observed & MPU0_FAULT_CLOCK);" },
+    { "id": "recover-in-place", "description": "Clear containment after a runtime fault and permit normal mode to resume.", "find": "containment->event_pending = true;\n  containment->ready = false;\n  containment->contained = true;", "replace": "containment->event_pending = true;\n  containment->ready = true;\n  containment->contained = false;" }
+  ]
+}

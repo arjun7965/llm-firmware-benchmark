@@ -102,6 +102,16 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "secure-maintenance-command",
+    source: "reference/secure_maintenance_command.c",
+    suite: "firmware",
+  },
+  {
+    taskId: "mpu-fault-containment",
+    source: "reference/mpu_fault_containment.c",
+    suite: "firmware",
+  },
+  {
     taskId: "dual-slot-update-recovery",
     source: "reference/dual_slot_update_recovery.c",
     suite: "firmware",

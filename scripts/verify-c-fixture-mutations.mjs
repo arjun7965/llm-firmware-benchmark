@@ -30,6 +30,8 @@ runFixtureMutationTests({
     "fault-crash-record",
     "idempotent-system-init",
     "secure-boot-image-validation",
+    "secure-maintenance-command",
+    "mpu-fault-containment",
     "dual-slot-update-recovery",
     "low-power-wake-clock",
     "real-time-deadline-budget",

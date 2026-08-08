@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/secure_maintenance_command.c",
+  "mutations": [
+    { "id": "skip-exact-length", "description": "Permit a frame with a non-exact length.", "find": "if (length == SEC0_DEBUG_FRAME_BYTES)", "replace": "if (length >= SEC0_DEBUG_FRAME_BYTES)" },
+    { "id": "accept-bad-magic", "description": "Accept malformed command magic.", "find": "magic != SEC0_DEBUG_MAGIC", "replace": "false" },
+    { "id": "accept-bad-update-version", "description": "Accept an update frame with the wrong protocol version.", "find": "magic != SEC0_UPDATE_MAGIC || frame[4] != SEC0_PROTOCOL_VERSION ||", "replace": "magic != SEC0_UPDATE_MAGIC || false ||" },
+    { "id": "accept-bad-update-command", "description": "Accept an update frame with the wrong command.", "find": "frame[5] != SEC0_UPDATE_COMMAND || sequence == 0u ||", "replace": "false || sequence == 0u ||" },
+    { "id": "accept-reserved-bytes", "description": "Accept nonzero update reserved bytes.", "find": "frame[11] != 0u || frame[12] != 0u || frame[13] != 0u", "replace": "false" },
+    { "id": "accept-replay", "description": "Accept a replayed debug sequence number.", "find": "!sequence_is_newer(maintenance->debug_sequence, sequence)", "replace": "false" },
+    { "id": "ignore-lifecycle-denial", "description": "Issue a challenge in the locked lifecycle.", "find": "lifecycle == SEC0_LIFECYCLE_LOCKED", "replace": "(lifecycle == SEC0_LIFECYCLE_LOCKED && false)" },
+    { "id": "omit-update-lock-on-challenge", "description": "Leave the update gate and prior authorization active when issuing a debug challenge.", "find": "sec0_write_update_gate(maintenance->security, SEC0_DEBUG_GATE_LOCKED);\n  sec0_revoke_update_authorization(maintenance->security);\n  maintenance->update_authorized = false;", "replace": "(void)maintenance;" },
+    { "id": "commit-before-authentication", "description": "Commit the debug sequence before the verifier succeeds.", "find": "if (!sec0_verify_debug_response(", "replace": "if ((maintenance->debug_sequence = sequence), !sec0_verify_debug_response(" },
+    { "id": "skip-physical-policy", "description": "Skip the physical-presence policy.", "find": "!sec0_read_physical_presence(maintenance->security)", "replace": "false" },
+    { "id": "accept-expired-challenge", "description": "Accept an expired challenge.", "find": "deadline_reached(now, maintenance->deadline) ||\n      challenge != maintenance->challenge", "replace": "((now == UINT32_MAX) && false) ||\n      challenge != maintenance->challenge" },
+    { "id": "reuse-challenge", "description": "Leave a successful challenge active.", "find": "maintenance->challenge_active = false;\n    maintenance->authentication_failures", "replace": "maintenance->challenge_active = true;\n    maintenance->authentication_failures" },
+    { "id": "ignore-debug-verifier", "description": "Ignore an immutable debug verification failure.", "find": "if (!sec0_verify_debug_response(", "replace": "if (false && !sec0_verify_debug_response(" },
+    { "id": "disable-lockout", "description": "Disable the fixed authentication lockout threshold.", "find": "maintenance->authentication_failures >= SEC0_DEBUG_LOCKOUT_LIMIT", "replace": "false" },
+    { "id": "allow-stale-update", "description": "Accept an update at or below the configured minimum.", "find": "firmware_version <= maintenance->minimum_version", "replace": "false" },
+    { "id": "accept-update-replay", "description": "Allow a previously authorized update sequence to reach publication.", "find": "!sequence_is_newer(maintenance->update_sequence, sequence) ||\n      (slot != SEC0_SLOT_A", "replace": "false ||\n      (slot != SEC0_SLOT_A" },
+    { "id": "accept-maximum-update-sequence", "description": "Accept UINT32_MAX as an update replay sequence.", "find": "return candidate != 0u && candidate != UINT32_MAX &&\n    last != UINT32_MAX && candidate > last;", "replace": "return candidate != 0u && last != UINT32_MAX && candidate > last;" },
+    { "id": "commit-update-before-authentication", "description": "Commit the update replay sequence before immutable verification succeeds.", "find": "if (!sec0_verify_update_authorization(", "replace": "if (maintenance->update_sequence = sequence, !sec0_verify_update_authorization(" },
+    { "id": "ignore-update-signature", "description": "Ignore immutable update verification failure.", "find": "if (!sec0_verify_update_authorization(", "replace": "if (false && !sec0_verify_update_authorization(" },
+    { "id": "publish-before-verification", "description": "Publish update authorization before the immutable verifier succeeds.", "find": "if (!sec0_verify_update_authorization(", "replace": "if (sec0_write_update_authorization(maintenance->security, slot, firmware_version, image_digest), !sec0_verify_update_authorization(" }
+  ]
+}

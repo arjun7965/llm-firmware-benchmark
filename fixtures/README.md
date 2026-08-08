@@ -92,6 +92,18 @@ public tests authenticate exact raw bytes before JSON parsing, exercise secret
 rotation and concurrent deliveries across two app instances, and verify that
 the event and its one outbox row roll back together.
 
+The active `secure-maintenance-command` fixture uses an opaque SEC0 boundary
+for lifecycle, physical presence, challenge generation, separate debug/update
+verification, and gate publication. Its public tests cover exact unaligned
+little-endian frames, replay and lockout semantics, challenge expiry, and the
+rule that debug unlock cannot authorize updates.
+
+The active `mpu-fault-containment` fixture uses opaque MPU0/security-controller
+boundaries and deterministic event traces. Its public tests cover the exact
+four-region Cortex-M3 policy, safe-first initialization, readback and injected
+fault rejection, containment-before-clear ordering, latched runtime failure,
+and exact interrupt-state restoration.
+
 The active `rtos-priority-inversion` fixture uses a fixture-owned C11 RTOS
 mock with low-priority telemetry, medium-priority diagnostics, and
 high-priority safety contexts. Its public tests verify priority donation,
