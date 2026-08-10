@@ -13,8 +13,21 @@
   } \
 } while (false)
 
+static bool initialized_state_visible(const void *context) {
+  const mpu_fault_containment_t *containment = context;
+  return containment->mpu == mock_mpu() &&
+    containment->security == mock_security_controller() &&
+    containment->event.fault_bits == 0u && containment->initialized &&
+    !containment->ready && !containment->contained &&
+    !containment->event_pending;
+}
+
 static bool initialize(mpu_fault_containment_t *containment) {
   mock_mpu_reset();
+  mock_mpu_set_first_access_validator(
+    initialized_state_visible,
+    containment
+  );
   return mpu_fault_containment_init(
     containment, mock_mpu(), mock_security_controller());
 }
@@ -41,6 +54,14 @@ static bool same_config(
   return config->base == base && config->size == size &&
     config->priority == priority && config->permissions == permissions &&
     config->execute_never == execute_never;
+}
+
+static size_t event_type_count(mock_mpu_event_t type) {
+  size_t count = 0u;
+  for (size_t index = 0u; index < mock_mpu_event_count(); index++) {
+    if (mock_mpu_event_at(index) == type) count++;
+  }
+  return count;
 }
 
 static bool test_safe_first_exact_policy(void) {
@@ -82,6 +103,7 @@ static bool test_safe_first_exact_policy(void) {
   CHECK(mock_mpu_region(MPU0_REGION_STACK_GUARD, &config));
   CHECK(same_config(&config, MPU0_STACK_GUARD_BASE, MPU0_STACK_GUARD_SIZE, 3u,
     MPU0_PERM_STACK_GUARD, MPU0_XN_STACK_GUARD));
+  CHECK(mock_mpu_first_access_validated());
   CHECK(!mock_mpu_invalid_access());
   return true;
 }
@@ -90,8 +112,9 @@ static bool test_invalid_and_fault_injection_fails_closed(void) {
   mpu_fault_containment_t containment = {
     .mpu = (volatile mpu0_registers_t *)(uintptr_t)1u,
     .security = (volatile security_controller_t *)(uintptr_t)2u,
-    .initialized = true,
+    .initialized = false,
     .ready = true,
+    .contained = true,
   };
   const mpu_fault_containment_t before = containment;
 
@@ -100,7 +123,12 @@ static bool test_invalid_and_fault_injection_fails_closed(void) {
   CHECK(!mpu_fault_containment_init(&containment, NULL, mock_security_controller()));
   CHECK(!mpu_fault_containment_init(&containment, mock_mpu(), NULL));
   CHECK(state_equals(&containment, &before));
+  CHECK(mpu_fault_containment_ready(&containment));
+  CHECK(mpu_fault_containment_contained(&containment));
+  CHECK(!mpu_fault_containment_ready(NULL));
+  CHECK(!mpu_fault_containment_contained(NULL));
   CHECK(mock_mpu_event_count() == 0u);
+  CHECK(!mock_mpu_invalid_access());
 
   mock_mpu_set_fault_status(MPU0_FAULT_CLOCK | MPU0_FAULT_GLITCH);
   CHECK(!mpu_fault_containment_init(&containment, mock_mpu(), mock_security_controller()));
@@ -210,6 +238,7 @@ static bool test_every_readback_field_fails_closed(void) {
     CHECK(!mpu_fault_containment_ready(&containment));
     CHECK(mpu_fault_containment_contained(&containment));
     CHECK(mock_mpu_configuration_contained());
+    CHECK(event_type_count(MOCK_MPU_EVENT_CONTAIN_CONFIGURATION) == 1u);
     CHECK(mock_mpu_contained_bits() == 0u);
     CHECK(mock_mpu_cleared_bits() == 0u);
     CHECK(mock_mpu_event_at(mock_mpu_event_count() - 1u) ==
@@ -310,6 +339,7 @@ static bool test_irq_contains_before_clear_and_restores_exact_irq_state(void) {
 
 static bool test_empty_irq_and_invalid_take_have_no_effect(void) {
   mpu_fault_containment_t containment = { 0 };
+  mpu_fault_containment_t uninitialized = { 0 };
   mpu_fault_event_t event = { 0 };
   size_t before;
 
@@ -319,7 +349,10 @@ static bool test_empty_irq_and_invalid_take_have_no_effect(void) {
   CHECK(mock_mpu_event_count() == before + 1u);
   CHECK(!mpu_fault_containment_take_event(&containment, NULL));
   CHECK(!mpu_fault_containment_take_event(NULL, &event));
+  CHECK(!mpu_fault_containment_irq(&uninitialized));
+  CHECK(!mpu_fault_containment_take_event(&uninitialized, &event));
   CHECK(mock_mpu_event_count() == before + 1u);
+  CHECK(!mock_mpu_invalid_access());
   return true;
 }
 

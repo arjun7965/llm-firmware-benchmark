@@ -66,8 +66,22 @@ static bool state_equals(
     left->locked_out == right->locked_out;
 }
 
+static bool initialized_state_visible(const void *context) {
+  const secure_maintenance_t *maintenance = context;
+  const secure_maintenance_t expected = {
+    .security = mock_sec0(),
+    .minimum_version = UINT32_C(7),
+    .initialized = true,
+  };
+  return state_equals(maintenance, &expected);
+}
+
 static bool initialize(secure_maintenance_t *maintenance) {
   mock_sec0_reset();
+  mock_sec0_set_first_access_validator(
+    initialized_state_visible,
+    maintenance
+  );
   return secure_maintenance_init(maintenance, mock_sec0(), UINT32_C(7));
 }
 
@@ -95,6 +109,7 @@ static bool test_invalid_calls_preserve_state_and_accessors(void) {
   CHECK(!secure_maintenance_init(&maintenance, NULL, 0u));
   CHECK(state_equals(&maintenance, &sentinel));
   CHECK(mock_sec0_event_count() == 0u);
+  CHECK(!mock_sec0_invalid_access());
 
   maintenance = (secure_maintenance_t) { 0 };
   {
@@ -110,8 +125,10 @@ static bool test_invalid_calls_preserve_state_and_accessors(void) {
     CHECK(state_equals(&maintenance, &uninitialized));
   }
   CHECK(mock_sec0_event_count() == 0u);
+  CHECK(!mock_sec0_invalid_access());
 
   CHECK(initialize(&maintenance));
+  CHECK(mock_sec0_first_access_validated());
   CHECK(mock_sec0_event_count() == 3u);
   CHECK(mock_sec0_event_at(0u) == MOCK_SEC0_EVENT_DEBUG_GATE);
   CHECK(mock_sec0_event_at(1u) == MOCK_SEC0_EVENT_UPDATE_GATE);
@@ -272,15 +289,28 @@ static bool test_policy_malformed_and_unaligned_rejection(void) {
 
   CHECK(initialize(&maintenance));
   mock_sec0_set_policy(SEC0_LIFECYCLE_PRODUCTION, false);
+  before = mock_sec0_event_count();
   CHECK(secure_maintenance_begin_debug(&maintenance, 0u, 4u) ==
     SECURE_MAINTENANCE_RESULT_DENIED);
+  CHECK(mock_sec0_event_count() == before + 5u);
+  CHECK(mock_sec0_event_at(before) == MOCK_SEC0_EVENT_LIFECYCLE);
+  CHECK(mock_sec0_event_at(before + 1u) == MOCK_SEC0_EVENT_PHYSICAL);
+  CHECK(mock_sec0_event_at(before + 2u) == MOCK_SEC0_EVENT_DEBUG_GATE);
+  CHECK(mock_sec0_event_at(before + 3u) == MOCK_SEC0_EVENT_UPDATE_GATE);
+  CHECK(mock_sec0_event_at(before + 4u) == MOCK_SEC0_EVENT_UPDATE_REVOKE);
   CHECK(!maintenance.challenge_active);
   CHECK(mock_sec0_debug_gate() == SEC0_DEBUG_GATE_LOCKED);
   CHECK(mock_sec0_update_gate() == SEC0_DEBUG_GATE_LOCKED);
   CHECK(mock_sec0_update_revoked());
   mock_sec0_set_policy(SEC0_LIFECYCLE_LOCKED, true);
+  before = mock_sec0_event_count();
   CHECK(secure_maintenance_begin_debug(&maintenance, 0u, 4u) ==
     SECURE_MAINTENANCE_RESULT_DENIED);
+  CHECK(mock_sec0_event_count() == before + 4u);
+  CHECK(mock_sec0_event_at(before) == MOCK_SEC0_EVENT_LIFECYCLE);
+  CHECK(mock_sec0_event_at(before + 1u) == MOCK_SEC0_EVENT_DEBUG_GATE);
+  CHECK(mock_sec0_event_at(before + 2u) == MOCK_SEC0_EVENT_UPDATE_GATE);
+  CHECK(mock_sec0_event_at(before + 3u) == MOCK_SEC0_EVENT_UPDATE_REVOKE);
   CHECK(!maintenance.challenge_active);
   CHECK(mock_sec0_debug_gate() == SEC0_DEBUG_GATE_LOCKED);
   CHECK(mock_sec0_update_gate() == SEC0_DEBUG_GATE_LOCKED);
@@ -302,8 +332,16 @@ static bool test_policy_malformed_and_unaligned_rejection(void) {
 
   mock_sec0_set_policy(SEC0_LIFECYCLE_PRODUCTION, true);
   mock_sec0_set_debug_verdict(true);
+  before = mock_sec0_event_count();
   CHECK(secure_maintenance_begin_debug(&maintenance, 2u, 8u) ==
     SECURE_MAINTENANCE_RESULT_DENIED);
+  CHECK(mock_sec0_event_count() == before + 6u);
+  CHECK(mock_sec0_event_at(before) == MOCK_SEC0_EVENT_LIFECYCLE);
+  CHECK(mock_sec0_event_at(before + 1u) == MOCK_SEC0_EVENT_PHYSICAL);
+  CHECK(mock_sec0_event_at(before + 2u) == MOCK_SEC0_EVENT_CHALLENGE);
+  CHECK(mock_sec0_event_at(before + 3u) == MOCK_SEC0_EVENT_DEBUG_GATE);
+  CHECK(mock_sec0_event_at(before + 4u) == MOCK_SEC0_EVENT_UPDATE_GATE);
+  CHECK(mock_sec0_event_at(before + 5u) == MOCK_SEC0_EVENT_UPDATE_REVOKE);
   debug_frame(frame + 1u, 1u, UINT32_C(0x12345678));
   CHECK(secure_maintenance_process(&maintenance, frame + 1u,
     SEC0_DEBUG_FRAME_BYTES + 1u, 3u) == SECURE_MAINTENANCE_RESULT_DENIED);
@@ -437,8 +475,26 @@ static bool test_authentication_failure_lockout_and_sequence_commit(void) {
 static bool test_expiry_and_wrap_safe_deadline(void) {
   secure_maintenance_t maintenance = { 0 };
   uint8_t frame[SEC0_DEBUG_FRAME_BYTES] = { 0 };
+  uint8_t update[SEC0_UPDATE_FRAME_BYTES] = { 0 };
+  size_t before;
 
   CHECK(initialize(&maintenance));
+  mock_sec0_set_update_verdict(true);
+  update_frame(update, 1u);
+  CHECK(secure_maintenance_process(&maintenance, update, sizeof(update), 0u) ==
+    SECURE_MAINTENANCE_RESULT_UPDATE_AUTHORIZED);
+  CHECK(maintenance.update_authorized);
+  CHECK(mock_sec0_update_written());
+  CHECK(mock_sec0_update_gate() == SEC0_DEBUG_GATE_UNLOCKED);
+  before = mock_sec0_event_count();
+  CHECK(secure_maintenance_expire(&maintenance, 0u) ==
+    SECURE_MAINTENANCE_RESULT_DENIED);
+  CHECK(mock_sec0_event_count() == before + 3u);
+  CHECK(mock_sec0_event_at(before) == MOCK_SEC0_EVENT_DEBUG_GATE);
+  CHECK(mock_sec0_event_at(before + 1u) == MOCK_SEC0_EVENT_UPDATE_GATE);
+  CHECK(mock_sec0_event_at(before + 2u) == MOCK_SEC0_EVENT_UPDATE_REVOKE);
+  CHECK(!maintenance.update_authorized);
+  CHECK(!mock_sec0_update_written());
   mock_sec0_set_policy(SEC0_LIFECYCLE_PRODUCTION, true);
   mock_sec0_set_debug_verdict(true);
   mock_sec0_set_challenge(UINT32_C(0xaabbccdd));

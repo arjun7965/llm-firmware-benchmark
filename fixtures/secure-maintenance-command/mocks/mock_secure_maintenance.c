@@ -35,8 +35,24 @@ static uint16_t last_update_verify_tag;
 static uint32_t last_debug_verify_sequence;
 static uint32_t last_debug_verify_challenge;
 static uint16_t last_debug_verify_tag;
+static mock_sec0_state_validator_t first_access_validator;
+static const void *first_access_context;
+static bool first_access_validated;
+static bool invalid_access;
+
+static bool good_security(const volatile sec0_handle_t *security) {
+  if (security == &handle && handle.marker == UINT32_C(0x53454330)) {
+    return true;
+  }
+  invalid_access = true;
+  return false;
+}
 
 static void record(mock_sec0_event_t type, uint32_t value) {
+  if (!first_access_validated && first_access_validator != NULL) {
+    first_access_validated = true;
+    if (!first_access_validator(first_access_context)) invalid_access = true;
+  }
   if (event_count < sizeof(events) / sizeof(events[0])) {
     events[event_count++] = (event_t) { type, value };
   }
@@ -66,8 +82,21 @@ void mock_sec0_reset(void) {
   last_debug_verify_sequence = 0u;
   last_debug_verify_challenge = 0u;
   last_debug_verify_tag = 0u;
+  first_access_validator = NULL;
+  first_access_context = NULL;
+  first_access_validated = false;
+  invalid_access = false;
 }
 
+void mock_sec0_set_first_access_validator(
+  mock_sec0_state_validator_t validator,
+  const void *context
+) {
+  first_access_validator = validator;
+  first_access_context = context;
+  first_access_validated = false;
+}
+bool mock_sec0_first_access_validated(void) { return first_access_validated; }
 void mock_sec0_set_policy(sec0_lifecycle_t value, bool present) {
   lifecycle = value;
   physical = present;
@@ -94,22 +123,24 @@ uint16_t mock_sec0_last_update_verify_tag(void) { return last_update_verify_tag;
 uint32_t mock_sec0_last_debug_verify_sequence(void) { return last_debug_verify_sequence; }
 uint32_t mock_sec0_last_debug_verify_challenge(void) { return last_debug_verify_challenge; }
 uint16_t mock_sec0_last_debug_verify_tag(void) { return last_debug_verify_tag; }
-bool mock_sec0_invalid_access(void) { return handle.marker != UINT32_C(0x53454330); }
+bool mock_sec0_invalid_access(void) {
+  return invalid_access || handle.marker != UINT32_C(0x53454330);
+}
 
 sec0_lifecycle_t sec0_read_lifecycle(const volatile sec0_handle_t *security) {
-  if (security != &handle) return SEC0_LIFECYCLE_DEVELOPMENT;
+  if (!good_security(security)) return SEC0_LIFECYCLE_DEVELOPMENT;
   record(MOCK_SEC0_EVENT_LIFECYCLE, (uint32_t)lifecycle);
   return lifecycle;
 }
 
 bool sec0_read_physical_presence(const volatile sec0_handle_t *security) {
-  if (security != &handle) return false;
+  if (!good_security(security)) return false;
   record(MOCK_SEC0_EVENT_PHYSICAL, physical ? 1u : 0u);
   return physical;
 }
 
 uint32_t sec0_issue_challenge(volatile sec0_handle_t *security) {
-  if (security != &handle) return 0u;
+  if (!good_security(security)) return 0u;
   record(MOCK_SEC0_EVENT_CHALLENGE, challenge);
   return challenge;
 }
@@ -120,7 +151,7 @@ bool sec0_verify_debug_response(
   uint32_t response_challenge,
   uint16_t response_tag
 ) {
-  if (security != &handle) return false;
+  if (!good_security(security)) return false;
   last_debug_verify_sequence = sequence;
   last_debug_verify_challenge = response_challenge;
   last_debug_verify_tag = response_tag;
@@ -136,7 +167,7 @@ bool sec0_verify_update_authorization(
   uint32_t image_digest,
   uint16_t signature_tag
 ) {
-  if (security != &handle) return false;
+  if (!good_security(security)) return false;
   last_update_verify_sequence = sequence;
   last_update_verify_slot = slot;
   last_update_verify_version = firmware_version;
@@ -147,13 +178,13 @@ bool sec0_verify_update_authorization(
 }
 
 void sec0_write_debug_gate(volatile sec0_handle_t *security, uint32_t value) {
-  if (security != &handle) return;
+  if (!good_security(security)) return;
   debug_gate = value;
   record(MOCK_SEC0_EVENT_DEBUG_GATE, value);
 }
 
 void sec0_write_update_gate(volatile sec0_handle_t *security, uint32_t value) {
-  if (security != &handle) return;
+  if (!good_security(security)) return;
   update_gate = value;
   record(MOCK_SEC0_EVENT_UPDATE_GATE, value);
 }
@@ -164,7 +195,7 @@ void sec0_write_update_authorization(
   uint32_t firmware_version,
   uint32_t image_digest
 ) {
-  if (security != &handle) return;
+  if (!good_security(security)) return;
   update_written = true;
   last_update_slot = slot;
   last_update_version = firmware_version;
@@ -173,7 +204,7 @@ void sec0_write_update_authorization(
 }
 
 void sec0_revoke_update_authorization(volatile sec0_handle_t *security) {
-  if (security != &handle) return;
+  if (!good_security(security)) return;
   update_written = false;
   update_revoked = true;
   last_update_slot = SEC0_SLOT_A;

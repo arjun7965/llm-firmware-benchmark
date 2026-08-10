@@ -7,5 +7,7 @@ life-cycle denial, and invalid API calls. Tests begin from open mock gates so
 initialization writes are observable, isolate each malformed field behind an
 otherwise eligible challenge, and prove that every denial relocks both gates,
 revokes published update authorization, and clears software authorization
-state. Event logs prove exact verifier arguments and ordering at the opaque
-SEC0 boundary.
+state. Lifecycle and physical-presence reads, generic expiry denial, invalid
+accessor attempts, and initialization state publication are independently
+observable. Event logs prove exact verifier arguments and ordering at the
+opaque SEC0 boundary.
