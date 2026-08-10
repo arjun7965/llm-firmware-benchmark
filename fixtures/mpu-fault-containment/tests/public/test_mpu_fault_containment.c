@@ -13,10 +13,34 @@
   } \
 } while (false)
 
+static bool initialized_state_visible(const void *context) {
+  const mpu_fault_containment_t *containment = context;
+  return containment->mpu == mock_mpu() &&
+    containment->security == mock_security_controller() &&
+    containment->event.fault_bits == 0u && containment->initialized &&
+    !containment->ready && !containment->contained &&
+    !containment->event_pending;
+}
+
 static bool initialize(mpu_fault_containment_t *containment) {
   mock_mpu_reset();
+  mock_mpu_set_first_access_validator(
+    initialized_state_visible,
+    containment
+  );
   return mpu_fault_containment_init(
     containment, mock_mpu(), mock_security_controller());
+}
+
+static bool state_equals(
+  const mpu_fault_containment_t *left,
+  const mpu_fault_containment_t *right
+) {
+  return left->mpu == right->mpu && left->security == right->security &&
+    left->event.fault_bits == right->event.fault_bits &&
+    left->initialized == right->initialized && left->ready == right->ready &&
+    left->contained == right->contained &&
+    left->event_pending == right->event_pending;
 }
 
 static bool same_config(
@@ -30,6 +54,14 @@ static bool same_config(
   return config->base == base && config->size == size &&
     config->priority == priority && config->permissions == permissions &&
     config->execute_never == execute_never;
+}
+
+static size_t event_type_count(mock_mpu_event_t type) {
+  size_t count = 0u;
+  for (size_t index = 0u; index < mock_mpu_event_count(); index++) {
+    if (mock_mpu_event_at(index) == type) count++;
+  }
+  return count;
 }
 
 static bool test_safe_first_exact_policy(void) {
@@ -71,6 +103,7 @@ static bool test_safe_first_exact_policy(void) {
   CHECK(mock_mpu_region(MPU0_REGION_STACK_GUARD, &config));
   CHECK(same_config(&config, MPU0_STACK_GUARD_BASE, MPU0_STACK_GUARD_SIZE, 3u,
     MPU0_PERM_STACK_GUARD, MPU0_XN_STACK_GUARD));
+  CHECK(mock_mpu_first_access_validated());
   CHECK(!mock_mpu_invalid_access());
   return true;
 }
@@ -79,15 +112,23 @@ static bool test_invalid_and_fault_injection_fails_closed(void) {
   mpu_fault_containment_t containment = {
     .mpu = (volatile mpu0_registers_t *)(uintptr_t)1u,
     .security = (volatile security_controller_t *)(uintptr_t)2u,
-    .initialized = true,
+    .initialized = false,
     .ready = true,
+    .contained = true,
   };
+  const mpu_fault_containment_t before = containment;
 
   mock_mpu_reset();
   CHECK(!mpu_fault_containment_init(NULL, mock_mpu(), mock_security_controller()));
   CHECK(!mpu_fault_containment_init(&containment, NULL, mock_security_controller()));
-  CHECK(containment.mpu == (volatile mpu0_registers_t *)(uintptr_t)1u);
+  CHECK(!mpu_fault_containment_init(&containment, mock_mpu(), NULL));
+  CHECK(state_equals(&containment, &before));
+  CHECK(mpu_fault_containment_ready(&containment));
+  CHECK(mpu_fault_containment_contained(&containment));
+  CHECK(!mpu_fault_containment_ready(NULL));
+  CHECK(!mpu_fault_containment_contained(NULL));
   CHECK(mock_mpu_event_count() == 0u);
+  CHECK(!mock_mpu_invalid_access());
 
   mock_mpu_set_fault_status(MPU0_FAULT_CLOCK | MPU0_FAULT_GLITCH);
   CHECK(!mpu_fault_containment_init(&containment, mock_mpu(), mock_security_controller()));
@@ -113,6 +154,96 @@ static bool test_invalid_and_fault_injection_fails_closed(void) {
   CHECK(!mpu_fault_containment_init(&containment, mock_mpu(), mock_security_controller()));
   CHECK(!mpu_fault_containment_ready(&containment));
   CHECK(mock_mpu_contained_bits() == MPU0_FAULT_MPU);
+  return true;
+}
+
+static bool test_every_injection_boundary_fails_closed(void) {
+  mpu_fault_containment_t containment = { 0 };
+
+  for (uint32_t call = 1u; call <= MPU0_REGION_COUNT; call++) {
+    const uint32_t fault = UINT32_C(1) << ((call - 1u) % 4u);
+    mock_mpu_reset();
+    mock_mpu_set_fault_on_program(call, fault);
+    CHECK(!mpu_fault_containment_init(
+      &containment, mock_mpu(), mock_security_controller()
+    ));
+    CHECK(!mpu_fault_containment_ready(&containment));
+    CHECK(mpu_fault_containment_contained(&containment));
+    CHECK(mock_mpu_contained_bits() == fault);
+    CHECK(mock_mpu_cleared_bits() == 0u);
+    CHECK(mock_mpu_event_at(mock_mpu_event_count() - 3u) ==
+      MOCK_MPU_EVENT_PROGRAM);
+    CHECK(mock_mpu_event_at(mock_mpu_event_count() - 2u) ==
+      MOCK_MPU_EVENT_READ_FAULT);
+    CHECK(mock_mpu_event_at(mock_mpu_event_count() - 1u) ==
+      MOCK_MPU_EVENT_CONTAIN);
+  }
+
+  for (uint32_t call = 1u; call <= MPU0_REGION_COUNT; call++) {
+    const uint32_t fault = UINT32_C(1) << (call % 4u);
+    mock_mpu_reset();
+    mock_mpu_set_fault_on_read_region(call, fault);
+    CHECK(!mpu_fault_containment_init(
+      &containment, mock_mpu(), mock_security_controller()
+    ));
+    CHECK(!mpu_fault_containment_ready(&containment));
+    CHECK(mpu_fault_containment_contained(&containment));
+    CHECK(mock_mpu_contained_bits() == fault);
+    CHECK(mock_mpu_cleared_bits() == 0u);
+    CHECK(mock_mpu_event_at(mock_mpu_event_count() - 3u) ==
+      MOCK_MPU_EVENT_READ_REGION);
+    CHECK(mock_mpu_event_at(mock_mpu_event_count() - 2u) ==
+      MOCK_MPU_EVENT_READ_FAULT);
+    CHECK(mock_mpu_event_at(mock_mpu_event_count() - 1u) ==
+      MOCK_MPU_EVENT_CONTAIN);
+  }
+
+  mock_mpu_reset();
+  mock_mpu_set_fault_on_enable(MPU0_FAULT_MPU);
+  CHECK(!mpu_fault_containment_init(
+    &containment, mock_mpu(), mock_security_controller()
+  ));
+  CHECK(mock_mpu_contained_bits() == MPU0_FAULT_MPU);
+  CHECK(mock_mpu_cleared_bits() == 0u);
+
+  mock_mpu_reset();
+  mock_mpu_set_fault_on_read_enable(MPU0_FAULT_CLOCK | MPU0_FAULT_VOLTAGE);
+  CHECK(!mpu_fault_containment_init(
+    &containment, mock_mpu(), mock_security_controller()
+  ));
+  CHECK(mock_mpu_contained_bits() ==
+    (MPU0_FAULT_CLOCK | MPU0_FAULT_VOLTAGE));
+  CHECK(mock_mpu_cleared_bits() == 0u);
+  return true;
+}
+
+static bool test_every_readback_field_fails_closed(void) {
+  const uint32_t fields[] = {
+    MOCK_MPU_CORRUPT_BASE,
+    MOCK_MPU_CORRUPT_SIZE,
+    MOCK_MPU_CORRUPT_PRIORITY,
+    MOCK_MPU_CORRUPT_PERMISSIONS,
+    MOCK_MPU_CORRUPT_EXECUTE_NEVER,
+  };
+  mpu_fault_containment_t containment = { 0 };
+
+  for (size_t index = 0u; index < sizeof(fields) / sizeof(fields[0]); index++) {
+    mock_mpu_reset();
+    mock_mpu_set_readback_corruption(
+      (uint32_t)(index % MPU0_REGION_COUNT), fields[index]
+    );
+    CHECK(!mpu_fault_containment_init(
+      &containment, mock_mpu(), mock_security_controller()
+    ));
+    CHECK(!mpu_fault_containment_ready(&containment));
+    CHECK(mpu_fault_containment_contained(&containment));
+    CHECK(mock_mpu_configuration_contained());
+    CHECK(event_type_count(MOCK_MPU_EVENT_CONTAIN_CONFIGURATION) == 1u);
+    CHECK(mock_mpu_contained_bits() == 0u);
+    CHECK(mock_mpu_cleared_bits() == 0u);
+    CHECK(mock_mpu_event_at(mock_mpu_event_count() - 1u) ==
+      MOCK_MPU_EVENT_CONTAIN_CONFIGURATION);
+  }
   return true;
 }
 
@@ -208,6 +339,7 @@ static bool test_irq_contains_before_clear_and_restores_exact_irq_state(void) {
 
 static bool test_empty_irq_and_invalid_take_have_no_effect(void) {
   mpu_fault_containment_t containment = { 0 };
+  mpu_fault_containment_t uninitialized = { 0 };
   mpu_fault_event_t event = { 0 };
   size_t before;
 
@@ -217,7 +349,10 @@ static bool test_empty_irq_and_invalid_take_have_no_effect(void) {
   CHECK(mock_mpu_event_count() == before + 1u);
   CHECK(!mpu_fault_containment_take_event(&containment, NULL));
   CHECK(!mpu_fault_containment_take_event(NULL, &event));
+  CHECK(!mpu_fault_containment_irq(&uninitialized));
+  CHECK(!mpu_fault_containment_take_event(&uninitialized, &event));
   CHECK(mock_mpu_event_count() == before + 1u);
+  CHECK(!mock_mpu_invalid_access());
   return true;
 }
 
@@ -225,6 +360,8 @@ int main(void) {
   const struct { const char *name; bool (*run)(void); } tests[] = {
     { "safe first exact policy", test_safe_first_exact_policy },
     { "invalid and injected faults", test_invalid_and_fault_injection_fails_closed },
+    { "every injection boundary", test_every_injection_boundary_fails_closed },
+    { "every readback field", test_every_readback_field_fails_closed },
     { "readback and enable failures", test_readback_and_enable_fail_closed },
     { "runtime containment and IRQ state", test_irq_contains_before_clear_and_restores_exact_irq_state },
     { "empty and invalid calls", test_empty_irq_and_invalid_take_have_no_effect },

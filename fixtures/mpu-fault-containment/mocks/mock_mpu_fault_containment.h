@@ -26,11 +26,25 @@ typedef enum {
   MOCK_MPU_EVENT_RESTORE_IRQ,
 } mock_mpu_event_t;
 
+typedef bool (*mock_mpu_state_validator_t)(const void *context);
+
+#define MOCK_MPU_CORRUPT_BASE UINT32_C(1)
+#define MOCK_MPU_CORRUPT_SIZE UINT32_C(2)
+#define MOCK_MPU_CORRUPT_PRIORITY UINT32_C(4)
+#define MOCK_MPU_CORRUPT_PERMISSIONS UINT32_C(8)
+#define MOCK_MPU_CORRUPT_EXECUTE_NEVER UINT32_C(16)
+
 volatile mpu0_registers_t *mock_mpu(void);
 volatile security_controller_t *mock_security_controller(void);
 void mock_mpu_reset(void);
+void mock_mpu_set_first_access_validator(
+  mock_mpu_state_validator_t validator,
+  const void *context
+);
+bool mock_mpu_first_access_validated(void);
 void mock_mpu_set_fault_status(uint32_t status);
 void mock_mpu_set_readback_corrupt(uint32_t index, bool corrupt);
+void mock_mpu_set_readback_corruption(uint32_t index, uint32_t fields);
 void mock_mpu_set_fault_on_enable(uint32_t status);
 void mock_mpu_set_fault_on_program(uint32_t call_index, uint32_t status);
 void mock_mpu_set_fault_on_read_region(uint32_t call_index, uint32_t status);

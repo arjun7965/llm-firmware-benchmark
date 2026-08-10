@@ -19,8 +19,15 @@ typedef enum {
   MOCK_SEC0_EVENT_UPDATE_REVOKE,
 } mock_sec0_event_t;
 
+typedef bool (*mock_sec0_state_validator_t)(const void *context);
+
 volatile sec0_handle_t *mock_sec0(void);
 void mock_sec0_reset(void);
+void mock_sec0_set_first_access_validator(
+  mock_sec0_state_validator_t validator,
+  const void *context
+);
+bool mock_sec0_first_access_validated(void);
 void mock_sec0_set_policy(sec0_lifecycle_t lifecycle, bool physical);
 void mock_sec0_set_challenge(uint32_t challenge);
 void mock_sec0_set_debug_verdict(bool verdict);

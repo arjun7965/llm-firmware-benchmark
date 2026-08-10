@@ -17,7 +17,7 @@ static struct security_controller security = { UINT32_C(0x53454354) };
 static event_t events[128];
 static size_t event_count;
 static uint32_t fault_status;
-static bool corrupt[MPU0_REGION_COUNT];
+static uint32_t corruption[MPU0_REGION_COUNT];
 static bool enabled;
 static bool enable_readback = true;
 static uint32_t fault_on_enable;
@@ -34,14 +34,28 @@ static uint32_t cleared_bits;
 static uint32_t interrupt_state = UINT32_C(0xa5a5a5a5);
 static bool configuration_contained;
 static mpu0_region_config_t regions[MPU0_REGION_COUNT];
+static mock_mpu_state_validator_t first_access_validator;
+static const void *first_access_context;
+static bool first_access_validated;
+static bool invalid_access;
 
 static bool good_mpu(const volatile mpu0_registers_t *value) {
-  return value == &mpu && mpu.marker == UINT32_C(0x4d505530);
+  if (value == &mpu && mpu.marker == UINT32_C(0x4d505530)) return true;
+  invalid_access = true;
+  return false;
 }
 static bool good_security(const volatile security_controller_t *value) {
-  return value == &security && security.marker == UINT32_C(0x53454354);
+  if (value == &security && security.marker == UINT32_C(0x53454354)) {
+    return true;
+  }
+  invalid_access = true;
+  return false;
 }
 static void record(mock_mpu_event_t type, uint32_t value) {
+  if (!first_access_validated && first_access_validator != NULL) {
+    first_access_validated = true;
+    if (!first_access_validator(first_access_context)) invalid_access = true;
+  }
   if (event_count < sizeof(events) / sizeof(events[0])) {
     events[event_count++] = (event_t) { type, value };
   }
@@ -67,14 +81,32 @@ void mock_mpu_reset(void) {
   read_region_failure_call = 0u;
   interrupt_state = UINT32_C(0xa5a5a5a5);
   configuration_contained = false;
+  first_access_validator = NULL;
+  first_access_context = NULL;
+  first_access_validated = false;
+  invalid_access = false;
   for (size_t index = 0u; index < MPU0_REGION_COUNT; index++) {
-    corrupt[index] = false;
+    corruption[index] = 0u;
     regions[index] = (mpu0_region_config_t) { 0 };
   }
 }
+void mock_mpu_set_first_access_validator(
+  mock_mpu_state_validator_t validator,
+  const void *context
+) {
+  first_access_validator = validator;
+  first_access_context = context;
+  first_access_validated = false;
+}
+bool mock_mpu_first_access_validated(void) { return first_access_validated; }
 void mock_mpu_set_fault_status(uint32_t status) { fault_status = status; }
 void mock_mpu_set_readback_corrupt(uint32_t index, bool value) {
-  if (index < MPU0_REGION_COUNT) corrupt[index] = value;
+  if (index < MPU0_REGION_COUNT) {
+    corruption[index] = value ? MOCK_MPU_CORRUPT_PERMISSIONS : 0u;
+  }
+}
+void mock_mpu_set_readback_corruption(uint32_t index, uint32_t fields) {
+  if (index < MPU0_REGION_COUNT) corruption[index] = fields;
 }
 void mock_mpu_set_fault_on_enable(uint32_t status) { fault_on_enable = status; }
 void mock_mpu_set_fault_on_program(uint32_t call_index, uint32_t status) {
@@ -106,7 +138,8 @@ bool mock_mpu_region(uint32_t index, mpu0_region_config_t *config) {
   return true;
 }
 bool mock_mpu_invalid_access(void) {
-  return !good_mpu(&mpu) || !good_security(&security);
+  return invalid_access || mpu.marker != UINT32_C(0x4d505530) ||
+    security.marker != UINT32_C(0x53454354);
 }
 
 void secctl_lock_debug(volatile security_controller_t *value) {
@@ -153,7 +186,11 @@ void mpu0_disable(volatile mpu0_registers_t *value) {
   record(MOCK_MPU_EVENT_DISABLE, 0u);
 }
 void mpu0_program_region(volatile mpu0_registers_t *value, uint32_t index, const mpu0_region_config_t *config) {
-  if (!good_mpu(value) || config == NULL || index >= MPU0_REGION_COUNT) return;
+  if (!good_mpu(value)) return;
+  if (config == NULL || index >= MPU0_REGION_COUNT) {
+    invalid_access = true;
+    return;
+  }
   regions[index] = *config;
   program_calls++;
   if (program_calls == fault_on_program_call) {
@@ -174,7 +211,11 @@ void mpu0_enable_default_deny(volatile mpu0_registers_t *value) {
   record(MOCK_MPU_EVENT_ENABLE, 0u);
 }
 bool mpu0_read_region(const volatile mpu0_registers_t *value, uint32_t index, mpu0_region_config_t *config) {
-  if (!good_mpu(value) || config == NULL || index >= MPU0_REGION_COUNT) return false;
+  if (!good_mpu(value)) return false;
+  if (config == NULL || index >= MPU0_REGION_COUNT) {
+    invalid_access = true;
+    return false;
+  }
   read_region_calls++;
   if (read_region_calls == fault_on_read_region_call) {
     fault_status |= fault_on_read_region_status;
@@ -184,7 +225,21 @@ bool mpu0_read_region(const volatile mpu0_registers_t *value, uint32_t index, mp
     return false;
   }
   *config = regions[index];
-  if (corrupt[index]) config->permissions ^= UINT32_C(1);
+  if ((corruption[index] & MOCK_MPU_CORRUPT_BASE) != 0u) {
+    config->base ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_SIZE) != 0u) {
+    config->size ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_PRIORITY) != 0u) {
+    config->priority ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_PERMISSIONS) != 0u) {
+    config->permissions ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_EXECUTE_NEVER) != 0u) {
+    config->execute_never = !config->execute_never;
+  }
   record(MOCK_MPU_EVENT_READ_REGION, index);
   return true;
 }
