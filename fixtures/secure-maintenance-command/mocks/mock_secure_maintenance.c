@@ -51,8 +51,8 @@ void mock_sec0_reset(void) {
   challenge = UINT32_C(0x12345678);
   debug_verdict = false;
   update_verdict = false;
-  debug_gate = SEC0_DEBUG_GATE_LOCKED;
-  update_gate = SEC0_DEBUG_GATE_LOCKED;
+  debug_gate = SEC0_DEBUG_GATE_UNLOCKED;
+  update_gate = SEC0_DEBUG_GATE_UNLOCKED;
   update_written = false;
   update_revoked = false;
   last_update_slot = SEC0_SLOT_A;

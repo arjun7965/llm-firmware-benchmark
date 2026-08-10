@@ -203,6 +203,48 @@ test("mixed C/C++ MMIO review prompt is a self-contained fixture contract", () =
   }
 });
 
+test("firmware security prompts are self-contained fixture contracts", () => {
+  const tasks = new Map(
+    loadTasks(new URL("../tasks.json", import.meta.url))
+      .map((task) => [task.id, task]),
+  );
+  const requiredText = {
+    "secure-maintenance-command": [
+      "The complete public API is:",
+      "typedef struct sec0_handle sec0_handle_t",
+      "sec0_verify_debug_response",
+      "sec0_verify_update_authorization",
+      "The exact debug frame is 16 bytes",
+      "The exact update frame is 24 bytes",
+      "process does not reread lifecycle or physical presence",
+      "write the debug gate LOCKED, write the update gate LOCKED",
+      "Never access, cast, copy, expose, derive, or implement a device secret",
+    ],
+    "mpu-fault-containment": [
+      "The complete public API is:",
+      "typedef struct mpu0_registers mpu0_registers_t",
+      "mpu0_region_config_t { uint32_t base; uint32_t size;",
+      "The only permitted accessor signatures are",
+      "programs exactly four regions in index and priority order",
+      "Immediately after each region program, sample fault status exactly once",
+      "give nonzero fault bits precedence",
+      "secctl_contain_configuration exactly once",
+      "Recovery requires reboot or reinitialization",
+    ],
+  };
+
+  for (const [taskId, fragments] of Object.entries(requiredText)) {
+    const task = tasks.get(taskId);
+    assert.ok(task, `missing task: ${taskId}`);
+    for (const fragment of fragments) {
+      assert.ok(
+        task.prompt.includes(fragment),
+        `${taskId} prompt omits ${fragment}`,
+      );
+    }
+  }
+});
+
 test("tasks require explicit scoring modes and rubric-only rationale", () => {
   const task = {
     id: "manual-task",

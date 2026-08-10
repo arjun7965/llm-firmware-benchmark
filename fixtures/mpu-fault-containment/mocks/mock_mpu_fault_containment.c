@@ -17,7 +17,7 @@ static struct security_controller security = { UINT32_C(0x53454354) };
 static event_t events[128];
 static size_t event_count;
 static uint32_t fault_status;
-static bool corrupt[MPU0_REGION_COUNT];
+static uint32_t corruption[MPU0_REGION_COUNT];
 static bool enabled;
 static bool enable_readback = true;
 static uint32_t fault_on_enable;
@@ -68,13 +68,18 @@ void mock_mpu_reset(void) {
   interrupt_state = UINT32_C(0xa5a5a5a5);
   configuration_contained = false;
   for (size_t index = 0u; index < MPU0_REGION_COUNT; index++) {
-    corrupt[index] = false;
+    corruption[index] = 0u;
     regions[index] = (mpu0_region_config_t) { 0 };
   }
 }
 void mock_mpu_set_fault_status(uint32_t status) { fault_status = status; }
 void mock_mpu_set_readback_corrupt(uint32_t index, bool value) {
-  if (index < MPU0_REGION_COUNT) corrupt[index] = value;
+  if (index < MPU0_REGION_COUNT) {
+    corruption[index] = value ? MOCK_MPU_CORRUPT_PERMISSIONS : 0u;
+  }
+}
+void mock_mpu_set_readback_corruption(uint32_t index, uint32_t fields) {
+  if (index < MPU0_REGION_COUNT) corruption[index] = fields;
 }
 void mock_mpu_set_fault_on_enable(uint32_t status) { fault_on_enable = status; }
 void mock_mpu_set_fault_on_program(uint32_t call_index, uint32_t status) {
@@ -184,7 +189,21 @@ bool mpu0_read_region(const volatile mpu0_registers_t *value, uint32_t index, mp
     return false;
   }
   *config = regions[index];
-  if (corrupt[index]) config->permissions ^= UINT32_C(1);
+  if ((corruption[index] & MOCK_MPU_CORRUPT_BASE) != 0u) {
+    config->base ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_SIZE) != 0u) {
+    config->size ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_PRIORITY) != 0u) {
+    config->priority ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_PERMISSIONS) != 0u) {
+    config->permissions ^= UINT32_C(1);
+  }
+  if ((corruption[index] & MOCK_MPU_CORRUPT_EXECUTE_NEVER) != 0u) {
+    config->execute_never = !config->execute_never;
+  }
   record(MOCK_MPU_EVENT_READ_REGION, index);
   return true;
 }
