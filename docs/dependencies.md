@@ -47,6 +47,7 @@ code. Each task references a pinned hosted runtime contract from
 | `embedded-ring-buffer` | A C11 compiler with `<stdatomic.h>` support, such as GCC or Clang |
 | `static-memory-pool` | A C11 compiler with `<stdalign.h>` and `<stdint.h>` support; no runtime mock or allocator dependency |
 | `fixed-point-stack-budget` | A C11 compiler with fixed-width integer support and `-Wvla` diagnostics; no runtime mock or floating-point dependency |
+| `fixed-point-filter-optimization` | A C11 compiler plus the fixture-owned opaque FIR cost-model mock; no floating-point or hardware cycle-counter dependency |
 | `mixed-c-cpp-mmio-safety-review` | GCC/`cc` 13.3.0 for the C opaque-MMIO mock and GCC/`c++` 13.3.0 with C++17, conversion, old-style-cast, shadow, no-exception, and no-RTTI diagnostics |
 | `dma-cache-coherency` | A C11 compiler plus fixture-owned cache-maintenance/DMA ordering mock; `arm-none-eabi-gcc` is optional for Cortex-M7-compatible ARMv7-M compile-only validation |
 | `firmware-state-machine` | A C11 compiler plus a deterministic mock implementation of the supplied HAL |

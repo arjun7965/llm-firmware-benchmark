@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.3",
+  "source": "reference/fixed_point_filter.c",
+  "mutations": [
+    {
+      "id": "retain-history-on-init",
+      "description": "Leave caller-provided history in place instead of starting from a zero-input filter state.",
+      "find": "filter->history[index] = 0;",
+      "replace": "(void)filter->history[index];"
+    },
+    {
+      "id": "pair-wrong-oldest-sample",
+      "description": "Pair the current input with the wrong delayed sample.",
+      "find": "pair0 = (int32_t)input_q15 + filter->history[5];",
+      "replace": "pair0 = (int32_t)input_q15 + filter->history[4];"
+    },
+    {
+      "id": "use-wrong-second-coefficient",
+      "description": "Apply the outer coefficient to the second symmetric sample pair.",
+      "find": "    FIXED_POINT_FILTER_COEFF_1_Q15\n  );",
+      "replace": "    FIXED_POINT_FILTER_COEFF_0_Q15\n  );"
+    },
+    {
+      "id": "declare-three-macs",
+      "description": "Understate the number of MAC operations required by the optimized step.",
+      "find": "filter_cost_begin_step(cost, FIXED_POINT_FILTER_UNIQUE_TAPS)",
+      "replace": "filter_cost_begin_step(cost, FIXED_POINT_FILTER_UNIQUE_TAPS - 1u)"
+    },
+    {
+      "id": "ignore-cost-commit-failure",
+      "description": "Publish filter state and output even when the cost transaction fails to commit.",
+      "find": "if (!filter_cost_commit_step(cost)) return false;",
+      "replace": "if (!filter_cost_commit_step(cost) && false) return false;"
+    },
+    {
+      "id": "truncate-negative-ties",
+      "description": "Drop half-away-from-zero rounding for negative Q1.15 accumulators.",
+      "find": "return (value - half) / (int64_t)FIXED_POINT_FILTER_Q15_SCALE;",
+      "replace": "return value / (int64_t)FIXED_POINT_FILTER_Q15_SCALE;"
+    },
+    {
+      "id": "wrap-positive-overflow",
+      "description": "Cast positive overshoot instead of saturating it to int16_t.",
+      "find": "if (value > INT16_MAX) return INT16_MAX;",
+      "replace": "if (false) return INT16_MAX;"
+    },
+    {
+      "id": "do-not-shift-history",
+      "description": "Keep delayed samples in their old slots instead of advancing the FIR history.",
+      "find": "filter->history[index] = filter->history[index - 1u];",
+      "replace": "filter->history[index] = filter->history[index];"
+    }
+  ]
+}

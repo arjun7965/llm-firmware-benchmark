@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![108 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=108%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![109 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=109%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![75 C/C++ checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=75%20C%2FC%2B%2B%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -202,10 +202,12 @@ The constrained-memory fixtures are calibrated with
 `npm run fixture:ring-buffer:self-test`,
 `npm run fixture:static-memory-pool:self-test`,
 `npm run fixture:dma-cache:self-test`, and
-`npm run fixture:fixed-point:self-test`. Together they cover lock-free
+`npm run fixture:fixed-point:self-test`. The resource-optimization fixture is
+calibrated with `npm run fixture:fixed-point-filter:self-test`. Together they cover lock-free
 caller-owned ring storage, deterministic static block allocation and alignment,
 noncoherent DMA cache-line maintenance, and fixed-point processing under an
-explicit stack high-water budget.
+explicit stack high-water budget plus symmetric FIR execution under modeled
+cycle and numerical-error budgets.
 
 The active Rust stream-decoder fixture is calibrated with
 `npm run fixture:rust-decoder:self-test` and validated in CI under pinned

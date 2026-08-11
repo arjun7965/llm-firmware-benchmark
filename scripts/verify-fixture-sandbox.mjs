@@ -193,6 +193,11 @@ const references = [
     suite: "firmware",
   },
   {
+    taskId: "fixed-point-filter-optimization",
+    source: "reference/fixed_point_filter.c",
+    suite: "firmware",
+  },
+  {
     taskId: "mixed-c-cpp-mmio-safety-review",
     source: "reference/mmio_safety_review.cpp",
     suite: "firmware",

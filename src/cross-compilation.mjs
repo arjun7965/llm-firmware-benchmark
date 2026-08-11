@@ -321,6 +321,14 @@ const trustedSources = Object.freeze([
     ]),
   }),
   Object.freeze({
+    id: "fixed-point-filter-optimization",
+    source:
+      "fixtures/fixed-point-filter-optimization/reference/fixed_point_filter.c",
+    includes: Object.freeze([
+      "fixtures/fixed-point-filter-optimization/starter",
+    ]),
+  }),
+  Object.freeze({
     id: "dma-cache-coherency",
     source: "fixtures/dma-cache-coherency/reference/dma_cache_transfer.c",
     includes: Object.freeze([

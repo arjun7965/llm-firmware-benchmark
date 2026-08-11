@@ -15,6 +15,7 @@ runFixtureMutationTests({
     "embedded-ring-buffer",
     "static-memory-pool",
     "fixed-point-stack-budget",
+    "fixed-point-filter-optimization",
     "dma-cache-coherency",
     "firmware-state-machine",
     "interrupt-vector-configuration",
