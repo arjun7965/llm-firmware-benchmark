@@ -126,7 +126,10 @@ lock-free caller-owned ring storage, add `static-memory-pool` for 16-byte-
 aligned fixed blocks and deterministic exhaustion/reuse, add
 `dma-cache-coherency` for cache-line rounded noncoherent DMA ordering, and add
 `fixed-point-stack-budget` for Q-format arithmetic with a caller-owned stack
-watermark and bounded batch processing.
+watermark and bounded batch processing. The active
+`fixed-point-filter-optimization` fixture adds an opaque deterministic cost
+model for a symmetric seven-tap Q1.15 FIR, checking four-MAC execution, a
+28-cycle modeled budget, and a one-LSB numerical-error bound.
 
 The active `mixed-c-cpp-mmio-safety-review` fixture compiles its opaque C11
 MMIO mock separately from the C++17 answer and tests. Immutable defective

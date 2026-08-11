@@ -39,6 +39,9 @@ The active `static-memory-pool` task uses caller-owned, 16-byte-aligned embedded
 storage and deterministic allocation-map transitions. The active
 `fixed-point-stack-budget` task uses a caller-owned eight-byte-aligned simulated
 stack watermark, an explicit 64-byte budget, and Q1.15/Q8.8 integer arithmetic.
+The active `fixed-point-filter-optimization` task uses a seven-tap symmetric
+Q1.15 FIR plus an opaque architecture-independent cost model with a one-LSB
+error budget and 28 modeled cycles per accepted sample.
 
 ### `c11-lock-free-spsc`
 
@@ -238,6 +241,7 @@ extension use, alignment behavior, memory map, and timer source.
 | `embedded-ring-buffer` | `c11-lock-free-spsc` | Caller-owned power-of-two storage; drop-new overflow; ISR producer; main-loop consumer |
 | `static-memory-pool` | `portable-c11` | Caller-owned four-block embedded pool; 16-byte alignment; deterministic exhaustion, exact release validation, and reinitialization |
 | `fixed-point-stack-budget` | `portable-c11` | Caller-owned eight-byte-aligned simulated downward stack; 64-byte high-water limit; Q1.15 gain, Q8.8 offset, signed rounding, and saturation |
+| `fixed-point-filter-optimization` | `portable-c11` | Seven-tap symmetric Q1.15 FIR; six-sample caller-owned history; four instrumented MACs; one-LSB error and 28-cycle modeled budgets |
 | `firmware-state-machine` | `c11-mocked-hal` | Supplied asynchronous I2C API; 32-bit millisecond clock |
 | `rtos-priority-inversion` | `generic-rtos` | Deterministic three-task priority-inheritance mutex and two-tick safety acquisition bound |
 | `rtos-periodic-scheduler` | `generic-rtos` | Deterministic control-before-telemetry releases, fresh relative deadlines, late-period collapse, and wrap-safe ticks |
