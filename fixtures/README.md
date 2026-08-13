@@ -129,7 +129,9 @@ aligned fixed blocks and deterministic exhaustion/reuse, add
 watermark and bounded batch processing. The active
 `fixed-point-filter-optimization` fixture adds an opaque deterministic cost
 model for a symmetric seven-tap Q1.15 FIR, checking four-MAC execution, a
-28-cycle modeled budget, and a one-LSB numerical-error bound.
+28-cycle modeled budget, and a one-LSB numerical-error bound. Complete operand
+traces and commit-time state validation reject dummy work and early publication
+even when a candidate attempts to roll back a failed transaction.
 
 The active `mixed-c-cpp-mmio-safety-review` fixture compiles its opaque C11
 MMIO mock separately from the C++17 answer and tests. Immutable defective

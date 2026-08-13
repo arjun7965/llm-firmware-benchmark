@@ -49,6 +49,156 @@
       "description": "Keep delayed samples in their old slots instead of advancing the FIR history.",
       "find": "filter->history[index] = filter->history[index - 1u];",
       "replace": "filter->history[index] = filter->history[index];"
+    },
+    {
+      "id": "leave-filter-uninitialized",
+      "description": "Clear history but fail to publish an initialized filter state.",
+      "find": "filter->initialized = true;",
+      "replace": "filter->initialized = false;"
+    },
+    {
+      "id": "accept-uninitialized-filter",
+      "description": "Run a step against caller state that has not been initialized.",
+      "find": "filter == NULL ||\n    !filter->initialized ||\n    cost == NULL ||",
+      "replace": "filter == NULL ||\n    false ||\n    cost == NULL ||"
+    },
+    {
+      "id": "call-null-cost-model",
+      "description": "Pass a NULL opaque cost handle into the cost boundary instead of rejecting it without calls.",
+      "find": "cost == NULL ||\n    output_q15 == NULL",
+      "replace": "false ||\n    output_q15 == NULL"
+    },
+    {
+      "id": "mutate-state-on-null-cost",
+      "description": "Modify initialized filter history while rejecting a NULL cost model.",
+      "find": "cost == NULL ||\n    output_q15 == NULL",
+      "replace": "(cost == NULL && (filter->history[0] = input_q15, true)) ||\n    output_q15 == NULL"
+    },
+    {
+      "id": "mutate-state-on-null-output",
+      "description": "Modify initialized filter history while rejecting a NULL output pointer.",
+      "find": "output_q15 == NULL\n  ) {\n    return false;",
+      "replace": "(output_q15 == NULL &&\n      (filter->history[0] = input_q15, true))\n  ) {\n    return false;"
+    },
+    {
+      "id": "continue-after-begin-failure",
+      "description": "Issue MAC calls after the cost model rejects the transaction budget.",
+      "find": "if (!filter_cost_begin_step(cost, FIXED_POINT_FILTER_UNIQUE_TAPS)) {\n    return false;\n  }",
+      "replace": "(void)filter_cost_begin_step(cost, FIXED_POINT_FILTER_UNIQUE_TAPS);"
+    },
+    {
+      "id": "pair-wrong-first-history-sample",
+      "description": "Pair x[n-1] with x[n-4] instead of x[n-5].",
+      "find": "pair1 = (int32_t)filter->history[0] + filter->history[4];",
+      "replace": "pair1 = (int32_t)filter->history[0] + filter->history[3];"
+    },
+    {
+      "id": "pair-wrong-second-history-sample",
+      "description": "Pair x[n-2] with x[n-3] instead of x[n-4].",
+      "find": "pair2 = (int32_t)filter->history[1] + filter->history[3];",
+      "replace": "pair2 = (int32_t)filter->history[1] + filter->history[2];"
+    },
+    {
+      "id": "use-wrong-center-sample",
+      "description": "Use x[n-4] for the unpaired center tap instead of x[n-3].",
+      "find": "    filter->history[2],\n    FIXED_POINT_FILTER_COEFF_3_Q15",
+      "replace": "    filter->history[3],\n    FIXED_POINT_FILTER_COEFF_3_Q15"
+    },
+    {
+      "id": "narrow-outer-pair-sum",
+      "description": "Narrow the outer symmetric pair to int16_t before the MAC accessor.",
+      "find": "pair0 = (int32_t)input_q15 + filter->history[5];",
+      "replace": "pair0 = (int16_t)((int32_t)input_q15 + filter->history[5]);"
+    },
+    {
+      "id": "narrow-first-inner-pair-sum",
+      "description": "Narrow the first inner symmetric pair to int16_t before the MAC accessor.",
+      "find": "pair1 = (int32_t)filter->history[0] + filter->history[4];",
+      "replace": "pair1 = (int16_t)((int32_t)filter->history[0] + filter->history[4]);"
+    },
+    {
+      "id": "narrow-second-inner-pair-sum",
+      "description": "Narrow the second inner symmetric pair to int16_t before the MAC accessor.",
+      "find": "pair2 = (int32_t)filter->history[1] + filter->history[3];",
+      "replace": "pair2 = (int16_t)((int32_t)filter->history[1] + filter->history[3]);"
+    },
+    {
+      "id": "use-wrong-third-coefficient",
+      "description": "Apply the center coefficient to the second inner symmetric pair.",
+      "find": "    pair2,\n    FIXED_POINT_FILTER_COEFF_2_Q15",
+      "replace": "    pair2,\n    FIXED_POINT_FILTER_COEFF_3_Q15"
+    },
+    {
+      "id": "use-wrong-outer-coefficient",
+      "description": "Apply the first inner coefficient to the outer symmetric pair.",
+      "find": "    pair0,\n    FIXED_POINT_FILTER_COEFF_0_Q15",
+      "replace": "    pair0,\n    FIXED_POINT_FILTER_COEFF_1_Q15"
+    },
+    {
+      "id": "use-wrong-center-coefficient",
+      "description": "Apply the adjacent coefficient to the center sample.",
+      "find": "    filter->history[2],\n    FIXED_POINT_FILTER_COEFF_3_Q15",
+      "replace": "    filter->history[2],\n    FIXED_POINT_FILTER_COEFF_2_Q15"
+    },
+    {
+      "id": "swap-first-two-macs",
+      "description": "Issue the correct outer and first-inner MAC operations in the wrong observable order.",
+      "find": "filter_cost_mac_q15(\n    cost,\n    &accumulator,\n    pair0,\n    FIXED_POINT_FILTER_COEFF_0_Q15\n  );\n  filter_cost_mac_q15(\n    cost,\n    &accumulator,\n    pair1,\n    FIXED_POINT_FILTER_COEFF_1_Q15\n  );",
+      "replace": "filter_cost_mac_q15(\n    cost,\n    &accumulator,\n    pair1,\n    FIXED_POINT_FILTER_COEFF_1_Q15\n  );\n  filter_cost_mac_q15(\n    cost,\n    &accumulator,\n    pair0,\n    FIXED_POINT_FILTER_COEFF_0_Q15\n  );"
+    },
+    {
+      "id": "bypass-one-instrumented-mac",
+      "description": "Compute one tap directly and under-declare the instrumented work as three MACs.",
+      "find": "if (!filter_cost_begin_step(cost, FIXED_POINT_FILTER_UNIQUE_TAPS)) {\n    return false;\n  }\n\n  filter_cost_mac_q15(\n    cost,\n    &accumulator,\n    pair0,\n    FIXED_POINT_FILTER_COEFF_0_Q15\n  );",
+      "replace": "if (!filter_cost_begin_step(cost, FIXED_POINT_FILTER_UNIQUE_TAPS - 1u)) {\n    return false;\n  }\n\n  accumulator += (int64_t)pair0 * FIXED_POINT_FILTER_COEFF_0_Q15;"
+    },
+    {
+      "id": "truncate-positive-ties",
+      "description": "Drop half-away-from-zero rounding for positive Q1.15 accumulators.",
+      "find": "return (value + half) / (int64_t)FIXED_POINT_FILTER_Q15_SCALE;",
+      "replace": "return value / (int64_t)FIXED_POINT_FILTER_Q15_SCALE;"
+    },
+    {
+      "id": "wrap-negative-overflow",
+      "description": "Cast negative overshoot instead of saturating it to int16_t.",
+      "find": "if (value < INT16_MIN) return INT16_MIN;",
+      "replace": "if (false) return INT16_MIN;"
+    },
+    {
+      "id": "commit-twice",
+      "description": "Attempt a second cost commit after the first transaction commits.",
+      "find": "if (!filter_cost_commit_step(cost)) return false;",
+      "replace": "if (!filter_cost_commit_step(cost) ||\n      !filter_cost_commit_step(cost)) return false;"
+    },
+    {
+      "id": "publish-output-during-commit",
+      "description": "Publish output before commit but restore it when commit reports failure.",
+      "find": "if (!filter_cost_commit_step(cost)) return false;",
+      "replace": "{\n    const int16_t prior_output = *output_q15;\n    *output_q15 = result;\n    if (!filter_cost_commit_step(cost)) {\n      *output_q15 = prior_output;\n      return false;\n    }\n  }"
+    },
+    {
+      "id": "publish-history-during-commit",
+      "description": "Advance history before commit but restore it when commit reports failure.",
+      "find": "if (!filter_cost_commit_step(cost)) return false;\n\n  for (size_t index = FIXED_POINT_FILTER_HISTORY_SAMPLES - 1u;\n    index > 0u;\n    index--) {\n    filter->history[index] = filter->history[index - 1u];\n  }\n  filter->history[0] = input_q15;",
+      "replace": "{\n    const fixed_point_filter_t prior = *filter;\n    for (size_t index = FIXED_POINT_FILTER_HISTORY_SAMPLES - 1u;\n      index > 0u;\n      index--) {\n      filter->history[index] = filter->history[index - 1u];\n    }\n    filter->history[0] = input_q15;\n    if (!filter_cost_commit_step(cost)) {\n      *filter = prior;\n      return false;\n    }\n  }"
+    },
+    {
+      "id": "shift-history-forward",
+      "description": "Advance history in ascending order and overwrite older samples before copying them.",
+      "find": "for (size_t index = FIXED_POINT_FILTER_HISTORY_SAMPLES - 1u;\n    index > 0u;\n    index--) {\n    filter->history[index] = filter->history[index - 1u];\n  }",
+      "replace": "for (size_t index = 1u;\n    index < FIXED_POINT_FILTER_HISTORY_SAMPLES;\n    index++) {\n    filter->history[index] = filter->history[index - 1u];\n  }"
+    },
+    {
+      "id": "store-output-in-history",
+      "description": "Store the filtered output as newest history instead of the raw input sample.",
+      "find": "filter->history[0] = input_q15;",
+      "replace": "filter->history[0] = result;"
+    },
+    {
+      "id": "omit-output-publication",
+      "description": "Commit state without publishing the computed output to the caller.",
+      "find": "*output_q15 = result;",
+      "replace": "(void)result;"
     }
   ]
 }

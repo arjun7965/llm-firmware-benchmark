@@ -20,6 +20,10 @@ struct filter_cost_model {
   bool active;
   bool violation;
   bool fail_commit;
+  mock_filter_cost_commit_validator_t commit_validator;
+  const void *commit_context;
+  bool commit_validated;
+  bool invalid_access;
 };
 
 static struct filter_cost_model model;
@@ -36,6 +40,15 @@ void mock_filter_cost_set_commit_failure(bool fail) {
   model.fail_commit = fail;
 }
 
+void mock_filter_cost_set_commit_validator(
+  mock_filter_cost_commit_validator_t validator,
+  const void *context
+) {
+  model.commit_validator = validator;
+  model.commit_context = context;
+  model.commit_validated = false;
+}
+
 uint32_t mock_filter_cost_cycles_used(void) { return model.cycles_used; }
 size_t mock_filter_cost_begin_count(void) { return model.begin_count; }
 size_t mock_filter_cost_mac_count(void) { return model.mac_count; }
@@ -50,6 +63,10 @@ int16_t mock_filter_cost_coefficient(size_t index) {
   return index < model.mac_count ? model.coefficients[index] : 0;
 }
 bool mock_filter_cost_active(void) { return model.active; }
+bool mock_filter_cost_commit_validated(void) {
+  return model.commit_validated;
+}
+bool mock_filter_cost_invalid_access(void) { return model.invalid_access; }
 
 bool filter_cost_begin_step(
   filter_cost_model_t *cost,
@@ -57,7 +74,10 @@ bool filter_cost_begin_step(
 ) {
   uint32_t required_cycles;
 
-  if (cost != &model) return false;
+  if (cost != &model) {
+    model.invalid_access = true;
+    return false;
+  }
   model.begin_count++;
   model.declared_macs = mac_count;
   if (
@@ -86,7 +106,10 @@ void filter_cost_mac_q15(
   int32_t sample_sum_q15,
   int16_t coefficient_q15
 ) {
-  if (cost != &model) return;
+  if (cost != &model) {
+    model.invalid_access = true;
+    return;
+  }
   if (model.mac_count < MOCK_FILTER_COST_MAX_MACS) {
     model.sample_sums[model.mac_count] = sample_sum_q15;
     model.coefficients[model.mac_count] = coefficient_q15;
@@ -109,8 +132,17 @@ void filter_cost_mac_q15(
 bool filter_cost_commit_step(filter_cost_model_t *cost) {
   bool success;
 
-  if (cost != &model) return false;
+  if (cost != &model) {
+    model.invalid_access = true;
+    return false;
+  }
   model.commit_count++;
+  if (model.commit_validator != NULL) {
+    model.commit_validated = true;
+    if (!model.commit_validator(model.commit_context)) {
+      model.violation = true;
+    }
+  }
   success = model.active &&
     !model.violation &&
     model.active_macs == model.declared_macs &&
