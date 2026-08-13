@@ -199,6 +199,31 @@ test("mixed C/C++ MMIO review prompt is a self-contained fixture contract", () =
     "at most one live active mmio_transfer_t owns a given opaque MMIO handle",
     "move assignment between distinct active owners requires distinct handles",
   ]) {
+    assert.ok(
+      task.prompt.includes(requiredText),
+      "prompt omits " + requiredText,
+    );
+  }
+});
+
+test("fixed-point filter prompt is a self-contained fixture contract", () => {
+  const task = loadTasks(new URL("../tasks.json", import.meta.url))
+    .find((item) => item.id === "fixed-point-filter-optimization");
+  assert.ok(task);
+  for (const requiredText of [
+    "fixed_point_filter_t { int16_t history[6]; bool initialized; }",
+    "The complete opaque cost boundary is:",
+    "filter_cost_begin_step(filter_cost_model_t *,uint32_t mac_count)",
+    "filter_cost_mac_q15(filter_cost_model_t *,int64_t *accumulator",
+    "History index zero is x[n-1] and index five is x[n-6]",
+    "call begin_step exactly once declaring four MACs",
+    "call mac_q15 exactly four times in this order",
+    "Pair sums use int32_t and the accumulator is int64_t",
+    "do not multiply samples and coefficients directly or issue dummy MACs",
+    "Only after a successful commit shift history toward index five",
+    "one final nearest rounding",
+    "fence label is exactly `c`",
+  ]) {
     assert.ok(task.prompt.includes(requiredText), "prompt omits " + requiredText);
   }
 });

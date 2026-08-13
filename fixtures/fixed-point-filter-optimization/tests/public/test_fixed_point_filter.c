@@ -28,6 +28,20 @@ static bool filter_state_equals(
   return true;
 }
 
+typedef struct {
+  const fixed_point_filter_t *filter;
+  fixed_point_filter_t expected_filter;
+  const int16_t *output;
+  int16_t expected_output;
+} commit_context_t;
+
+static bool state_is_unpublished(const void *value) {
+  const commit_context_t *context = value;
+
+  return filter_state_equals(context->filter, &context->expected_filter) &&
+    *context->output == context->expected_output;
+}
+
 static int64_t divide_q15_rounded(int64_t value) {
   const int64_t half = (int64_t)FIXED_POINT_FILTER_Q15_SCALE / 2;
 
@@ -77,6 +91,8 @@ static bool test_initialization_and_invalid_calls(void) {
   };
   fixed_point_filter_t uninitialized = { 0 };
   const fixed_point_filter_t before = filter;
+  const fixed_point_filter_t uninitialized_before = uninitialized;
+  fixed_point_filter_t initialized_before;
   int16_t output = 77;
 
   mock_filter_cost_reset(FIXED_POINT_FILTER_CYCLE_BUDGET);
@@ -89,6 +105,7 @@ static bool test_initialization_and_invalid_calls(void) {
     index++) {
     CHECK(filter.history[index] == 0);
   }
+  initialized_before = filter;
 
   CHECK(!fixed_point_filter_step(
     NULL,
@@ -109,10 +126,13 @@ static bool test_initialization_and_invalid_calls(void) {
     1,
     NULL
   ));
+  CHECK(filter_state_equals(&uninitialized, &uninitialized_before));
+  CHECK(filter_state_equals(&filter, &initialized_before));
   CHECK(output == 77);
   CHECK(mock_filter_cost_begin_count() == 0u);
   CHECK(mock_filter_cost_mac_count() == 0u);
   CHECK(mock_filter_cost_commit_count() == 0u);
+  CHECK(!mock_filter_cost_invalid_access());
   return true;
 }
 
@@ -120,6 +140,7 @@ static bool test_cycle_boundary_and_transactional_commit(void) {
   fixed_point_filter_t filter = { 0 };
   fixed_point_filter_t before;
   int16_t output = 99;
+  commit_context_t commit_context;
 
   CHECK(fixed_point_filter_init(&filter));
   before = filter;
@@ -140,6 +161,16 @@ static bool test_cycle_boundary_and_transactional_commit(void) {
 
   mock_filter_cost_reset(FIXED_POINT_FILTER_CYCLE_BUDGET);
   mock_filter_cost_set_commit_failure(true);
+  commit_context = (commit_context_t) {
+    .filter = &filter,
+    .expected_filter = before,
+    .output = &output,
+    .expected_output = output,
+  };
+  mock_filter_cost_set_commit_validator(
+    state_is_unpublished,
+    &commit_context
+  );
   CHECK(!fixed_point_filter_step(
     &filter,
     mock_filter_cost_handle(),
@@ -152,8 +183,13 @@ static bool test_cycle_boundary_and_transactional_commit(void) {
   CHECK(mock_filter_cost_commit_count() == 1u);
   CHECK(mock_filter_cost_cycles_used() == 0u);
   CHECK(!mock_filter_cost_active());
+  CHECK(mock_filter_cost_commit_validated());
 
   mock_filter_cost_reset(FIXED_POINT_FILTER_CYCLE_BUDGET);
+  mock_filter_cost_set_commit_validator(
+    state_is_unpublished,
+    &commit_context
+  );
   CHECK(fixed_point_filter_step(
     &filter,
     mock_filter_cost_handle(),
@@ -162,6 +198,7 @@ static bool test_cycle_boundary_and_transactional_commit(void) {
   ));
   CHECK(output == -128);
   CHECK(filter.history[0] == 4096);
+  CHECK(mock_filter_cost_commit_validated());
   CHECK(mock_filter_cost_cycles_used() == FIXED_POINT_FILTER_CYCLE_BUDGET);
   CHECK(mock_filter_cost_mac_count() == FIXED_POINT_FILTER_UNIQUE_TAPS);
   CHECK(mock_filter_cost_sample_sum(0u) == 4096);
@@ -177,6 +214,61 @@ static bool test_cycle_boundary_and_transactional_commit(void) {
   CHECK(
     mock_filter_cost_coefficient(3u) == FIXED_POINT_FILTER_COEFF_3_Q15
   );
+  return true;
+}
+
+static bool test_complete_symmetric_mac_trace(void) {
+  fixed_point_filter_t filter = {
+    .history = {
+      INT16_C(30000),
+      -INT16_C(30000),
+      INT16_C(20000),
+      -INT16_C(20000),
+      INT16_C(10000),
+      INT16_C(30000),
+    },
+    .initialized = true,
+  };
+  const fixed_point_filter_t before = filter;
+  const int32_t expected_sums[] = {
+    INT32_C(42345),
+    INT32_C(40000),
+    -INT32_C(50000),
+    INT32_C(20000),
+  };
+  const int16_t expected_coefficients[] = {
+    FIXED_POINT_FILTER_COEFF_0_Q15,
+    FIXED_POINT_FILTER_COEFF_1_Q15,
+    FIXED_POINT_FILTER_COEFF_2_Q15,
+    FIXED_POINT_FILTER_COEFF_3_Q15,
+  };
+  int16_t output = 0;
+
+  mock_filter_cost_reset(FIXED_POINT_FILTER_CYCLE_BUDGET);
+  CHECK(fixed_point_filter_step(
+    &filter,
+    mock_filter_cost_handle(),
+    INT16_C(12345),
+    &output
+  ));
+  CHECK(output == ideal_step(before.history, INT16_C(12345)));
+  CHECK(mock_filter_cost_begin_count() == 1u);
+  CHECK(mock_filter_cost_declared_macs() == FIXED_POINT_FILTER_UNIQUE_TAPS);
+  CHECK(mock_filter_cost_mac_count() == FIXED_POINT_FILTER_UNIQUE_TAPS);
+  CHECK(mock_filter_cost_commit_count() == 1u);
+  CHECK(mock_filter_cost_cycles_used() == FIXED_POINT_FILTER_CYCLE_BUDGET);
+  for (size_t index = 0u; index < FIXED_POINT_FILTER_UNIQUE_TAPS; index++) {
+    CHECK(mock_filter_cost_sample_sum(index) == expected_sums[index]);
+    CHECK(
+      mock_filter_cost_coefficient(index) == expected_coefficients[index]
+    );
+  }
+  CHECK(filter.history[0] == INT16_C(12345));
+  for (size_t index = 1u;
+    index < FIXED_POINT_FILTER_HISTORY_SAMPLES;
+    index++) {
+    CHECK(filter.history[index] == before.history[index - 1u]);
+  }
   return true;
 }
 
@@ -322,6 +414,7 @@ int main(void) {
   } tests[] = {
     { "initialization and invalid calls", test_initialization_and_invalid_calls },
     { "cycle boundary and transactional commit", test_cycle_boundary_and_transactional_commit },
+    { "complete symmetric MAC trace", test_complete_symmetric_mac_trace },
     { "impulse response and signed ties", test_impulse_response_and_signed_ties },
     { "saturation and error budget", test_saturation_and_error_budget },
   };
