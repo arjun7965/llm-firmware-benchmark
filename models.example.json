@@ -55,6 +55,14 @@
       }
     },
     {
+      "id": "opencode-example",
+      "provider": "opencode",
+      "model": "provider/model-id",
+      "options": {
+        "timeoutMs": 600000
+      }
+    },
+    {
       "id": "local-openai-compatible",
       "provider": "openai-compatible",
       "model": "local-model-id",

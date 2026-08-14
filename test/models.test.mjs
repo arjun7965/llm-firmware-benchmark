@@ -17,7 +17,7 @@ const validModel = {
 test("example model configuration is valid", () => {
   const models = loadModels(new URL("../models.example.json", import.meta.url));
 
-  assert.equal(models.length, 7);
+  assert.equal(models.length, 8);
   assert.equal(models[0].provider, "ncode");
   assert.deepEqual(
     models.slice(2, 5).map(({ id, provider, model }) => ({
@@ -52,7 +52,15 @@ test("example model configuration is valid", () => {
       timeoutMs: 600000,
     },
   });
-  assert.equal(models[6].provider, "openai-compatible");
+  assert.deepEqual(models[6], {
+    id: "opencode-example",
+    provider: "opencode",
+    model: "provider/model-id",
+    options: {
+      timeoutMs: 600000,
+    },
+  });
+  assert.equal(models[7].provider, "openai-compatible");
 });
 
 test("model validation rejects unsafe and duplicate IDs", () => {
