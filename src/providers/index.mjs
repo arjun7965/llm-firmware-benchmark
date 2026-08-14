@@ -1,7 +1,9 @@
+import { executeCodexJob } from "./codex.mjs";
 import { executeNcodeJob } from "./ncode.mjs";
 import { executeOpenAICompatibleJob } from "./openai-compatible.mjs";
 
 const providers = new Map([
+  ["codex", executeCodexJob],
   ["ncode", executeNcodeJob],
   ["openai-compatible", executeOpenAICompatibleJob],
 ]);

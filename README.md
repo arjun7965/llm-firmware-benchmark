@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![110 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=110%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![116 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=116%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![75 C/C++ checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=75%20C%2FC%2B%2B%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -12,7 +12,8 @@ validation. General coding tasks remain as an auxiliary comparison suite.
 ## Requirements
 
 - Node.js 22 or newer
-- A supported provider runtime; NCode and OpenAI-compatible HTTP are included
+- A supported provider runtime; Codex, NCode, and OpenAI-compatible HTTP are
+  included
 - Local access or credentials required by the configured models
 
 Language toolchains such as `rustc`, a C11 compiler, Go, Python, or PostgreSQL
@@ -55,6 +56,15 @@ npm run benchmark
 npm test
 npm run test:c
 npm run check
+```
+
+Codex models reuse the authentication from `codex login`. The example model
+file includes `gpt-5.6-luna`, `gpt-5.6-sol`, and `gpt-5.6-terra`; select them
+without running locally configured models:
+
+```bash
+npm run benchmark -- \
+  --models gpt-5.6-luna,gpt-5.6-sol,gpt-5.6-terra
 ```
 
 Use another configuration without copying it into the repository:
@@ -330,6 +340,11 @@ The included `openai-compatible` provider sends non-streaming Chat Completions
 requests to a configured HTTP endpoint. It supports unauthenticated local
 servers and environment-based Bearer credentials. See
 `docs/providers/openai-compatible.md` for configuration and safety constraints.
+
+The included `codex` provider runs the Codex CLI non-interactively with saved
+CLI authentication, isolated temporary working directories, and a fixed
+no-tools policy. See `docs/providers/codex.md` for configuration and benchmark
+parity considerations.
 
 ## Security Checks
 
