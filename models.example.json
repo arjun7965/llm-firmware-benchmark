@@ -46,6 +46,15 @@
       }
     },
     {
+      "id": "claude-sonnet-5",
+      "provider": "claude-code",
+      "model": "claude-sonnet-5",
+      "options": {
+        "effort": "medium",
+        "timeoutMs": 600000
+      }
+    },
+    {
       "id": "local-openai-compatible",
       "provider": "openai-compatible",
       "model": "local-model-id",

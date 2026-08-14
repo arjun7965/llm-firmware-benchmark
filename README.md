@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![116 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=116%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![122 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=122%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![75 C/C++ checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=75%20C%2FC%2B%2B%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -12,8 +12,8 @@ validation. General coding tasks remain as an auxiliary comparison suite.
 ## Requirements
 
 - Node.js 22 or newer
-- A supported provider runtime; Codex, NCode, and OpenAI-compatible HTTP are
-  included
+- A supported provider runtime; Claude Code, Codex, NCode, and OpenAI-compatible
+  HTTP are included
 - Local access or credentials required by the configured models
 
 Language toolchains such as `rustc`, a C11 compiler, Go, Python, or PostgreSQL
@@ -65,6 +65,13 @@ without running locally configured models:
 ```bash
 npm run benchmark -- \
   --models gpt-5.6-luna,gpt-5.6-sol,gpt-5.6-terra
+```
+
+Claude models reuse the authentication from `claude auth login`. Run the
+example Claude Code configuration with:
+
+```bash
+npm run benchmark -- --models claude-sonnet-5
 ```
 
 Use another configuration without copying it into the repository:
@@ -345,6 +352,12 @@ The included `codex` provider runs the Codex CLI non-interactively with saved
 CLI authentication, isolated temporary working directories, and a fixed
 no-tools policy. See `docs/providers/codex.md` for configuration and benchmark
 parity considerations.
+
+The included `claude-code` provider runs Claude Code non-interactively with
+saved CLI authentication, isolated temporary working directories, no session
+persistence, and a fixed no-tools policy. See
+`docs/providers/claude-code.md` for configuration and benchmark parity
+considerations.
 
 ## Security Checks
 
