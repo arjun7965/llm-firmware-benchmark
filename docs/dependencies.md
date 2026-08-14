@@ -6,7 +6,8 @@ The repository itself has no npm package dependencies. Running benchmarks,
 tests, exports, and summaries requires:
 
 - Node.js 22 or newer;
-- the Codex CLI, NCode CLI, or an OpenAI-compatible HTTP endpoint; and
+- the Claude Code, Codex, NCode, or OpenCode CLI, or an OpenAI-compatible HTTP
+  endpoint; and
 - model access or credentials required by the selected provider.
 
 Task-language toolchains are not required when the harness only collects model

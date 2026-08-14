@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![122 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=122%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![130 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=130%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![75 C/C++ checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=75%20C%2FC%2B%2B%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -12,8 +12,8 @@ validation. General coding tasks remain as an auxiliary comparison suite.
 ## Requirements
 
 - Node.js 22 or newer
-- A supported provider runtime; Claude Code, Codex, NCode, and OpenAI-compatible
-  HTTP are included
+- A supported provider runtime; Claude Code, Codex, NCode, OpenCode, and
+  OpenAI-compatible HTTP are included
 - Local access or credentials required by the configured models
 
 Language toolchains such as `rustc`, a C11 compiler, Go, Python, or PostgreSQL
@@ -72,6 +72,14 @@ example Claude Code configuration with:
 
 ```bash
 npm run benchmark -- --models claude-sonnet-5
+```
+
+OpenCode models use `provider/model` identifiers and reuse authentication from
+`opencode auth login`. Replace the placeholder identifier in the example model
+configuration, then run it with:
+
+```bash
+npm run benchmark -- --models opencode-example
 ```
 
 Use another configuration without copying it into the repository:
@@ -358,6 +366,12 @@ saved CLI authentication, isolated temporary working directories, no session
 persistence, and a fixed no-tools policy. See
 `docs/providers/claude-code.md` for configuration and benchmark parity
 considerations.
+
+The included `opencode` provider runs OpenCode non-interactively with saved
+provider authentication, isolated temporary working directories, pure mode,
+isolated agent configuration, and a fixed no-tools policy. See
+`docs/providers/opencode.md` for configuration, NDJSON output handling, and
+benchmark parity considerations.
 
 ## Security Checks
 
