@@ -6,6 +6,8 @@ Assess least-privilege Cortex-M3 MPU setup and fail-closed fault handling
 through opaque MPU0/security-controller boundaries.
 
 Implement `fixtures/mpu-fault-containment/starter/mpu_fault_containment.h`.
+The implementation includes `<stdbool.h>`, `<stddef.h>`, and `<stdint.h>` so
+the complete API and its required null-pointer checks compile freestanding.
 The four-region policy is exact: executable read-only flash; read/write,
 execute-never SRAM; privileged-only, execute-never key vault overriding SRAM;
 and a highest-priority no-access, execute-never stack guard.
@@ -43,3 +45,10 @@ addresses, sizes, priorities, permissions, barriers, safe-first order,
 fault-injection points, configuration-containment action, and exact interrupt
 save/restore behavior are normative. The public tests and mutations are
 authoritative for deterministic rejection.
+
+## Calibration
+
+Run `npm run fixture:mpu-fault:self-test` to exercise the trusted reference
+and its seven public test groups. The C mutation suite rejects all 34
+compile-valid controlled defects for region policy, readback, injected faults,
+containment ordering, event handling, and initialization state publication.

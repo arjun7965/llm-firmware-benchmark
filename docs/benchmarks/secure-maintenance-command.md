@@ -48,3 +48,10 @@ SEC0 signatures, minimum-version-zero rule, non-wrapping sequence rule,
 challenge TTL/deadline rule, challenge-begin return value, cumulative lockout,
 and denial side effects are normative. The public tests and mutations are
 authoritative for deterministic rejection.
+
+## Calibration
+
+Run `npm run fixture:secure-maintenance:self-test` to exercise the trusted
+reference and its eight public test groups. The C mutation suite rejects all
+40 compile-valid controlled defects for framing, replay, policy, verifier,
+lockout, authorization-publication, and fail-closed ordering behavior.
