@@ -7,7 +7,7 @@ import {
 
 const validModel = {
   id: "model-a",
-  provider: "ncode",
+  provider: "codex",
   model: "provider/model-a",
   options: {
     effort: "medium",
@@ -17,10 +17,9 @@ const validModel = {
 test("example model configuration is valid", () => {
   const models = loadModels(new URL("../models.example.json", import.meta.url));
 
-  assert.equal(models.length, 8);
-  assert.equal(models[0].provider, "ncode");
+  assert.equal(models.length, 6);
   assert.deepEqual(
-    models.slice(2, 5).map(({ id, provider, model }) => ({
+    models.slice(0, 3).map(({ id, provider, model }) => ({
       id,
       provider,
       model,
@@ -43,7 +42,7 @@ test("example model configuration is valid", () => {
       },
     ],
   );
-  assert.deepEqual(models[5], {
+  assert.deepEqual(models[3], {
     id: "claude-sonnet-5",
     provider: "claude-code",
     model: "claude-sonnet-5",
@@ -52,7 +51,7 @@ test("example model configuration is valid", () => {
       timeoutMs: 600000,
     },
   });
-  assert.deepEqual(models[6], {
+  assert.deepEqual(models[4], {
     id: "opencode-example",
     provider: "opencode",
     model: "provider/model-id",
@@ -60,7 +59,7 @@ test("example model configuration is valid", () => {
       timeoutMs: 600000,
     },
   });
-  assert.equal(models[7].provider, "openai-compatible");
+  assert.equal(models[5].provider, "openai-compatible");
 });
 
 test("model validation rejects unsafe and duplicate IDs", () => {
