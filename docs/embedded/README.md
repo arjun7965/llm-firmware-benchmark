@@ -6,6 +6,8 @@ assumptions are made comparable across model runs.
 - `capability-matrix.md` records current coverage and planned task families.
 - `target-assumptions.md` defines reusable execution profiles and the minimum
   assumptions every embedded task must state.
+- `host-validation.md` records and enforces the deterministic host-side mock
+  and simulator coverage audit.
 - `../benchmarks/firmware-scoring.md` defines the common scoring dimensions
   used by embedded and firmware task rubrics.
 - `../../fixtures/` contains the validated per-task scaffold and manifest

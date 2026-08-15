@@ -30,6 +30,7 @@ const forbiddenCommandTools = new Set([
   "sh",
   "zsh",
 ]);
+const hostedExecutionKinds = new Set(["host", "oci"]);
 const manifestFields = [
   "answer",
   "commands",
@@ -428,6 +429,84 @@ function validateTrackedDirectories(fixtureRoot, manifest) {
   }
 }
 
+function regularFiles(directory) {
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...regularFiles(path));
+    } else if (entry.isFile()) {
+      files.push(path);
+    }
+  }
+  return files;
+}
+
+function commandUsesFixtureDirectory(command, directory) {
+  return command.argv.some((argument) =>
+    argument === directory ||
+    argument.startsWith(`${directory}/`) ||
+    argument === `-I${directory}`
+  );
+}
+
+function validateFirmwareHostCoverage(fixtureRoot, manifest, task) {
+  if (task.suite !== "firmware") return null;
+  if (manifest.status !== "active") {
+    throw new TypeError(
+      `firmware fixture ${task.id} must be active for host-side coverage`,
+    );
+  }
+
+  const profile = getValidationProfile(manifest.validationProfile);
+  if (
+    !Array.isArray(profile.environments) ||
+    profile.environments.length === 0
+  ) {
+    throw new TypeError(
+      `firmware fixture ${task.id} must use a hosted validation environment`,
+    );
+  }
+  for (const reference of profile.environments) {
+    const environment = getValidationEnvironmentRevision(
+      reference.id,
+      reference.revision,
+    );
+    if (!hostedExecutionKinds.has(environment.execution.kind)) {
+      throw new TypeError(
+        `firmware fixture ${task.id} validation environment must be hosted`,
+      );
+    }
+  }
+
+  const mocksRoot = resolve(fixtureRoot, manifest.paths.mocks);
+  const readmePath = join(mocksRoot, "README.md");
+  if (
+    !existsSync(readmePath) ||
+    lstatSync(readmePath).isSymbolicLink() ||
+    !lstatSync(readmePath).isFile() ||
+    readFileSync(readmePath, "utf8").trim() === ""
+  ) {
+    throw new TypeError(
+      `firmware fixture ${task.id} must document its host-side boundary in ` +
+      "mocks/README.md",
+    );
+  }
+
+  const mockAssets = regularFiles(mocksRoot)
+    .filter((path) => path !== readmePath);
+  if (
+    mockAssets.length > 0 &&
+    !manifest.commands.some((command) =>
+      commandUsesFixtureDirectory(command, manifest.paths.mocks))
+  ) {
+    throw new TypeError(
+      `firmware fixture ${task.id} mock assets are not used by its commands`,
+    );
+  }
+  return { hasMockAssets: mockAssets.length > 0 };
+}
+
 export function validateFixtureRepository({
   fixturesRoot,
   tasksPath,
@@ -446,6 +525,9 @@ export function validateFixtureRepository({
   let commandCount = 0;
   let activeCount = 0;
   let scaffoldCount = 0;
+  let firmwareHostCoverageCount = 0;
+  let firmwareMockAssetCount = 0;
+  let firmwareNoRuntimeMockCount = 0;
 
   for (const entry of readdirSync(root, { withFileTypes: true })) {
     if (entry.isSymbolicLink()) {
@@ -466,6 +548,19 @@ export function validateFixtureRepository({
       task,
     );
     validateTrackedDirectories(taskFixtureRoot, manifest);
+    const firmwareCoverage = validateFirmwareHostCoverage(
+      taskFixtureRoot,
+      manifest,
+      task,
+    );
+    if (firmwareCoverage) {
+      firmwareHostCoverageCount++;
+      if (firmwareCoverage.hasMockAssets) {
+        firmwareMockAssetCount++;
+      } else {
+        firmwareNoRuntimeMockCount++;
+      }
+    }
     fixtureTaskIds.add(entry.name);
     commandCount += manifest.commands.length;
     if (manifest.status === "active") activeCount++;
@@ -483,5 +578,8 @@ export function validateFixtureRepository({
     activeCount,
     scaffoldCount,
     commandCount,
+    firmwareHostCoverageCount,
+    firmwareMockAssetCount,
+    firmwareNoRuntimeMockCount,
   };
 }

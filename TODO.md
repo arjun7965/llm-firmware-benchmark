@@ -244,12 +244,15 @@ record exact versions in validation reports.
   test-local mapping.
 - [x] Define stable per-task fixture directories and a validated manifest/build
   command contract.
-- [ ] Build deterministic host-side hardware mocks and simulators so core tasks
+- [x] Build deterministic host-side hardware mocks and simulators so core tasks
   require no physical board or proprietary SDK.
   - [x] Add a deterministic clock/I2C mock and trusted self-test for
     `firmware-state-machine`.
   - [x] Add deterministic full-capacity and counter-wrap tests for
     `embedded-ring-buffer`.
+  - [x] Audit all 42 deterministic firmware fixtures and enforce active hosted
+    validation, a documented mock boundary, and command wiring for committed
+    mock or simulator assets.
 - [ ] Add optional hardware-in-the-loop validation for representative STM32,
   NXP, and TI boards after the mock-MMIO tasks stabilize. Keep host mocks as the
   required scoring path, and document each board, debug probe, toolchain, SDK

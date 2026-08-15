@@ -1,4 +1,5 @@
 import {
+  cpSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -69,6 +70,9 @@ test("repository fixture scaffolds match task metadata", () => {
       activeCount: 51,
       scaffoldCount: 0,
       commandCount: 108,
+      firmwareHostCoverageCount: 42,
+      firmwareMockAssetCount: 33,
+      firmwareNoRuntimeMockCount: 9,
     },
   );
 });
@@ -191,7 +195,91 @@ test("fixture eligibility follows the task scoring mode", (t) => {
       activeCount: 0,
       scaffoldCount: 0,
       commandCount: 0,
+      firmwareHostCoverageCount: 0,
+      firmwareMockAssetCount: 0,
+      firmwareNoRuntimeMockCount: 0,
     },
+  );
+});
+
+test("firmware fixtures enforce documented host-side coverage", (t) => {
+  const root = temporaryDirectory(t);
+  const temporaryFixturesRoot = join(root, "fixtures");
+  const temporaryTasksPath = join(root, "tasks.json");
+  const taskIds = ["embedded-ring-buffer", "firmware-state-machine"];
+  const tasks = loadTasks(tasksPath)
+    .filter((task) => taskIds.includes(task.id));
+  mkdirSync(temporaryFixturesRoot);
+  for (const taskId of taskIds) {
+    cpSync(
+      new URL(`../fixtures/${taskId}/`, import.meta.url),
+      join(temporaryFixturesRoot, taskId),
+      { recursive: true },
+    );
+  }
+  writeFileSync(temporaryTasksPath, JSON.stringify(tasks));
+
+  assert.deepEqual(
+    validateFixtureRepository({
+      fixturesRoot: temporaryFixturesRoot,
+      tasksPath: temporaryTasksPath,
+    }),
+    {
+      fixtureCount: 2,
+      activeCount: 2,
+      scaffoldCount: 0,
+      commandCount: 4,
+      firmwareHostCoverageCount: 2,
+      firmwareMockAssetCount: 1,
+      firmwareNoRuntimeMockCount: 1,
+    },
+  );
+
+  const stateMachineManifestPath = join(
+    temporaryFixturesRoot,
+    "firmware-state-machine",
+    "manifest.json",
+  );
+  const stateMachineManifest = JSON.parse(
+    readFileSync(stateMachineManifestPath, "utf8"),
+  );
+  writeFileSync(stateMachineManifestPath, JSON.stringify({
+    ...stateMachineManifest,
+    status: "scaffold",
+  }));
+  assert.throws(
+    () => validateFixtureRepository({
+      fixturesRoot: temporaryFixturesRoot,
+      tasksPath: temporaryTasksPath,
+    }),
+    /firmware fixture firmware-state-machine must be active/u,
+  );
+  writeFileSync(stateMachineManifestPath, JSON.stringify(stateMachineManifest));
+
+  const ringBufferMocks = join(
+    temporaryFixturesRoot,
+    "embedded-ring-buffer",
+    "mocks",
+  );
+  const ringBufferReadme = join(ringBufferMocks, "README.md");
+  const readme = readFileSync(ringBufferReadme, "utf8");
+  writeFileSync(ringBufferReadme, "\n");
+  assert.throws(
+    () => validateFixtureRepository({
+      fixturesRoot: temporaryFixturesRoot,
+      tasksPath: temporaryTasksPath,
+    }),
+    /must document its host-side boundary in mocks\/README\.md/u,
+  );
+  writeFileSync(ringBufferReadme, readme);
+
+  writeFileSync(join(ringBufferMocks, "unused_mock.c"), "int mock_value;\n");
+  assert.throws(
+    () => validateFixtureRepository({
+      fixturesRoot: temporaryFixturesRoot,
+      tasksPath: temporaryTasksPath,
+    }),
+    /mock assets are not used by its commands/u,
   );
 });
 
