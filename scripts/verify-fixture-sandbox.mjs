@@ -10,16 +10,19 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runFixtureValidation } from "../src/fixture-sandbox.mjs";
+import {
+  readValidationHost,
+  runFixtureValidation,
+} from "../src/fixture-sandbox.mjs";
 import {
   fixtureAnswerFiles,
   validateFixtureRepository,
 } from "../src/fixtures.mjs";
 import {
   environmentFingerprint,
-  getValidationEnvironmentRevision,
   getValidationProfile,
   profileFingerprint,
+  selectValidationEnvironment,
 } from "../src/validation-profiles.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
@@ -282,6 +285,7 @@ const references = [
 ];
 
 try {
+  const validationHost = readValidationHost();
   validateFixtureRepository({
     fixturesRoot: repositoryFixtures,
     tasksPath: repositoryTasks,
@@ -317,10 +321,9 @@ try {
     const validationProfile = getValidationProfile(
       manifest.validationProfile,
     );
-    const environmentReference = validationProfile.environments[0];
-    const validationEnvironment = getValidationEnvironmentRevision(
-      environmentReference.id,
-      environmentReference.revision,
+    const validationEnvironment = selectValidationEnvironment(
+      validationProfile,
+      validationHost,
     );
 
     const { report } = runFixtureValidation({
