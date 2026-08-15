@@ -28,7 +28,7 @@ function rawResult(stdout) {
     scoringMode: "deterministic",
     targetProfile: "portable-c11",
     validationProfile: "c11-host",
-    provider: "ncode",
+    provider: "example-provider",
     modelName: "example-model",
     modelId: "/private/models/example-model",
     modelOptions: {
@@ -58,7 +58,7 @@ test("sanitizer removes credential, key, path, and identifier canaries", () => {
     "cHJpdmF0ZS1rZXktY2FuYXJ5",
     "-----END " + "PRIVATE KEY-----",
   ].join("\n");
-  const homePath = ["/home", "alice", ".ncode", "memory"].join("/");
+  const homePath = ["/home", "alice", ".config", "provider"].join("/");
   const credentialCanary = ["correct", "horse", "canary"].join("-");
   const credentialUrl = ["https://user", "canary@example.test"].join(":");
   const sensitive = [
@@ -86,7 +86,7 @@ test("sanitizer removes credential, key, path, and identifier canaries", () => {
   assert.ok(result.redactions.length >= 6);
 });
 
-test("public result allowlists fields and extracts NCode answer text", () => {
+test("public result allowlists fields and extracts provider answer text", () => {
   const raw = rawResult(JSON.stringify({
     type: "result",
     result: "A legitimate answer.",
@@ -126,7 +126,7 @@ test("public result allowlists fields and extracts NCode answer text", () => {
 
 test("public result reproduces and blocks the original disclosure path", () => {
   const credential = ["do", "not", "publish"].join("-");
-  const homePath = ["/home", "alice", ".ncode", "memory", "MEMORY.md"]
+  const homePath = ["/home", "alice", ".config", "provider", "MEMORY.md"]
     .join("/");
   const answer = [
     ["passwd", ": ", credential].join(""),

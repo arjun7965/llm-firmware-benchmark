@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![130 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=130%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![126 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=126%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![75 C/C++ checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=75%20C%2FC%2B%2B%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -12,7 +12,7 @@ validation. General coding tasks remain as an auxiliary comparison suite.
 ## Requirements
 
 - Node.js 22 or newer
-- A supported provider runtime; Claude Code, Codex, NCode, OpenCode, and
+- A supported provider runtime; Claude Code, Codex, OpenCode, and
   OpenAI-compatible HTTP are included
 - Local access or credentials required by the configured models
 
@@ -37,12 +37,12 @@ Edit `models.local.json`:
 {
   "models": [
     {
-      "id": "my-model",
-      "provider": "ncode",
-      "model": "provider/model-or-local-path",
+      "id": "gpt-5.6-luna",
+      "provider": "codex",
+      "model": "gpt-5.6-luna",
       "options": {
         "effort": "medium",
-        "timeoutMs": 300000
+        "timeoutMs": 600000
       }
     }
   ]

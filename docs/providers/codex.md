@@ -33,12 +33,11 @@ and applies all of the following controls:
 - final-answer text on stdout, with Codex progress retained separately on
   stderr in the private raw result.
 
-These controls keep benchmark tasks self-contained and align Codex as closely
-as possible with the NCode provider's empty tool list. Codex still supplies its
-own provider-level agent instructions, just as other runtimes may supply their
-own system prompts. Record the Codex CLI version, authentication mode, model
-identifier, effort, and any provider-policy differences when publishing a
-comparison.
+These controls keep benchmark tasks self-contained and give Codex a fixed
+no-tools policy. Codex still supplies its own provider-level agent
+instructions, just as other runtimes may supply their own system prompts.
+Record the Codex CLI version, authentication mode, model identifier, effort,
+and any provider-policy differences when publishing a comparison.
 
 Check authentication without exposing credentials:
 
