@@ -486,6 +486,12 @@ chmodSync(output, 0o700);
     "}",
     "",
   ].join("\n"));
+  writeFileSync(join(fixtureRoot, "mocks/README.md"), [
+    "# Mocks",
+    "",
+    "This synthetic fixture has no hardware dependency or runtime mock.",
+    "",
+  ].join("\n"));
 
   const previousPath = process.env.PATH;
   process.env.PATH = `${binRoot}:${previousPath}`;

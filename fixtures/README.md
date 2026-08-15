@@ -40,6 +40,16 @@ manifests for those profiles must use an approved command prefix. A
 `scaffold` manifest defines an incomplete interface. An `active` manifest has
 verified extraction, compile, and test commands.
 
+Deterministic firmware fixtures have an additional host-coverage invariant.
+They must be active, resolve to hosted validation environments, and include a
+nonempty `mocks/README.md` that identifies the deterministic boundary. If the
+directory contains mock or simulator assets beyond that README, at least one
+manifest command must consume the `mocks/` directory. A fixture that needs no
+runtime mock documents why its caller-owned inputs or immutable evidence are
+sufficient instead. `npm run fixtures:check` enforces this policy and reports
+the firmware coverage totals. See
+`../docs/embedded/host-validation.md` for the completed audit.
+
 The active `rust-stream-decoder` fixture has a complete API, trusted reference,
 public tests, and controlled mutations calibrated under pinned Rust/Cargo
 1.87.0 with its GCC 13.3.0 linker in the sandbox namespace. Its trusted test
@@ -278,8 +288,9 @@ and 1.4 records still accepted. Validation reports are emitted at version
 1.7, with legacy 1.6 reports accepted. Mutation catalogs use version 1.3.
 
 Run `npm run fixtures:check` to validate task/profile references, manifests,
-safe paths, and tracked directory structure. This command validates fixture
-metadata only; it does not execute compiler commands.
+safe paths, tracked directory structure, and deterministic firmware host
+coverage. This command validates fixture metadata and mock wiring only; it
+does not execute compiler commands.
 
 `mutations.json` follows `schemas/fixture-mutations.schema.json`. Every active
 fixture supplies exact, single-match source substitutions derived from its
