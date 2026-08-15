@@ -89,6 +89,23 @@ test("hosted validation profiles are pinned and immutable", () => {
     ),
     environment,
   );
+  const debianEnvironment = getValidationEnvironmentRevision(
+    "debian-13-x86-64-c11-host",
+    1,
+  );
+  assert.deepEqual(debianEnvironment.host, {
+    operatingSystem: "debian",
+    release: "13",
+    architecture: "x86_64",
+  });
+  assert.deepEqual(
+    selectValidationEnvironment(
+      getValidationProfile("c11-host"),
+      debianEnvironment.host,
+    ),
+    debianEnvironment,
+  );
+  assert.equal(getValidationProfile("c11-host").revision, 3);
   const stableEnvironment = getValidationEnvironmentRevision(
     "ubuntu-24-04-x86-64-stable-rust",
     2,
@@ -367,8 +384,8 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => selectValidationEnvironment(logicalProfile, {
-      operatingSystem: "debian",
-      release: "13",
+      operatingSystem: "fedora",
+      release: "42",
       architecture: "x86_64",
     }),
     /does not match exactly one supported environment/u,

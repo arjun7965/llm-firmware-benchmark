@@ -2,6 +2,45 @@
   "schemaVersion": "2.5",
   "environments": [
     {
+      "id": "debian-13-x86-64-c11-host",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "debian",
+        "release": "13",
+        "architecture": "x86_64"
+      },
+      "execution": {
+        "kind": "host"
+      },
+      "sandbox": {
+        "runtime": {
+          "name": "bubblewrap",
+          "executable": "bwrap",
+          "version": "0.11.0",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "limiter": {
+          "name": "prlimit",
+          "executable": "prlimit",
+          "version": "2.41",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      },
+      "toolchains": [
+        {
+          "name": "cc",
+          "version": "14.2.0",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      ]
+    },
+    {
       "id": "ubuntu-24-04-x86-64-c11-host",
       "revision": 1,
       "host": {
@@ -684,6 +723,46 @@
       "revision": 2,
       "dependencies": [],
       "environments": [
+        {
+          "id": "ubuntu-24-04-x86-64-c11-host",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "cc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 15,
+            "fileBytes": 16777216,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 134217728,
+            "cpuSeconds": 3,
+            "fileBytes": 1048576,
+            "openFiles": 32
+          }
+        }
+      }
+    },
+    {
+      "id": "c11-host",
+      "revision": 3,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "debian-13-x86-64-c11-host",
+          "revision": 1
+        },
         {
           "id": "ubuntu-24-04-x86-64-c11-host",
           "revision": 1
