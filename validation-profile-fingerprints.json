@@ -1,6 +1,9 @@
 {
   "schemaVersion": "2.5",
   "environments": {
+    "debian-13-x86-64-c11-host": {
+      "1": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7"
+    },
     "ubuntu-24-04-x86-64-c11-host": {
       "1": "e5d9461f311c7f721aa31fd7b24c65ed2927ca6a1079cc128c85c92647cf6729"
     },
@@ -38,7 +41,8 @@
   "profiles": {
     "c11-host": {
       "1": "7a33e3e653f7f16869cfc2f1cfed032062eb18e725a715a3cc90c7e7b8b78d83",
-      "2": "ee0bdc2b27369a73c7533888bb6362da4e15aebdb7be2024b0f0d578eebdb3fd"
+      "2": "ee0bdc2b27369a73c7533888bb6362da4e15aebdb7be2024b0f0d578eebdb3fd",
+      "3": "4886a2ac6a7e84073ac31efb4058becfe9743d0c8695b069f972dc996f618732"
     },
     "cpp17-host": {
       "1": "9402614595c2c4d9bfdcd7bfc93e87e3343a312e270be8aba839a002a4f9514c"

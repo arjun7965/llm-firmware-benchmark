@@ -46,22 +46,25 @@ revision 4 pins the relocatable runtime tree mounted by the runner, and
 `go-std` revision 4 raises its bounded temporary filesystem to 256 MiB so Go
 1.24.4 can compile the standard library inside the sandbox; revision 5 raises
 the compile-phase file-descriptor limit from 128 to 256 for that toolchain.
+`c11-host` revision 3 adds a separately pinned Debian 13 x86-64 environment
+while retaining the existing Ubuntu 24.04 environment.
 `react18-typescript` revision 4 pins the complete npm package-lock and installed
 tree, mounts that tree for both TypeScript compilation and jsdom tests, and
 provides each Node.js phase a 2 GiB virtual-address limit.
 
 ## Profile Registry
 
-Each current profile references a profile-scoped Ubuntu 24.04 x86-64 host
+Current profiles reference profile-scoped Ubuntu 24.04 x86-64 host
+environments. `c11-host` additionally supports a Debian 13 x86-64 host
 environment. Every environment pins only the toolchains required by that
-profile, plus host execution, Bubblewrap 0.9.0, and `prlimit` from util-linux
-2.39.3. Fixture manifests and reports must cover that complete toolchain set,
-so the environment fingerprint never attests an unprobed tool. Profile
-policies require no network and an isolated filesystem.
+profile, plus host execution and its exact Bubblewrap and `prlimit` versions.
+Fixture manifests and reports must cover that complete toolchain set, so the
+environment fingerprint never attests an unprobed tool. Profile policies
+require no network and an isolated filesystem.
 
 | Profile | Pinned toolchains | Pinned packages | Test command contract |
 | --- | --- | --- | --- |
-| `c11-host` | GCC/`cc` 13.3.0 | None | Native `build/` executable |
+| `c11-host` | Ubuntu: GCC/`cc` 13.3.0; Debian: GCC/`cc` 14.2.0 | None | Native `build/` executable |
 | `cpp17-host` | GCC/`cc` and `c++` 13.3.0 | None | C11 mock object linked with a C++17 native `build/` executable |
 | `go-std` | Go 1.24.4 | None; standard library only | Native `build/` executable |
 | `node-typescript` | Node.js 22.16.0, TypeScript 5.8.3 | TypeScript and Node.js types | `tsc` compile and Node.js public-test commands |

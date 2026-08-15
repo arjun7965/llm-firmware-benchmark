@@ -1202,7 +1202,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
     }),
     /cpp17-host fixture validation reports require schemaVersion 1\.7/u,
   );
-  assert.equal(report.validationProfileRevision, 2);
+  assert.equal(report.validationProfileRevision, 3);
   assert.match(report.validationProfileSha256, /^[a-f0-9]{64}$/u);
   assert.deepEqual(report.validationEnvironment.host, {
     operatingSystem: "ubuntu",
@@ -1262,7 +1262,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
   assert.throws(
     () => validateFixtureValidationReport({
       ...report,
-      validationProfileRevision: 3,
+      validationProfileRevision: 99,
     }),
     /validationProfileRevision/u,
   );
@@ -1454,8 +1454,8 @@ test("sandbox validation records successful compile and test phases", (t) => {
       fixturesRoot: wrongHost.fixturesRoot,
       tasksPath: wrongHost.tasksPath,
       readValidationHostImpl: () => ({
-        operatingSystem: "debian",
-        release: "13",
+        operatingSystem: "fedora",
+        release: "42",
         architecture: "x86_64",
       }),
       resolveExecutableImpl: fakeExecutable,
