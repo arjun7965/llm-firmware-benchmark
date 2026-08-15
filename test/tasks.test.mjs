@@ -247,6 +247,7 @@ test("firmware security prompts are self-contained fixture contracts", () => {
     ],
     "mpu-fault-containment": [
       "The complete public API is:",
+      "Include stdbool.h, stddef.h, and stdint.h",
       "typedef struct mpu0_registers mpu0_registers_t",
       "mpu0_region_config_t { uint32_t base; uint32_t size;",
       "The only permitted accessor signatures are",
