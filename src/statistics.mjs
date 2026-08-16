@@ -34,21 +34,21 @@ function suiteForTask(suiteByTask, task) {
 }
 
 function summarizeSuites(scores, runs, suiteByTask) {
-  const indicesBySuite = new Map(
+  const tasksBySuite = new Map(
     suiteIds.map((suite) => [suite, []]),
   );
-  for (const [index, task] of scores.tasks.entries()) {
-    indicesBySuite.get(suiteForTask(suiteByTask, task)).push(index);
+  for (const task of scores.tasks) {
+    tasksBySuite.get(suiteForTask(suiteByTask, task)).push(task);
   }
 
   return suiteIds.flatMap((suite) => {
-    const indices = indicesBySuite.get(suite);
-    if (indices.length === 0) return [];
+    const tasks = tasksBySuite.get(suite);
+    if (tasks.length === 0) return [];
     const totals = runs.map((run) =>
-      indices.reduce((sum, index) => sum + run[index], 0));
+      tasks.reduce((sum, task) => sum + run[task], 0));
     return [{
       suite,
-      tasks: indices.map((index) => scores.tasks[index]),
+      tasks,
       totals,
       totalMean: mean(totals),
       totalSd: populationSd(totals),
@@ -72,23 +72,31 @@ export function summarizeModelScores(scores, model, {
   if (runEntries.length === 0) {
     throw new TypeError(`model ${model} has no runs`);
   }
-  for (const [runName, values] of runEntries) {
-    if (!Array.isArray(values) || values.length !== scores.tasks.length ||
-        values.some((value) => !Number.isFinite(value))) {
+  const expectedTasks = [...scores.tasks].sort();
+  for (const [runName, taskScores] of runEntries) {
+    const scoredTasks = taskScores && typeof taskScores === "object" &&
+        !Array.isArray(taskScores)
+      ? Object.keys(taskScores).sort()
+      : [];
+    if (scoredTasks.length !== expectedTasks.length ||
+        !scoredTasks.every((task, index) => task === expectedTasks[index]) ||
+        Object.values(taskScores ?? {}).some((value) =>
+          !Number.isFinite(value))) {
       throw new TypeError(`model ${model} has invalid scores for ${runName}`);
     }
   }
 
-  const runs = runEntries.map(([, values]) => values);
-  const totals = runs.map((run) => run.reduce((sum, value) => sum + value, 0));
+  const runs = runEntries.map(([, taskScores]) => taskScores);
+  const totals = runs.map((run) =>
+    scores.tasks.reduce((sum, task) => sum + run[task], 0));
   const summary = {
     model,
     totals,
     totalMean: mean(totals),
     totalSd: populationSd(totals),
     totalRange: Math.max(...totals) - Math.min(...totals),
-    tasks: scores.tasks.map((task, index) => {
-      const values = runs.map((run) => run[index]);
+    tasks: scores.tasks.map((task) => {
+      const values = runs.map((run) => run[task]);
       return {
         task,
         values,

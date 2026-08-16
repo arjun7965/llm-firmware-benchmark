@@ -37,7 +37,7 @@ test("repository task and score documents match runtime contracts", () => {
 
 test("score validation rejects malformed runs and out-of-range values", () => {
   const valid = {
-    schemaVersion: "1.1",
+    schemaVersion: "1.2",
     rubric: "Scores are out of 10",
     scoringModes: {
       "task-one": "deterministic",
@@ -57,7 +57,7 @@ test("score validation rejects malformed runs and out-of-range values", () => {
     },
     tasks: ["task-one"],
     model: {
-      run1: [8],
+      run1: { "task-one": 8 },
     },
   };
   const options = {
@@ -77,21 +77,28 @@ test("score validation rejects malformed runs and out-of-range values", () => {
   assert.throws(
     () => validate({
       ...valid,
-      model: { first: [8] },
+      model: { first: { "task-one": 8 } },
     }),
     /invalid run name/,
   );
   assert.throws(
     () => validate({
       ...valid,
-      model: { run1: [11] },
+      model: { run1: { "task-one": 11 } },
     }),
     /invalid scores/,
   );
   assert.throws(
     () => validate({
       ...valid,
-      model: { run1: [] },
+      model: { run1: {} },
+    }),
+    /invalid scores/,
+  );
+  assert.throws(
+    () => validate({
+      ...valid,
+      model: { run1: { "task-two": 8 } },
     }),
     /invalid scores/,
   );
@@ -272,7 +279,7 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(scoreSchema.$schema, taskSchema.$schema);
   assert.equal(scoreSchema.additionalProperties, false);
-  assert.equal(scoreSchema.properties.schemaVersion.const, "1.1");
+  assert.equal(scoreSchema.properties.schemaVersion.const, "1.2");
   assert.ok(scoreSchema.required.includes("validationContracts"));
   assert.ok(scoreSchema.required.includes("scoringModes"));
   assert.deepEqual(

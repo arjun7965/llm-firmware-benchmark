@@ -12,7 +12,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "1.1"
+      "const": "1.2"
     },
     "rubric": {
       "type": "string",
@@ -55,13 +55,7 @@
         "pattern": "^run[1-9][0-9]*$"
       },
       "additionalProperties": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 10
-        }
+        "$ref": "#/$defs/taskScores"
       }
     }
   },
@@ -97,6 +91,18 @@
         "environment": {
           "$ref": "#/$defs/contractReference"
         }
+      }
+    },
+    "taskScores": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10
       }
     }
   }

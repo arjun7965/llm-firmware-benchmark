@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.1",
+  "schemaVersion": "1.2",
   "rubric": "Scores are out of 10",
   "scoringModes": {
     "bare-metal-timer": "deterministic",
@@ -36,13 +36,31 @@
     "frontend-autocomplete"
   ],
   "model-a": {
-    "run1": [7.5, 8.0],
-    "run2": [8.0, 7.5],
-    "run3": [7.0, 8.5]
+    "run1": {
+      "bare-metal-timer": 7.5,
+      "frontend-autocomplete": 8.0
+    },
+    "run2": {
+      "bare-metal-timer": 8.0,
+      "frontend-autocomplete": 7.5
+    },
+    "run3": {
+      "bare-metal-timer": 7.0,
+      "frontend-autocomplete": 8.5
+    }
   },
   "model-b": {
-    "run1": [6.5, 8.5],
-    "run2": [7.0, 8.0],
-    "run3": [7.5, 7.5]
+    "run1": {
+      "bare-metal-timer": 6.5,
+      "frontend-autocomplete": 8.5
+    },
+    "run2": {
+      "bare-metal-timer": 7.0,
+      "frontend-autocomplete": 8.0
+    },
+    "run3": {
+      "bare-metal-timer": 7.5,
+      "frontend-autocomplete": 7.5
+    }
   }
 }

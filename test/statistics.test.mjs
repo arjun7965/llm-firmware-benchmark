@@ -15,9 +15,9 @@ test("model summaries include totals and per-task variation", () => {
   const scores = {
     tasks: ["a", "b"],
     model: {
-      run1: [1, 3],
-      run2: [3, 5],
-      run3: [5, 7],
+      run1: { a: 1, b: 3 },
+      run2: { a: 3, b: 5 },
+      run3: { a: 5, b: 7 },
     },
   };
 
@@ -69,7 +69,7 @@ test("model summaries include totals and per-task variation", () => {
   });
 });
 
-test("summaries reject missing and inconsistent score arrays", () => {
+test("summaries reject missing and inconsistent per-task scores", () => {
   assert.throws(
     () => summarizeModelScores({ tasks: ["a"] }, "missing"),
     /missing scores/,
@@ -77,14 +77,14 @@ test("summaries reject missing and inconsistent score arrays", () => {
   assert.throws(
     () => summarizeModelScores({
       tasks: ["a", "b"],
-      model: { run1: [1] },
+      model: { run1: { a: 1 } },
     }, "model"),
     /invalid scores/,
   );
   assert.throws(
     () => summarizeModelScores({
       tasks: ["a"],
-      model: { run1: [1] },
+      model: { run1: { a: 1 } },
     }, "model", {
       suiteByTask: new Map(),
     }),
