@@ -155,7 +155,17 @@ tools, context limits, or execution environments.
 Task-specific ten-point rubrics are under `docs/benchmarks/`. Machine-readable
 contracts are provided in `schemas/tasks.schema.json` and
 `schemas/repeat-scores.schema.json`; the summarizer also validates cross-field
-requirements such as score-array lengths. Firmware-suite tasks use the shared
+requirements such as exact per-run task coverage. Each run records totals by
+task ID, so scores do not depend on the order of the `tasks` array:
+
+```json
+"run1": {
+  "embedded-ring-buffer": 9.0,
+  "firmware-state-machine": 8.5
+}
+```
+
+Firmware-suite tasks use the shared
 `firmware-v1` dimensions in `docs/benchmarks/firmware-scoring.md`. Summaries
 report combined totals and separate firmware and auxiliary totals using the
 task registry; set `BENCHMARK_TASKS_FILE` when scoring an alternate task file.

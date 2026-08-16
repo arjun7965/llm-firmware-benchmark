@@ -21,6 +21,8 @@ For comparable results:
 
 The rubric files are human-readable policy. `schemas/tasks.schema.json` and
 `schemas/repeat-scores.schema.json` define the machine-readable input formats.
+Repeated-score runs map each task ID directly to its 0–10 total; task scores are
+never inferred from array position.
 See `docs/dependencies.md` for optional compilation and execution toolchains.
 Tasks in the `firmware` suite also follow the versioned dimensions and scoring
 procedure in `firmware-scoring.md`.

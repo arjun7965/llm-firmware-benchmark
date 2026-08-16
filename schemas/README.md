@@ -27,5 +27,6 @@ detection.
 
 `repeat-scores.schema.json` records a scoring mode for every scored task and a
 pinned profile/environment pair for each deterministic task. Runtime validation
-additionally checks those values against the task registry because JSON Schema
-cannot express that cross-document relationship.
+additionally checks those values against the task registry and requires every
+model run to record exactly one 0–10 total under each declared task ID because
+JSON Schema cannot express those cross-document relationships.

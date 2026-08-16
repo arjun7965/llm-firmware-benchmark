@@ -25,7 +25,8 @@
   },
   "repeat-scores.schema.json": {
     "1.0": "fc4e4b09556b267f53b0af7285105c54dec1024bffe232c97dd58d0332a4e83b",
-    "1.1": "cfff86b793f6cf2d6285ba43f91f3772bb19c172dc1c3257834626f9e7278656"
+    "1.1": "cfff86b793f6cf2d6285ba43f91f3772bb19c172dc1c3257834626f9e7278656",
+    "1.2": "5d3573c9eec90feac8c7fe4d6f6da44d47539ae03f9798631a20336cd57e0a48"
   },
   "validation-profiles.schema.json": {
     "1.0": "5bcb54e68e36d82a0cc19ec74f1c79a358b1d0a77b0e94b3b887e45f437fd652",

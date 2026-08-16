@@ -20,6 +20,16 @@ function isObject(value) {
   return value && typeof value === "object" && !Array.isArray(value);
 }
 
+function hasExactTaskScores(values, tasks) {
+  if (!isObject(values)) return false;
+  const scoredTasks = Object.keys(values).sort();
+  const expectedTasks = [...tasks].sort();
+  return scoredTasks.length === expectedTasks.length &&
+    scoredTasks.every((task, index) => task === expectedTasks[index]) &&
+    Object.values(values).every((value) =>
+      Number.isFinite(value) && value >= 0 && value <= 10);
+}
+
 export function scoreModelIds(scores) {
   return Object.keys(scores).filter((key) => !reservedKeys.has(key));
 }
@@ -67,7 +77,7 @@ export function validateScores(scores, {
   if (!isObject(scores)) {
     throw new TypeError("scores must be an object");
   }
-  if (scores.schemaVersion !== "1.1") {
+  if (scores.schemaVersion !== "1.2") {
     throw new TypeError("unsupported scores.schemaVersion");
   }
   if (typeof scores.rubric !== "string" || scores.rubric.trim() === "") {
@@ -160,13 +170,11 @@ export function validateScores(scores, {
     if (!isObject(runs) || Object.keys(runs).length === 0) {
       throw new TypeError(`model ${model} must contain runs`);
     }
-    for (const [run, values] of Object.entries(runs)) {
+    for (const [run, taskScores] of Object.entries(runs)) {
       if (!runNamePattern.test(run)) {
         throw new TypeError(`model ${model} has invalid run name: ${run}`);
       }
-      if (!Array.isArray(values) || values.length !== scores.tasks.length ||
-          values.some((value) =>
-            !Number.isFinite(value) || value < 0 || value > 10)) {
+      if (!hasExactTaskScores(taskScores, scores.tasks)) {
         throw new TypeError(`model ${model} has invalid scores for ${run}`);
       }
     }
