@@ -35,6 +35,7 @@ test("GitHub Pages build publishes the complete task registry", () => {
 
     const html = readFileSync(join(output, "index.html"), "utf8");
     const css = readFileSync(join(output, "styles.css"), "utf8");
+    const app = readFileSync(join(output, "app.js"), "utf8");
     assert.doesNotMatch(html, /__BENCHMARK_DATA__/u);
     assert.match(html, /href="styles\.css\?v=[0-9a-f]{12}"/u);
     assert.match(html, /src="app\.js\?v=[0-9a-f]{12}"/u);
@@ -48,6 +49,19 @@ test("GitHub Pages build publishes the complete task registry", () => {
     assert.doesNotMatch(html, /<code>validate embedded-ring-buffer<\/code>/u);
     assert.match(html, /4 checks captured/u);
     assert.match(html, /RUBRIC SCORE/u);
+    assert.match(html, /data-suite="all" aria-pressed="true"/u);
+    assert.match(html, /data-suite="firmware" aria-pressed="false"/u);
+    assert.match(html, /data-suite="auxiliary" aria-pressed="false"/u);
+    assert.match(
+      app,
+      /aria-label="View scoring for \$\{escapeHtml\(task\.title\)\}"/u,
+    );
+    assert.match(
+      app,
+      /setAttribute\("aria-pressed", String\(isActive\)\)/u,
+    );
+    assert.match(app, /event\.key === "Escape"/u);
+    assert.match(app, /toggle\.focus\(\)/u);
     assert.match(html, /--runs 1 --concurrency 2/u);
     assert.doesNotMatch(html, /--runs 1,2,3/u);
     const repeatCommand = html.match(
@@ -85,6 +99,10 @@ test("GitHub Pages build publishes the complete task registry", () => {
       /\.closing-section\s*\{[^}]*background: var\(--night\);/u,
     );
     assert.match(css, /\.button-primary\s*\{\s*background: var\(--amber\);/u);
+    assert.match(
+      css,
+      /@media \(max-width: 900px\) \{[\s\S]*?\.hero-grid \{[\s\S]*?grid-template-columns: 1fr;/u,
+    );
     const dataMatch = html.match(
       /<script type="application\/json" id="benchmark-data">([^<]+)<\/script>/u,
     );

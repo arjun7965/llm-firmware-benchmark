@@ -110,7 +110,7 @@ function taskCard(task) {
           <span class="task-category">${escapeHtml(label(task.category))}</span>
           <span class="task-profile">${escapeHtml(task.validationProfile)}</span>
         </div>
-        <button class="task-open" type="button" data-open-task="${escapeHtml(task.id)}">
+        <button class="task-open" type="button" data-open-task="${escapeHtml(task.id)}" aria-label="View scoring for ${escapeHtml(task.title)}">
           View scoring <span aria-hidden="true">→</span>
         </button>
       </div>
@@ -127,15 +127,21 @@ function renderTasks() {
   grid.hidden = tasks.length === 0;
 }
 
+function updateSuiteButtons(activeSuite) {
+  for (const button of document.querySelectorAll("[data-suite]")) {
+    const isActive = button.dataset.suite === activeSuite;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  }
+}
+
 function clearFilters() {
   state.suite = "all";
   state.category = "all";
   state.query = "";
   document.querySelector("[data-task-search]").value = "";
   document.querySelector("[data-category-filter]").value = "all";
-  for (const button of document.querySelectorAll("[data-suite]")) {
-    button.classList.toggle("is-active", button.dataset.suite === "all");
-  }
+  updateSuiteButtons("all");
   renderTasks();
 }
 
@@ -151,9 +157,7 @@ function configureExplorer() {
   for (const button of document.querySelectorAll("[data-suite]")) {
     button.addEventListener("click", () => {
       state.suite = button.dataset.suite;
-      for (const peer of document.querySelectorAll("[data-suite]")) {
-        peer.classList.toggle("is-active", peer === button);
-      }
+      updateSuiteButtons(state.suite);
       renderTasks();
     });
   }
@@ -223,22 +227,30 @@ function configureNavigation() {
   const header = document.querySelector("[data-header]");
   const nav = document.querySelector("[data-nav]");
   const toggle = document.querySelector("[data-nav-toggle]");
+  const setOpen = (open) => {
+    toggle.setAttribute("aria-expanded", String(open));
+    nav.classList.toggle("is-open", open);
+    header.classList.toggle("is-open", open);
+  };
   const updateHeader = () => header.classList.toggle("is-scrolled", scrollY > 12);
   updateHeader();
   addEventListener("scroll", updateHeader, { passive: true });
   toggle.addEventListener("click", () => {
     const open = toggle.getAttribute("aria-expanded") !== "true";
-    toggle.setAttribute("aria-expanded", String(open));
-    nav.classList.toggle("is-open", open);
-    header.classList.toggle("is-open", open);
+    setOpen(open);
   });
   for (const link of nav.querySelectorAll("a")) {
     link.addEventListener("click", () => {
-      toggle.setAttribute("aria-expanded", "false");
-      nav.classList.remove("is-open");
-      header.classList.remove("is-open");
+      setOpen(false);
     });
   }
+  addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && nav.classList.contains("is-open")) {
+      event.preventDefault();
+      setOpen(false);
+      toggle.focus();
+    }
+  });
 }
 
 function configureCopyButtons() {
