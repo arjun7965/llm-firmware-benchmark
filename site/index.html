@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A reproducible benchmark for evaluating language models on firmware and embedded coding tasks.">
+    <meta name="theme-color" content="#0d1b1e">
+    <meta property="og:title" content="LLM Firmware Benchmark">
+    <meta property="og:description" content="Deterministic fixtures, pinned validation, and transparent ten-point rubrics for firmware-capable language models.">
+    <meta property="og:type" content="website">
+    <title>LLM Firmware Benchmark</title>
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script type="application/json" id="benchmark-data">__BENCHMARK_DATA__</script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header" data-header>
+      <div class="shell header-inner">
+        <a class="brand" href="#top" aria-label="LLM Firmware Benchmark home">
+          <img src="logo.svg" alt="" width="38" height="38">
+          <span>LLM <b>Firmware</b> Benchmark</span>
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+          <span></span><span></span><span></span>
+          <span class="sr-only">Toggle navigation</span>
+        </button>
+        <nav class="site-nav" id="site-nav" aria-label="Primary navigation" data-nav>
+          <a href="#method">How it works</a>
+          <a href="#tasks">Tasks</a>
+          <a href="#grading">Grading</a>
+          <a href="#run">Run it</a>
+          <a class="nav-github" data-repository-link href="#">View on GitHub <span aria-hidden="true">↗</span></a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="hero-grid shell">
+          <div class="hero-copy">
+            <p class="eyebrow"><span></span> Open, reproducible evaluation</p>
+            <h1>Benchmark the code that <em>cannot afford to guess.</em></h1>
+            <p class="hero-lede">A dependency-free harness for measuring how language models reason about interrupts, memory, timing, protocols, recovery, and safety at the firmware boundary.</p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#run">Run the benchmark <span aria-hidden="true">→</span></a>
+              <a class="button button-secondary" href="#tasks">Explore all tasks</a>
+            </div>
+            <ul class="hero-proof" aria-label="Benchmark guarantees">
+              <li><span class="proof-mark" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"></path></svg></span> Pinned environments</li>
+              <li><span class="proof-mark" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"></path></svg></span> No-network validation</li>
+              <li><span class="proof-mark" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3 8 3 3 7-7"></path></svg></span> Public rubrics</li>
+            </ul>
+          </div>
+
+          <div class="hero-console" aria-label="Example firmware validation result">
+            <div class="console-bar">
+              <div class="console-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+              <span>validation / run-01</span>
+              <span class="console-live">evidence ready</span>
+            </div>
+            <div class="console-body">
+              <div class="console-runline">
+                <span class="prompt">$</span>
+                <code>npm run fixture:validate -- --task embedded-ring-buffer</code>
+              </div>
+              <div class="console-rule"></div>
+              <p class="console-label">TARGET PROFILE</p>
+              <p class="console-value">c11-lock-free-spsc</p>
+              <div class="trace-row"><span>compile / C11</span><b>PASS</b></div>
+              <div class="trace-row"><span>public behavior</span><b>PASS</b></div>
+              <div class="trace-row"><span>controlled mutations</span><b>REJECTED</b></div>
+              <div class="trace-row"><span>sandbox policy</span><b>ATTESTED</b></div>
+              <div class="score-preview">
+                <div>
+                  <small>EXECUTABLE EVIDENCE</small>
+                  <strong>4 checks captured</strong>
+                </div>
+                <div class="review-state"><small>RUBRIC SCORE</small><b>Pending</b></div>
+              </div>
+              <p class="console-note">Tests provide evidence. The published task rubric determines the score.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-band">
+          <div class="shell stats-grid">
+            <div><strong data-stat="tasks">—</strong><span>total tasks</span></div>
+            <div><strong data-stat="firmwareTasks">—</strong><span>firmware tasks</span></div>
+            <div><strong data-stat="activeFixtures">—</strong><span>active fixtures</span></div>
+            <div><strong data-stat="validationProfiles">—</strong><span>validation profiles</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section method-section" id="method">
+        <div class="shell">
+          <div class="section-heading split-heading">
+            <div>
+              <p class="eyebrow"><span></span> Method, not vibes</p>
+              <h2>From identical prompt to reviewable evidence.</h2>
+            </div>
+            <p>Every compared model sees the same checked-in prompt. The harness preserves provenance; fixture-owned validators and public rubrics turn the answer into evidence a reviewer can audit.</p>
+          </div>
+
+          <ol class="method-flow">
+            <li>
+              <span class="method-number">01</span>
+              <div class="method-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 4-4 8 4 8M15 4l4 8-4 8"></path></svg></div>
+              <h3>Select a task</h3>
+              <p>Choose exact task IDs or a whole suite from the versioned registry.</p>
+            </li>
+            <li>
+              <span class="method-number">02</span>
+              <div class="method-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"></path></svg></div>
+              <h3>Run the matrix</h3>
+              <p>Send identical prompts across selected models, providers, and runs.</p>
+            </li>
+            <li>
+              <span class="method-number">03</span>
+              <div class="method-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6l7-3Z"></path><path d="m8 12 2.5 2.5L16 9"></path></svg></div>
+              <h3>Validate safely</h3>
+              <p>Extract the answer and run bounded commands in a pinned, isolated fixture.</p>
+            </li>
+            <li>
+              <span class="method-number">04</span>
+              <div class="method-icon" aria-hidden="true"><span class="method-icon-label">10</span></div>
+              <h3>Grade &amp; disclose</h3>
+              <p>Score the public rubric, blind identities, then export only sanitized results.</p>
+            </li>
+          </ol>
+
+          <div class="principles-grid">
+            <article>
+              <span class="principle-mark amber" aria-hidden="true"></span>
+              <h3>Embedded realism</h3>
+              <p>Interrupts, MMIO boundaries, RTOS semantics, stack budgets, DMA, boot flows, and recovery behavior—without requiring physical hardware.</p>
+            </article>
+            <article>
+              <span class="principle-mark mint" aria-hidden="true"></span>
+              <h3>Reproducible validation</h3>
+              <p>Toolchains, dependencies, environment revisions, resource limits, and sandbox policy are machine-readable and fingerprinted.</p>
+            </article>
+            <article>
+              <span class="principle-mark coral" aria-hidden="true"></span>
+              <h3>Evaluation integrity</h3>
+              <p>Prompt hashes prevent stale reuse. Raw provider output stays private; reviewed allowlisted projections are the publication boundary.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section task-section" id="tasks">
+        <div class="shell">
+          <div class="section-heading task-heading">
+            <div>
+              <p class="eyebrow"><span></span> Task registry</p>
+              <h2>Explore what the benchmark exercises.</h2>
+            </div>
+            <a class="text-link" data-tasks-link href="#">Read tasks.json <span aria-hidden="true">↗</span></a>
+          </div>
+
+          <div class="explorer" data-explorer>
+            <div class="filter-bar">
+              <label class="search-box">
+                <span class="sr-only">Search tasks</span>
+                <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg>
+                <input type="search" placeholder="Search task, target, or profile…" data-task-search>
+              </label>
+              <div class="suite-tabs" role="group" aria-label="Filter by suite">
+                <button class="is-active" type="button" data-suite="all">All <span data-count="all"></span></button>
+                <button type="button" data-suite="firmware">Firmware <span data-count="firmware"></span></button>
+                <button type="button" data-suite="auxiliary">Auxiliary <span data-count="auxiliary"></span></button>
+              </div>
+              <label class="select-box">
+                <span class="sr-only">Filter by category</span>
+                <select data-category-filter><option value="all">All categories</option></select>
+              </label>
+            </div>
+            <div class="results-line" aria-live="polite"><strong data-visible-count>0</strong> tasks match your filters</div>
+            <div class="task-grid" data-task-grid></div>
+            <div class="empty-state" data-empty-state hidden>
+              <h3>No tasks found</h3>
+              <p>Try another keyword or clear the active filters.</p>
+              <button class="button button-secondary" type="button" data-clear-filters>Clear filters</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section grading-section" id="grading">
+        <div class="shell">
+          <div class="grading-intro">
+            <div>
+              <p class="eyebrow eyebrow-light"><span></span> Transparent grading</p>
+              <h2>Ten points. Seven firmware dimensions. No hidden criteria.</h2>
+            </div>
+            <p>Each task owns a ten-point rubric. Firmware tasks use the shared <code>firmware-v1</code> profile, with every prompt requirement assigned to one dimension so a single defect is not counted twice.</p>
+          </div>
+
+          <div class="grading-layout">
+            <div class="dimension-list">
+              <article><span>01</span><div><h3>Functional correctness</h3><p>Interfaces, state transitions, successful paths, and outputs.</p></div></article>
+              <article><span>02</span><div><h3>Bounded resource use</h3><p>Memory, storage, allocation, alignment, and buffer limits.</p></div></article>
+              <article><span>03</span><div><h3>Timing behavior</h3><p>Deadlines, wraparound, latency, lock-freedom, and blocking.</p></div></article>
+              <article><span>04</span><div><h3>Concurrency safety</h3><p>Ownership, atomics, ordering, interrupts, RTOS interaction, and races.</p></div></article>
+              <article><span>05</span><div><h3>Fault recovery</h3><p>Invalid input, partial failure, retries, timeouts, and safe states.</p></div></article>
+              <article><span>06</span><div><h3>Portability</h3><p>Target assumptions, language rules, alignment, and undefined behavior.</p></div></article>
+              <article><span>07</span><div><h3>Clarity &amp; validation</h3><p>Reviewable code, explicit assumptions, and focused tests.</p></div></article>
+            </div>
+
+            <aside class="grading-card">
+              <p class="card-kicker">The scoring rule</p>
+              <blockquote>Executable checks are evidence for the affected dimensions—not an automatic score.</blockquote>
+              <div class="grade-rule"><span>01</span><p>Blind model identity and verify prompt, rubric, profiles, and environment.</p></div>
+              <div class="grade-rule"><span>02</span><p>Run declared compilation, tests, mutations, and sandbox validation.</p></div>
+              <div class="grade-rule"><span>03</span><p>Award partial credit by dimension and record a concrete reason per deduction.</p></div>
+              <div class="grade-rule"><span>04</span><p>Give zero for contradicted or safety-critical requirements in their owning dimension.</p></div>
+              <a class="button button-light" data-grading-link href="#">Read the complete scoring profile <span aria-hidden="true">↗</span></a>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="section run-section" id="run">
+        <div class="shell">
+          <div class="section-heading split-heading">
+            <div>
+              <p class="eyebrow"><span></span> Quick start</p>
+              <h2>Run your first firmware comparison.</h2>
+            </div>
+            <p>Node.js 22+ runs the dependency-free harness. Generating answers also requires one configured provider runtime or OpenAI-compatible endpoint; each validator declares its own language toolchain.</p>
+          </div>
+
+          <div class="run-grid">
+            <div class="steps-column">
+              <article class="run-step">
+                <span class="run-number">1</span>
+                <div><h3>Clone and configure</h3><p>Create a private model configuration. It is ignored by Git and must never be committed.</p></div>
+              </article>
+              <article class="run-step">
+                <span class="run-number">2</span>
+                <div><h3>Choose and authenticate a provider</h3><p>The example uses Codex and <code>gpt-5.6-luna</code>. Claude Code, OpenCode, and OpenAI-compatible endpoints are also supported; see the <a data-readme-link href="#">provider setup instructions</a>.</p></div>
+              </article>
+              <article class="run-step">
+                <span class="run-number">3</span>
+                <div><h3>Run one constrained sample</h3><p>Start with one run, one model, and one or two task IDs. Run 1 writes one record per pair directly under <code>results/</code>.</p></div>
+              </article>
+              <article class="run-step">
+                <span class="run-number">4</span>
+                <div><h3>Extract and validate</h3><p>The answer is written into fixture-owned ignored paths, then compiled and tested under its declared contract.</p></div>
+              </article>
+            </div>
+
+            <div class="command-stack">
+              <div class="code-window">
+                <div class="code-title"><span>01 / setup — Codex example</span><button type="button" data-copy-target="setup-code">Copy</button></div>
+                <pre id="setup-code"><code><span class="code-muted"># Node.js 22+</span>
+git clone https://github.com/arjun7965/llm-firmware-benchmark.git
+cd llm-firmware-benchmark
+cp models.example.json models.local.json
+codex login</code></pre>
+              </div>
+              <div class="code-window">
+                <div class="code-title"><span>02 / benchmark</span><button type="button" data-copy-target="run-code">Copy</button></div>
+                <pre id="run-code"><code>npm run benchmark -- \
+  --models gpt-5.6-luna \
+  --suites firmware \
+  --tasks embedded-ring-buffer \
+  --tasks firmware-state-machine \
+  --runs 1 --concurrency 2</code></pre>
+              </div>
+              <div class="code-window">
+                <div class="code-title"><span>03 / validate one answer</span><button type="button" data-copy-target="validate-code">Copy</button></div>
+                <pre id="validate-code"><code>npm run fixture:extract -- \
+  --result results/embedded-ring-buffer--gpt-5.6-luna.json
+
+npm run fixture:validate -- \
+  --task embedded-ring-buffer</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="after-run">
+            <article><span class="after-run-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 8a8 8 0 0 0-13.5-2L4 8"></path><path d="M4 4v4h4"></path><path d="M4 16a8 8 0 0 0 13.5 2L20 16"></path><path d="M20 20v-4h-4"></path></svg></span><div><h3>Repeat the same matrix</h3><p>Generate runs 2 and 3 with the same model and task filters. Repeated records are written under <code>results/run-2/</code> and <code>results/run-3/</code>.</p><pre><code>npm run benchmark:repeats -- \
+  --models gpt-5.6-luna \
+  --suites firmware \
+  --tasks embedded-ring-buffer \
+  --tasks firmware-state-machine \
+  --runs 2,3 --concurrency 2</code></pre></div></article>
+            <article><span class="after-run-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 5H8l6 7-6 7h10"></path></svg></span><div><h3>Score, then summarize</h3><p>Copy the score template, then record each 0–10 total under its task ID for every completed model run.</p><pre><code>cp repeat-scores.example.json repeat-scores.json
+<span class="code-comment"># Edit repeat-scores.json, then:</span>
+npm run summarize</code></pre></div></article>
+            <article><span class="after-run-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4M8 8l4-4 4 4"></path><path d="M5 14v5h14v-5"></path></svg></span><div><h3>Publish safely</h3><p>Never publish raw results. Export the allowlisted projection and inspect every file marked <code>reviewRequired</code>.</p><pre><code>npm run export:public -- \
+  --input results \
+  --output public-results</code></pre></div></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing-section">
+        <div class="shell closing-inner">
+          <div>
+            <p class="eyebrow eyebrow-light"><span></span> Inspect every assumption</p>
+            <h2>Built for results people can challenge—and reproduce.</h2>
+          </div>
+          <div class="closing-actions">
+            <a class="button button-accent" data-repository-link href="#">Open the repository <span aria-hidden="true">↗</span></a>
+            <a class="button button-ghost" data-docs-link href="#">Browse technical docs</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <a class="brand footer-brand" href="#top"><img src="logo.svg" alt="" width="34" height="34"><span>LLM <b>Firmware</b> Benchmark</span></a>
+        <p>Apache-2.0 · Reproducible by design.</p>
+        <div><a data-repository-link href="#">GitHub</a><a data-docs-link href="#">Documentation</a><a href="#grading">Scoring</a></div>
+      </div>
+    </footer>
+
+    <dialog class="task-dialog" data-task-dialog>
+      <button class="dialog-close" type="button" aria-label="Close task details" data-dialog-close>×</button>
+      <div class="dialog-content">
+        <p class="dialog-kicker" data-dialog-kicker></p>
+        <h2 data-dialog-title></h2>
+        <p class="dialog-objective" data-dialog-objective></p>
+        <div class="dialog-meta" data-dialog-meta></div>
+        <div class="dialog-divider"></div>
+        <div class="dialog-scoring-head"><h3>Ten-point rubric</h3><span>Points</span></div>
+        <div class="dialog-scoring" data-dialog-scoring></div>
+        <p class="dialog-note" data-dialog-note hidden></p>
+        <div class="dialog-actions">
+          <a class="button button-primary" data-dialog-rubric href="#">Read full rubric <span aria-hidden="true">↗</span></a>
+          <a class="button button-secondary" data-dialog-fixture href="#">Inspect fixture <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </dialog>
+  </body>
+</html>

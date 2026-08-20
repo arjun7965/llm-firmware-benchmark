@@ -1,6 +1,7 @@
 # Local dependencies and tooling output
 node_modules/
 coverage/
+/site-dist/
 *.log
 .DS_Store
 
@@ -8,7 +9,6 @@ coverage/
 .env
 .env.*
 !.env.example
-.ncode/
 
 # Local benchmark outputs may contain session metadata or generated secrets.
 # Commit only reviewed, sanitized exports to a separate public directory.

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">LLM Firmware Benchmark circuit mark</title>
+  <rect width="64" height="64" rx="16" fill="#0d1b1e"/>
+  <path d="M15 20h8m18 0h8M15 32h8m18 0h8M15 44h8m18 0h8M20 15v8m12-8v8m12-8v8M20 41v8m12-8v8m12-8v8" stroke="#72d6ba" stroke-width="3" stroke-linecap="round"/>
+  <rect x="22" y="22" width="20" height="20" rx="4" fill="#f0ad53"/>
+  <path d="M27 28h10M27 32h7M27 36h10" stroke="#0d1b1e" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

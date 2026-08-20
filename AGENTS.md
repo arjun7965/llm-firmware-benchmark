@@ -9,6 +9,8 @@
 - `docs/` contains rubrics, dependencies, and embedded plans; `schemas/`
   defines JSON contracts.
 - `fixtures/<task-id>/` contains manifests and task assets.
+- `site/` holds the static GitHub Pages sources; `scripts/build-pages.mjs`
+  embeds task data and writes the ignored `site-dist/` output.
 - Scripts manage ignored records in `results/`.
 
 Outputs follow `<task-id>--<model-name>.json`; task IDs use lowercase
@@ -31,6 +33,7 @@ npm run fixture:extract -- --result <result.json>
 npm run fixture:validate -- --task <task-id>
 npm run test:c               # Run C fixtures and mutants
 npm run cross:check          # Probe optional cross-compilers
+npm run site:build           # Build the GitHub Pages site into site-dist/
 ```
 
 Use `npm run benchmark -- --help` for model/task filters, run selection,
