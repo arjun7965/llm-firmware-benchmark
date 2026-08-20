@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![126 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=126%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![128 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=128%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![75 C/C++ checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=75%20C%2FC%2B%2B%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -8,6 +8,12 @@ A dependency-free Node.js harness for evaluating language models on firmware
 and embedded coding tasks. Deterministic host fixtures, mutation tests,
 sandboxed execution, and optional cross-compilation support reproducible
 validation. General coding tasks remain as an auxiliary comparison suite.
+
+**[Explore the interactive benchmark guide →](https://arjun7965.github.io/llm-firmware-benchmark/)**
+
+The guide explains the methodology, provides a searchable catalog of every
+task and rubric, walks through grading, and gives a runnable first-benchmark
+path. Its task data is generated from this repository at deploy time.
 
 ## Requirements
 
@@ -22,6 +28,24 @@ See `docs/dependencies.md` for the validation matrix and
 `docs/validation-profiles.md` for reusable runtime assumptions.
 Exact profile revisions, toolchains, dependencies, sandbox policy, and resource
 limits are pinned in `validation-profiles.json`.
+
+## Benchmark Website
+
+The public guide is a static site in `site/`. Its searchable task and scoring
+data is generated directly from `tasks.json`, `validation-profiles.json`,
+fixture manifests, and `docs/benchmarks/`, so changes to those sources are
+checked during the site build.
+
+Build it locally and open `site-dist/index.html` in a browser:
+
+```bash
+npm run site:build
+```
+
+The `Deploy GitHub Pages` workflow rebuilds and publishes the site after
+relevant changes reach `main`. A repository administrator must select
+**GitHub Actions** once under **Settings → Pages → Build and deployment**;
+after that, pushes and manual workflow dispatches deploy automatically.
 
 ## Quick Start
 
