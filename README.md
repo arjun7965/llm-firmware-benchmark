@@ -9,7 +9,7 @@ and embedded coding tasks. Deterministic host fixtures, mutation tests,
 sandboxed execution, and optional cross-compilation support reproducible
 validation. General coding tasks remain as an auxiliary comparison suite.
 
-**[Explore the interactive benchmark guide →](https://arjun7965.github.io/llm-firmware-benchmark/)**
+**[Explore the interactive benchmark guide →](https://arjunvinod.com/llm-firmware-benchmark/)**
 
 The guide explains the methodology, provides a searchable catalog of every
 task and rubric, walks through grading, and gives a runnable first-benchmark
