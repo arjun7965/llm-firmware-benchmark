@@ -1562,6 +1562,24 @@ pre,
   }
 }
 
+@media (max-width: 900px) {
+  .hero-grid {
+    min-height: auto;
+    padding-top: 145px;
+    padding-bottom: 90px;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy {
+    max-width: 680px;
+  }
+
+  .hero-console {
+    width: min(100%, 520px);
+    margin: 10px auto 0;
+  }
+}
+
 @media (max-width: 800px) {
   .shell {
     width: min(calc(100% - 34px), var(--shell));
@@ -1595,22 +1613,6 @@ pre,
 
   .site-nav a {
     padding: 13px 8px;
-  }
-
-  .hero-grid {
-    min-height: auto;
-    padding-top: 145px;
-    padding-bottom: 90px;
-    grid-template-columns: 1fr;
-  }
-
-  .hero-copy {
-    max-width: 680px;
-  }
-
-  .hero-console {
-    width: min(100%, 520px);
-    margin: 10px auto 0;
   }
 
   .stats-grid {
