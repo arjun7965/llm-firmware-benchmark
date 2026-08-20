@@ -30,3 +30,10 @@ pinned profile/environment pair for each deterministic task. Runtime validation
 additionally checks those values against the task registry and requires every
 model run to record exactly one 0–10 total under each declared task ID because
 JSON Schema cannot express those cross-document relationships.
+
+`hil-targets.schema.json` defines the supplemental STM32, NXP, and TI lab
+catalog. `hil-validation-report.schema.json` records content-addressed HIL
+evidence without raw probe identities. Runtime validation additionally pins a
+report to the canonical catalog fingerprint, checks target-specific dependency
+names, requires the common test order, and derives aggregate success from all
+six outcomes. HIL contracts never participate in benchmark scoring.

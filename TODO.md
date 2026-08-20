@@ -253,7 +253,7 @@ record exact versions in validation reports.
   - [x] Audit all 42 deterministic firmware fixtures and enforce active hosted
     validation, a documented mock boundary, and command wiring for committed
     mock or simulator assets.
-- [ ] Add optional hardware-in-the-loop validation for representative STM32,
+- [x] Add optional hardware-in-the-loop validation for representative STM32,
   NXP, and TI boards after the mock-MMIO tasks stabilize. Keep host mocks as the
   required scoring path, and document each board, debug probe, toolchain, SDK
   dependency, and license separately.

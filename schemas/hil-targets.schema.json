@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/arjun7965/llm-firmware-benchmark/schemas/hil-targets.schema.json",
+  "title": "Optional hardware-in-the-loop target catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policy",
+    "targets"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "requiredScoringPath",
+        "network",
+        "publication"
+      ],
+      "properties": {
+        "role": {
+          "const": "supplemental-only"
+        },
+        "requiredScoringPath": {
+          "const": "host-mocks"
+        },
+        "network": {
+          "const": "disabled-during-execution"
+        },
+        "publication": {
+          "const": "sanitized-reports-only"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/target"
+      }
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "vendor",
+        "vendorName",
+        "board",
+        "probe",
+        "toolchain",
+        "sdk",
+        "testPlan"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "stm32-nucleo-f446re",
+            "nxp-frdm-mcxn947",
+            "ti-lp-mspm0g3507"
+          ]
+        },
+        "vendor": {
+          "enum": [
+            "st",
+            "nxp",
+            "ti"
+          ]
+        },
+        "vendorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "board": {
+          "$ref": "#/$defs/board"
+        },
+        "probe": {
+          "$ref": "#/$defs/probe"
+        },
+        "toolchain": {
+          "$ref": "#/$defs/toolchain"
+        },
+        "sdk": {
+          "$ref": "#/$defs/sdk"
+        },
+        "testPlan": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/testCase"
+          }
+        }
+      }
+    },
+    "board": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mcu",
+        "architecture",
+        "productUrl",
+        "datasheetUrl",
+        "userManualUrl"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "mcu": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "productUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "datasheetUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "userManualUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        }
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "interface",
+        "programmer",
+        "toolUrl",
+        "versionCommand",
+        "versionPolicy",
+        "license"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "interface": {
+          "const": "SWD"
+        },
+        "programmer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "toolUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "versionCommand": {
+          "$ref": "#/$defs/command"
+        },
+        "versionPolicy": {
+          "$ref": "#/$defs/policyText"
+        },
+        "license": {
+          "$ref": "#/$defs/license"
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "targetTriple",
+        "downloadUrl",
+        "versionCommand",
+        "versionPolicy",
+        "license"
+      ],
+      "properties": {
+        "name": {
+          "const": "Arm GNU Toolchain"
+        },
+        "targetTriple": {
+          "const": "arm-none-eabi"
+        },
+        "downloadUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "versionCommand": {
+          "$ref": "#/$defs/command"
+        },
+        "versionPolicy": {
+          "$ref": "#/$defs/policyText"
+        },
+        "license": {
+          "$ref": "#/$defs/license"
+        }
+      }
+    },
+    "sdk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "required",
+        "envVar",
+        "sourceUrl",
+        "versionPolicy",
+        "license"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "required": {
+          "const": true
+        },
+        "envVar": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$"
+        },
+        "sourceUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "versionPolicy": {
+          "$ref": "#/$defs/policyText"
+        },
+        "license": {
+          "$ref": "#/$defs/license"
+        }
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "url",
+        "redistribution"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "url": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "redistribution": {
+          "const": "not-vendored"
+        }
+      }
+    },
+    "testCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "required",
+        "destructive",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "probe-identity",
+            "flash-verify",
+            "reset-boot",
+            "uart-handshake",
+            "gpio-loopback",
+            "watchdog-reset"
+          ]
+        },
+        "required": {
+          "const": true
+        },
+        "destructive": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    },
+    "command": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 8,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "policyText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "httpsUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    }
+  }
+}

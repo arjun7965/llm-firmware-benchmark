@@ -2,8 +2,9 @@
 
 Required benchmark scoring for firmware tasks runs against deterministic,
 fixture-owned boundaries. It does not require a physical board, debug probe,
-vendor simulator, or proprietary SDK. Optional hardware-in-the-loop checks may
-supplement this path later, but they must not replace it.
+vendor simulator, or proprietary SDK. The optional STM32, NXP, and TI
+hardware-in-the-loop protocol may supplement this path, but it cannot replace
+it; see `hardware-in-the-loop.md`.
 
 ## Enforced Invariant
 
@@ -19,8 +20,8 @@ supplement this path later, but they must not replace it.
 The existing fixture contract additionally limits commands to profile-approved
 toolchains and safe fixture-relative paths. The sandbox runner supplies the
 declared inputs with no network access. Together, these rules keep a board or
-undeclared SDK out of the required scoring path while allowing an optional
-cross-compilation or future hardware-in-the-loop path to remain separate.
+undeclared SDK out of the required scoring path while allowing optional
+cross-compilation and hardware-in-the-loop paths to remain separate.
 
 ## Completed Audit
 

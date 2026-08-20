@@ -105,6 +105,24 @@ harness solely to score one task.
 Embedded task toolchains and runtime assumptions are defined separately in
 `docs/embedded/target-assumptions.md`.
 
+## Optional Hardware-in-the-Loop Labs
+
+HIL checks use a separately installed Arm GNU Toolchain plus the board vendor's
+programmer and SDK. They are not harness dependencies and are never installed
+by CI:
+
+| Target | Programmer | SDK root |
+| --- | --- | --- |
+| `stm32-nucleo-f446re` | STM32CubeProgrammer CLI | `HIL_STM32CUBEF4_ROOT` |
+| `nxp-frdm-mcxn947` | LinkServer | `HIL_MCUXPRESSO_SDK_ROOT` |
+| `ti-lp-mspm0g3507` | UniFlash `dslite` | `HIL_MSPM0_SDK_ROOT` |
+
+Run `npm run hil:check` for catalog validation or add `--probe-tools` for
+non-destructive local readiness checks. Exact upstream downloads, board
+manuals, license obligations, isolation rules, and the common test protocol are
+documented in `docs/embedded/hardware-in-the-loop.md`. Vendor packages and HIL
+artifacts must stay outside the repository.
+
 Fixture manifests declare a matching validation profile, required tools, and
 commands. `npm run fixtures:check` validates those declarations but does not
 install tools or execute generated code.

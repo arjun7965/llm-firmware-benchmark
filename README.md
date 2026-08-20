@@ -1,6 +1,6 @@
 # LLM Firmware Benchmark
 
-[![128 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=128%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
+[![136 tests](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/ci.yml?branch=main&event=push&label=136%20tests)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/ci.yml?query=branch%3Amain)
 [![75 C/C++ checks](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/c-tests.yml?branch=main&event=push&label=75%20C%2FC%2B%2B%20checks)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/c-tests.yml?query=branch%3Amain)
 [![10 sandbox fixtures](https://img.shields.io/github/actions/workflow/status/arjun7965/llm-firmware-benchmark/sandbox-tests.yml?branch=main&event=push&label=10%20sandbox%20fixtures)](https://github.com/arjun7965/llm-firmware-benchmark/actions/workflows/sandbox-tests.yml?query=branch%3Amain)
 
@@ -217,6 +217,25 @@ a compiler is missing. The manual **Cross compilation** GitHub Actions workflow
 installs both toolchains and requires both target checks to pass. These checks
 compile trusted sources only; they do not link, execute, or validate generated
 model code.
+
+## Optional Hardware-in-the-Loop Validation
+
+The supplemental HIL catalog covers ST NUCLEO-F446RE, NXP FRDM-MCXN947, and
+TI LP-MSPM0G3507 boards. Validate its board, probe, toolchain, SDK, license, and
+test metadata without touching hardware:
+
+```bash
+npm run hil:check
+npm run hil:check -- --target stm32-nucleo-f446re --probe-tools
+```
+
+Physical lab runs use a common probe, flash verification, reset, UART, GPIO,
+and watchdog protocol. Their versioned reports pin the catalog, firmware,
+dependencies, hashed probe identity, and evidence digests. HIL remains
+supplemental: host mocks are always the required scoring path. See
+[`docs/embedded/hardware-in-the-loop.md`](docs/embedded/hardware-in-the-loop.md)
+for official board and datasheet links, electrical and flashing safety,
+vendor licenses, lab setup, and report validation.
 
 ## Fixture Validation
 

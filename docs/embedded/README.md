@@ -8,6 +8,9 @@ assumptions are made comparable across model runs.
   assumptions every embedded task must state.
 - `host-validation.md` records and enforces the deterministic host-side mock
   and simulator coverage audit.
+- `hardware-in-the-loop.md` defines the optional STM32, NXP, and TI lab
+  targets, safety boundary, common test protocol, dependencies, and report
+  contract.
 - `../benchmarks/firmware-scoring.md` defines the common scoring dimensions
   used by embedded and firmware task rubrics.
 - `../../fixtures/` contains the validated per-task scaffold and manifest
@@ -20,3 +23,5 @@ toolchains are installed. A capability is considered covered only after its
 task, rubric, fixtures, and validation path are committed and calibrated.
 Cross-compilation is a portability probe; it does not activate a planned target
 profile or replace task-specific execution tests.
+Hardware-in-the-loop results are likewise supplemental and cannot change the
+required host-mock scoring path.
