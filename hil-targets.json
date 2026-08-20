@@ -1,0 +1,293 @@
+{
+  "schemaVersion": "1.0",
+  "policy": {
+    "role": "supplemental-only",
+    "requiredScoringPath": "host-mocks",
+    "network": "disabled-during-execution",
+    "publication": "sanitized-reports-only"
+  },
+  "targets": [
+    {
+      "id": "stm32-nucleo-f446re",
+      "vendor": "st",
+      "vendorName": "STMicroelectronics",
+      "board": {
+        "name": "NUCLEO-F446RE",
+        "mcu": "STM32F446RE",
+        "architecture": "Arm Cortex-M4F",
+        "productUrl": "https://www.st.com/en/evaluation-tools/nucleo-f446re.html",
+        "datasheetUrl": "https://www.st.com/resource/en/datasheet/stm32f446re.pdf",
+        "userManualUrl": "https://www.st.com/resource/en/user_manual/dm00105823.pdf"
+      },
+      "probe": {
+        "name": "On-board ST-LINK/V2-1",
+        "interface": "SWD",
+        "programmer": "STM32CubeProgrammer CLI",
+        "toolUrl": "https://www.st.com/en/development-tools/stm32cubeprog.html",
+        "versionCommand": [
+          "STM32_Programmer_CLI",
+          "--version"
+        ],
+        "versionPolicy": "Pin one lab-approved release and record its exact version in every HIL report.",
+        "license": {
+          "name": "ST software license terms supplied with STM32CubeProgrammer",
+          "url": "https://www.st.com/en/development-tools/stm32cubeprog.html",
+          "redistribution": "not-vendored"
+        }
+      },
+      "toolchain": {
+        "name": "Arm GNU Toolchain",
+        "targetTriple": "arm-none-eabi",
+        "downloadUrl": "https://gitlab.arm.com/tooling/gnu-toolchains-for-arm/-/releases",
+        "versionCommand": [
+          "arm-none-eabi-gcc",
+          "--version"
+        ],
+        "versionPolicy": "Pin one signed Arm release per lab and record the full compiler version in every HIL report.",
+        "license": {
+          "name": "Component-specific GNU and permissive licenses listed by the Arm release manifest",
+          "url": "https://gitlab.arm.com/tooling/gnu-toolchains-for-arm/-/releases",
+          "redistribution": "not-vendored"
+        }
+      },
+      "sdk": {
+        "name": "STM32CubeF4",
+        "required": true,
+        "envVar": "HIL_STM32CUBEF4_ROOT",
+        "sourceUrl": "https://www.st.com/en/embedded-software/stm32cubef4.html",
+        "versionPolicy": "Pin the complete package release and retain its manifest; do not mix files across revisions.",
+        "license": {
+          "name": "SLA0048 with STM32CubeF4 additional terms and component-specific notices",
+          "url": "https://www.st.com/content/ccc/resource/legal/legal_agreement/additional_license_terms/group0/fb/0b/a4/05/ba/01/48/85/additional-license-terms-stm32cubef4/files/additional-license-terms-stm32cubef4.html/jcr%3Acontent/translations/en.additional-license-terms-stm32cubef4.html",
+          "redistribution": "not-vendored"
+        }
+      },
+      "testPlan": [
+        {
+          "id": "probe-identity",
+          "required": true,
+          "destructive": false,
+          "description": "Enumerate exactly one expected probe and record a SHA-256 hash of its serial number."
+        },
+        {
+          "id": "flash-verify",
+          "required": true,
+          "destructive": true,
+          "description": "Erase the lab board, program the trusted smoke image, and verify flash contents against the image digest."
+        },
+        {
+          "id": "reset-boot",
+          "required": true,
+          "destructive": true,
+          "description": "Reset through the debug probe and observe one clean boot marker before the deadline."
+        },
+        {
+          "id": "uart-handshake",
+          "required": true,
+          "destructive": true,
+          "description": "Exchange a nonce over the probe virtual COM port and require an exact echoed response."
+        },
+        {
+          "id": "gpio-loopback",
+          "required": true,
+          "destructive": true,
+          "description": "Drive the documented lab output into the documented input and check low, high, and edge states."
+        },
+        {
+          "id": "watchdog-reset",
+          "required": true,
+          "destructive": true,
+          "description": "Stop feeding the watchdog, require a bounded reset, and verify the reset cause after reboot."
+        }
+      ]
+    },
+    {
+      "id": "nxp-frdm-mcxn947",
+      "vendor": "nxp",
+      "vendorName": "NXP Semiconductors",
+      "board": {
+        "name": "FRDM-MCXN947",
+        "mcu": "MCXN947",
+        "architecture": "Dual Arm Cortex-M33",
+        "productUrl": "https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947",
+        "datasheetUrl": "https://www.nxp.com/docs/en/data-sheet/MCXNP184M150F70.pdf",
+        "userManualUrl": "https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947#documentation"
+      },
+      "probe": {
+        "name": "On-board MCU-Link",
+        "interface": "SWD",
+        "programmer": "LinkServer",
+        "toolUrl": "https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/linkserver-for-microcontrollers%3ALINKSERVER",
+        "versionCommand": [
+          "LinkServer",
+          "--version"
+        ],
+        "versionPolicy": "Pin one lab-approved LinkServer release and record its exact version in every HIL report.",
+        "license": {
+          "name": "NXP software license terms presented by the LinkServer download",
+          "url": "https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/linkserver-for-microcontrollers%3ALINKSERVER",
+          "redistribution": "not-vendored"
+        }
+      },
+      "toolchain": {
+        "name": "Arm GNU Toolchain",
+        "targetTriple": "arm-none-eabi",
+        "downloadUrl": "https://gitlab.arm.com/tooling/gnu-toolchains-for-arm/-/releases",
+        "versionCommand": [
+          "arm-none-eabi-gcc",
+          "--version"
+        ],
+        "versionPolicy": "Pin one signed Arm release per lab and record the full compiler version in every HIL report.",
+        "license": {
+          "name": "Component-specific GNU and permissive licenses listed by the Arm release manifest",
+          "url": "https://gitlab.arm.com/tooling/gnu-toolchains-for-arm/-/releases",
+          "redistribution": "not-vendored"
+        }
+      },
+      "sdk": {
+        "name": "MCUXpresso SDK for FRDM-MCXN947",
+        "required": true,
+        "envVar": "HIL_MCUXPRESSO_SDK_ROOT",
+        "sourceUrl": "https://www.nxp.com/design/design-center/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-software-development-kit-sdk%3AMCUXpresso-SDK",
+        "versionPolicy": "Pin the west manifest revision and retain the merged SBOM for every lab image.",
+        "license": {
+          "name": "LA_OPT_Online_Code_Hosting plus repository-specific licenses and SBOM entries",
+          "url": "https://mcuxpresso.nxp.com/mcuxsdk/latest/html/index.html",
+          "redistribution": "not-vendored"
+        }
+      },
+      "testPlan": [
+        {
+          "id": "probe-identity",
+          "required": true,
+          "destructive": false,
+          "description": "Enumerate exactly one expected probe and record a SHA-256 hash of its serial number."
+        },
+        {
+          "id": "flash-verify",
+          "required": true,
+          "destructive": true,
+          "description": "Erase the lab board, program the trusted smoke image, and verify flash contents against the image digest."
+        },
+        {
+          "id": "reset-boot",
+          "required": true,
+          "destructive": true,
+          "description": "Reset through the debug probe and observe one clean boot marker before the deadline."
+        },
+        {
+          "id": "uart-handshake",
+          "required": true,
+          "destructive": true,
+          "description": "Exchange a nonce over the probe virtual COM port and require an exact echoed response."
+        },
+        {
+          "id": "gpio-loopback",
+          "required": true,
+          "destructive": true,
+          "description": "Drive the documented lab output into the documented input and check low, high, and edge states."
+        },
+        {
+          "id": "watchdog-reset",
+          "required": true,
+          "destructive": true,
+          "description": "Stop feeding the watchdog, require a bounded reset, and verify the reset cause after reboot."
+        }
+      ]
+    },
+    {
+      "id": "ti-lp-mspm0g3507",
+      "vendor": "ti",
+      "vendorName": "Texas Instruments",
+      "board": {
+        "name": "LP-MSPM0G3507",
+        "mcu": "MSPM0G3507",
+        "architecture": "Arm Cortex-M0+",
+        "productUrl": "https://www.ti.com/tool/LP-MSPM0G3507",
+        "datasheetUrl": "https://www.ti.com/lit/ds/symlink/mspm0g3507.pdf",
+        "userManualUrl": "https://www.ti.com/lit/ug/slau873d/slau873d.pdf"
+      },
+      "probe": {
+        "name": "On-board XDS110",
+        "interface": "SWD",
+        "programmer": "UniFlash dslite",
+        "toolUrl": "https://www.ti.com/tool/UNIFLASH",
+        "versionCommand": [
+          "dslite",
+          "--version"
+        ],
+        "versionPolicy": "Pin one lab-approved UniFlash release and record its exact version in every HIL report.",
+        "license": {
+          "name": "TI software license terms supplied with UniFlash",
+          "url": "https://www.ti.com/tool/UNIFLASH",
+          "redistribution": "not-vendored"
+        }
+      },
+      "toolchain": {
+        "name": "Arm GNU Toolchain",
+        "targetTriple": "arm-none-eabi",
+        "downloadUrl": "https://gitlab.arm.com/tooling/gnu-toolchains-for-arm/-/releases",
+        "versionCommand": [
+          "arm-none-eabi-gcc",
+          "--version"
+        ],
+        "versionPolicy": "Pin one signed Arm release per lab and record the full compiler version in every HIL report.",
+        "license": {
+          "name": "Component-specific GNU and permissive licenses listed by the Arm release manifest",
+          "url": "https://gitlab.arm.com/tooling/gnu-toolchains-for-arm/-/releases",
+          "redistribution": "not-vendored"
+        }
+      },
+      "sdk": {
+        "name": "MSPM0 SDK",
+        "required": true,
+        "envVar": "HIL_MSPM0_SDK_ROOT",
+        "sourceUrl": "https://www.ti.com/tool/MSPM0-SDK",
+        "versionPolicy": "Pin one complete SDK release and retain its component manifest and installer checksum.",
+        "license": {
+          "name": "Mostly BSD-3-Clause with component-specific TI commercial and third-party terms; inspect the SDK manifest",
+          "url": "https://www.ti.com/tool/MSPM0-SDK",
+          "redistribution": "not-vendored"
+        }
+      },
+      "testPlan": [
+        {
+          "id": "probe-identity",
+          "required": true,
+          "destructive": false,
+          "description": "Enumerate exactly one expected probe and record a SHA-256 hash of its serial number."
+        },
+        {
+          "id": "flash-verify",
+          "required": true,
+          "destructive": true,
+          "description": "Erase the lab board, program the trusted smoke image, and verify flash contents against the image digest."
+        },
+        {
+          "id": "reset-boot",
+          "required": true,
+          "destructive": true,
+          "description": "Reset through the debug probe and observe one clean boot marker before the deadline."
+        },
+        {
+          "id": "uart-handshake",
+          "required": true,
+          "destructive": true,
+          "description": "Exchange a nonce over the probe virtual COM port and require an exact echoed response."
+        },
+        {
+          "id": "gpio-loopback",
+          "required": true,
+          "destructive": true,
+          "description": "Drive the documented lab output into the documented input and check low, high, and edge states."
+        },
+        {
+          "id": "watchdog-reset",
+          "required": true,
+          "destructive": true,
+          "description": "Stop feeding the watchdog, require a bounded reset, and verify the reset cause after reboot."
+        }
+      ]
+    }
+  ]
+}
