@@ -123,6 +123,10 @@ test("GitHub Pages build publishes the complete task registry", () => {
       css,
       /@media \(max-width: 900px\) \{[\s\S]*?\.hero-grid \{[\s\S]*?grid-template-columns: 1fr;/u,
     );
+    assert.match(
+      css,
+      /@media \(max-width: 900px\) \{[\s\S]*?\.site-nav \{[\s\S]*?gap: 12px;[\s\S]*?\.site-nav a \{[\s\S]*?white-space: nowrap;/u,
+    );
     const dataMatch = html.match(
       /<script type="application\/json" id="benchmark-data">([^<]+)<\/script>/u,
     );
