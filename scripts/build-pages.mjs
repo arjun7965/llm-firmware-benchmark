@@ -11,6 +11,7 @@ import {
 import { relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
+import { loadHilCatalog } from "../src/hil-targets.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
 const siteSource = resolve(repositoryRoot, "site");
@@ -84,6 +85,7 @@ function repositoryUrl(packageDocument) {
 function buildData() {
   const packageDocument = readJson(resolve(repositoryRoot, "package.json"));
   const tasks = readJson(resolve(repositoryRoot, "tasks.json"));
+  const hilCatalog = loadHilCatalog();
   const profiles = readJson(
     resolve(repositoryRoot, "validation-profiles.json"),
   );
@@ -132,6 +134,23 @@ function buildData() {
     repositoryUrl: baseUrl,
     docsUrl: `${baseUrl}/tree/main/docs`,
     tasksUrl: `${baseUrl}/blob/main/tasks.json`,
+    hil: {
+      guideUrl: `${baseUrl}/blob/main/docs/embedded/hardware-in-the-loop.md`,
+      catalogUrl: `${baseUrl}/blob/main/hil-targets.json`,
+      policy: hilCatalog.policy,
+      targets: hilCatalog.targets.map((target) => ({
+        id: target.id,
+        vendorName: target.vendorName,
+        boardName: target.board.name,
+        mcu: target.board.mcu,
+        architecture: target.board.architecture,
+        productUrl: target.board.productUrl,
+        datasheetUrl: target.board.datasheetUrl,
+        userManualUrl: target.board.userManualUrl,
+        probeName: target.probe.name,
+        sdkName: target.sdk.name,
+      })),
+    },
     stats: {
       tasks: siteTasks.length,
       firmwareTasks: siteTasks.filter((task) => task.suite === "firmware")

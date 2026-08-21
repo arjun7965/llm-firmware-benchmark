@@ -49,6 +49,44 @@ function configureLinks() {
   readmeLink.href = `${benchmark.repositoryUrl}/blob/main/README.md#quick-start`;
   readmeLink.target = "_blank";
   readmeLink.rel = "noreferrer";
+
+  const hilGuideLink = document.querySelector("[data-hil-guide-link]");
+  hilGuideLink.href = benchmark.hil.guideUrl;
+  hilGuideLink.target = "_blank";
+  hilGuideLink.rel = "noreferrer";
+
+  const hilCatalogLink = document.querySelector("[data-hil-catalog-link]");
+  hilCatalogLink.href = benchmark.hil.catalogUrl;
+  hilCatalogLink.target = "_blank";
+  hilCatalogLink.rel = "noreferrer";
+}
+
+function hilTargetCard(target) {
+  return `
+    <article class="hil-target-card">
+      <div class="hil-card-top">
+        <span class="hil-vendor">${escapeHtml(target.vendorName)}</span>
+        <span class="hil-target-id">${escapeHtml(target.id)}</span>
+      </div>
+      <h3>${escapeHtml(target.boardName)}</h3>
+      <p class="hil-mcu">${escapeHtml(target.mcu)}</p>
+      <dl>
+        <div><dt>Architecture</dt><dd>${escapeHtml(target.architecture)}</dd></div>
+        <div><dt>Debug probe</dt><dd>${escapeHtml(target.probeName)}</dd></div>
+        <div><dt>SDK</dt><dd>${escapeHtml(target.sdkName)}</dd></div>
+      </dl>
+      <div class="hil-card-links">
+        <a href="${escapeHtml(target.productUrl)}" target="_blank" rel="noreferrer">Board page <span aria-hidden="true">↗</span></a>
+        <a href="${escapeHtml(target.datasheetUrl)}" target="_blank" rel="noreferrer">Datasheet <span aria-hidden="true">↗</span></a>
+        <a href="${escapeHtml(target.userManualUrl)}" target="_blank" rel="noreferrer">Manual <span aria-hidden="true">↗</span></a>
+      </div>
+    </article>
+  `;
+}
+
+function renderHilTargets() {
+  const grid = document.querySelector("[data-hil-target-grid]");
+  grid.innerHTML = benchmark.hil.targets.map(hilTargetCard).join("");
 }
 
 function renderStats() {
@@ -270,6 +308,7 @@ function configureCopyButtons() {
 
 configureLinks();
 renderStats();
+renderHilTargets();
 configureCategoryFilter();
 configureExplorer();
 configureDialog();

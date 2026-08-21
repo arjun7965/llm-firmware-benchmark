@@ -30,6 +30,7 @@
           <a href="#method">How it works</a>
           <a href="#tasks">Tasks</a>
           <a href="#grading">Grading</a>
+          <a href="#hardware">Hardware labs</a>
           <a href="#run">Run it</a>
           <a class="nav-github" data-repository-link href="#">View on GitHub <span aria-hidden="true">↗</span></a>
         </nav>
@@ -219,6 +220,34 @@
               <div class="grade-rule"><span>04</span><p>Give zero for contradicted or safety-critical requirements in their owning dimension.</p></div>
               <a class="button button-light" data-grading-link href="#">Read the complete scoring profile <span aria-hidden="true">↗</span></a>
             </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="section hil-section" id="hardware">
+        <div class="shell">
+          <div class="section-heading split-heading hil-heading">
+            <div>
+              <p class="eyebrow"><span></span> Optional hardware labs</p>
+              <h2>Take representative firmware onto real boards.</h2>
+            </div>
+            <p>Hardware-in-the-loop runs add reviewable lab evidence for representative STM32, NXP, and TI targets. They are optional and supplemental: deterministic host-mock validation remains the required scoring path.</p>
+          </div>
+
+          <div class="hil-policy" role="note" aria-label="Hardware-in-the-loop policy">
+            <div><strong>Supplemental only</strong><span>HIL evidence cannot change benchmark scores.</span></div>
+            <div><strong>Network isolated</strong><span>Execution runs with network access disabled.</span></div>
+            <div><strong>Sanitized reports</strong><span>Only reviewed, allowlisted evidence is published.</span></div>
+          </div>
+
+          <div class="hil-target-grid" data-hil-target-grid></div>
+
+          <div class="hil-footer">
+            <p><code>npm run hil:check</code> validates the catalog; probe and SDK checks stay opt-in for machines connected to a lab.</p>
+            <div class="hil-actions">
+              <a class="button button-primary" data-hil-guide-link href="#">Read the HIL guide <span aria-hidden="true">↗</span></a>
+              <a class="button hil-catalog-button" data-hil-catalog-link href="#">Inspect the catalog <span aria-hidden="true">↗</span></a>
+            </div>
           </div>
         </div>
       </section>
