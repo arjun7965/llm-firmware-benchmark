@@ -1132,6 +1132,198 @@ pre,
   color: var(--night);
 }
 
+.hil-section {
+  background: var(--paper-2);
+}
+
+.hil-policy {
+  display: grid;
+  overflow: hidden;
+  margin: -8px 0 28px;
+  border: 1px solid rgba(13, 27, 30, 0.12);
+  border-radius: 13px;
+  background: var(--night);
+  color: var(--white);
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.hil-policy > div {
+  display: flex;
+  min-width: 0;
+  padding: 19px 22px;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hil-policy > div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hil-policy strong,
+.hil-vendor,
+.hil-target-id,
+.hil-target-card dt {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.hil-policy strong {
+  color: var(--mint);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hil-policy span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+
+.hil-target-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 18px;
+}
+
+.hil-target-card {
+  display: flex;
+  min-width: 0;
+  padding: 27px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(13, 27, 30, 0.035);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.hil-target-card:hover {
+  border-color: #a8b7b0;
+  box-shadow: 0 18px 42px rgba(13, 27, 30, 0.08);
+  transform: translateY(-3px);
+}
+
+.hil-card-top {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hil-vendor {
+  color: var(--mint-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hil-target-id {
+  color: #758285;
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+
+.hil-target-card h3 {
+  margin: 25px 0 1px;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.hil-mcu {
+  margin: 0 0 25px;
+  color: var(--amber-dark);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.hil-target-card dl {
+  margin: 0 0 27px;
+}
+
+.hil-target-card dl > div {
+  display: grid;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+  align-items: baseline;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.hil-target-card dt {
+  color: #7a8789;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hil-target-card dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.hil-card-links {
+  display: flex;
+  padding-top: 17px;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+  flex-wrap: wrap;
+  gap: 9px 17px;
+}
+
+.hil-card-links a {
+  color: var(--mint-dark);
+  font-size: 11px;
+  font-weight: 780;
+  text-decoration: none;
+}
+
+.hil-card-links a:hover,
+.hil-card-links a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hil-footer {
+  display: flex;
+  margin-top: 29px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.hil-footer > p {
+  max-width: 580px;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.hil-footer code {
+  color: var(--ink);
+  font-size: 0.92em;
+  font-weight: 700;
+}
+
+.hil-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.hil-catalog-button {
+  border-color: #aeb9b3;
+  background: var(--white);
+  color: var(--ink);
+}
+
 .run-section {
   background: var(--paper);
 }
@@ -1563,6 +1755,14 @@ pre,
 }
 
 @media (max-width: 900px) {
+  .site-nav {
+    gap: 12px;
+  }
+
+  .site-nav a {
+    white-space: nowrap;
+  }
+
   .hero-grid {
     min-height: auto;
     padding-top: 145px;
@@ -1633,6 +1833,20 @@ pre,
   .run-grid {
     grid-template-columns: 1fr;
     gap: 35px;
+  }
+
+  .hil-policy {
+    grid-template-columns: 1fr;
+  }
+
+  .hil-policy > div + div {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 0;
+  }
+
+  .hil-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .method-flow {
@@ -1763,13 +1977,19 @@ pre,
   }
 
   .closing-actions,
+  .hil-actions,
   .dialog-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
   .closing-actions .button,
+  .hil-actions .button,
   .dialog-actions .button {
+    width: 100%;
+  }
+
+  .hil-actions {
     width: 100%;
   }
 

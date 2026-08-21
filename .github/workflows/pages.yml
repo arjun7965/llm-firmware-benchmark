@@ -7,9 +7,12 @@ on:
     paths:
       - ".github/workflows/pages.yml"
       - "docs/benchmarks/**"
+      - "docs/embedded/hardware-in-the-loop.md"
       - "fixtures/*/manifest.json"
+      - "hil-targets.json"
       - "scripts/build-pages.mjs"
       - "site/**"
+      - "src/hil-targets.mjs"
       - "package.json"
       - "tasks.json"
       - "validation-profiles.json"

@@ -41,7 +41,14 @@ test("GitHub Pages build publishes the complete task registry", () => {
     assert.match(html, /src="app\.js\?v=[0-9a-f]{12}"/u);
     assert.match(html, /id="tasks"/u);
     assert.match(html, /id="grading"/u);
+    assert.match(html, /id="hardware"/u);
     assert.match(html, /id="run"/u);
+    assert.match(html, /Hardware labs/u);
+    assert.match(html, /HIL evidence cannot change benchmark scores/u);
+    assert.match(html, /data-hil-target-grid/u);
+    assert.match(html, /data-hil-guide-link/u);
+    assert.match(html, /data-hil-catalog-link/u);
+    assert.match(html, /npm run hil:check/u);
     assert.match(
       html,
       /npm run fixture:validate -- --task embedded-ring-buffer/u,
@@ -62,6 +69,13 @@ test("GitHub Pages build publishes the complete task registry", () => {
     );
     assert.match(app, /event\.key === "Escape"/u);
     assert.match(app, /toggle\.focus\(\)/u);
+    assert.match(
+      app,
+      /benchmark\.hil\.targets\.map\(hilTargetCard\)\.join\(""\)/u,
+    );
+    assert.match(app, /escapeHtml\(target\.productUrl\)/u);
+    assert.match(app, /escapeHtml\(target\.datasheetUrl\)/u);
+    assert.match(app, /escapeHtml\(target\.userManualUrl\)/u);
     assert.match(html, /--runs 1 --concurrency 2/u);
     assert.doesNotMatch(html, /--runs 1,2,3/u);
     const repeatCommand = html.match(
@@ -96,12 +110,22 @@ test("GitHub Pages build publishes the complete task registry", () => {
     }
     assert.match(
       css,
+      /\.hil-section\s*\{\s*background: var\(--paper-2\);/u,
+    );
+    assert.match(css, /\.hil-target-grid\s*\{/u);
+    assert.match(css, /\.hil-policy\s*\{/u);
+    assert.match(
+      css,
       /\.closing-section\s*\{[^}]*background: var\(--night\);/u,
     );
     assert.match(css, /\.button-primary\s*\{\s*background: var\(--amber\);/u);
     assert.match(
       css,
       /@media \(max-width: 900px\) \{[\s\S]*?\.hero-grid \{[\s\S]*?grid-template-columns: 1fr;/u,
+    );
+    assert.match(
+      css,
+      /@media \(max-width: 900px\) \{[\s\S]*?\.site-nav \{[\s\S]*?gap: 12px;[\s\S]*?\.site-nav a \{[\s\S]*?white-space: nowrap;/u,
     );
     const dataMatch = html.match(
       /<script type="application\/json" id="benchmark-data">([^<]+)<\/script>/u,
@@ -110,6 +134,9 @@ test("GitHub Pages build publishes the complete task registry", () => {
     const data = JSON.parse(dataMatch[1]);
     const repositoryTasks = JSON.parse(
       readFileSync(join(repositoryRoot, "tasks.json"), "utf8"),
+    );
+    const hilCatalog = JSON.parse(
+      readFileSync(join(repositoryRoot, "hil-targets.json"), "utf8"),
     );
 
     assert.equal(data.tasks.length, repositoryTasks.length);
@@ -123,6 +150,28 @@ test("GitHub Pages build publishes the complete task registry", () => {
       data.tasks.map((task) => task.id),
       repositoryTasks.map((task) => task.id),
     );
+    assert.deepEqual(data.hil.policy, hilCatalog.policy);
+    assert.match(
+      data.hil.guideUrl,
+      /docs\/embedded\/hardware-in-the-loop\.md$/u,
+    );
+    assert.match(data.hil.catalogUrl, /hil-targets\.json$/u);
+    assert.deepEqual(
+      data.hil.targets.map((target) => target.id),
+      hilCatalog.targets.map((target) => target.id),
+    );
+    for (const [index, target] of data.hil.targets.entries()) {
+      const source = hilCatalog.targets[index];
+      assert.equal(target.vendorName, source.vendorName);
+      assert.equal(target.boardName, source.board.name);
+      assert.equal(target.mcu, source.board.mcu);
+      assert.equal(target.architecture, source.board.architecture);
+      assert.equal(target.productUrl, source.board.productUrl);
+      assert.equal(target.datasheetUrl, source.board.datasheetUrl);
+      assert.equal(target.userManualUrl, source.board.userManualUrl);
+      assert.equal(target.probeName, source.probe.name);
+      assert.equal(target.sdkName, source.sdk.name);
+    }
     for (const task of data.tasks) {
       assert.equal(
         task.scoring.reduce((total, criterion) => total + criterion.points, 0),
@@ -159,4 +208,7 @@ test("Pages workflow builds and deploys only the generated site", () => {
   assert.match(workflow, /pages: write/u);
   assert.match(workflow, /id-token: write/u);
   assert.match(workflow, /uses: actions\/deploy-pages@v4/u);
+  assert.match(workflow, /"hil-targets\.json"/u);
+  assert.match(workflow, /"docs\/embedded\/hardware-in-the-loop\.md"/u);
+  assert.match(workflow, /"src\/hil-targets\.mjs"/u);
 });
