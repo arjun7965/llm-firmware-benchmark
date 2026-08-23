@@ -24,7 +24,10 @@ const runtimeMountPattern =
 const versionPattern =
   /^\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?$/u;
 const imagePattern =
-  /^[a-z0-9./_-]+(?::[A-Za-z0-9._-]+)?@sha256:[a-f0-9]{64}$/u;
+  /^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?(?:\/[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?)*(?::[A-Za-z0-9_][A-Za-z0-9._-]{0,127})?@sha256:[a-f0-9]{64}$/u;
+const sourceRepositoryPattern =
+  /^https:\/\/github\.com\/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?\/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?(?:\.git)?$/u;
+const sourceRevisionPattern = /^[a-f0-9]{40}$/u;
 const fingerprintPattern = /^[a-f0-9]{64}$/u;
 const lockfilePattern = /^validation-locks\/[A-Za-z0-9._/-]+$/u;
 const dependencyInstallMountPattern = /^\/workspace\/[A-Za-z0-9._-]+$/u;
@@ -562,28 +565,30 @@ function validateHost(host, name) {
   );
 }
 
-function validateSandboxTool(tool, role, environmentId) {
+function validateSandboxTool(tool, role, environment) {
   requireExactFields(
     tool,
     ["executable", "name", "version", "versionArgs"],
-    `validation environment ${environmentId} ${role}`,
+    `validation environment ${environment.id} ${role}`,
   );
-  const expected = role === "runtime"
-    ? { executable: "bwrap", name: "bubblewrap" }
-    : { executable: "prlimit", name: "prlimit" };
+  const expected = environment.execution.kind === "oci"
+    ? { executable: "podman", name: "podman" }
+    : role === "runtime"
+      ? { executable: "bwrap", name: "bubblewrap" }
+      : { executable: "prlimit", name: "prlimit" };
   if (tool.executable !== expected.executable || tool.name !== expected.name) {
     throw new TypeError(
-      `validation environment ${environmentId} ${role} is invalid`,
+      `validation environment ${environment.id} ${role} is invalid`,
     );
   }
   requireString(
     tool.version,
-    `validation environment ${environmentId} ${role} version`,
+    `validation environment ${environment.id} ${role} version`,
     versionPattern,
   );
   validateVersionArgs(
     tool.versionArgs,
-    `validation environment ${environmentId} ${role}`,
+    `validation environment ${environment.id} ${role}`,
   );
 }
 
@@ -626,13 +631,23 @@ function validateEnvironment(environment) {
   } else if (environment.execution.kind === "oci") {
     requireExactFields(
       environment.execution,
-      ["image", "kind"],
+      ["image", "kind", "revision", "source"],
       `validation environment ${environment.id} execution`,
     );
     requireString(
       environment.execution.image,
       `validation environment ${environment.id} image`,
       imagePattern,
+    );
+    requireString(
+      environment.execution.source,
+      `validation environment ${environment.id} source`,
+      sourceRepositoryPattern,
+    );
+    requireString(
+      environment.execution.revision,
+      `validation environment ${environment.id} source revision`,
+      sourceRevisionPattern,
     );
   } else {
     throw new TypeError(
@@ -647,13 +662,28 @@ function validateEnvironment(environment) {
   validateSandboxTool(
     environment.sandbox.runtime,
     "runtime",
-    environment.id,
+    environment,
   );
   validateSandboxTool(
     environment.sandbox.limiter,
     "limiter",
-    environment.id,
+    environment,
   );
+  if (
+    environment.execution.kind === "oci" &&
+    (
+      environment.sandbox.limiter.version !==
+        environment.sandbox.runtime.version ||
+      environment.sandbox.limiter.versionArgs.length !==
+        environment.sandbox.runtime.versionArgs.length ||
+      environment.sandbox.limiter.versionArgs.some((argument, index) =>
+        argument !== environment.sandbox.runtime.versionArgs[index])
+    )
+  ) {
+    throw new TypeError(
+      `validation environment ${environment.id} OCI sandbox tools differ`,
+    );
+  }
   validateToolchains(
     environment.toolchains,
     `validation environment ${environment.id}`,
@@ -783,7 +813,7 @@ export function validateValidationProfiles(document) {
     ["environments", "profiles", "schemaVersion"],
     "validation profiles document",
   );
-  if (document.schemaVersion !== "2.5") {
+  if (document.schemaVersion !== "2.6") {
     throw new TypeError("unsupported validation profiles schemaVersion");
   }
   if (
@@ -920,7 +950,7 @@ export function validateValidationProfileFingerprints(
     ["environments", "profiles", "schemaVersion"],
     "validation profile fingerprints document",
   );
-  if (fingerprintsDocument.schemaVersion !== "2.5") {
+  if (fingerprintsDocument.schemaVersion !== "2.6") {
     throw new TypeError(
       "unsupported validation profile fingerprints schemaVersion",
     );
@@ -1284,21 +1314,56 @@ function hostsMatch(left, right) {
     .every((field) => left[field] === right[field]);
 }
 
-export function selectValidationEnvironment(profile, actualHost) {
+function environmentSupportsHost(
+  environment,
+  actualHost,
+  runtimeOperatingSystem,
+) {
+  if (environment.execution.kind === "host") {
+    return hostsMatch(environment.host, actualHost);
+  }
+  return runtimeOperatingSystem === "linux" &&
+    environment.host.architecture === actualHost.architecture;
+}
+
+export function selectValidationEnvironmentFrom(
+  profile,
+  actualHost,
+  environmentRevisions,
+  {
+    environmentId = null,
+    runtimeOperatingSystem = process.platform,
+  } = {},
+) {
   if (!Array.isArray(profile.environments)) {
     throw new TypeError(
       `validation profile ${profile.id}@${profile.revision} is legacy-only`,
     );
   }
   validateHost(actualHost, "validation host");
+  if (
+    environmentId !== null &&
+    (typeof environmentId !== "string" || !identifierPattern.test(environmentId))
+  ) {
+    throw new TypeError("validation environment selection is invalid");
+  }
+  if (typeof runtimeOperatingSystem !== "string") {
+    throw new TypeError("validation runtime operating system is invalid");
+  }
   const matches = profile.environments
-    .map((reference) => getValidationEnvironmentRevision(
-      reference.id,
-      reference.revision,
+    .map((reference) => environmentRevisions.get(
+      `${reference.id}@${reference.revision}`,
     ))
+    .filter(Boolean)
     .filter((environment) =>
-      environment.execution.kind === "host" &&
-      hostsMatch(environment.host, actualHost));
+      (environmentId === null
+        ? environment.execution.kind === "host"
+        : environment.id === environmentId) &&
+      environmentSupportsHost(
+        environment,
+        actualHost,
+        runtimeOperatingSystem,
+      ));
   if (matches.length !== 1) {
     const supported = profile.environments
       .map((reference) => `${reference.id}@${reference.revision}`)
@@ -1309,6 +1374,19 @@ export function selectValidationEnvironment(profile, actualHost) {
     );
   }
   return matches[0];
+}
+
+export function selectValidationEnvironment(
+  profile,
+  actualHost,
+  options = {},
+) {
+  return selectValidationEnvironmentFrom(
+    profile,
+    actualHost,
+    environmentMaps.revisions,
+    options,
+  );
 }
 
 export function resolveValidationProfile(profile, environment) {
@@ -1331,8 +1409,10 @@ export function resolveValidationProfile(profile, environment) {
     toolchains: profile.toolchains.map((name) => tools.get(name)),
     sandbox: {
       ...profile.sandbox,
+      limiter: environment.sandbox.limiter.name,
       runtimeVersion: environment.sandbox.runtime.version,
       limiterVersion: environment.sandbox.limiter.version,
+      runtime: environment.sandbox.runtime.name,
     },
   };
 }
@@ -1408,17 +1488,31 @@ export function validateValidationEnvironmentReference(
   return environment;
 }
 
-export function sandboxProfileBlockReason(profile) {
-  if (
-    profile.dependencies.length > 0 &&
+export function sandboxProfileBlockReason(profile, environment = null) {
+  const executionKinds = environment
+    ? [environment.execution.kind]
+    : profile.environments?.map((reference) =>
+      environmentMaps.revisions.get(`${reference.id}@${reference.revision}`)
+        ?.execution.kind) ?? ["host"];
+  const canUseOciImage = executionKinds.includes("oci") &&
     (
-      profile.dependencyInstall?.kind !== "lockfile" ||
-      !Object.hasOwn(profile.dependencyInstall, "installRoot")
-    )
+      profile.dependencies.length === 0 ||
+      profile.dependencyInstall?.kind === "oci-image"
+    );
+  const canUseHostInstall = executionKinds.includes("host") &&
+    (
+      profile.dependencies.length === 0 ||
+      (
+        profile.dependencyInstall?.kind === "lockfile" &&
+        Object.hasOwn(profile.dependencyInstall, "installRoot")
+      )
+    );
+  if (
+    profile.dependencies.length > 0 && !canUseOciImage && !canUseHostInstall
   ) {
     return "its validation profile dependency installation cannot be runtime-attested";
   }
-  if (!sandboxRunnableValidationProfileSet.has(profile.id)) {
+  if (!sandboxRunnableValidationProfileSet.has(profile.id) && !canUseOciImage) {
     if (profile.testRuntime) {
       return "its validation profile test runtime is not mounted by the current runner";
     }

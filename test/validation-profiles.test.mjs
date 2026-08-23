@@ -10,7 +10,9 @@ import {
   normalizeDependencyLockfileContent,
   profileFingerprint,
   resolveValidationProfile,
+  sandboxProfileBlockReason,
   selectValidationEnvironment,
+  selectValidationEnvironmentFrom,
   validateValidationProfileFingerprints,
   validateValidationEnvironmentReference,
   validateValidationProfileReference,
@@ -24,6 +26,60 @@ import {
   validationProfilesDocument,
   validateValidationProfileLockfiles,
 } from "../src/validation-profiles.mjs";
+
+const ociDigest = `sha256:${"a".repeat(64)}`;
+const imageReference = `ghcr.io/example/validator@${ociDigest}`;
+const ociSourceRevision = "b".repeat(40);
+
+function ociValidationDocument() {
+  const environment = {
+    id: "debian-13-x86-64-c11-oci",
+    revision: 1,
+    host: {
+      operatingSystem: "debian",
+      release: "13",
+      architecture: "x86_64",
+    },
+    execution: {
+      kind: "oci",
+      image: imageReference,
+      source: "https://github.com/example/validator",
+      revision: ociSourceRevision,
+    },
+    sandbox: {
+      runtime: {
+        name: "podman",
+        executable: "podman",
+        version: "5.4.2",
+        versionArgs: ["--version"],
+      },
+      limiter: {
+        name: "podman",
+        executable: "podman",
+        version: "5.4.2",
+        versionArgs: ["--version"],
+      },
+    },
+    toolchains: [{
+      name: "cc",
+      version: "14.2.0",
+      versionArgs: ["--version"],
+    }],
+  };
+  const profile = {
+    id: "oci-c11",
+    revision: 1,
+    dependencies: [],
+    environments: [{ id: environment.id, revision: environment.revision }],
+    toolchains: ["cc"],
+    sandbox: structuredClone(getValidationProfile("c11-host").sandbox),
+  };
+  return {
+    schemaVersion: "2.6",
+    environments: [environment],
+    profiles: [profile],
+  };
+}
 
 test("hosted validation profiles are pinned and immutable", () => {
   const fingerprintsDocument = JSON.parse(
@@ -317,7 +373,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   };
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.5",
+      schemaVersion: "2.6",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, secondRevision],
     }),
@@ -325,7 +381,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.5",
+      schemaVersion: "2.6",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -339,7 +395,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.5",
+      schemaVersion: "2.6",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...validProfile,
@@ -353,7 +409,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.5",
+      schemaVersion: "2.6",
       environments: structuredClone(validationEnvironments),
       profiles: [validProfile, structuredClone(validProfile)],
     }),
@@ -361,7 +417,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   );
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.5",
+      schemaVersion: "2.6",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...structuredClone(validProfile),
@@ -373,7 +429,7 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   const logicalProfile = structuredClone(getValidationProfile("c11-host"));
   assert.throws(
     () => validateValidationProfiles({
-      schemaVersion: "2.5",
+      schemaVersion: "2.6",
       environments: structuredClone(validationEnvironments),
       profiles: [{
         ...logicalProfile,
@@ -475,5 +531,112 @@ test("validation profile contracts reject unpinned or unsafe values", () => {
   assert.throws(
     () => validateValidationProfiles(unsafeServiceCommand),
     /service startArgv is invalid/u,
+  );
+});
+
+test("OCI validation environments are explicit, pinned, and platform-safe", () => {
+  const document = ociValidationDocument();
+  assert.equal(validateValidationProfiles(document), document);
+  const profile = document.profiles[0];
+  const environment = document.environments[0];
+  const revisions = new Map([[
+    `${environment.id}@${environment.revision}`,
+    environment,
+  ]]);
+  const ubuntuHost = {
+    operatingSystem: "ubuntu",
+    release: "24.04",
+    architecture: "x86_64",
+  };
+  assert.equal(
+    selectValidationEnvironmentFrom(profile, ubuntuHost, revisions, {
+      environmentId: environment.id,
+      runtimeOperatingSystem: "linux",
+    }),
+    environment,
+  );
+  assert.deepEqual(resolveValidationProfile(profile, environment).sandbox, {
+    ...profile.sandbox,
+    limiter: "podman",
+    limiterVersion: "5.4.2",
+    runtime: "podman",
+    runtimeVersion: "5.4.2",
+  });
+  assert.throws(
+    () => selectValidationEnvironmentFrom(profile, ubuntuHost, revisions),
+    /does not match exactly one supported environment/u,
+  );
+  assert.throws(
+    () => selectValidationEnvironmentFrom(profile, ubuntuHost, revisions, {
+      environmentId: environment.id,
+      runtimeOperatingSystem: "darwin",
+    }),
+    /does not match exactly one supported environment/u,
+  );
+
+  const taggedImage = ociValidationDocument();
+  taggedImage.environments[0].execution.image =
+    "ghcr.io/example/validator:latest";
+  assert.throws(
+    () => validateValidationProfiles(taggedImage),
+    /image is invalid/u,
+  );
+  const optionLikeImage = ociValidationDocument();
+  optionLikeImage.environments[0].execution.image =
+    `--rootfs@${ociDigest}`;
+  assert.throws(
+    () => validateValidationProfiles(optionLikeImage),
+    /image is invalid/u,
+  );
+  const unsafeSource = ociValidationDocument();
+  unsafeSource.environments[0].execution.source =
+    "https://github.com/example/../validator";
+  assert.throws(
+    () => validateValidationProfiles(unsafeSource),
+    /source is invalid/u,
+  );
+  const mismatchedRuntime = ociValidationDocument();
+  mismatchedRuntime.environments[0].sandbox.runtime = {
+    name: "bubblewrap",
+    executable: "bwrap",
+    version: "0.9.0",
+    versionArgs: ["--version"],
+  };
+  assert.throws(
+    () => validateValidationProfiles(mismatchedRuntime),
+    /runtime is invalid/u,
+  );
+  const mismatchedLimiter = ociValidationDocument();
+  mismatchedLimiter.environments[0].sandbox.limiter.versionArgs = [
+    "version",
+  ];
+  assert.throws(
+    () => validateValidationProfiles(mismatchedLimiter),
+    /OCI sandbox tools differ/u,
+  );
+
+  const dependencyImage = ociValidationDocument();
+  dependencyImage.profiles[0].dependencies = [{
+    name: "example-package",
+    source: "npm",
+    version: "1.2.3",
+  }];
+  dependencyImage.profiles[0].dependencyInstall = {
+    kind: "oci-image",
+    image: imageReference,
+  };
+  assert.equal(validateValidationProfiles(dependencyImage), dependencyImage);
+  assert.equal(
+    sandboxProfileBlockReason(
+      dependencyImage.profiles[0],
+      dependencyImage.environments[0],
+    ),
+    null,
+  );
+  dependencyImage.profiles[0].dependencyInstall.image =
+    `ghcr.io/example/other@${ociDigest}`;
+  assert.throws(
+    () => validateValidationProfiles(dependencyImage),
+    /does not match its environments/u,
   );
 });

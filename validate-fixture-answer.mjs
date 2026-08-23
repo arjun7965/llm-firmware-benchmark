@@ -8,6 +8,7 @@ Options:
   --task <id>           Fixture task ID
   --fixtures <path>     Fixture root (default: fixtures)
   --tasks-file <path>   Task definitions (default: tasks.json)
+  --environment <id>    Exact supported environment (required for OCI)
   -h, --help            Show this help
 `;
 
@@ -16,6 +17,7 @@ try {
     strict: true,
     options: {
       fixtures: { type: "string", default: "fixtures" },
+      environment: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
       task: { type: "string" },
       "tasks-file": { type: "string", default: "tasks.json" },
@@ -29,6 +31,7 @@ try {
       taskId: values.task,
       fixturesRoot: values.fixtures,
       tasksPath: values["tasks-file"],
+      validationEnvironmentId: values.environment,
     });
     console.log(JSON.stringify({
       taskId: report.taskId,

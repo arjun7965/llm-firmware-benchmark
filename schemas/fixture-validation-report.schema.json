@@ -30,6 +30,46 @@
           "targetProfile": { "const": null }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "validationEnvironment": {
+            "properties": {
+              "execution": {
+                "properties": { "kind": { "const": "oci" } },
+                "required": ["kind"]
+              }
+            },
+            "required": ["execution"]
+          }
+        },
+        "required": ["validationEnvironment"]
+      },
+      "then": {
+        "properties": {
+          "sandbox": {
+            "properties": {
+              "runtime": { "const": "podman" },
+              "limiter": { "const": "podman" },
+              "rootless": { "const": true },
+              "image": { "$ref": "#/$defs/ociImage" }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "sandbox": {
+            "properties": {
+              "runtime": { "const": "bubblewrap" },
+              "limiter": { "const": "prlimit" },
+              "rootless": { "const": null },
+              "image": { "const": null }
+            }
+          }
+        }
+      }
     }
   ],
   "required": [
@@ -54,7 +94,7 @@
     "success"
   ],
   "properties": {
-    "schemaVersion": { "const": "1.7" },
+    "schemaVersion": { "const": "1.8" },
     "taskId": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
@@ -161,12 +201,20 @@
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["kind", "image"],
+              "required": ["kind", "image", "source", "revision"],
               "properties": {
                 "kind": { "const": "oci" },
                 "image": {
                   "type": "string",
-                  "pattern": "^[a-z0-9./_-]+(?::[A-Za-z0-9._-]+)?@sha256:[a-f0-9]{64}$"
+                  "pattern": "^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?(?:/[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?)*(?::[A-Za-z0-9_][A-Za-z0-9._-]{0,127})?@sha256:[a-f0-9]{64}$"
+                },
+                "source": {
+                  "type": "string",
+                  "pattern": "^https://github\\.com/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?(?:\\.git)?$"
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{40}$"
                 }
               }
             }
@@ -199,16 +247,18 @@
         "limiterVersion",
         "network",
         "filesystem",
+        "image",
+        "rootless",
         "resourceLimits"
       ],
       "properties": {
-        "runtime": { "const": "bubblewrap" },
+        "runtime": { "enum": ["bubblewrap", "podman"] },
         "runtimeVersion": {
           "type": "string",
           "minLength": 1,
           "maxLength": 1024
         },
-        "limiter": { "const": "prlimit" },
+        "limiter": { "enum": ["prlimit", "podman"] },
         "limiterVersion": {
           "type": "string",
           "minLength": 1,
@@ -216,6 +266,13 @@
         },
         "network": { "const": "none" },
         "filesystem": { "const": "isolated" },
+        "image": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/ociImage" }
+          ]
+        },
+        "rootless": { "type": ["boolean", "null"] },
         "resourceLimits": {
           "type": "object",
           "additionalProperties": false,
@@ -274,7 +331,7 @@
         },
         "executable": {
           "type": "string",
-          "pattern": "^/usr/"
+          "pattern": "^(?:/usr/|oci:[a-z0-9][a-z0-9+._-]*$)"
         },
         "version": {
           "type": "string",
@@ -303,6 +360,46 @@
         "sizeBytes": {
           "type": "integer",
           "minimum": 0
+        }
+      }
+    },
+    "ociImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "digest",
+        "id",
+        "operatingSystem",
+        "architecture",
+        "source",
+        "revision"
+      ],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?(?:/[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?)*(?::[A-Za-z0-9_][A-Za-z0-9._-]{0,127})?@sha256:[a-f0-9]{64}$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "operatingSystem": { "const": "linux" },
+        "architecture": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]+$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?(?:\\.git)?$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
         }
       }
     },

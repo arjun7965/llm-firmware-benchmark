@@ -352,7 +352,7 @@ test("JSON Schema files declare the expected contracts", () => {
   );
   assert.equal(
     fixtureValidationSchema.properties.schemaVersion.const,
-    "1.7",
+    "1.8",
   );
   assert.equal(
     fixtureValidationSchema.properties.validationProfileRevision.minimum,
@@ -378,12 +378,29 @@ test("JSON Schema files declare the expected contracts", () => {
     fixtureValidationSchema.$defs.artifact.properties.sizeBytes.minimum,
     0,
   );
+  assert.equal(
+    fixtureValidationSchema.allOf[2].then.properties.sandbox.properties
+      .rootless.const,
+    true,
+  );
+  assert.deepEqual(
+    fixtureValidationSchema.$defs.ociImage.required,
+    [
+      "reference",
+      "digest",
+      "id",
+      "operatingSystem",
+      "architecture",
+      "source",
+      "revision",
+    ],
+  );
   assert.deepEqual(
     fixtureValidationSchema.$defs.phase.properties.outcome.enum,
     ["error", "failed", "passed", "timed-out"],
   );
   assert.equal(fixtureValidationSchema.additionalProperties, false);
-  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.5");
+  assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.6");
   assert.equal(validationProfilesSchema.additionalProperties, false);
   assert.equal(
     validationProfilesSchema.$defs.dependencyInstall.oneOf.length,
@@ -410,6 +427,11 @@ test("JSON Schema files declare the expected contracts", () => {
     validationProfilesSchema.$defs.environment
       .properties.execution.$ref,
     "#/$defs/execution",
+  );
+  assert.equal(
+    validationProfilesSchema.$defs.environment.allOf[0].then.properties
+      .sandbox.properties.runtime.properties.name.const,
+    "podman",
   );
   assert.equal(
     validationProfilesSchema.$defs.sandboxPolicyFields

@@ -5,17 +5,23 @@ Extracted model code is untrusted. Validation is opt-in and Linux-only:
 ```bash
 npm run fixture:extract -- --result results/<task>--<model>.json
 npm run fixture:validate -- --task <task>
+npm run fixture:validate -- --task <task> --environment <oci-environment-id>
 ```
 
-The validator requires Bubblewrap, `prlimit`, and each manifest toolchain as
-root-owned, non-writable executables under `/usr`. Compile namespaces also
+The default host path requires Bubblewrap, `prlimit`, and each manifest
+toolchain as root-owned, non-writable executables under `/usr`. Compile
+namespaces also
 mount `/etc/alternatives` read-only so attested compiler and linker symlinks
 resolve to their root-owned `/usr` targets. Validation fails closed when any
 dependency or namespace feature is unavailable; it never falls back to host
 execution. It also reads `/etc/os-release` as data and checks the OS ID, release,
 and normalized architecture against the concrete environments supported by
 the current logical validation-profile revision. Exactly one environment must
-match before the validator resolves or executes sandbox tools.
+match before the validator resolves or executes sandbox tools. A registered
+OCI environment must be selected explicitly. It requires only an architecture
+match with the Linux host because the pinned image supplies its OS userspace.
+The exact Podman runtime must itself resolve to a root-owned, non-writable
+executable under `/usr`.
 
 The `node-typescript` and `react18-typescript` profiles pin complete npm
 package-locks, root-owned installation paths, and canonical SHA-256 values over
@@ -52,7 +58,7 @@ Do not disable AppArmor globally to make validation pass.
 
 ## Isolation Boundary
 
-Compilation and testing run in separate Bubblewrap namespaces with:
+Host compilation and testing run in separate Bubblewrap namespaces with:
 
 - no network namespace access, capabilities, inherited environment, or home;
 - no access to the repository, results, local models, credentials, or `/etc`;
@@ -65,6 +71,20 @@ Compilation and testing run in separate Bubblewrap namespaces with:
 - only approved runtime files and either the test binary or interpreter during
   execution; and
 - PID namespace teardown and `--die-with-parent` cleanup.
+
+OCI compilation and testing run as separate containers under a local,
+rootless, seccomp-enabled Podman runtime with cgroup v2. The runner verifies the
+already-local platform image against its registered digest and source/revision
+labels and uses `--pull=never`. Each container has no network, IPC sharing,
+capabilities, inherited environment, persistent runtime log, image-declared
+volume, or writable image root. `no-new-privileges`, a private PID and cgroup
+namespace, a fixed unprivileged keep-id mapping, memory/swap and PID cgroups,
+RLIMITs, wall deadlines, and output caps are applied. Starter files, mocks,
+public tests, and answers are copied to a private read-only staging mount. The
+separate build mount is writable during compilation and read-only during tests;
+only bounded `/tmp` and `/run` tmpfs mounts are otherwise writable. Container
+IDs are recorded so timeout and service-supervisor cleanup can force-remove any
+remaining container.
 
 For PostgreSQL, trusted Node orchestration starts the server in its own
 Bubblewrap process and runs `psql` in a separate candidate namespace. They
@@ -98,21 +118,24 @@ Each run writes ignored machine-readable output to:
 fixtures/<task-id>/build/validation-report.json
 ```
 
-The report follows `schemas/fixture-validation-report.schema.json` version 1.7.
+The report follows `schemas/fixture-validation-report.schema.json` version 1.8.
 It records every extracted file's path, byte length, and SHA-256 plus the direct
 single-file or canonical bundle SHA-256. It also records the logical
 validation-profile revision and contract SHA-256, concrete environment revision
 and contract SHA-256, detected host, execution mode, target profile, language,
-resolved toolchain and sandbox versions, and any produced native artifact size.
+resolved toolchain and sandbox versions, OCI image identity and rootless status
+when applicable, and any produced native artifact size.
 Each phase preserves the
 exact compiler or test argv—including compile flags—and records a normalized `passed`, `failed`,
 `timed-out`, or `error` outcome alongside timing, limits, diagnostics, exit
 status, and signals.
 
-Toolchain version probes execute only root-owned, non-writable programs already
-approved by the manifest. Each manifest provides the version argv pinned by its
-profile, so tools can use their native interface—for example, `cc --version` or
-`go version`—without fallback guessing. Validation fails if a resolved version
-does not match the profile. Artifacts remain temporary; reports retain their
-fixture-relative path and byte size only. Reports can contain model-controlled
-diagnostics and must be reviewed before publication.
+Host toolchain version probes execute only root-owned, non-writable programs
+already approved by the manifest. OCI probes execute the approved program
+inside the verified image with the same isolation contract as tests. Each
+manifest provides the version argv pinned by its profile, so tools can use
+their native interface—for example, `cc --version` or `go version`—without
+fallback guessing. Validation fails if a resolved version does not match the
+profile. Artifacts remain temporary; reports retain their fixture-relative path
+and byte size only. Reports can contain model-controlled diagnostics and must
+be reviewed before publication.

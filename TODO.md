@@ -259,7 +259,7 @@ record exact versions in validation reports.
   dependency, and license separately.
 - [x] Add optional cross-compilation checks for representative ARM and RISC-V
   targets while keeping the default test suite dependency-free.
-- [ ] Implement digest-pinned OCI validation as a portable alternative to the
+- [x] Implement digest-pinned OCI validation as a portable alternative to the
   host Bubblewrap runner. Require a rootless runtime, reviewed reproducible
   image builds, verified image digests, read-only fixture mounts, no network,
   dropped capabilities, resource limits, and image metadata in validation

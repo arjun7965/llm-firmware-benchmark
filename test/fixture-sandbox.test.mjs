@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   chmodSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -20,7 +21,9 @@ import {
   readValidationHost,
   resolveExecutable,
   runFixtureValidation,
+  stageOciFixtureInputs,
   validateFixtureValidationReport,
+  validateOciSandboxMetadata,
 } from "../src/fixture-sandbox.mjs";
 import {
   getValidationEnvironmentRevision,
@@ -381,6 +384,93 @@ test("sandbox invocation isolates files, network, and build permissions", (t) =>
   );
 });
 
+test("OCI staging exposes only declared fixture inputs and rejects links", (t) => {
+  const fixture = sandboxFixture(t);
+  writeFileSync(join(fixture.fixtureRoot, "starter", "api.h"), "starter\n");
+  writeFileSync(join(fixture.fixtureRoot, "mocks", "mock.c"), "mock\n");
+  writeFileSync(
+    join(fixture.fixtureRoot, "tests", "public", "test.c"),
+    "test\n",
+  );
+  writeFileSync(
+    join(fixture.fixtureRoot, "reference", "answer.c"),
+    "secret reference\n",
+  );
+  const inputRoot = join(temporaryDirectory(t), "input");
+  stageOciFixtureInputs(
+    fixture.fixtureRoot,
+    inputRoot,
+    fixture.manifest,
+  );
+  assert.equal(readFileSync(join(inputRoot, "starter", "api.h"), "utf8"),
+    "starter\n");
+  assert.equal(readFileSync(join(inputRoot, "mocks", "mock.c"), "utf8"),
+    "mock\n");
+  assert.equal(
+    readFileSync(join(inputRoot, "tests", "public", "test.c"), "utf8"),
+    "test\n",
+  );
+  assert.equal(
+    readFileSync(join(inputRoot, "generated", "answer.c"), "utf8"),
+    "int answer(void) { return 0; }\n",
+  );
+  assert.equal(existsSync(join(inputRoot, "reference")), false);
+  assert.equal(existsSync(join(inputRoot, "scripts")), false);
+  assert.equal(existsSync(join(inputRoot, "build")), true);
+  assert.equal(existsSync(join(inputRoot, "service", "socket")), true);
+
+  symlinkSync("../generated/answer.c", join(fixture.fixtureRoot, "mocks", "link"));
+  assert.throws(
+    () => stageOciFixtureInputs(
+      fixture.fixtureRoot,
+      join(temporaryDirectory(t), "linked-input"),
+      fixture.manifest,
+    ),
+    /cannot contain symbolic links/u,
+  );
+});
+
+test("OCI report metadata binds the digest and reviewed provenance", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const execution = {
+    kind: "oci",
+    image: `ghcr.io/example/validator@${digest}`,
+    source: "https://github.com/example/validator",
+    revision: "b".repeat(40),
+  };
+  const sandbox = {
+    rootless: true,
+    image: {
+      architecture: "x86_64",
+      digest,
+      id: `sha256:${"c".repeat(64)}`,
+      operatingSystem: "linux",
+      reference: execution.image,
+      revision: execution.revision,
+      source: execution.source,
+    },
+  };
+  assert.equal(
+    validateOciSandboxMetadata(sandbox, execution, "x86_64"),
+    sandbox,
+  );
+  for (const changed of [
+    { rootless: false },
+    { image: { ...sandbox.image, digest: `sha256:${"d".repeat(64)}` } },
+    { image: { ...sandbox.image, source: "https://github.com/example/other" } },
+    { image: { ...sandbox.image, architecture: "aarch64" } },
+  ]) {
+    assert.throws(
+      () => validateOciSandboxMetadata(
+        { ...sandbox, ...changed },
+        execution,
+        "x86_64",
+      ),
+      /OCI image metadata is invalid/u,
+    );
+  }
+});
+
 test("sandbox rejects a missing attested dependency installation", (t) => {
   const fixture = sandboxFixture(t);
   const tasks = JSON.parse(readFileSync(fixture.tasksPath, "utf8"));
@@ -417,6 +507,7 @@ test("sandbox rejects a missing attested dependency installation", (t) => {
       taskId: "example-task",
       fixturesRoot: fixture.fixturesRoot,
       tasksPath: fixture.tasksPath,
+      readValidationHostImpl: matchingValidationHost,
     }),
     /dependency installation does not exist/u,
   );
@@ -1191,7 +1282,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.7");
+  assert.equal(report.schemaVersion, "1.8");
   assert.equal(report.suite, "firmware");
   assert.equal(report.validationProfile, "c11-host");
   assert.throws(
@@ -1550,7 +1641,7 @@ test("cpp17-host validation attests both C and C++ toolchains", (t) => {
   });
 
   assert.equal(report.success, true);
-  assert.equal(report.schemaVersion, "1.7");
+  assert.equal(report.schemaVersion, "1.8");
   assert.equal(report.validationProfile, "cpp17-host");
   assert.deepEqual(
     report.toolchains.map((toolchain) => toolchain.name),

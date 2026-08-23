@@ -338,7 +338,7 @@ try {
       );
     }
     if (
-      report.schemaVersion !== "1.7" ||
+      report.schemaVersion !== "1.8" ||
       report.suite !== reference.suite ||
       report.validationProfile !== validationProfile.id ||
       report.validationProfileRevision !== validationProfile.revision ||

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.5",
+  "schemaVersion": "2.6",
   "environments": {
     "debian-13-x86-64-c11-host": {
       "1": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7"
