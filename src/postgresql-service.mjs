@@ -109,6 +109,7 @@ function localInvocation(argv, {
     args: translated.slice(1),
     cwd,
     env,
+    inheritEnv: true,
     timeoutMs,
   };
 }
@@ -137,6 +138,7 @@ export function runLocalPostgresqlCommand({
         args,
         cwd,
         env,
+        inheritEnv: true,
         timeoutMs,
       },
       initialize: localInvocation(service.initializeArgv, {

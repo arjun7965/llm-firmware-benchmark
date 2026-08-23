@@ -127,7 +127,7 @@ Fixture manifests declare a matching validation profile, required tools, and
 commands. `npm run fixtures:check` validates those declarations but does not
 install tools or execute generated code.
 
-Sandboxed model-answer validation is Linux-only and additionally requires:
+Sandboxed model-answer validation is Linux-only. A host environment requires:
 
 - Bubblewrap (`bwrap`);
 - `prlimit` from util-linux; and
@@ -138,6 +138,15 @@ Ubuntu 24.04 also requires an AppArmor policy that permits Bubblewrap to create
 its user namespace. CI installs `apparmor-profiles` and enables the packaged
 `bwrap-userns-restrict` policy; it does not disable AppArmor or run the
 validator as root.
+
+An OCI environment instead requires the exact registered Podman version as a
+root-owned, non-writable executable under `/usr`, a non-root host user, local
+rootless operation, cgroup v2, the registered `/usr/bin/crun` or
+`/usr/bin/runc` and `/usr/bin/conmon` versions, the registered system seccomp
+profile hash, and the digest-pinned image already in local storage. OCI
+validation never pulls an image. The repository currently registers no OCI
+environment; image build and activation requirements are documented in
+`docs/validation-profiles.md`.
 Run `npm run fixture:validate -- --task <task-id>`. The command fails closed if
 isolation is unavailable. `npm run test:sandbox` validates the sandbox runner
 against trusted references only. Validation reports automatically capture the

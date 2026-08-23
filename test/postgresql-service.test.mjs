@@ -15,6 +15,18 @@ function invocation(command, args, cwd, timeoutMs = 2_000) {
     args,
     cwd,
     env: {},
+    inheritEnv: true,
+    timeoutMs,
+  };
+}
+
+function isolatedInvocation(command, args, cwd, env, timeoutMs = 2_000) {
+  return {
+    command,
+    args,
+    cwd,
+    env,
+    inheritEnv: false,
     timeoutMs,
   };
 }
@@ -72,4 +84,57 @@ test("service supervisor reports a server spawn failure", (t) => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /PostgreSQL did not become ready/u);
   assert.match(result.stderr, /ENOENT/u);
+});
+
+test("service supervisor can give child processes an exact environment", (t) => {
+  const temporaryRoot = mkdtempSync(join(tmpdir(), "service-test-"));
+  t.after(() => rmSync(temporaryRoot, { recursive: true, force: true }));
+  const { runRoot, serviceRoot } = createPostgresqlServiceRunRoot({
+    temporaryRoot,
+  });
+  t.after(() => removePostgresqlServiceRunRoot(runRoot));
+  const exactEnvironment = { VALIDATION_ENVIRONMENT: "isolated" };
+  const canaryName = "AMBIENT_SERVICE_ENVIRONMENT_CANARY";
+  const previousCanary = process.env[canaryName];
+  process.env[canaryName] = "must-not-be-inherited";
+  t.after(() => {
+    if (previousCanary === undefined) delete process.env[canaryName];
+    else process.env[canaryName] = previousCanary;
+  });
+
+  const result = runPostgresqlService({
+    candidate: isolatedInvocation(
+      "/usr/bin/env",
+      [],
+      temporaryRoot,
+      exactEnvironment,
+    ),
+    initialize: isolatedInvocation(
+      "/bin/true",
+      [],
+      temporaryRoot,
+      exactEnvironment,
+    ),
+    logPath: join(serviceRoot, "service.log"),
+    ready: isolatedInvocation(
+      "/bin/true",
+      [],
+      temporaryRoot,
+      exactEnvironment,
+    ),
+    runRoot,
+    shutdownTimeoutMs: 2_000,
+    start: isolatedInvocation(
+      "/bin/sleep",
+      ["30"],
+      temporaryRoot,
+      exactEnvironment,
+    ),
+    startupTimeoutMs: 2_000,
+    stop: null,
+  });
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, "VALIDATION_ENVIRONMENT=isolated\n");
+  assert.equal(result.stdout.includes(canaryName), false);
 });

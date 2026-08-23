@@ -21,7 +21,8 @@ A logical profile defines required tool names, package dependencies, sandbox
 policy, tmpfs sizes, compile/test resource limits, and exact supported
 environment references. A concrete environment independently defines its OS
 release, architecture, execution mode, exact toolchain versions, and exact
-Bubblewrap and `prlimit` versions. This lets one logical profile support
+sandbox runtime versions. Host environments pin Bubblewrap and `prlimit`; OCI
+environments pin Podman. This lets one logical profile support
 multiple distributions, architectures, or image revisions without treating
 those hosts as the same scoring environment.
 
@@ -99,10 +100,13 @@ normalizes CRLF to LF before hashing so platform checkout settings do not
 change the contract.
 Fixture manifests may invoke only toolchains declared by their profile and
 must use version-probe argv supported by every referenced environment. Before
-probing tools, the sandbox validator reads `/etc/os-release`, normalizes the
-runtime architecture, and selects exactly one supported host environment. Zero
-or multiple matches fail closed. It then rejects any resolved tool, Bubblewrap,
-or `prlimit` version that differs from that environment's pins.
+probing tools, the sandbox validator reads `/etc/os-release` and normalizes the
+runtime architecture. Without an explicit selection, it chooses exactly one
+matching host environment; zero or multiple matches fail closed. OCI
+environments must be selected by exact ID, run only on Linux with the matching
+architecture, and never take precedence over a host environment implicitly.
+The validator rejects any resolved tool or sandbox runtime version that differs
+from that environment's pins.
 
 Reports record the profile and environment IDs, revisions, contract SHA-256
 values, detected host fields, and execution mode. `repeat-scores.json` requires
@@ -114,23 +118,81 @@ same contracts while unrelated tasks may use different environments.
 Evaluators must check that every validation report used as scoring evidence
 matches that task's declared pair.
 
-## OCI Image Decision
+## OCI Execution
 
-Digest-pinned OCI images are the preferred future execution mode for profiles
-with npm, PyPI, interpreter, or service dependencies. A digest can fix the
-complete userspace and package installation across host distributions, which
-host version probes cannot attest. The registry and schemas accept only
-`image@sha256:<digest>` references for OCI environments.
+Digest-pinned OCI images are supported as a portable alternative for profiles
+whose complete userspace should not depend on the validator's distribution.
+The current registry contains host environments only; an OCI environment is
+activated only after its reviewed build recipe, published digest, runtime
+security contracts, and calibration are committed. Until then, the OCI runner
+is dormant and is not a usable validation environment. Activation appends a
+reviewed environment and, when necessary, a new logical-profile revision. It
+is never selected implicitly. Invoke a registered one with:
 
-The current runner intentionally implements only `host` environments. It
-bind-mounts host toolchains and runtime libraries into Bubblewrap and has no
-OCI runtime dependency or verified image-build pipeline. Treating an image tag
-as reproducible, or nesting an unverified container invocation inside the
-existing sandbox, would weaken the fail-closed boundary. Before activating an
-OCI environment, add a rootless runtime contract, a reviewed build recipe and
-lockfiles, image provenance, digest verification before execution, and tests
-for the resulting mount and network boundary. An OCI-only environment is not
-selected by the host runner.
+```bash
+npm run fixture:validate -- --task <task-id> --environment <environment-id>
+```
+
+The execution contract accepts only `image@sha256:<platform-manifest-digest>`
+references and records the reviewed GitHub source repository and 40-character
+source revision. Podman first inspects the already-local image without pulling,
+requires the observed digest and Linux architecture to match, and verifies the
+`org.opencontainers.image.source` and
+`org.opencontainers.image.revision` labels. Toolchain probes then run inside
+the same hardened image contract. Reports preserve the image reference,
+digest, local content ID, platform, source, revision, and rootless status.
+
+OCI validation requires a non-root caller and the environment's exact Podman
+version. Each environment also pins an exact generated `containers.conf`
+SHA-256, `/usr/bin/crun` or `/usr/bin/runc`, `/usr/bin/conmon`, their versions,
+and the SHA-256 of `/usr/share/containers/seccomp.json`. The runner places the
+configuration and an empty `XDG_CONFIG_HOME` in a private state directory and
+passes an allowlisted host environment to every Podman process, including
+service-supervisor children. Runtime inspection must prove that Podman is
+local and rootless, uses the registered low-level runtime, monitor, seccomp
+profile, cgroup v2 with `systemd`, and the non-persistent `none` event and log
+backends. Each invocation disables pulls and networking, clears inherited and
+image-defined environment variables, ignores image-declared volumes, drops all
+capabilities, sets `no-new-privileges`, disables automatic systemd behavior,
+and uses a read-only image root. The reviewed image must define UID/GID 65532;
+rootless `keep-id` mapping maps the host caller to that unprivileged identity.
+Only bounded `/tmp` and `/run` tmpfs mounts and explicit fixture mounts are
+writable.
+The validator copies the starter, mocks, public tests, and extracted answer to
+a private staging tree rather than exposing the repository. That tree is
+read-only; a separate build mount is writable only for compilation and becomes
+read-only for testing. Memory, swap, process-count, address-space, CPU,
+file-size, open-file, core-dump, wall-time, and captured-output limits apply.
+Recorded container IDs are force-removed after errors or supervisor teardown.
+The CID file, runtime configuration, and service state remain on disk with a
+recovery path in the error if forced removal fails; successful cleanup removes
+them.
+
+An image is eligible for registration only after review establishes all of the
+following:
+
+- every base image uses a digest and every downloaded artifact or package
+  closure is checksum- or lockfile-pinned;
+- the build recipe, lockfiles, source revision, target architecture, and
+  UID/GID 65532 account are committed and reviewable;
+- rebuilding the same source revision produces the reviewed filesystem content
+  under the project's documented build procedure;
+- trusted reference and mutation calibration pass inside that exact platform
+  image before its digest is added to the registry; and
+- the published image carries the required source and revision labels, and its
+  platform-manifest digest is independently resolved before registration;
+- the Podman, low-level runtime, monitor, generated configuration, and seccomp
+  fingerprints are captured on the same runner image used by calibration; and
+- CI exercises trusted references and the mutation catalog through that exact
+  registered OCI environment.
+
+Preloading or publishing images is a trusted provisioning step outside model
+answer validation. The runner never authenticates to a registry or falls back
+to a tag or a different local image. Dependency-bearing OCI-only profile
+revisions use `dependencyInstall.kind: "oci-image"` with the same digest as
+every referenced environment. Contract revisions and fingerprints remain
+append-only, so changing a recipe, package, tool, runtime, or image produces a
+new environment revision and digest.
 
 The host Bubblewrap runner supports `node-typescript` by hashing its complete
 root-owned installed tree and comparing it with the profile contract before
