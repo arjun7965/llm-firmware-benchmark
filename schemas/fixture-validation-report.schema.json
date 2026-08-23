@@ -53,7 +53,24 @@
               "runtime": { "const": "podman" },
               "limiter": { "const": "podman" },
               "rootless": { "const": true },
-              "image": { "$ref": "#/$defs/ociImage" }
+              "image": { "$ref": "#/$defs/ociImage" },
+              "containerRuntime": {
+                "$ref": "#/$defs/ociContainerRuntime"
+              },
+              "monitor": { "$ref": "#/$defs/ociMonitor" },
+              "runtimeConfigurationSha256": {
+                "$ref": "#/$defs/fingerprint"
+              },
+              "seccompProfile": { "$ref": "#/$defs/ociSeccompProfile" }
+            }
+          },
+          "toolchains": {
+            "items": {
+              "properties": {
+                "executable": {
+                  "pattern": "^oci:[a-z0-9][a-z0-9+._-]*$"
+                }
+              }
             }
           }
         }
@@ -65,7 +82,18 @@
               "runtime": { "const": "bubblewrap" },
               "limiter": { "const": "prlimit" },
               "rootless": { "const": null },
-              "image": { "const": null }
+              "image": { "const": null },
+              "containerRuntime": { "const": null },
+              "monitor": { "const": null },
+              "runtimeConfigurationSha256": { "const": null },
+              "seccompProfile": { "const": null }
+            }
+          },
+          "toolchains": {
+            "items": {
+              "properties": {
+                "executable": { "pattern": "^/usr/" }
+              }
             }
           }
         }
@@ -249,6 +277,10 @@
         "filesystem",
         "image",
         "rootless",
+        "containerRuntime",
+        "monitor",
+        "runtimeConfigurationSha256",
+        "seccompProfile",
         "resourceLimits"
       ],
       "properties": {
@@ -273,6 +305,30 @@
           ]
         },
         "rootless": { "type": ["boolean", "null"] },
+        "containerRuntime": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/ociContainerRuntime" }
+          ]
+        },
+        "monitor": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/ociMonitor" }
+          ]
+        },
+        "runtimeConfigurationSha256": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/fingerprint" }
+          ]
+        },
+        "seccompProfile": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/ociSeccompProfile" }
+          ]
+        },
         "resourceLimits": {
           "type": "object",
           "additionalProperties": false,
@@ -301,6 +357,10 @@
     "success": { "type": "boolean" }
   },
   "$defs": {
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
     "answerFile": {
       "type": "object",
       "additionalProperties": false,
@@ -401,6 +461,62 @@
           "type": "string",
           "pattern": "^[a-f0-9]{40}$"
         }
+      }
+    },
+    "ociContainerRuntime": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ociRuntimeComponent",
+          "properties": {
+            "name": { "const": "crun" },
+            "executable": { "const": "/usr/bin/crun" }
+          }
+        },
+        {
+          "$ref": "#/$defs/ociRuntimeComponent",
+          "properties": {
+            "name": { "const": "runc" },
+            "executable": { "const": "/usr/bin/runc" }
+          }
+        }
+      ]
+    },
+    "ociMonitor": {
+      "$ref": "#/$defs/ociRuntimeComponent",
+      "properties": {
+        "name": { "const": "conmon" },
+        "executable": { "const": "/usr/bin/conmon" }
+      }
+    },
+    "ociRuntimeComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executable", "name", "version", "versionArgv"],
+      "properties": {
+        "executable": {
+          "type": "string",
+          "pattern": "^/usr/bin/(?:crun|runc|conmon)$"
+        },
+        "name": { "enum": ["crun", "runc", "conmon"] },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "versionArgv": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "ociSeccompProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "const": "/usr/share/containers/seccomp.json" },
+        "sha256": { "$ref": "#/$defs/fingerprint" }
       }
     },
     "resourceLimits": {

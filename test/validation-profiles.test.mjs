@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import test from "node:test";
+import { ociRuntimeConfigurationFingerprint } from "../src/oci-sandbox.mjs";
 import {
   environmentFingerprint,
   getValidationProfile,
@@ -30,6 +31,18 @@ import {
 const ociDigest = `sha256:${"a".repeat(64)}`;
 const imageReference = `ghcr.io/example/validator@${ociDigest}`;
 const ociSourceRevision = "b".repeat(40);
+const ociContainerRuntime = Object.freeze({
+  name: "crun",
+  executable: "/usr/bin/crun",
+  version: "1.20.0",
+  versionArgs: ["--version"],
+});
+const ociMonitor = Object.freeze({
+  name: "conmon",
+  executable: "/usr/bin/conmon",
+  version: "2.1.12",
+  versionArgs: ["--version"],
+});
 
 function ociValidationDocument() {
   const environment = {
@@ -47,6 +60,11 @@ function ociValidationDocument() {
       revision: ociSourceRevision,
     },
     sandbox: {
+      configurationSha256: ociRuntimeConfigurationFingerprint({
+        containerRuntime: ociContainerRuntime,
+        monitor: ociMonitor,
+      }),
+      containerRuntime: structuredClone(ociContainerRuntime),
       runtime: {
         name: "podman",
         executable: "podman",
@@ -58,6 +76,11 @@ function ociValidationDocument() {
         executable: "podman",
         version: "5.4.2",
         versionArgs: ["--version"],
+      },
+      monitor: structuredClone(ociMonitor),
+      seccompProfile: {
+        path: "/usr/share/containers/seccomp.json",
+        sha256: "c".repeat(64),
       },
     },
     toolchains: [{
@@ -613,6 +636,26 @@ test("OCI validation environments are explicit, pinned, and platform-safe", () =
   assert.throws(
     () => validateValidationProfiles(mismatchedLimiter),
     /OCI sandbox tools differ/u,
+  );
+  const unsafeContainerRuntime = ociValidationDocument();
+  unsafeContainerRuntime.environments[0].sandbox.containerRuntime.executable =
+    "/usr/local/bin/crun";
+  assert.throws(
+    () => validateValidationProfiles(unsafeContainerRuntime),
+    /container runtime is invalid/u,
+  );
+  const unsafeSeccompProfile = ociValidationDocument();
+  unsafeSeccompProfile.environments[0].sandbox.seccompProfile.path =
+    "/tmp/seccomp.json";
+  assert.throws(
+    () => validateValidationProfiles(unsafeSeccompProfile),
+    /seccomp profile is invalid/u,
+  );
+  const missingConfigurationHash = ociValidationDocument();
+  delete missingConfigurationHash.environments[0].sandbox.configurationSha256;
+  assert.throws(
+    () => validateValidationProfiles(missingConfigurationHash),
+    /sandbox has unexpected fields/u,
   );
 
   const dependencyImage = ociValidationDocument();

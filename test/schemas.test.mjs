@@ -383,6 +383,25 @@ test("JSON Schema files declare the expected contracts", () => {
       .rootless.const,
     true,
   );
+  assert.equal(
+    fixtureValidationSchema.allOf[2].then.properties.toolchains.items
+      .properties.executable.pattern,
+    "^oci:[a-z0-9][a-z0-9+._-]*$",
+  );
+  assert.equal(
+    fixtureValidationSchema.allOf[2].else.properties.toolchains.items
+      .properties.executable.pattern,
+    "^/usr/",
+  );
+  for (const field of [
+    "containerRuntime",
+    "monitor",
+    "runtimeConfigurationSha256",
+    "seccompProfile",
+  ]) {
+    assert.ok(fixtureValidationSchema.properties.sandbox.required
+      .includes(field));
+  }
   assert.deepEqual(
     fixtureValidationSchema.$defs.ociImage.required,
     [
@@ -402,6 +421,15 @@ test("JSON Schema files declare the expected contracts", () => {
   assert.equal(fixtureValidationSchema.additionalProperties, false);
   assert.equal(validationProfilesSchema.properties.schemaVersion.const, "2.6");
   assert.equal(validationProfilesSchema.additionalProperties, false);
+  for (const field of [
+    "configurationSha256",
+    "containerRuntime",
+    "monitor",
+    "seccompProfile",
+  ]) {
+    assert.ok(validationProfilesSchema.$defs.environment.allOf[0]
+      .then.properties.sandbox.required.includes(field));
+  }
   assert.equal(
     validationProfilesSchema.$defs.dependencyInstall.oneOf.length,
     3,

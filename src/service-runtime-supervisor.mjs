@@ -29,7 +29,7 @@ function requirePositiveInteger(value, name) {
 function validateInvocation(invocation, name) {
   requireExactKeys(
     invocation,
-    ["args", "command", "cwd", "env", "timeoutMs"],
+    ["args", "command", "cwd", "env", "inheritEnv", "timeoutMs"],
     name,
   );
   if (
@@ -40,6 +40,7 @@ function validateInvocation(invocation, name) {
       typeof argument !== "string" || argument.includes("\0")) ||
     typeof invocation.cwd !== "string" ||
     invocation.cwd === "" ||
+    typeof invocation.inheritEnv !== "boolean" ||
     !invocation.env ||
     typeof invocation.env !== "object" ||
     Array.isArray(invocation.env) ||
@@ -97,10 +98,9 @@ function loadConfiguration(path) {
 function invocationOptions(invocation, overrides = {}) {
   return {
     cwd: invocation.cwd,
-    env: {
-      ...process.env,
-      ...invocation.env,
-    },
+    env: invocation.inheritEnv
+      ? { ...process.env, ...invocation.env }
+      : invocation.env,
     killSignal: "SIGKILL",
     timeout: invocation.timeoutMs,
     ...overrides,

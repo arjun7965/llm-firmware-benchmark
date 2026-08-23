@@ -438,8 +438,37 @@ test("OCI report metadata binds the digest and reviewed provenance", () => {
     source: "https://github.com/example/validator",
     revision: "b".repeat(40),
   };
+  const environment = {
+    execution,
+    host: { architecture: "x86_64" },
+    sandbox: {
+      configurationSha256: "d".repeat(64),
+      containerRuntime: {
+        executable: "/usr/bin/crun",
+        name: "crun",
+        version: "1.20.0",
+        versionArgs: ["--version"],
+      },
+      monitor: {
+        executable: "/usr/bin/conmon",
+        name: "conmon",
+        version: "2.1.12",
+        versionArgs: ["--version"],
+      },
+      seccompProfile: {
+        path: "/usr/share/containers/seccomp.json",
+        sha256: "e".repeat(64),
+      },
+    },
+  };
   const sandbox = {
     rootless: true,
+    containerRuntime: {
+      executable: "/usr/bin/crun",
+      name: "crun",
+      version: "crun version 1.20.0",
+      versionArgv: ["/usr/bin/crun", "--version"],
+    },
     image: {
       architecture: "x86_64",
       digest,
@@ -449,9 +478,20 @@ test("OCI report metadata binds the digest and reviewed provenance", () => {
       revision: execution.revision,
       source: execution.source,
     },
+    monitor: {
+      executable: "/usr/bin/conmon",
+      name: "conmon",
+      version: "conmon version 2.1.12",
+      versionArgv: ["/usr/bin/conmon", "--version"],
+    },
+    runtimeConfigurationSha256: "d".repeat(64),
+    seccompProfile: {
+      path: "/usr/share/containers/seccomp.json",
+      sha256: "e".repeat(64),
+    },
   };
   assert.equal(
-    validateOciSandboxMetadata(sandbox, execution, "x86_64"),
+    validateOciSandboxMetadata(sandbox, environment),
     sandbox,
   );
   for (const changed of [
@@ -463,12 +503,31 @@ test("OCI report metadata binds the digest and reviewed provenance", () => {
     assert.throws(
       () => validateOciSandboxMetadata(
         { ...sandbox, ...changed },
-        execution,
-        "x86_64",
+        environment,
       ),
       /OCI image metadata is invalid/u,
     );
   }
+  assert.throws(
+    () => validateOciSandboxMetadata({
+      ...sandbox,
+      containerRuntime: {
+        ...sandbox.containerRuntime,
+        executable: "/usr/local/bin/crun",
+      },
+    }, environment),
+    /container runtime metadata is invalid/u,
+  );
+  assert.throws(
+    () => validateOciSandboxMetadata({
+      ...sandbox,
+      seccompProfile: {
+        ...sandbox.seccompProfile,
+        sha256: "f".repeat(64),
+      },
+    }, environment),
+    /security metadata is invalid/u,
+  );
 });
 
 test("sandbox rejects a missing attested dependency installation", (t) => {

@@ -75,7 +75,12 @@ Host compilation and testing run in separate Bubblewrap namespaces with:
 OCI compilation and testing run as separate containers under a local,
 rootless, seccomp-enabled Podman runtime with cgroup v2. The runner verifies the
 already-local platform image against its registered digest and source/revision
-labels and uses `--pull=never`. Each container has no network, IPC sharing,
+labels and uses `--pull=never`. A private, fingerprinted `containers.conf`
+pins the low-level runtime, monitor, cgroup manager, seccomp profile, empty
+hooks and CDI directories, and safe container defaults. A private
+`XDG_CONFIG_HOME` and allowlisted process environment prevent ambient user
+Podman configuration or remote-connection variables from changing execution.
+Each container has no network, IPC sharing,
 capabilities, inherited environment, persistent runtime log, image-declared
 volume, or writable image root. `no-new-privileges`, a private PID and cgroup
 namespace, a fixed unprivileged keep-id mapping, memory/swap and PID cgroups,
@@ -84,7 +89,8 @@ public tests, and answers are copied to a private read-only staging mount. The
 separate build mount is writable during compilation and read-only during tests;
 only bounded `/tmp` and `/run` tmpfs mounts are otherwise writable. Container
 IDs are recorded so timeout and service-supervisor cleanup can force-remove any
-remaining container.
+remaining container. A failed forced removal preserves the CID, private runtime
+configuration, and service directory and reports the recovery path.
 
 For PostgreSQL, trusted Node orchestration starts the server in its own
 Bubblewrap process and runs `psql` in a separate candidate namespace. They
@@ -124,7 +130,8 @@ single-file or canonical bundle SHA-256. It also records the logical
 validation-profile revision and contract SHA-256, concrete environment revision
 and contract SHA-256, detected host, execution mode, target profile, language,
 resolved toolchain and sandbox versions, OCI image identity and rootless status
-when applicable, and any produced native artifact size.
+when applicable, the generated runtime-configuration hash, low-level runtime,
+monitor, and seccomp-profile evidence, and any produced native artifact size.
 Each phase preserves the
 exact compiler or test argv—including compile flags—and records a normalized `passed`, `failed`,
 `timed-out`, or `error` outcome alongside timing, limits, diagnostics, exit

@@ -29,6 +29,8 @@ const sourceRepositoryPattern =
   /^https:\/\/github\.com\/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?\/[A-Za-z0-9](?:[A-Za-z0-9_.-]*[A-Za-z0-9])?(?:\.git)?$/u;
 const sourceRevisionPattern = /^[a-f0-9]{40}$/u;
 const fingerprintPattern = /^[a-f0-9]{64}$/u;
+const ociSeccompProfilePath = "/usr/share/containers/seccomp.json";
+const ociContainerRuntimeNames = new Set(["crun", "runc"]);
 const lockfilePattern = /^validation-locks\/[A-Za-z0-9._/-]+$/u;
 const dependencyInstallMountPattern = /^\/workspace\/[A-Za-z0-9._-]+$/u;
 const resourceLimitFields = [
@@ -592,6 +594,35 @@ function validateSandboxTool(tool, role, environment) {
   );
 }
 
+function validateOciSandboxComponent(component, role, environmentId) {
+  requireExactFields(
+    component,
+    ["executable", "name", "version", "versionArgs"],
+    `validation environment ${environmentId} ${role}`,
+  );
+  const expectedNames = role === "container runtime"
+    ? ociContainerRuntimeNames
+    : new Set(["conmon"]);
+  if (
+    typeof component.name !== "string" ||
+    !expectedNames.has(component.name) ||
+    component.executable !== `/usr/bin/${component.name}`
+  ) {
+    throw new TypeError(
+      `validation environment ${environmentId} ${role} is invalid`,
+    );
+  }
+  requireString(
+    component.version,
+    `validation environment ${environmentId} ${role} version`,
+    versionPattern,
+  );
+  validateVersionArgs(
+    component.versionArgs,
+    `validation environment ${environmentId} ${role}`,
+  );
+}
+
 function validateEnvironment(environment) {
   requireExactFields(
     environment,
@@ -654,9 +685,19 @@ function validateEnvironment(environment) {
       `validation environment ${environment.id} execution kind is invalid`,
     );
   }
+  const sandboxFields = environment.execution.kind === "oci"
+    ? [
+      "configurationSha256",
+      "containerRuntime",
+      "limiter",
+      "monitor",
+      "runtime",
+      "seccompProfile",
+    ]
+    : ["limiter", "runtime"];
   requireExactFields(
     environment.sandbox,
-    ["limiter", "runtime"],
+    sandboxFields,
     `validation environment ${environment.id} sandbox`,
   );
   validateSandboxTool(
@@ -682,6 +723,40 @@ function validateEnvironment(environment) {
   ) {
     throw new TypeError(
       `validation environment ${environment.id} OCI sandbox tools differ`,
+    );
+  }
+  if (environment.execution.kind === "oci") {
+    validateOciSandboxComponent(
+      environment.sandbox.containerRuntime,
+      "container runtime",
+      environment.id,
+    );
+    validateOciSandboxComponent(
+      environment.sandbox.monitor,
+      "monitor",
+      environment.id,
+    );
+    requireString(
+      environment.sandbox.configurationSha256,
+      `validation environment ${environment.id} runtime configuration`,
+      fingerprintPattern,
+    );
+    requireExactFields(
+      environment.sandbox.seccompProfile,
+      ["path", "sha256"],
+      `validation environment ${environment.id} seccomp profile`,
+    );
+    if (
+      environment.sandbox.seccompProfile.path !== ociSeccompProfilePath
+    ) {
+      throw new TypeError(
+        `validation environment ${environment.id} seccomp profile is invalid`,
+      );
+    }
+    requireString(
+      environment.sandbox.seccompProfile.sha256,
+      `validation environment ${environment.id} seccomp profile sha256`,
+      fingerprintPattern,
     );
   }
   validateToolchains(

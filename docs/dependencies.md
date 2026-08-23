@@ -141,9 +141,12 @@ validator as root.
 
 An OCI environment instead requires the exact registered Podman version as a
 root-owned, non-writable executable under `/usr`, a non-root host user, local
-rootless operation, seccomp, cgroup v2, and the digest-pinned image already in
-local storage. OCI validation never pulls an image. Image build and activation
-requirements are documented in `docs/validation-profiles.md`.
+rootless operation, cgroup v2, the registered `/usr/bin/crun` or
+`/usr/bin/runc` and `/usr/bin/conmon` versions, the registered system seccomp
+profile hash, and the digest-pinned image already in local storage. OCI
+validation never pulls an image. The repository currently registers no OCI
+environment; image build and activation requirements are documented in
+`docs/validation-profiles.md`.
 Run `npm run fixture:validate -- --task <task-id>`. The command fails closed if
 isolation is unavailable. `npm run test:sandbox` validates the sandbox runner
 against trusted references only. Validation reports automatically capture the

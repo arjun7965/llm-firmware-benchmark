@@ -158,6 +158,55 @@
         }
       ]
     },
+    "ociContainerRuntime": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "executable", "version", "versionArgs"],
+          "properties": {
+            "name": { "const": "crun" },
+            "executable": { "const": "/usr/bin/crun" },
+            "version": { "$ref": "#/$defs/version" },
+            "versionArgs": { "$ref": "#/$defs/versionArgs" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "executable", "version", "versionArgs"],
+          "properties": {
+            "name": { "const": "runc" },
+            "executable": { "const": "/usr/bin/runc" },
+            "version": { "$ref": "#/$defs/version" },
+            "versionArgs": { "$ref": "#/$defs/versionArgs" }
+          }
+        }
+      ]
+    },
+    "ociMonitor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "executable", "version", "versionArgs"],
+      "properties": {
+        "name": { "const": "conmon" },
+        "executable": { "const": "/usr/bin/conmon" },
+        "version": { "$ref": "#/$defs/version" },
+        "versionArgs": { "$ref": "#/$defs/versionArgs" }
+      }
+    },
+    "ociSeccompProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "const": "/usr/share/containers/seccomp.json" },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
     "environment": {
       "type": "object",
       "additionalProperties": false,
@@ -175,6 +224,12 @@
           "then": {
             "properties": {
               "sandbox": {
+                "required": [
+                  "configurationSha256",
+                  "containerRuntime",
+                  "monitor",
+                  "seccompProfile"
+                ],
                 "properties": {
                   "runtime": {
                     "properties": {
@@ -196,6 +251,10 @@
             "properties": {
               "sandbox": {
                 "properties": {
+                  "configurationSha256": false,
+                  "containerRuntime": false,
+                  "monitor": false,
+                  "seccompProfile": false,
                   "runtime": {
                     "properties": {
                       "name": { "const": "bubblewrap" },
@@ -236,7 +295,16 @@
           "required": ["runtime", "limiter"],
           "properties": {
             "runtime": { "$ref": "#/$defs/sandboxRuntime" },
-            "limiter": { "$ref": "#/$defs/sandboxLimiter" }
+            "limiter": { "$ref": "#/$defs/sandboxLimiter" },
+            "configurationSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "containerRuntime": {
+              "$ref": "#/$defs/ociContainerRuntime"
+            },
+            "monitor": { "$ref": "#/$defs/ociMonitor" },
+            "seccompProfile": { "$ref": "#/$defs/ociSeccompProfile" }
           }
         },
         "toolchains": {

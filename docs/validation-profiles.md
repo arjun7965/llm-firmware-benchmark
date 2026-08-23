@@ -123,9 +123,11 @@ matches that task's declared pair.
 Digest-pinned OCI images are supported as a portable alternative for profiles
 whose complete userspace should not depend on the validator's distribution.
 The current registry contains host environments only; an OCI environment is
-activated by appending a reviewed environment and, when necessary, a new
-logical-profile revision. It is never selected implicitly. Invoke a registered
-one with:
+activated only after its reviewed build recipe, published digest, runtime
+security contracts, and calibration are committed. Until then, the OCI runner
+is dormant and is not a usable validation environment. Activation appends a
+reviewed environment and, when necessary, a new logical-profile revision. It
+is never selected implicitly. Invoke a registered one with:
 
 ```bash
 npm run fixture:validate -- --task <task-id> --environment <environment-id>
@@ -141,20 +143,30 @@ the same hardened image contract. Reports preserve the image reference,
 digest, local content ID, platform, source, revision, and rootless status.
 
 OCI validation requires a non-root caller and the environment's exact Podman
-version. Runtime inspection must prove that Podman is local and rootless, uses
-seccomp and cgroup v2, and supports the non-persistent `none` log driver. Each
-invocation disables pulls and networking, clears inherited and image-defined
-environment variables, ignores image-declared volumes, drops all capabilities,
-sets `no-new-privileges`, disables automatic systemd behavior, and uses a
-read-only image root. The reviewed image must define UID/GID 65532; rootless
-`keep-id` mapping maps the host caller to that unprivileged identity. Only
-bounded `/tmp` and `/run` tmpfs mounts and explicit fixture mounts are writable.
+version. Each environment also pins an exact generated `containers.conf`
+SHA-256, `/usr/bin/crun` or `/usr/bin/runc`, `/usr/bin/conmon`, their versions,
+and the SHA-256 of `/usr/share/containers/seccomp.json`. The runner places the
+configuration and an empty `XDG_CONFIG_HOME` in a private state directory and
+passes an allowlisted host environment to every Podman process, including
+service-supervisor children. Runtime inspection must prove that Podman is
+local and rootless, uses the registered low-level runtime, monitor, seccomp
+profile, cgroup v2 with `systemd`, and the non-persistent `none` event and log
+backends. Each invocation disables pulls and networking, clears inherited and
+image-defined environment variables, ignores image-declared volumes, drops all
+capabilities, sets `no-new-privileges`, disables automatic systemd behavior,
+and uses a read-only image root. The reviewed image must define UID/GID 65532;
+rootless `keep-id` mapping maps the host caller to that unprivileged identity.
+Only bounded `/tmp` and `/run` tmpfs mounts and explicit fixture mounts are
+writable.
 The validator copies the starter, mocks, public tests, and extracted answer to
 a private staging tree rather than exposing the repository. That tree is
 read-only; a separate build mount is writable only for compilation and becomes
 read-only for testing. Memory, swap, process-count, address-space, CPU,
 file-size, open-file, core-dump, wall-time, and captured-output limits apply.
 Recorded container IDs are force-removed after errors or supervisor teardown.
+The CID file, runtime configuration, and service state remain on disk with a
+recovery path in the error if forced removal fails; successful cleanup removes
+them.
 
 An image is eligible for registration only after review establishes all of the
 following:
@@ -168,7 +180,11 @@ following:
 - trusted reference and mutation calibration pass inside that exact platform
   image before its digest is added to the registry; and
 - the published image carries the required source and revision labels, and its
-  platform-manifest digest is independently resolved before registration.
+  platform-manifest digest is independently resolved before registration;
+- the Podman, low-level runtime, monitor, generated configuration, and seccomp
+  fingerprints are captured on the same runner image used by calibration; and
+- CI exercises trusted references and the mutation catalog through that exact
+  registered OCI environment.
 
 Preloading or publishing images is a trusted provisioning step outside model
 answer validation. The runner never authenticates to a registry or falls back

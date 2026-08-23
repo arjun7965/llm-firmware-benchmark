@@ -36,9 +36,11 @@ import { loadTasks } from "./harness.mjs";
 import {
   buildOciInvocation,
   cleanupOciContainer,
+  createOciRuntimeEnvironment,
   inspectOciImage,
   inspectOciRuntime,
   inspectOciToolchain,
+  removeOciStateRoot,
   runOciInvocation,
 } from "./oci-sandbox.mjs";
 import {
@@ -748,12 +750,13 @@ export function buildSandboxInvocation({
   };
 }
 
-function serviceInvocation(invocation, cwd) {
+function serviceInvocation(invocation, cwd, environment = null) {
   return {
     command: invocation.command,
     args: invocation.args,
     cwd,
-    env: {},
+    env: environment ?? {},
+    inheritEnv: environment === null,
     timeoutMs: invocation.options.timeout,
   };
 }
@@ -864,6 +867,7 @@ function runPostgresqlOciPhase({
   runPostgresqlServiceImpl,
   runtimeEnvironment,
   runtimePath,
+  stateRoot,
   spawnTool,
 }) {
   const service = profile.testRuntime?.service;
@@ -873,7 +877,7 @@ function runPostgresqlOciPhase({
   const { runRoot, serviceRoot } = createPostgresqlServiceRunRoot();
   const cidFiles = [];
   const newCidFile = (id) => {
-    const cidFile = join(runRoot, `${id}-${randomUUID()}.cid`);
+    const cidFile = join(stateRoot, `${id}-${randomUUID()}.cid`);
     cidFiles.push(cidFile);
     return cidFile;
   };
@@ -939,13 +943,17 @@ function runPostgresqlOciPhase({
       Math.min(service.startupTimeoutMs, 1_000),
     );
     return runPostgresqlServiceImpl({
-      candidate: serviceInvocation(candidate, fixtureRoot),
-      initialize: serviceInvocation(initialize, fixtureRoot),
+      candidate: serviceInvocation(candidate, fixtureRoot, runtimeEnvironment),
+      initialize: serviceInvocation(
+        initialize,
+        fixtureRoot,
+        runtimeEnvironment,
+      ),
       logPath: join(serviceRoot, "postgres.log"),
-      ready: serviceInvocation(ready, fixtureRoot),
+      ready: serviceInvocation(ready, fixtureRoot, runtimeEnvironment),
       runRoot,
       shutdownTimeoutMs: service.shutdownTimeoutMs,
-      start: serviceInvocation(start, fixtureRoot),
+      start: serviceInvocation(start, fixtureRoot, runtimeEnvironment),
       startupTimeoutMs: service.startupTimeoutMs,
       stop: null,
     });
@@ -965,7 +973,9 @@ function runPostgresqlOciPhase({
         }
       }
     } finally {
-      removePostgresqlServiceRunRoot(runRoot);
+      if (cleanupError === null) {
+        removePostgresqlServiceRunRoot(runRoot);
+      }
     }
     if (cleanupError) throw cleanupError;
   }
@@ -1045,11 +1055,38 @@ function writeReport(path, report) {
   }
 }
 
-export function validateOciSandboxMetadata(
-  sandbox,
-  execution,
-  expectedArchitecture,
-) {
+function validateOciRuntimeComponentMetadata(observed, expected, role) {
+  requireExactKeys(
+    observed,
+    ["executable", "name", "version", "versionArgv"],
+    `fixture validation OCI ${role}`,
+  );
+  const expectedVersionArgv = [
+    expected.executable,
+    ...expected.versionArgs,
+  ];
+  if (
+    observed.executable !== expected.executable ||
+    observed.name !== expected.name ||
+    typeof observed.version !== "string" ||
+    observed.version.length === 0 ||
+    observed.version.length > 1024 ||
+    observed.version.includes("\0") ||
+    !versionMatches(observed.version, expected.version) ||
+    !Array.isArray(observed.versionArgv) ||
+    observed.versionArgv.length !== expectedVersionArgv.length ||
+    observed.versionArgv.some((argument, index) =>
+      argument !== expectedVersionArgv[index])
+  ) {
+    throw new TypeError(
+      `fixture validation OCI ${role} metadata is invalid`,
+    );
+  }
+}
+
+export function validateOciSandboxMetadata(sandbox, environment) {
+  const { execution } = environment;
+  const expectedArchitecture = environment.host.architecture;
   requireExactKeys(
     sandbox.image,
     [
@@ -1079,6 +1116,32 @@ export function validateOciSandboxMetadata(
   ) {
     throw new TypeError(
       "fixture validation OCI image metadata is invalid",
+    );
+  }
+  validateOciRuntimeComponentMetadata(
+    sandbox.containerRuntime,
+    environment.sandbox.containerRuntime,
+    "container runtime",
+  );
+  validateOciRuntimeComponentMetadata(
+    sandbox.monitor,
+    environment.sandbox.monitor,
+    "monitor",
+  );
+  requireExactKeys(
+    sandbox.seccompProfile,
+    ["path", "sha256"],
+    "fixture validation OCI seccomp profile",
+  );
+  if (
+    sandbox.runtimeConfigurationSha256 !==
+      environment.sandbox.configurationSha256 ||
+    sandbox.seccompProfile.path !== environment.sandbox.seccompProfile.path ||
+    sandbox.seccompProfile.sha256 !==
+      environment.sandbox.seccompProfile.sha256
+  ) {
+    throw new TypeError(
+      "fixture validation OCI security metadata is invalid",
     );
   }
   return sandbox;
@@ -1268,15 +1331,19 @@ export function validateFixtureValidationReport(report) {
   requireExactKeys(
     report.sandbox,
     report.schemaVersion === "1.8" ? [
+      "containerRuntime",
       "filesystem",
       "image",
       "limiter",
       "limiterVersion",
+      "monitor",
       "network",
       "resourceLimits",
       "rootless",
       "runtime",
+      "runtimeConfigurationSha256",
       "runtimeVersion",
+      "seccompProfile",
     ] : [
       "filesystem",
       "limiter",
@@ -1298,7 +1365,14 @@ export function validateFixtureValidationReport(report) {
   }
   if (report.schemaVersion === "1.8") {
     if (expectedExecution.kind === "host") {
-      if (report.sandbox.image !== null || report.sandbox.rootless !== null) {
+      if (
+        report.sandbox.image !== null ||
+        report.sandbox.rootless !== null ||
+        report.sandbox.containerRuntime !== null ||
+        report.sandbox.monitor !== null ||
+        report.sandbox.runtimeConfigurationSha256 !== null ||
+        report.sandbox.seccompProfile !== null
+      ) {
         throw new TypeError(
           "host fixture validation cannot record OCI sandbox metadata",
         );
@@ -1306,8 +1380,7 @@ export function validateFixtureValidationReport(report) {
     } else {
       validateOciSandboxMetadata(
         report.sandbox,
-        expectedExecution,
-        validationEnvironment.host.architecture,
+        validationEnvironment,
       );
     }
   }
@@ -1642,6 +1715,8 @@ export function runFixtureValidation({
     let sandboxRuntime;
     let sandboxLimiter;
     let imageMetadata = null;
+    let runtimeConfigurationSha256 = null;
+    let ociRuntimeEnvironment = runtimeEnvironment;
     let toolchains;
     const profileToolchains = new Map(
       validationProfile.toolchains.map((toolchain) => [
@@ -1700,12 +1775,44 @@ export function runFixtureValidation({
         validationEnvironment.sandbox.runtime.executable,
         { pathValue },
       );
+      const containerRuntime = validationEnvironment.sandbox.containerRuntime;
+      const monitor = validationEnvironment.sandbox.monitor;
+      const resolvedContainerRuntime = resolveExecutableImpl(
+        containerRuntime.name,
+        { pathValue },
+      );
+      const resolvedMonitor = resolveExecutableImpl(
+        monitor.name,
+        { pathValue },
+      );
+      if (
+        resolvedContainerRuntime !== containerRuntime.executable ||
+        resolvedMonitor !== monitor.executable
+      ) {
+        throw new TypeError(
+          "OCI runtime components do not match their absolute contracts",
+        );
+      }
+      const preparedRuntime = createOciRuntimeEnvironment({
+        stateRoot: ociStateRoot,
+        containerRuntime,
+        monitor,
+        expectedConfigurationSha256:
+          validationEnvironment.sandbox.configurationSha256,
+        environment: runtimeEnvironment,
+      });
+      runtimeConfigurationSha256 = preparedRuntime.configurationSha256;
+      ociRuntimeEnvironment = preparedRuntime.environment;
       sandboxRuntime = inspectOciRuntime({
         runtimePath,
         expectedVersion: validationEnvironment.sandbox.runtime.version,
         versionArgs: validationEnvironment.sandbox.runtime.versionArgs,
+        containerRuntime,
+        monitor,
+        expectedSeccompSha256:
+          validationEnvironment.sandbox.seccompProfile.sha256,
         spawn: spawnTool,
-        environment: runtimeEnvironment,
+        environment: ociRuntimeEnvironment,
         userId: hostUserId,
       });
       if (sandboxRuntime.architecture !== validationHost.architecture) {
@@ -1725,7 +1832,7 @@ export function runFixtureValidation({
         execution: validationEnvironment.execution,
         expectedArchitecture: validationEnvironment.host.architecture,
         spawn: spawnTool,
-        environment: runtimeEnvironment,
+        environment: ociRuntimeEnvironment,
       });
       toolchains = validationProfile.toolchains.map((toolchain) =>
         inspectOciToolchain({
@@ -1741,7 +1848,7 @@ export function runFixtureValidation({
           environment: ociCommandEnvironment(manifest, validationProfile, {
             phase: "test",
           }),
-          runtimeEnvironment,
+          runtimeEnvironment: ociRuntimeEnvironment,
           cidFile: join(
             ociStateRoot,
             `tool-${toolchain.name}-${randomUUID()}.cid`,
@@ -1809,8 +1916,9 @@ export function runFixtureValidation({
             manifest,
             profile: validationProfile,
             runPostgresqlServiceImpl,
-            runtimeEnvironment,
+            runtimeEnvironment: ociRuntimeEnvironment,
             runtimePath,
+            stateRoot: ociStateRoot,
             spawnTool,
           });
       } else if (executionKind === "host") {
@@ -1852,7 +1960,7 @@ export function runFixtureValidation({
         result = runOciInvocation(invocation, {
           spawn,
           cleanupSpawn: spawnTool,
-          environment: runtimeEnvironment,
+          environment: ociRuntimeEnvironment,
         });
       }
       const finishedAt = now();
@@ -1889,6 +1997,14 @@ export function runFixtureValidation({
         filesystem: "isolated",
         image: imageMetadata,
         rootless: executionKind === "oci" ? true : null,
+        containerRuntime: executionKind === "oci"
+          ? sandboxRuntime.containerRuntime
+          : null,
+        monitor: executionKind === "oci" ? sandboxRuntime.monitor : null,
+        runtimeConfigurationSha256,
+        seccompProfile: executionKind === "oci"
+          ? sandboxRuntime.seccompProfile
+          : null,
         resourceLimits: validationProfile.sandbox.resourceLimits,
       },
       toolchains,
@@ -1913,7 +2029,7 @@ export function runFixtureValidation({
       rmSync(inputRoot, { recursive: true, force: true });
     }
     if (ociStateRoot !== null) {
-      rmSync(ociStateRoot, { recursive: true, force: true });
+      removeOciStateRoot(ociStateRoot);
     }
   }
 }
