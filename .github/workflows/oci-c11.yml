@@ -238,6 +238,7 @@ jobs:
           retention-days: 30
 
   calibrate:
+    if: github.event_name != 'workflow_dispatch' || inputs.publish != true
     needs: activation
     runs-on: ubuntu-24.04
     timeout-minutes: 45

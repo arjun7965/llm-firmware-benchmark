@@ -141,7 +141,10 @@ test("OCI workflow gates publication and calibrates the registered digest", () =
   assert.match(workflow, /publish-oci-c11/u);
   assert.match(workflow, /packages: write/u);
   assert.match(workflow, /activation:\n    needs: recipe/u);
-  assert.match(workflow, /calibrate:\n    needs: activation/u);
+  assert.match(
+    workflow,
+    /calibrate:\n    if: github\.event_name != 'workflow_dispatch' \|\| inputs\.publish != true\n    needs: activation/u,
+  );
   assert.match(workflow, /skopeo=1\.13\.3\+ds1-2ubuntu0\.24\.04\.3/u);
   assert.match(workflow, /base\.indexReference/u);
   assert.match(
