@@ -259,13 +259,13 @@ record exact versions in validation reports.
   dependency, and license separately.
 - [x] Add optional cross-compilation checks for representative ARM and RISC-V
   targets while keeping the default test suite dependency-free.
-- [ ] Activate digest-pinned OCI validation as a portable alternative to the
+- [x] Activate digest-pinned OCI validation as a portable alternative to the
   host Bubblewrap runner.
   - [x] Implement the dormant, fail-closed Podman execution path, including
     isolated runtime configuration, image and security attestation, read-only
     fixture mounts, no network, dropped capabilities, resource limits,
     recovery-state preservation, reports, and unit tests.
-  - [ ] Commit and review a reproducible image recipe, publish its
+  - [x] Commit and review a reproducible image recipe, publish its
     platform-manifest digest, register the matching OCI environment, and run
     trusted-reference and mutation calibration in CI before using it as
     scoring evidence.

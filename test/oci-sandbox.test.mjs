@@ -517,7 +517,6 @@ test("OCI invocations enforce isolation, limits, and read-only test inputs", (t)
     "--memory=536870912b",
     "--memory-swap=536870913b",
     "--pids-limit=256",
-    "--ulimit=as=536870912:536870912",
     "--ulimit=cpu=15:15",
     "--ulimit=fsize=16777216:16777216",
     "--ulimit=nofile=64:64",
@@ -525,6 +524,10 @@ test("OCI invocations enforce isolation, limits, and read-only test inputs", (t)
   ]) {
     assert.ok(compile.args.includes(argument), `missing ${argument}`);
   }
+  assert.equal(
+    compile.args.some((argument) => argument.startsWith("--ulimit=as=")),
+    false,
+  );
   assert.equal(compile.command, "/usr/bin/podman");
   assert.equal(compile.options.timeout, 30_000);
   assert.equal(compile.args.includes("--privileged"), false);
@@ -720,7 +723,31 @@ test("OCI toolchain probes execute inside the pinned sandbox", (t) => {
   ]);
   assert.ok(calls[0].args.includes("--pull=never"));
   assert.ok(calls[0].args.includes("--network=none"));
+  assert.equal(calls[0].options.timeout, 60_000);
   assert.deepEqual(calls[0].options.env, {
     CONTAINERS_CONF: "/tmp/containers.conf",
   });
+
+  assert.throws(
+    () => inspectOciToolchain({
+      runtimePath: "/usr/bin/podman",
+      execution,
+      inputRoot: join(root, "input"),
+      buildRoot: join(root, "build"),
+      manifest,
+      profile,
+      name: "cc",
+      versionArgs: ["--version"],
+      expectedVersion: "14.2.0",
+      environment: { PATH: "/usr/bin:/bin" },
+      cidFile: join(root, "failed-probe.cid"),
+      spawn: () => ({
+        status: 125,
+        signal: null,
+        stdout: "",
+        stderr: "runtime rejected an isolation option\nsecond line\n",
+      }),
+    }),
+    /failed: status 125; runtime rejected an isolation option second line/u,
+  );
 });

@@ -14,6 +14,7 @@ import { resolve } from "node:path";
 
 const maximumOutputBytes = 1024 * 1024;
 const probeTimeoutMs = 5_000;
+const containerProbeTimeoutMs = 60_000;
 const ociProcessLimit = 256;
 const ociUserId = 65_532;
 const imagePattern =
@@ -54,7 +55,19 @@ function requireObject(value, name) {
 
 function requireSuccessfulResult(result, name) {
   if (result.error || (result.signal ?? null) !== null || result.status !== 0) {
-    throw new TypeError(`${name} failed`);
+    const diagnostic = [
+      Number.isInteger(result.status) ? `status ${result.status}` : null,
+      typeof result.signal === "string" ? `signal ${result.signal}` : null,
+      typeof result.error?.code === "string"
+        ? `spawn ${result.error.code}`
+        : null,
+      typeof result.stderr === "string"
+        ? result.stderr.replace(/[\u0000-\u001f\u007f]+/gu, " ").trim()
+        : null,
+    ].filter(Boolean).join("; ").slice(0, 1024);
+    throw new TypeError(
+      `${name} failed${diagnostic === "" ? "" : `: ${diagnostic}`}`,
+    );
   }
   return result;
 }
@@ -652,7 +665,6 @@ export function buildOciInvocation({
     `--memory=${limits.addressSpaceBytes}b`,
     `--memory-swap=${memorySwapBytes}b`,
     `--pids-limit=${ociProcessLimit}`,
-    `--ulimit=as=${limits.addressSpaceBytes}:${limits.addressSpaceBytes}`,
     `--ulimit=cpu=${limits.cpuSeconds}:${limits.cpuSeconds}`,
     `--ulimit=fsize=${limits.fileBytes}:${limits.fileBytes}`,
     `--ulimit=nofile=${limits.openFiles}:${limits.openFiles}`,
@@ -807,7 +819,7 @@ export function inspectOciToolchain({
       id: "oci-toolchain-probe",
       phase: "test",
       requiredTools: [name],
-      timeoutMs: probeTimeoutMs,
+      timeoutMs: containerProbeTimeoutMs,
     },
     environment,
     cidFile,

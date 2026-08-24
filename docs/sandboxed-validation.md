@@ -6,6 +6,8 @@ Extracted model code is untrusted. Validation is opt-in and Linux-only:
 npm run fixture:extract -- --result results/<task>--<model>.json
 npm run fixture:validate -- --task <task>
 npm run fixture:validate -- --task <task> --environment <oci-environment-id>
+npm run fixture:validate -- --task binary-parser \
+  --environment debian-12-x86-64-c11-oci
 ```
 
 The default host path requires Bubblewrap, `prlimit`, and each manifest

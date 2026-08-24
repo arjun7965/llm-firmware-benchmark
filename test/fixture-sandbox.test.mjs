@@ -1352,7 +1352,7 @@ test("sandbox validation records successful compile and test phases", (t) => {
     }),
     /cpp17-host fixture validation reports require schemaVersion 1\.7/u,
   );
-  assert.equal(report.validationProfileRevision, 3);
+  assert.equal(report.validationProfileRevision, 4);
   assert.match(report.validationProfileSha256, /^[a-f0-9]{64}$/u);
   assert.deepEqual(report.validationEnvironment.host, {
     operatingSystem: "ubuntu",

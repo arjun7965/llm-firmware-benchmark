@@ -1,6 +1,9 @@
 {
   "schemaVersion": "2.6",
   "environments": {
+    "debian-12-x86-64-c11-oci": {
+      "1": "fdd7c7103c1cca2705876d38934e33bd0b1ad6ed1bebdb951a6543110aaaaaf2"
+    },
     "debian-13-x86-64-c11-host": {
       "1": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7"
     },
@@ -42,7 +45,8 @@
     "c11-host": {
       "1": "7a33e3e653f7f16869cfc2f1cfed032062eb18e725a715a3cc90c7e7b8b78d83",
       "2": "ee0bdc2b27369a73c7533888bb6362da4e15aebdb7be2024b0f0d578eebdb3fd",
-      "3": "4886a2ac6a7e84073ac31efb4058becfe9743d0c8695b069f972dc996f618732"
+      "3": "4886a2ac6a7e84073ac31efb4058becfe9743d0c8695b069f972dc996f618732",
+      "4": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3"
     },
     "cpp17-host": {
       "1": "9402614595c2c4d9bfdcd7bfc93e87e3343a312e270be8aba839a002a4f9514c"

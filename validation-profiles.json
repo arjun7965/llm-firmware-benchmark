@@ -2,6 +2,69 @@
   "schemaVersion": "2.6",
   "environments": [
     {
+      "id": "debian-12-x86-64-c11-oci",
+      "revision": 1,
+      "host": {
+        "operatingSystem": "debian",
+        "release": "12",
+        "architecture": "x86_64"
+      },
+      "execution": {
+        "kind": "oci",
+        "image": "ghcr.io/arjun7965/llm-firmware-benchmark-c11@sha256:56e94b0d34b2bb2dd0b0eda59d7b7e502f610166bbbaf24c89e45ad94fa07193",
+        "source": "https://github.com/arjun7965/llm-firmware-benchmark",
+        "revision": "44b80f25ad286abbe819dd4287a61e1feaeef14e"
+      },
+      "sandbox": {
+        "runtime": {
+          "name": "podman",
+          "executable": "podman",
+          "version": "4.9.3",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "limiter": {
+          "name": "podman",
+          "executable": "podman",
+          "version": "4.9.3",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "configurationSha256": "132e8108e8ba944864fdfb8823ec3c7ed586ace3300b7573dfd7326f4235a3b7",
+        "containerRuntime": {
+          "name": "crun",
+          "executable": "/usr/bin/crun",
+          "version": "1.14.1",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "monitor": {
+          "name": "conmon",
+          "executable": "/usr/bin/conmon",
+          "version": "2.1.10",
+          "versionArgs": [
+            "--version"
+          ]
+        },
+        "seccompProfile": {
+          "path": "/usr/share/containers/seccomp.json",
+          "sha256": "cc374cf23846ce1f62f4dc807a8e2b8673c783c6f56cb475467621035d281e6c"
+        }
+      },
+      "toolchains": [
+        {
+          "name": "cc",
+          "version": "14.2.0",
+          "versionArgs": [
+            "--version"
+          ]
+        }
+      ]
+    },
+    {
       "id": "debian-13-x86-64-c11-host",
       "revision": 1,
       "host": {
@@ -759,6 +822,50 @@
       "revision": 3,
       "dependencies": [],
       "environments": [
+        {
+          "id": "debian-13-x86-64-c11-host",
+          "revision": 1
+        },
+        {
+          "id": "ubuntu-24-04-x86-64-c11-host",
+          "revision": 1
+        }
+      ],
+      "toolchains": [
+        "cc"
+      ],
+      "sandbox": {
+        "runtime": "bubblewrap",
+        "limiter": "prlimit",
+        "network": "none",
+        "filesystem": "isolated",
+        "rootTmpfsBytes": 33554432,
+        "temporaryDirectoryBytes": 16777216,
+        "resourceLimits": {
+          "compile": {
+            "addressSpaceBytes": 536870912,
+            "cpuSeconds": 15,
+            "fileBytes": 16777216,
+            "openFiles": 64
+          },
+          "test": {
+            "addressSpaceBytes": 134217728,
+            "cpuSeconds": 3,
+            "fileBytes": 1048576,
+            "openFiles": 32
+          }
+        }
+      }
+    },
+    {
+      "id": "c11-host",
+      "revision": 4,
+      "dependencies": [],
+      "environments": [
+        {
+          "id": "debian-12-x86-64-c11-oci",
+          "revision": 1
+        },
         {
           "id": "debian-13-x86-64-c11-host",
           "revision": 1
