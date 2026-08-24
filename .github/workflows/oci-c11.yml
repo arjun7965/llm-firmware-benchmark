@@ -6,14 +6,27 @@ on:
       - main
     paths:
       - ".github/workflows/oci-c11.yml"
+      - "fixtures/**"
       - "oci/c11/**"
+      - "package.json"
       - "scripts/calibrate-oci-c11.mjs"
       - "scripts/check-oci-image-recipe.mjs"
       - "scripts/probe-oci-runtime.mjs"
+      - "scripts/write-oci-publication.mjs"
+      - "src/fixture-mutations.mjs"
       - "src/fixture-sandbox.mjs"
+      - "src/fixtures.mjs"
+      - "src/harness.mjs"
       - "src/oci-calibration.mjs"
       - "src/oci-image-recipe.mjs"
       - "src/oci-sandbox.mjs"
+      - "src/validation-profiles.mjs"
+      - "tasks.json"
+      - "test/fixture-sandbox.test.mjs"
+      - "test/oci-calibration.test.mjs"
+      - "test/oci-image-recipe.test.mjs"
+      - "test/oci-sandbox.test.mjs"
+      - "test/validation-profiles.test.mjs"
       - "validation-profile-fingerprints.json"
       - "validation-profiles.json"
   pull_request:
@@ -22,6 +35,31 @@ on:
       - opened
       - reopened
       - synchronize
+    paths:
+      - ".github/workflows/oci-c11.yml"
+      - "fixtures/**"
+      - "oci/c11/**"
+      - "package.json"
+      - "scripts/calibrate-oci-c11.mjs"
+      - "scripts/check-oci-image-recipe.mjs"
+      - "scripts/probe-oci-runtime.mjs"
+      - "scripts/write-oci-publication.mjs"
+      - "src/fixture-mutations.mjs"
+      - "src/fixture-sandbox.mjs"
+      - "src/fixtures.mjs"
+      - "src/harness.mjs"
+      - "src/oci-calibration.mjs"
+      - "src/oci-image-recipe.mjs"
+      - "src/oci-sandbox.mjs"
+      - "src/validation-profiles.mjs"
+      - "tasks.json"
+      - "test/fixture-sandbox.test.mjs"
+      - "test/oci-calibration.test.mjs"
+      - "test/oci-image-recipe.test.mjs"
+      - "test/oci-sandbox.test.mjs"
+      - "test/validation-profiles.test.mjs"
+      - "validation-profile-fingerprints.json"
+      - "validation-profiles.json"
   workflow_dispatch:
     inputs:
       publish:

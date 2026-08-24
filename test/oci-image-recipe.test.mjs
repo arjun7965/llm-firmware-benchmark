@@ -139,6 +139,9 @@ test("OCI workflow gates publication and calibrates the registered digest", () =
   assert.match(workflow, /podman=4\.9\.3\+ds1-1ubuntu0\.2/u);
   assert.match(workflow, /cmp oci\/c11\/runtime-contract\.json/u);
   assert.match(workflow, /npm run oci:c11:calibrate/u);
+  assert.equal(workflow.match(/- "fixtures\/\*\*"/gu)?.length, 2);
+  assert.equal(workflow.match(/- "src\/oci-sandbox\.mjs"/gu)?.length, 2);
+  assert.equal(workflow.match(/- "validation-profiles\.json"/gu)?.length, 2);
   const calibrationJob = workflow.slice(workflow.indexOf("  calibrate:"));
   assert.doesNotMatch(calibrationJob, /login ghcr\.io/u);
 });
