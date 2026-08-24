@@ -664,7 +664,6 @@ export function buildOciInvocation({
     `--memory=${limits.addressSpaceBytes}b`,
     `--memory-swap=${memorySwapBytes}b`,
     `--pids-limit=${ociProcessLimit}`,
-    `--ulimit=as=${limits.addressSpaceBytes}:${limits.addressSpaceBytes}`,
     `--ulimit=cpu=${limits.cpuSeconds}:${limits.cpuSeconds}`,
     `--ulimit=fsize=${limits.fileBytes}:${limits.fileBytes}`,
     `--ulimit=nofile=${limits.openFiles}:${limits.openFiles}`,

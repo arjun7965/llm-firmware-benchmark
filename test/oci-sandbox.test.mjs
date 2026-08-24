@@ -517,7 +517,6 @@ test("OCI invocations enforce isolation, limits, and read-only test inputs", (t)
     "--memory=536870912b",
     "--memory-swap=536870913b",
     "--pids-limit=256",
-    "--ulimit=as=536870912:536870912",
     "--ulimit=cpu=15:15",
     "--ulimit=fsize=16777216:16777216",
     "--ulimit=nofile=64:64",
@@ -525,6 +524,10 @@ test("OCI invocations enforce isolation, limits, and read-only test inputs", (t)
   ]) {
     assert.ok(compile.args.includes(argument), `missing ${argument}`);
   }
+  assert.equal(
+    compile.args.some((argument) => argument.startsWith("--ulimit=as=")),
+    false,
+  );
   assert.equal(compile.command, "/usr/bin/podman");
   assert.equal(compile.options.timeout, 30_000);
   assert.equal(compile.args.includes("--privileged"), false);

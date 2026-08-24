@@ -162,8 +162,10 @@ writable.
 The validator copies the starter, mocks, public tests, and extracted answer to
 a private staging tree rather than exposing the repository. That tree is
 read-only; a separate build mount is writable only for compilation and becomes
-read-only for testing. Memory, swap, process-count, address-space, CPU,
-file-size, open-file, core-dump, wall-time, and captured-output limits apply.
+read-only for testing. The profile's `addressSpaceBytes` ceiling supplies the
+OCI cgroup memory limit; swap and process-count cgroups plus Podman-supported
+CPU, file-size, open-file, and core-dump RLIMITs also apply, alongside
+wall-time and captured-output limits.
 Recorded container IDs are force-removed after errors or supervisor teardown.
 The CID file, runtime configuration, and service state remain on disk with a
 recovery path in the error if forced removal fails; successful cleanup removes
