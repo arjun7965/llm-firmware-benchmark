@@ -1,0 +1,144 @@
+name: OCI C11 image
+
+on:
+  pull_request:
+    types:
+      - labeled
+      - opened
+      - reopened
+      - synchronize
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the image for the selected source revision
+        required: true
+        type: boolean
+        default: false
+      source-revision:
+        description: Exact 40-character repository commit to build
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oci-c11-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  recipe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run oci:recipe:check
+      - run: node --test test/oci-image-recipe.test.mjs
+
+  publish:
+    if: >-
+      (github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'publish-oci-c11')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish)
+    needs: recipe
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || inputs.source-revision }}
+    steps:
+      - name: Check out the exact image source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_REVISION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate source revision
+        run: |
+          if ! printf '%s' "${SOURCE_REVISION}" | grep -Eq '^[a-f0-9]{40}$'
+          then
+            echo "Source revision must be a full commit SHA" >&2
+            exit 1
+          fi
+          test "$(git rev-parse HEAD)" = "${SOURCE_REVISION}"
+      - name: Install the root-owned OCI toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            conmon crun podman skopeo
+      - name: Probe the live rootless runtime contract
+        run: >-
+          node scripts/probe-oci-runtime.mjs
+          --output "${RUNNER_TEMP}/oci-c11-runtime-contract.json"
+      - name: Resolve and preload the platform base
+        run: |
+          base_reference="$(node -p \
+            'JSON.parse(require("node:fs").readFileSync("oci/c11/image-recipe.json", "utf8")).base.reference')"
+          resolved_digest="$(skopeo inspect --format '{{.Digest}}' \
+            "docker://${base_reference}")"
+          test "${base_reference##*@}" = "${resolved_digest}"
+          podman pull --platform linux/amd64 "${base_reference}"
+      - name: Build and smoke-test the reproducible image
+        run: |
+          image_repository="$(node -p \
+            'JSON.parse(require("node:fs").readFileSync("oci/c11/image-recipe.json", "utf8")).imageRepository')"
+          image_tag="${image_repository}:sha-${SOURCE_REVISION}"
+          podman build \
+            --build-arg "SOURCE_REVISION=${SOURCE_REVISION}" \
+            --file oci/c11/Containerfile \
+            --format oci \
+            --network none \
+            --platform linux/amd64 \
+            --pull never \
+            --tag "${image_tag}" \
+            --timestamp 0 \
+            oci/c11
+          test "$(podman image inspect --format '{{.Config.User}}' "${image_tag}")" \
+            = "65532:65532"
+          test "$(podman image inspect --format \
+            '{{ index .Config.Labels "org.opencontainers.image.source" }}' \
+            "${image_tag}")" \
+            = "https://github.com/arjun7965/llm-firmware-benchmark"
+          test "$(podman image inspect --format \
+            '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+            "${image_tag}")" = "${SOURCE_REVISION}"
+          podman run --rm --network none --read-only \
+            --cap-drop all --security-opt no-new-privileges \
+            "${image_tag}" cc --version
+      - name: Publish and independently resolve the platform digest
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          image_repository="$(node -p \
+            'JSON.parse(require("node:fs").readFileSync("oci/c11/image-recipe.json", "utf8")).imageRepository')"
+          image_tag="${image_repository}:sha-${SOURCE_REVISION}"
+          printf '%s' "${GHCR_TOKEN}" | podman login ghcr.io \
+            --username "${GITHUB_ACTOR}" --password-stdin
+          printf '%s' "${GHCR_TOKEN}" | skopeo login ghcr.io \
+            --username "${GITHUB_ACTOR}" --password-stdin
+          podman push --digestfile "${RUNNER_TEMP}/pushed-digest" \
+            "${image_tag}"
+          pushed_digest="$(tr -d '\n' < "${RUNNER_TEMP}/pushed-digest")"
+          resolved_digest="$(skopeo inspect --format '{{.Digest}}' \
+            "docker://${image_tag}")"
+          test "${pushed_digest}" = "${resolved_digest}"
+          node scripts/write-oci-publication.mjs \
+            --digest "${resolved_digest}" \
+            --revision "${SOURCE_REVISION}" \
+            --output "${RUNNER_TEMP}/oci-c11-publication.json"
+          podman logout ghcr.io
+          skopeo logout ghcr.io
+      - name: Upload reviewed publication evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: oci-c11-publication-${{ env.SOURCE_REVISION }}
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/oci-c11-publication.json
+            ${{ runner.temp }}/oci-c11-runtime-contract.json
+          retention-days: 30

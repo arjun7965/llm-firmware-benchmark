@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "id": "debian-12-x86-64-c11",
+  "imageRepository": "ghcr.io/arjun7965/llm-firmware-benchmark-c11",
+  "source": "https://github.com/arjun7965/llm-firmware-benchmark",
+  "base": {
+    "reference": "docker.io/library/gcc@sha256:82549aa8f90ada3236a8be70c74543132a76662ef33f0c3271ed802b81584a82",
+    "indexReference": "docker.io/library/gcc:14.2.0-bookworm@sha256:b99b86a28812b1e6453a231a947dc43d76fe192788a12f344a9b568bf9f5d24c"
+  },
+  "platform": {
+    "operatingSystem": "linux",
+    "architecture": "amd64",
+    "validationArchitecture": "x86_64",
+    "distribution": "debian",
+    "release": "12"
+  },
+  "user": {
+    "name": "validator",
+    "uid": 65532,
+    "gid": 65532,
+    "home": "/nonexistent"
+  },
+  "toolchains": [
+    {
+      "name": "cc",
+      "version": "14.2.0",
+      "versionArgs": [
+        "--version"
+      ]
+    }
+  ]
+}
