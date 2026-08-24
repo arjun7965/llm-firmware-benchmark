@@ -54,7 +54,19 @@ function requireObject(value, name) {
 
 function requireSuccessfulResult(result, name) {
   if (result.error || (result.signal ?? null) !== null || result.status !== 0) {
-    throw new TypeError(`${name} failed`);
+    const diagnostic = [
+      Number.isInteger(result.status) ? `status ${result.status}` : null,
+      typeof result.signal === "string" ? `signal ${result.signal}` : null,
+      typeof result.error?.code === "string"
+        ? `spawn ${result.error.code}`
+        : null,
+      typeof result.stderr === "string"
+        ? result.stderr.replace(/[\u0000-\u001f\u007f]+/gu, " ").trim()
+        : null,
+    ].filter(Boolean).join("; ").slice(0, 1024);
+    throw new TypeError(
+      `${name} failed${diagnostic === "" ? "" : `: ${diagnostic}`}`,
+    );
   }
   return result;
 }

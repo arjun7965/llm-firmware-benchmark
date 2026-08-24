@@ -723,4 +723,27 @@ test("OCI toolchain probes execute inside the pinned sandbox", (t) => {
   assert.deepEqual(calls[0].options.env, {
     CONTAINERS_CONF: "/tmp/containers.conf",
   });
+
+  assert.throws(
+    () => inspectOciToolchain({
+      runtimePath: "/usr/bin/podman",
+      execution,
+      inputRoot: join(root, "input"),
+      buildRoot: join(root, "build"),
+      manifest,
+      profile,
+      name: "cc",
+      versionArgs: ["--version"],
+      expectedVersion: "14.2.0",
+      environment: { PATH: "/usr/bin:/bin" },
+      cidFile: join(root, "failed-probe.cid"),
+      spawn: () => ({
+        status: 125,
+        signal: null,
+        stdout: "",
+        stderr: "runtime rejected an isolation option\nsecond line\n",
+      }),
+    }),
+    /failed: status 125; runtime rejected an isolation option second line/u,
+  );
 });
