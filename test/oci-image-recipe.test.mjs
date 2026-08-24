@@ -144,6 +144,11 @@ test("OCI workflow gates publication and calibrates the registered digest", () =
   assert.match(workflow, /calibrate:\n    needs: activation/u);
   assert.match(workflow, /skopeo=1\.13\.3\+ds1-2ubuntu0\.24\.04\.3/u);
   assert.match(workflow, /base\.indexReference/u);
+  assert.match(
+    workflow,
+    /skopeo_index_reference="\$\{base_reference%@\*\}@\$\{index_reference##\*@\}"/u,
+  );
+  assert.doesNotMatch(workflow, /docker:\/\/\$\{index_reference\}/u);
   assert.match(workflow, /indexed_platform_digest/u);
   assert.match(workflow, /podman push --digestfile/u);
   assert.match(workflow, /skopeo inspect --format '\{\{\.Digest\}\}'/u);

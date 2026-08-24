@@ -156,11 +156,12 @@ jobs:
             'JSON.parse(require("node:fs").readFileSync("oci/c11/image-recipe.json", "utf8")).base.reference')"
           index_reference="$(node -p \
             'JSON.parse(require("node:fs").readFileSync("oci/c11/image-recipe.json", "utf8")).base.indexReference')"
+          skopeo_index_reference="${base_reference%@*}@${index_reference##*@}"
           resolved_index_digest="$(skopeo inspect --format '{{.Digest}}' \
-            "docker://${index_reference}")"
+            "docker://${skopeo_index_reference}")"
           test "${index_reference##*@}" = "${resolved_index_digest}"
           indexed_platform_digest="$(skopeo inspect --raw \
-            "docker://${index_reference}" | node --input-type=module -e '
+            "docker://${skopeo_index_reference}" | node --input-type=module -e '
               let input = "";
               for await (const chunk of process.stdin) input += chunk;
               const index = JSON.parse(input);
