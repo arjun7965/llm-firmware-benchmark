@@ -122,15 +122,16 @@ matches that task's declared pair.
 
 Digest-pinned OCI images are supported as a portable alternative for profiles
 whose complete userspace should not depend on the validator's distribution.
-The current registry contains host environments only; an OCI environment is
-activated only after its reviewed build recipe, published digest, runtime
-security contracts, and calibration are committed. Until then, the OCI runner
-is dormant and is not a usable validation environment. Activation appends a
-reviewed environment and, when necessary, a new logical-profile revision. It
-is never selected implicitly. Invoke a registered one with:
+The registry includes `debian-12-x86-64-c11-oci@1` for `c11-host@4`. Its
+reviewed recipe, Linux/amd64 platform-manifest digest, source revision, runtime
+security contract, and CI calibration are committed under `oci/c11/`. Future
+environments are activated only after the same evidence is reviewed. Activation
+appends an environment and, when necessary, a logical-profile revision. An OCI
+environment is never selected implicitly. Invoke the registered C11 one with:
 
 ```bash
-npm run fixture:validate -- --task <task-id> --environment <environment-id>
+npm run fixture:validate -- --task <task-id> \
+  --environment debian-12-x86-64-c11-oci
 ```
 
 The execution contract accepts only `image@sha256:<platform-manifest-digest>`

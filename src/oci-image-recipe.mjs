@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { ociRuntimeConfigurationFingerprint } from "./oci-sandbox.mjs";
 
 const digestPattern = /^sha256:[a-f0-9]{64}$/u;
 const imageRepositoryPattern =
@@ -21,6 +22,12 @@ export const defaultOciImageRecipePath = fileURLToPath(
 );
 export const defaultOciContainerfilePath = fileURLToPath(
   new URL("../oci/c11/Containerfile", import.meta.url),
+);
+export const defaultOciPublicationPath = fileURLToPath(
+  new URL("../oci/c11/publication.json", import.meta.url),
+);
+export const defaultOciRuntimeContractPath = fileURLToPath(
+  new URL("../oci/c11/runtime-contract.json", import.meta.url),
 );
 
 function requireObject(value, name) {
@@ -295,4 +302,129 @@ export function validateOciPublication(publication, definition) {
     sourceRevisionPattern,
   );
   return publication;
+}
+
+function validateRuntimeTool(tool, expected, name) {
+  requireExactFields(
+    tool,
+    ["executable", "name", "version", "versionArgs"],
+    name,
+  );
+  if (tool.name !== expected.name || tool.executable !== expected.executable) {
+    throw new TypeError(`${name} identity is invalid`);
+  }
+  requireString(tool.version, `${name} version`, /^\d+\.\d+(?:\.\d+)?$/u);
+  if (
+    !Array.isArray(tool.versionArgs) ||
+    tool.versionArgs.length !== 1 ||
+    tool.versionArgs[0] !== "--version"
+  ) {
+    throw new TypeError(`${name} versionArgs are invalid`);
+  }
+}
+
+export function validateOciRuntimeContract(contract) {
+  requireExactFields(
+    contract,
+    ["runner", "sandbox", "schemaVersion"],
+    "OCI runtime contract",
+  );
+  if (contract.schemaVersion !== "1.0") {
+    throw new TypeError("OCI runtime contract schemaVersion is unsupported");
+  }
+  requireExactFields(
+    contract.runner,
+    ["architecture", "operatingSystem", "release"],
+    "OCI runtime runner",
+  );
+  if (
+    contract.runner.operatingSystem !== "ubuntu" ||
+    contract.runner.release !== "24.04" ||
+    contract.runner.architecture !== "x86_64"
+  ) {
+    throw new TypeError("OCI runtime runner is unsupported");
+  }
+  requireExactFields(
+    contract.sandbox,
+    [
+      "configurationSha256",
+      "containerRuntime",
+      "limiter",
+      "monitor",
+      "runtime",
+      "seccompProfile",
+    ],
+    "OCI runtime sandbox",
+  );
+  validateRuntimeTool(
+    contract.sandbox.containerRuntime,
+    { name: "crun", executable: "/usr/bin/crun" },
+    "OCI container runtime",
+  );
+  validateRuntimeTool(
+    contract.sandbox.monitor,
+    { name: "conmon", executable: "/usr/bin/conmon" },
+    "OCI monitor",
+  );
+  validateRuntimeTool(
+    contract.sandbox.runtime,
+    { name: "podman", executable: "podman" },
+    "OCI sandbox runtime",
+  );
+  validateRuntimeTool(
+    contract.sandbox.limiter,
+    { name: "podman", executable: "podman" },
+    "OCI sandbox limiter",
+  );
+  if (
+    JSON.stringify(contract.sandbox.runtime) !==
+      JSON.stringify(contract.sandbox.limiter)
+  ) {
+    throw new TypeError("OCI runtime and limiter contracts must match");
+  }
+  requireString(
+    contract.sandbox.configurationSha256,
+    "OCI runtime configuration fingerprint",
+    /^[a-f0-9]{64}$/u,
+  );
+  if (
+    contract.sandbox.configurationSha256 !==
+      ociRuntimeConfigurationFingerprint({
+        containerRuntime: contract.sandbox.containerRuntime,
+        monitor: contract.sandbox.monitor,
+      })
+  ) {
+    throw new TypeError("OCI runtime configuration fingerprint is invalid");
+  }
+  requireExactFields(
+    contract.sandbox.seccompProfile,
+    ["path", "sha256"],
+    "OCI seccomp profile",
+  );
+  if (contract.sandbox.seccompProfile.path !==
+    "/usr/share/containers/seccomp.json") {
+    throw new TypeError("OCI seccomp profile path is invalid");
+  }
+  requireString(
+    contract.sandbox.seccompProfile.sha256,
+    "OCI seccomp profile fingerprint",
+    /^[a-f0-9]{64}$/u,
+  );
+  return contract;
+}
+
+export function loadOciImageActivation({
+  recipePath = defaultOciImageRecipePath,
+  containerfilePath = defaultOciContainerfilePath,
+  publicationPath = defaultOciPublicationPath,
+  runtimeContractPath = defaultOciRuntimeContractPath,
+} = {}) {
+  const recipe = loadOciImageRecipe({ recipePath, containerfilePath });
+  const publication = JSON.parse(readFileSync(publicationPath, "utf8"));
+  const runtimeContract = JSON.parse(
+    readFileSync(runtimeContractPath, "utf8"),
+  );
+  validateOciPublication(publication, recipe.definition);
+  validateOciRuntimeContract(runtimeContract);
+  return { ...recipe, publication, runtimeContract };
 }

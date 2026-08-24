@@ -1,6 +1,21 @@
 name: OCI C11 image
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/oci-c11.yml"
+      - "oci/c11/**"
+      - "scripts/calibrate-oci-c11.mjs"
+      - "scripts/check-oci-image-recipe.mjs"
+      - "scripts/probe-oci-runtime.mjs"
+      - "src/fixture-sandbox.mjs"
+      - "src/oci-calibration.mjs"
+      - "src/oci-image-recipe.mjs"
+      - "src/oci-sandbox.mjs"
+      - "validation-profile-fingerprints.json"
+      - "validation-profiles.json"
   pull_request:
     types:
       - labeled
@@ -30,8 +45,8 @@ jobs:
   recipe:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - run: npm run oci:recipe:check
@@ -52,10 +67,10 @@ jobs:
       SOURCE_REVISION: ${{ github.event.pull_request.head.sha || inputs.source-revision }}
     steps:
       - name: Check out the exact image source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.SOURCE_REVISION }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Validate source revision
@@ -140,7 +155,6 @@ jobs:
             --revision "${SOURCE_REVISION}" \
             --output "${RUNNER_TEMP}/oci-c11-publication.json"
           podman logout ghcr.io
-          skopeo logout ghcr.io
       - name: Upload reviewed publication evidence
         uses: actions/upload-artifact@v4
         with:
@@ -150,3 +164,54 @@ jobs:
             ${{ runner.temp }}/oci-c11-publication.json
             ${{ runner.temp }}/oci-c11-runtime-contract.json
           retention-days: 30
+
+  calibrate:
+    needs: recipe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard-index:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install the pinned root-owned OCI runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            conmon=2.1.10+ds1-1build2 \
+            crun=1.14.1-1 \
+            podman=4.9.3+ds1-1ubuntu0.2
+          seccomp_source="$(realpath /usr/share/containers/seccomp.json)"
+          if [[ "${seccomp_source}" != /usr/* ]]
+          then
+            sudo cp --remove-destination \
+              "${seccomp_source}" /usr/share/containers/seccomp.json
+          fi
+          sudo chown root:root /usr/share/containers/seccomp.json
+          sudo chmod 0644 /usr/share/containers/seccomp.json
+      - name: Verify the registered runtime contract
+        run: |
+          node scripts/probe-oci-runtime.mjs \
+            --output "${RUNNER_TEMP}/observed-runtime-contract.json"
+          cmp oci/c11/runtime-contract.json \
+            "${RUNNER_TEMP}/observed-runtime-contract.json"
+      - name: Preload the registered image without credentials
+        run: |
+          image="$(node -p \
+            'JSON.parse(require("node:fs").readFileSync("oci/c11/publication.json", "utf8")).image')"
+          podman pull --platform linux/amd64 "${image}"
+      - name: Calibrate trusted references and controlled mutations
+        run: >-
+          npm run oci:c11:calibrate --
+          --shard-count 6
+          --shard-index ${{ matrix.shard-index }}

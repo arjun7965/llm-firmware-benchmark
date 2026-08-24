@@ -379,12 +379,13 @@ npm run fixture:validate -- --task binary-parser
 ```
 
 Host environments require Bubblewrap, `prlimit`, and the fixture toolchain.
-The dormant OCI runner becomes usable only when a reviewed environment is
-registered. Such environments require pinned Podman, low-level runtime,
+The registered `debian-12-x86-64-c11-oci` environment provides a portable C11
+alternative. OCI environments require pinned Podman, low-level runtime,
 monitor, runtime-configuration, and seccomp contracts and must be selected
-explicitly with `--environment <id>`; the validator uses only a matching
-digest-pinned image already present locally and never pulls. The current
-registry contains host environments only.
+explicitly with `--environment debian-12-x86-64-c11-oci`; the validator uses
+only the matching digest-pinned image already present locally and never pulls.
+Its reviewed recipe, publication evidence, and reproducibility procedure are
+under `oci/c11/`.
 Both modes fail closed if isolation is unavailable and write an ignored
 machine-readable report under the fixture’s `build/` directory. See
 `docs/sandboxed-validation.md` for the isolation boundary and limitations.

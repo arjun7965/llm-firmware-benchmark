@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  loadOciImageActivation,
   loadOciImageRecipe,
   validateOciContainerfile,
   validateOciImageRecipeDefinition,
   validateOciPublication,
+  validateOciRuntimeContract,
 } from "../src/oci-image-recipe.mjs";
 
 function validRecipe() {
@@ -80,4 +83,62 @@ test("OCI publication metadata binds recipe, digest, platform, and source", () =
     ),
     /source revision is invalid/u,
   );
+});
+
+test("committed OCI activation evidence is internally consistent", () => {
+  const activation = loadOciImageActivation();
+  assert.equal(
+    activation.publication.sourceRevision,
+    "44b80f25ad286abbe819dd4287a61e1feaeef14e",
+  );
+  assert.equal(activation.runtimeContract.sandbox.runtime.version, "4.9.3");
+  assert.equal(
+    activation.runtimeContract.sandbox.configurationSha256,
+    "132e8108e8ba944864fdfb8823ec3c7ed586ace3300b7573dfd7326f4235a3b7",
+  );
+});
+
+test("OCI runtime contracts reject drift in runtime security inputs", () => {
+  const { runtimeContract } = loadOciImageActivation();
+  const differentConfiguration = structuredClone(runtimeContract);
+  differentConfiguration.sandbox.configurationSha256 = "0".repeat(64);
+  assert.throws(
+    () => validateOciRuntimeContract(differentConfiguration),
+    /configuration fingerprint is invalid/u,
+  );
+
+  const differentLimiter = structuredClone(runtimeContract);
+  differentLimiter.sandbox.limiter.version = "5.0.0";
+  assert.throws(
+    () => validateOciRuntimeContract(differentLimiter),
+    /runtime and limiter contracts must match/u,
+  );
+
+  const untrustedSeccomp = structuredClone(runtimeContract);
+  untrustedSeccomp.sandbox.seccompProfile.path = "/tmp/seccomp.json";
+  assert.throws(
+    () => validateOciRuntimeContract(untrustedSeccomp),
+    /seccomp profile path is invalid/u,
+  );
+});
+
+test("OCI workflow gates publication and calibrates the registered digest", () => {
+  const workflow = readFileSync(
+    new URL("../.github/workflows/oci-c11.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /head\.repo\.full_name == github\.repository/u,
+  );
+  assert.match(workflow, /publish-oci-c11/u);
+  assert.match(workflow, /packages: write/u);
+  assert.match(workflow, /podman push --digestfile/u);
+  assert.match(workflow, /skopeo inspect --format '\{\{\.Digest\}\}'/u);
+  assert.match(workflow, /test "\$\{pushed_digest\}" = "\$\{resolved_digest\}"/u);
+  assert.match(workflow, /podman=4\.9\.3\+ds1-1ubuntu0\.2/u);
+  assert.match(workflow, /cmp oci\/c11\/runtime-contract\.json/u);
+  assert.match(workflow, /npm run oci:c11:calibrate/u);
+  const calibrationJob = workflow.slice(workflow.indexOf("  calibrate:"));
+  assert.doesNotMatch(calibrationJob, /login ghcr\.io/u);
 });

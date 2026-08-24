@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import { ociRuntimeConfigurationFingerprint } from "../src/oci-sandbox.mjs";
+import { loadOciImageActivation } from "../src/oci-image-recipe.mjs";
 import {
   environmentFingerprint,
   getValidationProfile,
@@ -184,7 +185,7 @@ test("hosted validation profiles are pinned and immutable", () => {
     ),
     debianEnvironment,
   );
-  assert.equal(getValidationProfile("c11-host").revision, 3);
+  assert.equal(getValidationProfile("c11-host").revision, 4);
   const stableEnvironment = getValidationEnvironmentRevision(
     "ubuntu-24-04-x86-64-stable-rust",
     2,
@@ -681,5 +682,46 @@ test("OCI validation environments are explicit, pinned, and platform-safe", () =
   assert.throws(
     () => validateValidationProfiles(dependencyImage),
     /does not match its environments/u,
+  );
+});
+
+test("the committed C11 OCI activation matches publication evidence", () => {
+  const { definition, publication, runtimeContract } =
+    loadOciImageActivation();
+  const environment = getValidationEnvironmentRevision(
+    "debian-12-x86-64-c11-oci",
+    1,
+  );
+  const profile = getValidationProfile("c11-host");
+  assert.equal(profile.revision, 4);
+  assert.deepEqual(profile.environments, [
+    { id: environment.id, revision: environment.revision },
+    { id: "debian-13-x86-64-c11-host", revision: 1 },
+    { id: "ubuntu-24-04-x86-64-c11-host", revision: 1 },
+  ]);
+  assert.deepEqual(environment.execution, {
+    kind: "oci",
+    image: publication.image,
+    source: publication.source,
+    revision: publication.sourceRevision,
+  });
+  assert.deepEqual(environment.sandbox, runtimeContract.sandbox);
+  assert.deepEqual(environment.toolchains, definition.toolchains);
+  assert.deepEqual(environment.host, {
+    operatingSystem: definition.platform.distribution,
+    release: definition.platform.release,
+    architecture: definition.platform.validationArchitecture,
+  });
+  assert.equal(
+    selectValidationEnvironment(
+      profile,
+      {
+        operatingSystem: "ubuntu",
+        release: "24.04",
+        architecture: "x86_64",
+      },
+      { environmentId: environment.id, runtimeOperatingSystem: "linux" },
+    ),
+    environment,
   );
 });
