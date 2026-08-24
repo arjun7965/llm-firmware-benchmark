@@ -110,6 +110,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+      issues: write
       packages: write
     env:
       SOURCE_REVISION: ${{ github.event.pull_request.head.sha || inputs.source-revision }}
@@ -129,6 +130,8 @@ jobs:
             exit 1
           fi
           test "$(git rev-parse HEAD)" = "${SOURCE_REVISION}"
+      - name: Validate the exact image recipe
+        run: npm run oci:recipe:check
       - name: Install the root-owned OCI toolchain
         run: |
           sudo apt-get update
@@ -236,6 +239,14 @@ jobs:
             ${{ runner.temp }}/oci-c11-publication.json
             ${{ runner.temp }}/oci-c11-runtime-contract.json
           retention-days: 30
+      - name: Remove the one-shot publication label
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: >-
+          gh api --silent --method DELETE
+          "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels/publish-oci-c11"
 
   calibrate:
     if: github.event_name != 'workflow_dispatch' || inputs.publish != true

@@ -32,6 +32,14 @@ test("OCI recipe validation rejects mutable inputs and privileged users", () => 
     /platform base is invalid/u,
   );
 
+  const mismatchedIndex = validRecipe();
+  mismatchedIndex.base.indexReference =
+    `docker.io/example/gcc:14.2.0-bookworm@sha256:${"a".repeat(64)}`;
+  assert.throws(
+    () => validateOciImageRecipeDefinition(mismatchedIndex),
+    /platform and index repositories must match/u,
+  );
+
   const rootUser = validRecipe();
   rootUser.user.uid = 0;
   rootUser.user.gid = 0;
@@ -140,6 +148,8 @@ test("OCI workflow gates publication and calibrates the registered digest", () =
   );
   assert.match(workflow, /publish-oci-c11/u);
   assert.match(workflow, /packages: write/u);
+  assert.match(workflow, /issues: write/u);
+  assert.equal(workflow.match(/npm run oci:recipe:check/gu)?.length, 2);
   assert.match(workflow, /activation:\n    needs: recipe/u);
   assert.match(
     workflow,
@@ -156,6 +166,15 @@ test("OCI workflow gates publication and calibrates the registered digest", () =
   assert.match(workflow, /podman push --digestfile/u);
   assert.match(workflow, /skopeo inspect --format '\{\{\.Digest\}\}'/u);
   assert.match(workflow, /test "\$\{pushed_digest\}" = "\$\{resolved_digest\}"/u);
+  assert.match(workflow, /gh api --silent --method DELETE/u);
+  assert.match(
+    workflow,
+    /issues\/\$\{PR_NUMBER\}\/labels\/publish-oci-c11/u,
+  );
+  assert.ok(
+    workflow.indexOf("Upload reviewed publication evidence") <
+      workflow.indexOf("Remove the one-shot publication label"),
+  );
   assert.match(workflow, /podman=4\.9\.3\+ds1-1ubuntu0\.2/u);
   assert.match(workflow, /cmp oci\/c11\/runtime-contract\.json/u);
   assert.match(workflow, /npm run oci:c11:calibrate/u);

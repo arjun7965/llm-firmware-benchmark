@@ -127,6 +127,21 @@ export function validateOciImageRecipeDefinition(definition) {
     "OCI image index base",
     documentedIndexPattern,
   );
+  const platformRepository = definition.base.reference.slice(
+    0,
+    definition.base.reference.lastIndexOf("@"),
+  );
+  const taggedIndexRepository = definition.base.indexReference.slice(
+    0,
+    definition.base.indexReference.lastIndexOf("@"),
+  );
+  const indexRepository = taggedIndexRepository.slice(
+    0,
+    taggedIndexRepository.lastIndexOf(":"),
+  );
+  if (platformRepository !== indexRepository) {
+    throw new TypeError("OCI image platform and index repositories must match");
+  }
   if (
     digestFromReference(definition.base.reference) ===
       digestFromReference(definition.base.indexReference)
