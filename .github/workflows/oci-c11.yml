@@ -102,7 +102,7 @@ jobs:
             --format oci \
             --network none \
             --platform linux/amd64 \
-            --pull never \
+            --pull=never \
             --tag "${image_tag}" \
             --timestamp 0 \
             oci/c11
