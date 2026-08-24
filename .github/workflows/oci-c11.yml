@@ -71,6 +71,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
             conmon crun podman skopeo
+          seccomp_source="$(realpath /usr/share/containers/seccomp.json)"
+          if [[ "${seccomp_source}" != /usr/* ]]
+          then
+            sudo cp --remove-destination \
+              "${seccomp_source}" /usr/share/containers/seccomp.json
+          fi
+          sudo chown root:root /usr/share/containers/seccomp.json
+          sudo chmod 0644 /usr/share/containers/seccomp.json
       - name: Probe the live rootless runtime contract
         run: >-
           node scripts/probe-oci-runtime.mjs
