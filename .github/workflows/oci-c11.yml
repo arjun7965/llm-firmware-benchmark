@@ -88,6 +88,16 @@ jobs:
         with:
           node-version: 22
       - run: npm run oci:recipe:check
+
+  activation:
+    needs: recipe
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm run oci:activation:check
       - run: node --test test/oci-image-recipe.test.mjs
 
   publish:
@@ -122,8 +132,12 @@ jobs:
       - name: Install the root-owned OCI toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            conmon crun podman skopeo
+          sudo apt-get install --allow-downgrades --yes \
+            --no-install-recommends \
+            conmon=2.1.10+ds1-1build2 \
+            crun=1.14.1-1 \
+            podman=4.9.3+ds1-1ubuntu0.2 \
+            skopeo=1.13.3+ds1-2ubuntu0.24.04.3
           seccomp_source="$(realpath /usr/share/containers/seccomp.json)"
           if [[ "${seccomp_source}" != /usr/* ]]
           then
@@ -140,6 +154,25 @@ jobs:
         run: |
           base_reference="$(node -p \
             'JSON.parse(require("node:fs").readFileSync("oci/c11/image-recipe.json", "utf8")).base.reference')"
+          index_reference="$(node -p \
+            'JSON.parse(require("node:fs").readFileSync("oci/c11/image-recipe.json", "utf8")).base.indexReference')"
+          resolved_index_digest="$(skopeo inspect --format '{{.Digest}}' \
+            "docker://${index_reference}")"
+          test "${index_reference##*@}" = "${resolved_index_digest}"
+          indexed_platform_digest="$(skopeo inspect --raw \
+            "docker://${index_reference}" | node --input-type=module -e '
+              let input = "";
+              for await (const chunk of process.stdin) input += chunk;
+              const index = JSON.parse(input);
+              const matches = index.manifests?.filter(({ platform }) =>
+                platform?.os === "linux" && platform.architecture === "amd64");
+              if (matches?.length !== 1 ||
+                  !/^sha256:[a-f0-9]{64}$/u.test(matches[0].digest)) {
+                throw new TypeError("base index has no unique Linux/amd64 manifest");
+              }
+              process.stdout.write(matches[0].digest);
+            ')"
+          test "${base_reference##*@}" = "${indexed_platform_digest}"
           resolved_digest="$(skopeo inspect --format '{{.Digest}}' \
             "docker://${base_reference}")"
           test "${base_reference##*@}" = "${resolved_digest}"
@@ -204,7 +237,7 @@ jobs:
           retention-days: 30
 
   calibrate:
-    needs: recipe
+    needs: activation
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:
@@ -225,7 +258,8 @@ jobs:
       - name: Install the pinned root-owned OCI runtime
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
+          sudo apt-get install --allow-downgrades --yes \
+            --no-install-recommends \
             conmon=2.1.10+ds1-1build2 \
             crun=1.14.1-1 \
             podman=4.9.3+ds1-1ubuntu0.2

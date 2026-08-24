@@ -54,6 +54,13 @@ test("OCI recipe validation rejects mutable inputs and privileged users", () => 
     ),
     /select UID\/GID 65532/u,
   );
+  assert.throws(
+    () => validateOciContainerfile(
+      `${containerfile}\nUSER 0:0\n`,
+      validRecipe(),
+    ),
+    /reviewed deterministic instruction sequence/u,
+  );
 });
 
 test("OCI publication metadata binds recipe, digest, platform, and source", () => {
@@ -133,6 +140,11 @@ test("OCI workflow gates publication and calibrates the registered digest", () =
   );
   assert.match(workflow, /publish-oci-c11/u);
   assert.match(workflow, /packages: write/u);
+  assert.match(workflow, /activation:\n    needs: recipe/u);
+  assert.match(workflow, /calibrate:\n    needs: activation/u);
+  assert.match(workflow, /skopeo=1\.13\.3\+ds1-2ubuntu0\.24\.04\.3/u);
+  assert.match(workflow, /base\.indexReference/u);
+  assert.match(workflow, /indexed_platform_digest/u);
   assert.match(workflow, /podman push --digestfile/u);
   assert.match(workflow, /skopeo inspect --format '\{\{\.Digest\}\}'/u);
   assert.match(workflow, /test "\$\{pushed_digest\}" = "\$\{resolved_digest\}"/u);

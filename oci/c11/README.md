@@ -15,6 +15,8 @@ embeds the full source revision through the required OCI provenance label.
 `publication.json` binds the resulting platform-manifest digest to that source
 revision. `runtime-contract.json` records the rootless Podman, crun, conmon,
 generated configuration, and seccomp inputs observed on the calibration runner.
+Run `npm run oci:recipe:check` before publication and
+`npm run oci:activation:check` after committing the resulting evidence.
 
 To reproduce the filesystem and local image from the recorded source revision:
 
@@ -32,12 +34,16 @@ podman build \
   oci/c11
 ```
 
-The publication workflow is deliberately two-stage. A same-repository pull
-request must receive the maintainer-owned `publish-oci-c11` label before its
-exact head commit may push an immutable source tag. The workflow compares the
-push digest with a separate registry resolution and uploads both publication
-and runtime evidence. The label is removed after that one-shot provisioning
-step. Normal validation never authenticates to the registry or pulls an image.
+The publication workflow is deliberately two-stage. Its recipe gate does not
+require existing publication evidence, so a changed recipe can be reviewed and
+published before activation. A same-repository pull request must receive the
+maintainer-owned `publish-oci-c11` label before its exact head commit may push a
+source-revision tag. The workflow verifies that the platform base belongs to
+the recorded multi-platform index, compares the push digest with a separate
+registry resolution, and uploads both publication and runtime evidence. The
+activation gate and calibration require those committed evidence files. The
+label is removed after that one-shot provisioning step. Normal validation never
+authenticates to the registry or pulls an image.
 
 CI preloads the registered digest as a trusted provisioning step, verifies the
 live runtime contract byte-for-byte, then runs every C11 trusted reference and

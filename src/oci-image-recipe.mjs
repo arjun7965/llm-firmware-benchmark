@@ -250,6 +250,28 @@ export function validateOciContainerfile(containerfile, definition) {
   if (instructions.filter((line) => line === "WORKDIR /workspace").length !== 1) {
     throw new TypeError("OCI Containerfile workdir is invalid");
   }
+  const reviewedInstructions = [
+    `FROM ${definition.base.reference}`,
+    "ARG SOURCE_REVISION",
+    `LABEL org.opencontainers.image.source="${definition.source}"`,
+    "LABEL org.opencontainers.image.revision=\"${SOURCE_REVISION}\"",
+    "LABEL org.opencontainers.image.title=\"LLM firmware benchmark C11 validator\"",
+    "LABEL org.opencontainers.image.description=" +
+      "\"Digest-pinned GCC 14.2.0 validation environment\"",
+    "LABEL org.opencontainers.image.licenses=\"Apache-2.0\"",
+    accountCommand,
+    `USER ${definition.user.uid}:${definition.user.gid}`,
+    "WORKDIR /workspace",
+  ];
+  if (
+    instructions.length !== reviewedInstructions.length ||
+    instructions.some((line, index) => line !== reviewedInstructions[index])
+  ) {
+    throw new TypeError(
+      "OCI Containerfile must match its reviewed deterministic " +
+        "instruction sequence",
+    );
+  }
   return definition;
 }
 
