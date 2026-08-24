@@ -723,7 +723,7 @@ test("OCI toolchain probes execute inside the pinned sandbox", (t) => {
   ]);
   assert.ok(calls[0].args.includes("--pull=never"));
   assert.ok(calls[0].args.includes("--network=none"));
-  assert.equal(calls[0].options.timeout, 30_000);
+  assert.equal(calls[0].options.timeout, 60_000);
   assert.deepEqual(calls[0].options.env, {
     CONTAINERS_CONF: "/tmp/containers.conf",
   });

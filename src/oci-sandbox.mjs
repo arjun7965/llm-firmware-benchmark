@@ -14,7 +14,7 @@ import { resolve } from "node:path";
 
 const maximumOutputBytes = 1024 * 1024;
 const probeTimeoutMs = 5_000;
-const containerProbeTimeoutMs = 30_000;
+const containerProbeTimeoutMs = 60_000;
 const ociProcessLimit = 256;
 const ociUserId = 65_532;
 const imagePattern =
