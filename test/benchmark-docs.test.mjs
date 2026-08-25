@@ -88,6 +88,48 @@ test("rubric-only task policy is documented and task metadata is complete", () =
   }
 });
 
+test("vendor source policy defines provenance and is linked from authoring guidance", () => {
+  const policy = readFileSync(
+    new URL("../docs/vendor-specifications.md", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(policy, /^# Vendor Specification and Source Policy$/mu);
+  assert.match(policy, /^## Source Classes$/mu);
+  assert.match(policy, /^## When a Specification Is Summarized$/mu);
+  assert.match(policy, /^## Prohibited Inputs$/mu);
+  assert.match(policy, /^## Source Provenance Record$/mu);
+  assert.match(policy, /^## Review Checklist$/mu);
+  for (const sourceClass of [
+    "original-fictional",
+    "public-specification-summary",
+    "redistributable-third-party",
+    "external-tooling-only",
+  ]) {
+    assert.ok(
+      policy.includes(`\`${sourceClass}\``),
+      `vendor source policy is missing ${sourceClass}`,
+    );
+  }
+
+  for (const relativePath of [
+    "../README.md",
+    "../docs/benchmarks/README.md",
+    "../docs/embedded/README.md",
+    "../docs/embedded/hardware-in-the-loop.md",
+    "../fixtures/README.md",
+  ]) {
+    const guidance = readFileSync(
+      new URL(relativePath, import.meta.url),
+      "utf8",
+    );
+    assert.ok(
+      guidance.includes("vendor-specifications.md"),
+      `${relativePath} does not link the vendor source policy`,
+    );
+  }
+});
+
 test("fixture-backed prompts match their declared answer contract", () => {
   const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
 

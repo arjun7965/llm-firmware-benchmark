@@ -202,6 +202,11 @@ Embedded and firmware expansion is governed by
 `docs/embedded/capability-matrix.md` and reusable target profiles in
 `docs/embedded/target-assumptions.md`. Profiles are recorded as validation and
 result metadata; they do not inject hidden text into model prompts.
+New or materially revised tasks must also follow the
+[`vendor specification and source policy`](docs/vendor-specifications.md):
+prefer original fictional interfaces, record any public specification facts
+that influence the task, and never commit confidential or nonredistributable
+vendor material.
 
 ## Optional Cross-Compilation
 

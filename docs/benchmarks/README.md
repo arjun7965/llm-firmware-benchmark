@@ -26,3 +26,9 @@ never inferred from array position.
 See `docs/dependencies.md` for optional compilation and execution toolchains.
 Tasks in the `firmware` suite also follow the versioned dimensions and scoring
 procedure in `firmware-scoring.md`.
+
+When vendor or third-party technical material influences a new or materially
+revised task, follow the [vendor specification and source
+policy](../vendor-specifications.md) and add the required `## Source
+Provenance` section to its rubric. Prefer a repository-authored fictional
+interface over a vendor register map or SDK API.
