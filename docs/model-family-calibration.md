@@ -12,15 +12,19 @@ For each task:
    rejected in the task's declared validation environment.
 2. Select at least three distinct model families and generate three independent
    samples from each. Keep the task prompt and task metadata identical.
-3. Record model IDs, provider adapters, material provider options, prompt and
+3. Treat every raw result file as immutable once written. The harness preserves
+   successful results but replaces unsuccessful records when the same jobs run
+   again, so use a new attempt-specific output directory for every retry and
+   retain the original failure evidence.
+4. Record model IDs, provider adapters, material provider options, prompt and
    provider-configuration hashes, run count, and tool versions. Disclose
    provider differences rather than treating different adapters as identical.
-4. Extract each answer through the manifest-owned answer contract, then run it
+5. Extract each answer through the manifest-owned answer contract, then run it
    in the same validation-profile and environment revision used by every other
    sample in the comparison.
-5. Keep raw provider records and generated answers under ignored paths. Publish
+6. Keep raw provider records and generated answers under ignored paths. Publish
    answer text only through the reviewed public-result export process.
-6. Blind model identities before assigning rubric scores. An executable pass
+7. Blind model identities before assigning rubric scores. An executable pass
    is validation evidence, not an automatic score of 10.
 
 A task completes the executable part of this protocol when its trusted
