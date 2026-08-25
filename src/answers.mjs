@@ -30,14 +30,22 @@ function extractOpenCodeAnswer(stdout) {
     .map((event) => event.part)
     .filter((part) =>
       part && typeof part === "object" && !Array.isArray(part) &&
-      part.type === "text" && typeof part.text === "string")
-    .map((part) => part.text);
+      part.type === "text" && typeof part.text === "string");
   if (textParts.length === 0) {
     throw new TypeError(
       "OpenCode event stream does not contain a text result",
     );
   }
-  return textParts.join("");
+
+  if (textParts.every((part) => typeof part.messageID === "string")) {
+    const finalMessageId = textParts.at(-1).messageID;
+    return textParts
+      .filter((part) => part.messageID === finalMessageId)
+      .map((part) => part.text)
+      .join("");
+  }
+
+  return textParts.map((part) => part.text).join("");
 }
 
 export function extractAnswer(stdout) {

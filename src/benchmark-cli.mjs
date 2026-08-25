@@ -8,7 +8,10 @@ import {
   mapWithConcurrency,
 } from "./harness.mjs";
 import { loadModels } from "./models.mjs";
-import { generateWithProvider } from "./providers/index.mjs";
+import {
+  generateWithProvider,
+  getProviderConfigSha256,
+} from "./providers/index.mjs";
 import { suiteSet } from "./suites.mjs";
 
 const repositoryTasksPath = fileURLToPath(
@@ -181,6 +184,7 @@ export async function runBenchmarkCli({
         job,
         outputRoot: configuration.outputRoot,
         generate: generateWithProvider,
+        providerConfigSha256: getProviderConfigSha256(job.provider),
       });
       const runPrefix = job.run === 1 ? "" : `run-${job.run} `;
       if (result.status === "skipped") {

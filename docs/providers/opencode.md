@@ -32,11 +32,18 @@ process exits, and applies all of the following controls:
 - external plugins and project configuration are disabled;
 - global OpenCode configuration, injected config paths, and permission
   overrides are ignored;
-- a fixed primary benchmark agent denies every tool permission and subagent
-  use;
+- a fixed primary benchmark agent replaces provider-specific agent prompts,
+  tells the model to answer the self-contained task directly, and denies every
+  tool permission and subagent use;
 - automatic updates, sharing, snapshots, and LSP downloads are disabled; and
-- raw NDJSON events remain in the private result while answer extraction joins
-  the completed `text` event parts.
+- raw NDJSON events remain in the private result while answer extraction uses
+  the final text-bearing message and joins its completed `text` event parts.
+
+The adapter treats an exit-zero OpenCode event stream with no extractable text
+as a failed execution instead of caching it as a successful result. A SHA-256
+fingerprint of the fixed agent, isolation controls, and invocation mode is
+stored in raw result metadata and checked during reuse. Changing that provider
+context therefore invalidates older OpenCode results automatically.
 
 OpenCode's credential data remains available so saved provider authentication
 works. Unlike Codex and Claude Code, OpenCode does not currently expose a

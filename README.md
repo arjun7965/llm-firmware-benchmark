@@ -144,9 +144,11 @@ select alternate input documents. Run `npm run benchmark -- --help` or
 `npm run benchmark:repeats -- --help` for the complete interface.
 
 Raw records include the scoring mode, validation and target profiles, plus a
-SHA-256 of the task prompt. A changed prompt, scoring mode, or validation
-profile invalidates result reuse and prevents stale answers from entering
-fixture extraction.
+SHA-256 of the task prompt. Providers can also record a SHA-256 of their fixed
+execution context; OpenCode fingerprints its isolated agent and invocation
+configuration. A changed prompt, scoring mode, validation profile, or defined
+provider configuration invalidates result reuse and prevents stale answers
+from entering fixture extraction.
 
 Raw outputs are intentionally Git-ignored because generated text can contain
 credentials, session metadata, or local paths. Keep raw runs private and publish
