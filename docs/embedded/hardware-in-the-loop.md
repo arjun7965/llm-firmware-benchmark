@@ -42,6 +42,20 @@ Arm GNU Toolchain releases contain components under GNU and permissive
 licenses. Use the release manifest as the authority rather than assigning one
 license to the entire binary distribution.
 
+## Source Provenance
+
+This guide is classified as `public-specification-summary` for the board and
+MCU identities and as `external-tooling-only` for every programmer, SDK, and
+toolchain. The official document and license links are provenance metadata.
+The board facts are summarized from the official product pages, datasheets,
+and user manuals linked above. No vendor code, register map, table, diagram,
+documentation extract, installer, or binary is committed.
+
+The common test protocol, isolation rules, report contract, and the fictional
+host-mock scoring boundary are repository-authored. Changes must follow the
+[vendor specification and source policy](../vendor-specifications.md), retain
+official source and license links, and keep all vendor packages outside Git.
+
 ## Catalog and Readiness Checks
 
 Validate the committed metadata without touching hardware:

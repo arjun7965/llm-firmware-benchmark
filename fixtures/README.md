@@ -19,6 +19,13 @@ every deterministic task must have one. A `rubric-only` task has no manifest,
 extraction, mutation, or sandbox contract. See
 `../docs/rubric-only-tasks.md`.
 
+Fixture contents must follow the [vendor specification and source
+policy](../docs/vendor-specifications.md). Do not commit vendor SDK files,
+examples, generated projects, documentation extracts, firmware, or binaries
+without explicit redistribution permission and the required notices. A fixture
+based on summarized public behavior records that provenance in its task rubric
+and exposes a self-contained, preferably fictional contract.
+
 Fixture-backed tasks use the single-file `markdown-fenced-code` contract by
 default. The opt-in `markdown-file-bundle` contract validates a manifest-owned
 ordered file set before an atomic directory replacement. See

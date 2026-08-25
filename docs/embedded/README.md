@@ -11,6 +11,9 @@ assumptions are made comparable across model runs.
 - `hardware-in-the-loop.md` defines the optional STM32, NXP, and TI lab
   targets, safety boundary, common test protocol, dependencies, and report
   contract.
+- `../vendor-specifications.md` defines when public vendor facts may be
+  summarized, what source provenance to record, and which SDK or licensed
+  material must remain outside the repository.
 - `../benchmarks/firmware-scoring.md` defines the common scoring dimensions
   used by embedded and firmware task rubrics.
 - `../../fixtures/` contains the validated per-task scaffold and manifest

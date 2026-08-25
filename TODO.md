@@ -283,7 +283,7 @@ record exact versions in validation reports.
   timing behavior, concurrency safety, fault recovery, portability, and clarity.
 - [x] Record toolchain versions, compile flags, target metadata, diagnostics,
   binary size, and test outcomes in machine-readable validation reports.
-- [ ] Document when vendor specifications are summarized, and avoid embedding
+- [x] Document when vendor specifications are summarized, and avoid embedding
   confidential SDK content or restrictively licensed source.
 - [ ] Pilot and calibrate each task across several model families before adding
   it to the scored benchmark set.
