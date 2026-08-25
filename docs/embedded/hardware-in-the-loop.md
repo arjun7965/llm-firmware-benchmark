@@ -45,10 +45,10 @@ license to the entire binary distribution.
 ## Source Provenance
 
 This guide is classified as `public-specification-summary` for the board and
-MCU identities, official document links, and vendor-specific tool metadata,
-and as `external-tooling-only` for every programmer and SDK. Those facts are
-summarized from the official product pages, datasheets, user manuals, and
-license authorities linked above. No vendor code, register map, table, diagram,
+MCU identities and as `external-tooling-only` for every programmer, SDK, and
+toolchain. The official document and license links are provenance metadata.
+The board facts are summarized from the official product pages, datasheets,
+and user manuals linked above. No vendor code, register map, table, diagram,
 documentation extract, installer, or binary is committed.
 
 The common test protocol, isolation rules, report contract, and the fictional

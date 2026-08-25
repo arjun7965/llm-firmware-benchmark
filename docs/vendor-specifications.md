@@ -12,7 +12,7 @@ self-contained behavioral contracts over vendor-specific interfaces.
 
 ## Source Classes
 
-Classify every external source that materially influences committed content:
+Classify the provenance of material that influences committed content:
 
 - `original-fictional` — repository-authored behavior that does not reproduce
   a vendor peripheral, SDK API, example, register map, or implementation.
@@ -94,9 +94,9 @@ prebuilt firmware.
 
 A proprietary vendor dependency cannot become part of the required
 deterministic scoring path. If a proposed task cannot be validated without a
-public but nonredistributable environment, apply the rubric-only policy and
-document the limitation. Undocumented or confidential behavior is not an
-acceptable basis for either scoring mode.
+public but nonredistributable environment, apply the [rubric-only
+policy](rubric-only-tasks.md) and document the limitation. Undocumented or
+confidential behavior is not an acceptable basis for either scoring mode.
 
 ## Source Provenance Record
 
