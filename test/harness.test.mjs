@@ -82,15 +82,29 @@ test("result paths preserve the existing run directory convention", () => {
 test("successful results are reusable while failures and malformed files are not", (t) => {
   const root = temporaryDirectory(t);
   const success = join(root, "success.json");
+  const missingFingerprint = join(root, "missing-fingerprint.json");
   const failure = join(root, "failure.json");
   const malformed = join(root, "malformed.json");
-  writeFileSync(success, JSON.stringify({ exitCode: 0 }));
+  writeFileSync(success, JSON.stringify({
+    exitCode: 0,
+    providerConfigSha256: "a".repeat(64),
+  }));
+  writeFileSync(missingFingerprint, JSON.stringify({ exitCode: 0 }));
   writeFileSync(failure, JSON.stringify({ exitCode: 1 }));
   writeFileSync(malformed, "{");
 
   assert.equal(hasSuccessfulResult(success), true);
   assert.equal(hasSuccessfulResult(success, {
     expectedPromptSha256: "different",
+  }), false);
+  assert.equal(hasSuccessfulResult(success, {
+    expectedProviderConfigSha256: "a".repeat(64),
+  }), true);
+  assert.equal(hasSuccessfulResult(success, {
+    expectedProviderConfigSha256: "b".repeat(64),
+  }), false);
+  assert.equal(hasSuccessfulResult(missingFingerprint, {
+    expectedProviderConfigSha256: "a".repeat(64),
   }), false);
   assert.equal(hasSuccessfulResult(success, {
     expectedValidationProfile: "python3-stdlib",
@@ -146,6 +160,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
     job,
     outputRoot,
     generate,
+    providerConfigSha256: "a".repeat(64),
     now: () => new Date("2026-01-01T00:00:00.000Z"),
   });
   const persisted = JSON.parse(readFileSync(result.path, "utf8"));
@@ -162,6 +177,7 @@ test("executeJob persists provider output and result metadata", async (t) => {
   assert.equal(persisted.validationProfile, "c11-host");
   assert.equal(persisted.provider, "fake");
   assert.equal(persisted.modelName, "alpha");
+  assert.equal(persisted.providerConfigSha256, "a".repeat(64));
   assert.equal(persisted.promptSha256, promptSha256(job.task.prompt));
   assert.deepEqual(persisted.modelOptions, {});
 });
@@ -173,6 +189,7 @@ test("executeJob skips an existing successful result without generating", async 
   mkdirSync(outputRoot, { recursive: true });
   writeFileSync(path, JSON.stringify({
     exitCode: 0,
+    providerConfigSha256: "a".repeat(64),
     promptSha256: promptSha256(job.task.prompt),
     scoringMode: job.task.scoringMode,
     validationProfile: job.task.validationProfile,
@@ -184,12 +201,14 @@ test("executeJob skips an existing successful result without generating", async 
     generate: () => {
       throw new Error("must not generate");
     },
+    providerConfigSha256: "a".repeat(64),
   });
 
   assert.deepEqual(result, { status: "skipped", path });
 
   writeFileSync(path, JSON.stringify({
     exitCode: 0,
+    providerConfigSha256: "b".repeat(64),
     promptSha256: "0".repeat(64),
     scoringMode: job.task.scoringMode,
     validationProfile: job.task.validationProfile,
@@ -204,6 +223,7 @@ test("executeJob skips an existing successful result without generating", async 
       stderr: "",
       error: null,
     }),
+    providerConfigSha256: "a".repeat(64),
   });
   assert.equal(refreshed.status, "completed");
   assert.equal(refreshed.record.stdout, "refreshed");
@@ -222,4 +242,19 @@ test("executeJob records rejected provider executions", async (t) => {
 
   assert.equal(result.record.exitCode, null);
   assert.equal(result.record.error, "provider failed");
+});
+
+test("executeJob rejects malformed provider configuration fingerprints", async (t) => {
+  const outputRoot = temporaryDirectory(t);
+  const [job] = createJobs(tasks, [models[0]]);
+
+  await assert.rejects(
+    executeJob({
+      job,
+      outputRoot,
+      generate: async () => ({ exitCode: 0 }),
+      providerConfigSha256: "not-a-digest",
+    }),
+    /lowercase SHA-256 digest/,
+  );
 });

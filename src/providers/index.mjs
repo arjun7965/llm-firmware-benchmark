@@ -1,6 +1,9 @@
 import { executeClaudeCodeJob } from "./claude-code.mjs";
 import { executeCodexJob } from "./codex.mjs";
-import { executeOpenCodeJob } from "./opencode.mjs";
+import {
+  executeOpenCodeJob,
+  openCodeProviderConfigSha256,
+} from "./opencode.mjs";
 import { executeOpenAICompatibleJob } from "./openai-compatible.mjs";
 
 const providers = new Map([
@@ -8,6 +11,9 @@ const providers = new Map([
   ["codex", executeCodexJob],
   ["opencode", executeOpenCodeJob],
   ["openai-compatible", executeOpenAICompatibleJob],
+]);
+const providerConfigSha256ByName = new Map([
+  ["opencode", openCodeProviderConfigSha256],
 ]);
 
 export function getProvider(name) {
@@ -22,4 +28,9 @@ export function getProvider(name) {
 
 export function generateWithProvider(job) {
   return getProvider(job.provider)(job);
+}
+
+export function getProviderConfigSha256(name) {
+  getProvider(name);
+  return providerConfigSha256ByName.get(name);
 }

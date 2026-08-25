@@ -6,8 +6,12 @@ import { extractAnswer } from "../src/answers.mjs";
 import {
   buildOpenCodeInvocation,
   executeOpenCodeJob,
+  openCodeProviderConfigSha256,
 } from "../src/providers/opencode.mjs";
-import { getProvider } from "../src/providers/index.mjs";
+import {
+  getProvider,
+  getProviderConfigSha256,
+} from "../src/providers/index.mjs";
 
 const job = {
   run: 1,
@@ -84,7 +88,10 @@ test("OpenCode invocation isolates configuration and disables tools", () => {
   );
   assert.equal(config.share, "disabled");
   assert.equal(config.agent.benchmark.mode, "primary");
+  assert.match(config.agent.benchmark.prompt, /directly without using tools/);
+  assert.match(config.agent.benchmark.prompt, /Do not inspect or modify files/);
   assert.deepEqual(config.agent.benchmark.permission, { "*": "deny" });
+  assert.match(openCodeProviderConfigSha256, /^[a-f0-9]{64}$/);
 });
 
 test("OpenCode execution captures NDJSON and removes its workspace", async () => {
@@ -136,6 +143,44 @@ test("OpenCode answer extraction combines completed text parts", () => {
   assert.equal(extractAnswer(stdout), "first second");
 });
 
+test("OpenCode answer extraction selects the final text message", () => {
+  const stdout = [
+    event("step_start", {
+      type: "step-start",
+      messageID: "msg_progress",
+    }),
+    event("text", {
+      type: "text",
+      messageID: "msg_progress",
+      text: "Checking the interface.",
+    }),
+    event("step_finish", {
+      type: "step-finish",
+      messageID: "msg_progress",
+    }),
+    event("step_start", {
+      type: "step-start",
+      messageID: "msg_final",
+    }),
+    event("text", {
+      type: "text",
+      messageID: "msg_final",
+      text: "final",
+    }),
+    event("text", {
+      type: "text",
+      messageID: "msg_final",
+      text: " answer",
+    }),
+    event("step_finish", {
+      type: "step-finish",
+      messageID: "msg_final",
+    }),
+  ].join("\n");
+
+  assert.equal(extractAnswer(stdout), "final answer");
+});
+
 test("OpenCode answer extraction rejects invalid event streams", () => {
   const noText = [
     event("step_start", { type: "step-start" }),
@@ -150,6 +195,32 @@ test("OpenCode answer extraction rejects invalid event streams", () => {
   assert.throws(() => extractAnswer(mixedSessions), /multiple sessions/);
   assert.equal(extractAnswer('{"ordinary":true}\nnot-json'),
     '{"ordinary":true}\nnot-json');
+});
+
+test("OpenCode execution rejects a successful event stream without text", async () => {
+  const stdout = [
+    event("step_start", { type: "step-start" }),
+    event("step_finish", { type: "step-finish" }),
+  ].join("\n") + "\n";
+  const spawnImpl = () => {
+    const child = fakeChild();
+    process.nextTick(() => {
+      child.stdout.write(stdout);
+      child.emit("close", 0, null);
+    });
+    return child;
+  };
+
+  const result = await executeOpenCodeJob(job, {
+    spawnImpl,
+    createWorkingDirectory: () => "/tmp/opencode-job",
+    removeWorkingDirectory: () => {},
+  });
+
+  assert.equal(result.exitCode, 1);
+  assert.equal(result.stdout, stdout);
+  assert.match(result.error, /without an extractable text result/);
+  assert.match(result.error, /does not contain a text result/);
 });
 
 test("OpenCode invocation applies and validates model options", () => {
@@ -234,4 +305,9 @@ test("OpenCode execution terminates timed-out processes", async () => {
 
 test("provider registry exposes the OpenCode adapter", () => {
   assert.equal(getProvider("opencode"), executeOpenCodeJob);
+  assert.equal(
+    getProviderConfigSha256("opencode"),
+    openCodeProviderConfigSha256,
+  );
+  assert.equal(getProviderConfigSha256("codex"), undefined);
 });

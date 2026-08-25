@@ -16,6 +16,7 @@ import { requireSuite } from "./suites.mjs";
 import { requireValidationProfile } from "./validation-profiles.mjs";
 
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const sha256Pattern = /^[a-f0-9]{64}$/;
 const taskFields = new Set([
   "category",
   "id",
@@ -131,6 +132,7 @@ export function promptSha256(prompt) {
 }
 
 export function hasSuccessfulResult(path, {
+  expectedProviderConfigSha256,
   expectedPromptSha256,
   expectedScoringMode,
   expectedValidationProfile,
@@ -139,6 +141,8 @@ export function hasSuccessfulResult(path, {
   try {
     const result = JSON.parse(readFileSync(path, "utf8"));
     return result.exitCode === 0 &&
+      (expectedProviderConfigSha256 === undefined ||
+       result.providerConfigSha256 === expectedProviderConfigSha256) &&
       (expectedPromptSha256 === undefined ||
        result.promptSha256 === expectedPromptSha256) &&
       (expectedScoringMode === undefined ||
@@ -176,15 +180,23 @@ export async function executeJob({
   job,
   outputRoot,
   generate,
+  providerConfigSha256,
   now = () => new Date(),
 }) {
   if (typeof generate !== "function") {
     throw new TypeError("generate must be a function");
   }
+  if (providerConfigSha256 !== undefined &&
+      !sha256Pattern.test(providerConfigSha256)) {
+    throw new TypeError(
+      "providerConfigSha256 must be a lowercase SHA-256 digest",
+    );
+  }
 
   const path = resultFilePath(outputRoot, job);
   const currentPromptSha256 = promptSha256(job.task.prompt);
   if (hasSuccessfulResult(path, {
+    expectedProviderConfigSha256: providerConfigSha256,
     expectedPromptSha256: currentPromptSha256,
     expectedScoringMode: job.task.scoringMode,
     expectedValidationProfile: job.task.validationProfile,
@@ -219,6 +231,7 @@ export async function executeJob({
     modelName: job.modelName,
     modelId: job.modelId,
     modelOptions: job.modelOptions,
+    providerConfigSha256: providerConfigSha256 ?? null,
     promptSha256: currentPromptSha256,
     startedAt,
     finishedAt: now().toISOString(),

@@ -1,12 +1,19 @@
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { extractAnswer } from "../answers.mjs";
 
 const defaultTimeoutMs = 600_000;
 const modelIdPattern = /^[^\s/]+\/[^\s/]+(?:\/[^\s/]+)*$/u;
 const supportedOptions = new Set(["timeoutMs", "variant"]);
-const benchmarkConfig = JSON.stringify({
+const benchmarkAgentPrompt = [
+  "Answer the user's benchmark prompt directly without using tools.",
+  "The prompt is self-contained. Do not inspect or modify files.",
+  "Return the requested final answer in the exact format the user specifies.",
+].join(" ");
+const benchmarkConfiguration = {
   autoupdate: false,
   share: "disabled",
   snapshot: false,
@@ -18,12 +25,34 @@ const benchmarkConfig = JSON.stringify({
     benchmark: {
       description: "Answer benchmark prompts without tools.",
       mode: "primary",
+      prompt: benchmarkAgentPrompt,
       permission: {
         "*": "deny",
       },
     },
   },
-});
+};
+const benchmarkConfig = JSON.stringify(benchmarkConfiguration);
+const providerConfiguration = {
+  schemaVersion: 1,
+  invocation: {
+    pure: true,
+    format: "json",
+    agent: "benchmark",
+  },
+  environment: {
+    disableAutoupdate: true,
+    disableGlobalConfig: true,
+    disableLspDownload: true,
+    disableProjectConfig: true,
+    disableShare: true,
+  },
+  config: benchmarkConfiguration,
+};
+
+export const openCodeProviderConfigSha256 = createHash("sha256")
+  .update(JSON.stringify(providerConfiguration))
+  .digest("hex");
 
 function isPlainObject(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -140,6 +169,18 @@ export async function executeOpenCodeJob(job, {
       if (finished) return;
       finished = true;
       clearTimeout(timer);
+      if (exitCode === 0 && error === null) {
+        try {
+          if (extractAnswer(stdout).trim() === "") {
+            throw new TypeError("OpenCode output is empty");
+          }
+        } catch (outputError) {
+          exitCode = 1;
+          error =
+            "OpenCode completed without an extractable text result: " +
+            outputError.message;
+        }
+      }
       if (cwd !== undefined) {
         try {
           removeWorkingDirectory(cwd);
