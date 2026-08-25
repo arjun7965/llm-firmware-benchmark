@@ -287,6 +287,9 @@ record exact versions in validation reports.
   confidential SDK content or restrictively licensed source.
 - [ ] Pilot and calibrate each task across several model families before adding
   it to the scored benchmark set.
+  - [x] Establish the cross-model protocol and complete the executable
+    `static-memory-pool` pilot with three runs each from GPT-5.6 Luna, GLM-5.3,
+    and Kimi K3; retain blinded rubric scoring as a separate publication step.
 
 ## Repository Operations
 

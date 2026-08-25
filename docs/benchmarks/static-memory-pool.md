@@ -23,3 +23,18 @@ Scoring profile: `firmware-v1`.
 - 1 point — **Clarity and validation:** The explanation covers static ownership, alignment, deterministic exhaustion/reuse, invalid-release isolation, and representative tests.
 
 Allocating the same block twice, accepting an interior pointer, dynamically allocating backing storage, or retaining allocations after reinitialization cannot receive the corresponding correctness, resource, or recovery credit.
+
+## Calibration
+
+Run `npm run fixture:static-memory-pool:self-test` to exercise the trusted
+reference. The mutation suite rejects six compile-valid defects covering
+duplicate allocation, interior and unallocated release, missing release,
+uninitialized allocation, and incomplete reinitialization.
+
+The 2026-08-25 executable pilot generated three samples each from GPT-5.6 Luna,
+GLM-5.3, and Kimi K3. All nine distinct answers extracted, compiled, and passed
+the deterministic validator under the same `c11-host` revision 4 profile and
+`debian-13-x86-64-c11-host` revision 1 environment.
+See [Model-Family Calibration](../model-family-calibration.md) for the protocol,
+provider differences, and reproducibility metadata. Rubric totals still require
+blinded human scoring.
