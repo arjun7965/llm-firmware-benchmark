@@ -1,5 +1,6 @@
 import {
   createHash,
+  randomBytes,
   randomInt,
 } from "node:crypto";
 import {
@@ -10,12 +11,12 @@ import {
   statSync,
 } from "node:fs";
 import {
-  basename,
   join,
   relative,
   resolve,
   sep,
 } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { extractAnswer } from "./answers.mjs";
 import { promptSha256 } from "./harness.mjs";
 
@@ -35,6 +36,12 @@ function requireNonEmptyString(value, name) {
     throw new TypeError(`${name} must be a non-empty string`);
   }
   return value;
+}
+
+function normalizedIdentity(value) {
+  return value.normalize("NFKD")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "");
 }
 
 export function resolvePrivateResultsPath(path, {
@@ -121,6 +128,20 @@ function parseResult(path, inputRoot, task) {
   if (result.task !== task.id) {
     throw new TypeError(`calibration result has the wrong task: ${path}`);
   }
+  const expectedMetadata = {
+    category: task.category,
+    scoringMode: task.scoringMode,
+    suite: task.suite,
+    targetProfile: task.targetProfile ?? null,
+    validationProfile: task.validationProfile,
+  };
+  for (const [field, expected] of Object.entries(expectedMetadata)) {
+    if (result[field] !== expected) {
+      throw new TypeError(
+        `calibration result ${field} does not match the task: ${path}`,
+      );
+    }
+  }
   if (
     result.exitCode !== 0 ||
     result.signal !== null ||
@@ -152,10 +173,11 @@ function parseResult(path, inputRoot, task) {
   if (answer.trim() === "") {
     throw new TypeError(`calibration result answer is empty: ${path}`);
   }
-  const normalizedAnswer = answer.toLowerCase();
-  const leakedIdentity = [modelName, modelId]
+  const normalizedAnswer = normalizedIdentity(answer);
+  const leakedIdentity = [modelName, modelId, provider]
+    .map(normalizedIdentity)
     .filter((identity) => identity.length >= 4)
-    .find((identity) => normalizedAnswer.includes(identity.toLowerCase()));
+    .find((identity) => normalizedAnswer.includes(identity));
   if (leakedIdentity !== undefined) {
     throw new TypeError(
       `calibration answer exposes its model identity in ${path}`,
@@ -269,6 +291,7 @@ function shuffledSamples(samples, chooseIndex) {
 }
 
 export function buildBlindedScoringArtifacts({
+  createCommitmentNonce = () => randomBytes(32).toString("hex"),
   rubric,
   samples,
   task,
@@ -288,8 +311,31 @@ export function buildBlindedScoringArtifacts({
     blindId: `sample-${String(index + 1).padStart(width, "0")}`,
     ...sample,
   }));
+  const commitmentNonce = createCommitmentNonce();
+  if (
+    typeof commitmentNonce !== "string" ||
+    !/^[a-f0-9]{64}$/u.test(commitmentNonce)
+  ) {
+    throw new TypeError("identity key commitment nonce must be 32-byte hex");
+  }
+  const key = {
+    schemaVersion: "1.0",
+    taskId: task.id,
+    commitmentNonce,
+    samples: keyedSamples.map((sample) => ({
+      answerSha256: sample.answerSha256,
+      blindId: sample.blindId,
+      modelId: sample.modelId,
+      modelName: sample.modelName,
+      provider: sample.provider,
+      run: sample.run,
+      source: sample.source,
+    })),
+  };
+  const keyText = serializeJson(key);
   const packet = {
     schemaVersion: "1.0",
+    identityKeySha256: sha256(keyText),
     task: {
       id: task.id,
       prompt: task.prompt,
@@ -297,8 +343,8 @@ export function buildBlindedScoringArtifacts({
       rubric,
       rubricCriteria: criteria,
     },
-    validationEvidence:
-      "Every included sample completed extraction and deterministic public validation successfully. An executable pass is not an automatic score of 10.",
+    generationEvidence:
+      "Every included provider result completed successfully and contained an extractable answer. Verify answer-contract extraction and deterministic validation evidence separately before scoring; inclusion in this packet does not attest either outcome.",
     samples: keyedSamples.map((sample) => ({
       answer: sample.answer,
       answerSha256: sample.answerSha256,
@@ -325,24 +371,9 @@ export function buildBlindedScoringArtifacts({
       rationale: "",
     })),
   };
-  const key = {
-    schemaVersion: "1.0",
-    taskId: task.id,
-    packetSha256,
-    samples: keyedSamples.map((sample) => ({
-      answerSha256: sample.answerSha256,
-      blindId: sample.blindId,
-      modelId: sample.modelId,
-      modelName: sample.modelName,
-      provider: sample.provider,
-      run: sample.run,
-      source: sample.source,
-    })),
-  };
-
   return {
     key,
-    keyText: serializeJson(key),
+    keyText,
     packet,
     packetText,
     scoreSheet,
@@ -393,8 +424,21 @@ function summarizeTotals(values) {
   };
 }
 
+function requireMatchingJsonText(value, valueText, name) {
+  let parsed;
+  try {
+    parsed = JSON.parse(valueText);
+  } catch (error) {
+    throw new TypeError(`${name} text is not valid JSON: ${error.message}`);
+  }
+  if (!isDeepStrictEqual(parsed, value)) {
+    throw new TypeError(`${name} text does not match its parsed value`);
+  }
+}
+
 export function summarizeCompletedCalibrationScoring({
   identityKey,
+  identityKeyText,
   packet,
   packetText,
   scoreSheet,
@@ -403,8 +447,12 @@ export function summarizeCompletedCalibrationScoring({
   requireObject(identityKey, "identity key");
   requireObject(packet, "packet");
   requireObject(scoreSheet, "score sheet");
+  requireNonEmptyString(identityKeyText, "identity key text");
   requireNonEmptyString(packetText, "packet text");
   requireNonEmptyString(scoreSheetText, "score sheet text");
+  requireMatchingJsonText(identityKey, identityKeyText, "identity key");
+  requireMatchingJsonText(packet, packetText, "packet");
+  requireMatchingJsonText(scoreSheet, scoreSheetText, "score sheet");
   if (
     identityKey.schemaVersion !== "1.0" ||
     packet.schemaVersion !== "1.0" ||
@@ -413,15 +461,18 @@ export function summarizeCompletedCalibrationScoring({
     throw new TypeError("unsupported calibration scoring schemaVersion");
   }
   const taskId = requireNonEmptyString(identityKey.taskId, "identity key taskId");
+  if (!/^[a-f0-9]{64}$/u.test(identityKey.commitmentNonce)) {
+    throw new TypeError("calibration scoring identity key nonce is invalid");
+  }
   if (packet.task?.id !== taskId || scoreSheet.taskId !== taskId) {
     throw new TypeError("calibration scoring task IDs do not match");
   }
+  if (packet.identityKeySha256 !== sha256(identityKeyText)) {
+    throw new TypeError("calibration scoring identity key digest does not match");
+  }
 
   const packetDigest = sha256(packetText);
-  if (
-    identityKey.packetSha256 !== packetDigest ||
-    scoreSheet.packetSha256 !== packetDigest
-  ) {
+  if (scoreSheet.packetSha256 !== packetDigest) {
     throw new TypeError("calibration scoring packet digest does not match");
   }
   const packetSamples = requireUniqueSamples(packet.samples, "packet samples");

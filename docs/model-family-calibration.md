@@ -37,18 +37,28 @@ npm run calibration:blind -- \
 ```
 
 The command extracts complete answers through the provider envelope parser,
-rejects failed results and answers that name their model, randomly assigns
-`sample-NN` identifiers, and writes the answer packet, blank score sheet, and
-identity key separately. Give a reviewer only `packet.json` and
-`score-sheet.json`. Complete the sheet and preserve its SHA-256 before anyone
-opens `identity-key.json`. After that boundary, validate the packet digest,
-answer digests, rubric bounds, arithmetic, and model/run uniqueness while
-summarizing the scores:
+rejects failed results and normalized literal model/provider identifiers in
+answer text, randomly assigns `sample-NN` identifiers, and writes the answer
+packet, blank score sheet, and identity key separately. Manually review the
+packet for aliases or stylistic identity clues that literal screening cannot
+detect. The packet records the sealed identity key's SHA-256,
+committing the model/run mapping before review without disclosing it. The key
+contains a random 256-bit nonce, preventing a reviewer from brute-forcing the
+small permutation space from the public commitment. Give a reviewer only
+`packet.json` and `score-sheet.json`. Complete the sheet and preserve its
+SHA-256 before anyone opens `identity-key.json`. After that boundary, validate
+the key commitment, packet digest, answer digests, rubric bounds, arithmetic,
+and model/run uniqueness while summarizing the scores:
 
 ```bash
 npm run calibration:summarize -- \
   --directory results/<pilot>/blind-scoring
 ```
+
+Packet inclusion attests only that provider generation succeeded and the
+provider envelope contained an extractable answer. Before giving the packet to
+a reviewer, separately verify the manifest-owned answer extraction and the
+deterministic validation reports required by steps 1 and 5.
 
 A task completes the executable part of this protocol when its trusted
 reference passes, all controlled mutations are rejected, and every selected
@@ -126,3 +136,6 @@ bounds checking avoids that edge case.
 This was an AI rubric review used to verify the blinding and score-validation
 workflow. It is disclosed separately and does not satisfy the independent
 blinded human-review gate for publication-grade benchmark scores.
+This dry run predated the identity-key commitment now required by the workflow,
+so its packet and score-sheet hashes do not independently prove that the
+model/run mapping remained unchanged before unblinding.

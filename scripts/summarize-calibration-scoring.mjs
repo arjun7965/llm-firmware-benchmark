@@ -31,6 +31,7 @@ const scoreSheet = readJson("score-sheet.json");
 const identityKey = readJson("identity-key.json");
 const summary = summarizeCompletedCalibrationScoring({
   identityKey: identityKey.value,
+  identityKeyText: identityKey.text,
   packet: packet.value,
   packetText: packet.text,
   scoreSheet: scoreSheet.value,

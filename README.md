@@ -186,11 +186,21 @@ npm run calibration:summarize -- \
   --directory results/<pilot>/blind-scoring
 ```
 
-The preparation command extracts complete provider answers, rejects failed or
-identity-revealing samples, randomizes their order, and writes `packet.json`,
-`score-sheet.json`, and a separate `identity-key.json`. The summary command
-fails closed on packet, answer, criterion, total, or model/run mismatches. Keep
-all three files private; only publish reviewed aggregate findings.
+The preparation command extracts complete provider answers, rejects failed
+samples and normalized literal model/provider identifiers in answer text,
+randomizes their order, and writes `packet.json`, `score-sheet.json`, and a
+separate `identity-key.json`. The summary command
+fails closed on identity-key, packet, answer, criterion, total, or model/run
+mismatches. The packet commits the sealed identity key's SHA-256 before
+scoring; the hidden key includes a random 256-bit nonce so the small set of
+possible model/run permutations cannot be brute-forced from that commitment.
+Post-review remapping is therefore detectable without revealing the mapping.
+Keep all three files private; only publish reviewed aggregate findings.
+Packet inclusion attests successful provider generation and answer extraction
+from its envelope, not fixture answer-contract extraction or deterministic
+validation; verify those records separately before scoring.
+Before handoff, manually inspect the packet for aliases or stylistic identity
+clues that literal identifier screening cannot detect.
 
 The default rubric scores correctness, constraint compliance, edge cases,
 testing, maintainability, and technical reasoning out of 10. Blind model

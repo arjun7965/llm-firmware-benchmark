@@ -20,8 +20,13 @@ import {
 import { promptSha256 } from "../src/harness.mjs";
 
 const task = {
+  category: "embedded",
   id: "example-task",
   prompt: "Return one fenced C implementation and an explanation.",
+  scoringMode: "deterministic",
+  suite: "firmware",
+  targetProfile: "portable-c11",
+  validationProfile: "c11-host",
 };
 const rubric = [
   "# Example Task",
@@ -53,6 +58,11 @@ function writeResult(root, {
   writeFileSync(join(directory, `${task.id}--${modelName}.json`), JSON.stringify({
     run,
     task: task.id,
+    category: task.category,
+    scoringMode: task.scoringMode,
+    suite: task.suite,
+    targetProfile: task.targetProfile,
+    validationProfile: task.validationProfile,
     provider: "test-provider",
     modelName,
     modelId,
@@ -86,6 +96,22 @@ test("calibration samples are loaded without provider envelopes", (t) => {
   assert.match(samples[0].answer, /First explanation/u);
 });
 
+test("calibration samples must match task evaluation metadata", (t) => {
+  const root = temporaryDirectory(t);
+  writeResult(root, {
+    answer: "answer",
+    modelId: "provider/alpha",
+    modelName: "model-alpha",
+    run: 1,
+    validationProfile: "other-profile",
+  });
+
+  assert.throws(
+    () => loadCalibrationSamples(root, task),
+    /validationProfile does not match the task/u,
+  );
+});
+
 test("blinded artifacts separate answers from the identity key", () => {
   const samples = [
     {
@@ -108,6 +134,7 @@ test("blinded artifacts separate answers from the identity key", () => {
     },
   ];
   const artifacts = buildBlindedScoringArtifacts({
+    createCommitmentNonce: () => "c".repeat(64),
     rubric,
     samples,
     task,
@@ -118,9 +145,15 @@ test("blinded artifacts separate answers from the identity key", () => {
   assert.equal(artifacts.key.samples[0].modelName, "model-beta");
   assert.doesNotMatch(artifacts.packetText, /model-alpha|model-beta|provider-a/u);
   assert.match(artifacts.keyText, /model-alpha|model-beta/u);
+  assert.equal(artifacts.key.commitmentNonce, "c".repeat(64));
+  assert.doesNotMatch(artifacts.packetText, /c{64}/u);
+  assert.match(
+    artifacts.packet.generationEvidence,
+    /does not attest either outcome/u,
+  );
   assert.equal(
-    artifacts.key.packetSha256,
-    createHash("sha256").update(artifacts.packetText).digest("hex"),
+    artifacts.packet.identityKeySha256,
+    createHash("sha256").update(artifacts.keyText).digest("hex"),
   );
   assert.deepEqual(
     Object.keys(artifacts.scoreSheet.samples[0].scores),
@@ -188,6 +221,7 @@ test("completed blind scores are verified before model summaries", () => {
     },
   ];
   const artifacts = buildBlindedScoringArtifacts({
+    createCommitmentNonce: () => "d".repeat(64),
     rubric,
     samples,
     task,
@@ -210,6 +244,7 @@ test("completed blind scores are verified before model summaries", () => {
   const scoreSheetText = `${JSON.stringify(scoreSheet, null, 2)}\n`;
   const summary = summarizeCompletedCalibrationScoring({
     identityKey: artifacts.key,
+    identityKeyText: artifacts.keyText,
     packet: artifacts.packet,
     packetText: artifacts.packetText,
     scoreSheet,
@@ -223,16 +258,35 @@ test("completed blind scores are verified before model summaries", () => {
   assert.equal(summary.overall.sampleCount, 2);
   assert.equal(summary.overall.sd, 0);
 
-  scoreSheet.samples[0].scores["functional-correctness"] = 5;
+  const invalidScoreSheet = structuredClone(scoreSheet);
+  invalidScoreSheet.samples[0].scores["functional-correctness"] = 5;
+  const invalidScoreSheetText =
+    `${JSON.stringify(invalidScoreSheet, null, 2)}\n`;
   assert.throws(
     () => summarizeCompletedCalibrationScoring({
       identityKey: artifacts.key,
+      identityKeyText: artifacts.keyText,
+      packet: artifacts.packet,
+      packetText: artifacts.packetText,
+      scoreSheet: invalidScoreSheet,
+      scoreSheetText: invalidScoreSheetText,
+    }),
+    /outside its range/u,
+  );
+
+  const remappedKey = structuredClone(artifacts.key);
+  remappedKey.samples[0].modelName = "replacement-model";
+  const remappedKeyText = `${JSON.stringify(remappedKey, null, 2)}\n`;
+  assert.throws(
+    () => summarizeCompletedCalibrationScoring({
+      identityKey: remappedKey,
+      identityKeyText: remappedKeyText,
       packet: artifacts.packet,
       packetText: artifacts.packetText,
       scoreSheet,
       scoreSheetText,
     }),
-    /outside its range/u,
+    /identity key digest does not match/u,
   );
 });
 
@@ -263,6 +317,11 @@ test("sample loading rejects failed, duplicate, and identity-revealing results",
     JSON.stringify({
       run: 1,
       task: task.id,
+      category: task.category,
+      scoringMode: task.scoringMode,
+      suite: task.suite,
+      targetProfile: task.targetProfile,
+      validationProfile: task.validationProfile,
       provider: "test-provider",
       modelName: "model-alpha",
       modelId: "provider/alpha",
@@ -280,13 +339,26 @@ test("sample loading rejects failed, duplicate, and identity-revealing results",
 
   const leakRoot = temporaryDirectory(t);
   writeResult(leakRoot, {
-    answer: "Generated by model-alpha.",
+    answer: "Generated by MODEL ALPHA.",
     modelId: "provider/alpha",
     modelName: "model-alpha",
     run: 1,
   });
   assert.throws(
     () => loadCalibrationSamples(leakRoot, task),
+    /exposes its model identity/u,
+  );
+
+  const providerLeakRoot = temporaryDirectory(t);
+  writeResult(providerLeakRoot, {
+    answer: "Generated by CODEX.",
+    modelId: "unlisted-model",
+    modelName: "unlisted-model",
+    provider: "codex",
+    run: 1,
+  });
+  assert.throws(
+    () => loadCalibrationSamples(providerLeakRoot, task),
     /exposes its model identity/u,
   );
 });
