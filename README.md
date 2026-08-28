@@ -173,6 +173,25 @@ cp repeat-scores.example.json repeat-scores.json
 npm run summarize
 ```
 
+For a cross-model calibration pilot, prepare a private identity-blinded packet
+inside the ignored `results/` tree, complete its score sheet before opening the
+identity key, then validate and summarize the locked scores:
+
+```bash
+npm run calibration:blind -- \
+  --input results/<pilot> \
+  --task <task-id> \
+  --output results/<pilot>/blind-scoring
+npm run calibration:summarize -- \
+  --directory results/<pilot>/blind-scoring
+```
+
+The preparation command extracts complete provider answers, rejects failed or
+identity-revealing samples, randomizes their order, and writes `packet.json`,
+`score-sheet.json`, and a separate `identity-key.json`. The summary command
+fails closed on packet, answer, criterion, total, or model/run mismatches. Keep
+all three files private; only publish reviewed aggregate findings.
+
 The default rubric scores correctness, constraint compliance, edge cases,
 testing, maintainability, and technical reasoning out of 10. Blind model
 identities during initial scoring and disclose differences in provider settings,

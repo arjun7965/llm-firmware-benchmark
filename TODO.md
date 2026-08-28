@@ -290,6 +290,11 @@ record exact versions in validation reports.
   - [x] Establish the cross-model protocol and complete the executable
     `static-memory-pool` pilot with three runs each from GPT-5.6 Luna, GLM-5.3,
     and Kimi K3; retain blinded rubric scoring as a separate publication step.
+  - [x] Add a private identity-blinding and score-validation workflow, then
+    exercise it with a disclosed preliminary AI review of the nine pilot
+    answers.
+  - [ ] Obtain independent blinded human scores for the `static-memory-pool`
+    pilot, then select the next deterministic task for cross-model calibration.
 
 ## Repository Operations
 
