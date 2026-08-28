@@ -161,6 +161,44 @@ test("blinded artifacts separate answers from the identity key", () => {
   );
 });
 
+test("blinded packets omit prior calibration outcomes from the rubric", () => {
+  const artifacts = buildBlindedScoringArtifacts({
+    createCommitmentNonce: () => "c".repeat(64),
+    rubric: [
+      rubric.trimEnd(),
+      "",
+      "## Calibration",
+      "",
+      "A prior reviewer gave one answer a lower score.",
+      "",
+      "### Details",
+      "",
+      "This outcome must not anchor the next reviewer.",
+      "",
+      "## Source Provenance",
+      "",
+      "The task uses a repository-authored interface.",
+      "",
+    ].join("\n"),
+    samples: [{
+      answer: "answer alpha",
+      answerSha256: "a".repeat(64),
+      modelId: "provider/alpha",
+      modelName: "model-alpha",
+      provider: "provider-a",
+      run: 1,
+      source: "example-task--model-alpha.json",
+    }],
+    task,
+    chooseIndex: () => 0,
+  });
+
+  assert.doesNotMatch(artifacts.packet.task.rubric, /prior reviewer|anchor/u);
+  assert.doesNotMatch(artifacts.packet.task.rubric, /^## Calibration$/mu);
+  assert.match(artifacts.packet.task.rubric, /^## Source Provenance$/mu);
+  assert.equal(artifacts.packet.task.rubricCriteria.length, 6);
+});
+
 test("rubric parsing requires an exact ten-point allocation", () => {
   assert.equal(parseCalibrationRubric(rubric).length, 6);
   assert.throws(
