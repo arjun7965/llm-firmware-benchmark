@@ -36,5 +36,8 @@ GLM-5.3, and Kimi K3. All nine distinct answers extracted, compiled, and passed
 the deterministic validator under the same `c11-host` revision 4 profile and
 `debian-13-x86-64-c11-host` revision 1 environment.
 See [Model-Family Calibration](../model-family-calibration.md) for the protocol,
-provider differences, and reproducibility metadata. Rubric totals still require
-blinded human scoring.
+provider differences, and reproducibility metadata. A preliminary
+identity-blinded AI review scored eight answers at 10 and one at 9.5 because
+its exclusive-end integer calculation can wrap at the top of a `uintptr_t`
+address space. Independent blinded human scores are still required before the
+totals are treated as publication-grade benchmark evidence.

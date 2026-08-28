@@ -27,6 +27,39 @@ For each task:
 7. Blind model identities before assigning rubric scores. An executable pass
    is validation evidence, not an automatic score of 10.
 
+Create the private scoring artifacts under ignored `results/` paths:
+
+```bash
+npm run calibration:blind -- \
+  --input results/<pilot> \
+  --task <task-id> \
+  --output results/<pilot>/blind-scoring
+```
+
+The command extracts complete answers through the provider envelope parser,
+rejects failed results and normalized literal model/provider identifiers in
+answer text, randomly assigns `sample-NN` identifiers, and writes the answer
+packet, blank score sheet, and identity key separately. Manually review the
+packet for aliases or stylistic identity clues that literal screening cannot
+detect. The packet records the sealed identity key's SHA-256,
+committing the model/run mapping before review without disclosing it. The key
+contains a random 256-bit nonce, preventing a reviewer from brute-forcing the
+small permutation space from the public commitment. Give a reviewer only
+`packet.json` and `score-sheet.json`. Complete the sheet and preserve its
+SHA-256 before anyone opens `identity-key.json`. After that boundary, validate
+the key commitment, packet digest, answer digests, rubric bounds, arithmetic,
+and model/run uniqueness while summarizing the scores:
+
+```bash
+npm run calibration:summarize -- \
+  --directory results/<pilot>/blind-scoring
+```
+
+Packet inclusion attests only that provider generation succeeded and the
+provider envelope contained an extractable answer. Before giving the packet to
+a reviewer, separately verify the manifest-owned answer extraction and the
+deterministic validation reports required by steps 1 and 5.
+
 A task completes the executable part of this protocol when its trusted
 reference passes, all controlled mutations are rejected, and every selected
 sample has current prompt provenance plus a recorded extraction and validation
@@ -77,5 +110,32 @@ controlled mutations.
 
 Raw outputs, extracted answers, and per-sample validation reports remain under
 `results/static-memory-pool-cross-family-20260825/` and are intentionally
-Git-ignored. No rubric totals were assigned during this unblinded executable
-pilot.
+Git-ignored.
+
+### Preliminary blinded rubric review — 2026-08-27
+
+The blinding workflow was exercised on all nine complete answers. Codex
+GPT-5.6 Sol scored the randomized packet before the identity key was opened.
+The packet SHA-256 was
+`de1427141b7af701b1d79c685ff456fdac26ed1768dccab8c73126c1aafc0035`;
+the completed score-sheet SHA-256, frozen before unblinding, was
+`b903f99129397cfee44f2c5fbbf65745185628d9d1b9876b21655d6c5e9abca7`.
+
+| Model family | Run scores | Mean | Population SD | Range |
+| --- | --- | ---: | ---: | ---: |
+| GPT-5.6 Luna | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+| GLM-5.3 | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+| Kimi K3 | 10, 9.5, 10 | 9.833 | 0.236 | 0.5 |
+
+Across all nine samples, the mean was 9.944 with a population standard
+deviation of 0.157. The sole deduction was half of the portability point: one
+answer formed the exclusive storage end as `base + span`, which can wrap when
+a valid pool occupies the top of a `uintptr_t` address space. Offset-first
+bounds checking avoids that edge case.
+
+This was an AI rubric review used to verify the blinding and score-validation
+workflow. It is disclosed separately and does not satisfy the independent
+blinded human-review gate for publication-grade benchmark scores.
+This dry run predated the identity-key commitment now required by the workflow,
+so its packet and score-sheet hashes do not independently prove that the
+model/run mapping remained unchanged before unblinding.
