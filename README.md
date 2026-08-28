@@ -189,7 +189,9 @@ npm run calibration:summarize -- \
 The preparation command extracts complete provider answers, rejects failed
 samples and normalized literal model/provider identifiers in answer text,
 randomizes their order, and writes `packet.json`, `score-sheet.json`, and a
-separate `identity-key.json`. The summary command
+separate `identity-key.json`. It omits the rubric's `## Calibration` section
+from the reviewer packet so prior outcomes cannot anchor new scores. The
+summary command
 fails closed on identity-key, packet, answer, criterion, total, or model/run
 mismatches. The packet commits the sealed identity key's SHA-256 before
 scoring; the hidden key includes a random 256-bit nonce so the small set of

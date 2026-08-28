@@ -277,6 +277,25 @@ export function parseCalibrationRubric(rubric) {
   return criteria;
 }
 
+function rubricForBlindReview(rubric) {
+  const lines = requireNonEmptyString(rubric, "rubric")
+    .replace(/\r\n?/gu, "\n")
+    .split("\n");
+  const retained = [];
+  let omitSection = false;
+
+  for (const line of lines) {
+    const heading = line.match(/^##\s+(.+?)\s*$/u);
+    if (heading) {
+      omitSection = heading[1].trim().toLowerCase() === "calibration";
+      if (omitSection) continue;
+    }
+    if (!omitSection) retained.push(line);
+  }
+
+  return `${retained.join("\n").trimEnd()}\n`;
+}
+
 function shuffledSamples(samples, chooseIndex) {
   const shuffled = [...samples];
   for (let upper = shuffled.length; upper > 1; upper--) {
@@ -303,7 +322,8 @@ export function buildBlindedScoringArtifacts({
   if (!task || typeof task !== "object" || Array.isArray(task)) {
     throw new TypeError("task must be an object");
   }
-  const criteria = parseCalibrationRubric(rubric);
+  const reviewRubric = rubricForBlindReview(rubric);
+  const criteria = parseCalibrationRubric(reviewRubric);
   const shuffled = shuffledSamples(samples, chooseIndex);
   const width = Math.max(2, String(shuffled.length).length);
   const promptDigest = promptSha256(task.prompt);
@@ -340,7 +360,7 @@ export function buildBlindedScoringArtifacts({
       id: task.id,
       prompt: task.prompt,
       promptSha256: promptDigest,
-      rubric,
+      rubric: reviewRubric,
       rubricCriteria: criteria,
     },
     generationEvidence:

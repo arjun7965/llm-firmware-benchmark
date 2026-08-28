@@ -39,9 +39,12 @@ npm run calibration:blind -- \
 The command extracts complete answers through the provider envelope parser,
 rejects failed results and normalized literal model/provider identifiers in
 answer text, randomly assigns `sample-NN` identifiers, and writes the answer
-packet, blank score sheet, and identity key separately. Manually review the
-packet for aliases or stylistic identity clues that literal screening cannot
-detect. The packet records the sealed identity key's SHA-256,
+packet, blank score sheet, and identity key separately. The reviewer packet
+omits the rubric's `## Calibration` section so prior outcomes do not anchor the
+new review while retaining the prompt, scoring criteria, and other rubric
+sections. Manually review the packet for aliases or stylistic identity clues
+that literal screening cannot detect. The packet records the sealed identity
+key's SHA-256,
 committing the model/run mapping before review without disclosing it. The key
 contains a random 256-bit nonce, preventing a reviewer from brute-forcing the
 small permutation space from the public commitment. Give a reviewer only
