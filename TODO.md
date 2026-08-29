@@ -293,8 +293,14 @@ record exact versions in validation reports.
   - [x] Add a private identity-blinding and score-validation workflow, then
     exercise it with a disclosed preliminary AI review of the nine pilot
     answers.
-  - [ ] Obtain independent blinded human scores for the `static-memory-pool`
-    pilot, then select the next deterministic task for cross-model calibration.
+  - [x] Obtain independent blinded human scores for the `static-memory-pool`
+    pilot and publish the validated, sanitized aggregate.
+  - [x] Select `fixed-point-filter-optimization` as the next deterministic task
+    because its cost-model and numerical boundaries broaden the calibration
+    surface without introducing physical-hardware or service-runtime
+    variability.
+  - [ ] Run the `fixed-point-filter-optimization` cross-model pilot under the
+    established three-family, three-run, blinded-review protocol.
 
 ## Repository Operations
 

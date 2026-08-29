@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -17,7 +18,7 @@ import {
   resolvePrivateResultsPath,
   summarizeCompletedCalibrationScoring,
 } from "../src/calibration-scoring.mjs";
-import { promptSha256 } from "../src/harness.mjs";
+import { loadTasks, promptSha256 } from "../src/harness.mjs";
 
 const task = {
   category: "embedded",
@@ -398,5 +399,157 @@ test("sample loading rejects failed, duplicate, and identity-revealing results",
   assert.throws(
     () => loadCalibrationSamples(providerLeakRoot, task),
     /exposes its model identity/u,
+  );
+});
+
+test("published static-memory-pool human scores match the reviewed summary", () => {
+  const resultPath = new URL(
+    "../docs/calibration/static-memory-pool-2026-08-28.json",
+    import.meta.url,
+  );
+  const summary = JSON.parse(readFileSync(resultPath, "utf8"));
+
+  assert.equal(summary.schemaVersion, "1.0");
+  assert.equal(summary.taskId, "static-memory-pool");
+  assert.equal(
+    summary.packetSha256,
+    "7263938819eec9bfbeb7c04cbfedd95b650cc50fa03e5a94654d3bc2bbea9bef",
+  );
+  assert.equal(
+    summary.scoreSheetSha256,
+    "d724fe5a02eef9333c8c411abb07ea803af93ef8bdc088e7554be19873609af2",
+  );
+  assert.deepEqual(summary.scorer, {
+    completedAt: "2026-08-28T05:39:03Z",
+    identity: "reviewer-01",
+    type: "human",
+  });
+  assert.deepEqual(
+    summary.models.map(({ model }) => model).sort(),
+    ["glm53", "gpt-5.6-luna", "kimi-k3"],
+  );
+
+  const scores = [];
+  for (const model of summary.models) {
+    assert.deepEqual(model.runs.map(({ run }) => run), [1, 2, 3]);
+    assert.deepEqual(model.runs.map(({ score }) => score), [10, 10, 10]);
+    assert.deepEqual(
+      { mean: model.mean, range: model.range, sd: model.sd },
+      { mean: 10, range: 0, sd: 0 },
+    );
+    scores.push(...model.runs.map(({ score }) => score));
+  }
+  const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  const variance = scores.reduce(
+    (sum, score) => sum + (score - mean) ** 2,
+    0,
+  ) / scores.length;
+  assert.deepEqual(summary.overall, {
+    sampleCount: scores.length,
+    mean,
+    range: Math.max(...scores) - Math.min(...scores),
+    sd: Math.sqrt(variance),
+  });
+
+  const calibration = readFileSync(
+    new URL("../docs/model-family-calibration.md", import.meta.url),
+    "utf8",
+  );
+  const rubric = readFileSync(
+    new URL("../docs/benchmarks/static-memory-pool.md", import.meta.url),
+    "utf8",
+  );
+  const todo = readFileSync(new URL("../TODO.md", import.meta.url), "utf8");
+  assert.match(
+    calibration,
+    /\[`static-memory-pool-2026-08-28\.json`\]\(calibration\/static-memory-pool-2026-08-28\.json\)/u,
+  );
+  assert.match(
+    rubric,
+    /\[`static-memory-pool-2026-08-28\.json`\]\(\.\.\/calibration\/static-memory-pool-2026-08-28\.json\)/u,
+  );
+  assert.ok(calibration.includes(summary.packetSha256));
+  assert.ok(calibration.includes(summary.scoreSheetSha256));
+  const displayNames = new Map([
+    ["glm53", "GLM-5.3"],
+    ["gpt-5.6-luna", "GPT-5.6 Luna"],
+    ["kimi-k3", "Kimi K3"],
+  ]);
+  for (const model of summary.models) {
+    const scoresText = model.runs.map(({ score }) => score).join(", ");
+    const expectedRow = [
+      displayNames.get(model.model),
+      scoresText,
+      model.mean.toFixed(3),
+      model.sd.toFixed(3),
+      model.range.toFixed(1),
+    ].join(" | ");
+    assert.ok(
+      calibration.includes(`| ${expectedRow} |`),
+      `missing published score row for ${model.model}`,
+    );
+  }
+  assert.match(
+    calibration,
+    /Across all nine samples, the mean was 10\.000 with a population standard\s+deviation and range of zero\./u,
+  );
+  assert.match(
+    rubric,
+    /reviewer scored all nine answers at 10;\s+the aggregate mean was 10\.000 with zero population standard deviation and\s+range\./u,
+  );
+  assert.match(
+    todo,
+    /- \[x\] Obtain independent blinded human scores for the `static-memory-pool`/u,
+  );
+});
+
+test("the selected next calibration pilot is active and deterministic", () => {
+  const calibration = readFileSync(
+    new URL("../docs/model-family-calibration.md", import.meta.url),
+    "utf8",
+  );
+  const matches = [...calibration.matchAll(/^Next pilot: `([^`]+)`\.$/gmu)];
+  assert.equal(matches.length, 1, "calibration guide must name one next pilot");
+
+  const taskId = matches[0][1];
+  const selectedTask = loadTasks(
+    new URL("../tasks.json", import.meta.url),
+  ).find((candidate) => candidate.id === taskId);
+  assert.ok(selectedTask, `unknown next calibration task: ${taskId}`);
+  assert.equal(selectedTask.scoringMode, "deterministic");
+  assert.equal(selectedTask.suite, "firmware");
+
+  const fixtureRoot = new URL(`../fixtures/${taskId}/`, import.meta.url);
+  const manifest = JSON.parse(readFileSync(
+    new URL("manifest.json", fixtureRoot),
+    "utf8",
+  ));
+  const mutations = JSON.parse(readFileSync(
+    new URL("mutations.json", fixtureRoot),
+    "utf8",
+  ));
+  assert.equal(manifest.taskId, taskId);
+  assert.equal(manifest.status, "active");
+  assert.equal(manifest.validationProfile, selectedTask.validationProfile);
+  const mutationCount = calibration.match(
+    /all ([0-9]+) compile-valid controlled\s+mutations are rejected/u,
+  );
+  assert.ok(mutationCount, "next-pilot rationale must record mutation coverage");
+  assert.equal(Number(mutationCount[1]), mutations.mutations.length);
+
+  const todo = readFileSync(new URL("../TODO.md", import.meta.url), "utf8");
+  assert.match(
+    todo,
+    new RegExp(
+      "- \\[x\\] Select `" + taskId + "` as the next deterministic task",
+      "u",
+    ),
+  );
+  assert.match(
+    todo,
+    new RegExp(
+      "- \\[ \\] Run the `" + taskId + "` cross-model pilot",
+      "u",
+    ),
   );
 });

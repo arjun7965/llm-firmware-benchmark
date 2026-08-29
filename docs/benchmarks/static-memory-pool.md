@@ -39,5 +39,12 @@ See [Model-Family Calibration](../model-family-calibration.md) for the protocol,
 provider differences, and reproducibility metadata. A preliminary
 identity-blinded AI review scored eight answers at 10 and one at 9.5 because
 its exclusive-end integer calculation can wrap at the top of a `uintptr_t`
-address space. Independent blinded human scores are still required before the
-totals are treated as publication-grade benchmark evidence.
+address space.
+
+An independent blinded human review completed on 2026-08-28 under the hardened
+identity-key commitment workflow. The reviewer scored all nine answers at 10;
+the aggregate mean was 10.000 with zero population standard deviation and
+range. The validated, sanitized result is available as
+[`static-memory-pool-2026-08-28.json`](../calibration/static-memory-pool-2026-08-28.json).
+This completes the pilot's independent-review gate, but the single-task,
+single-reviewer result is not a broad model-family ranking.
