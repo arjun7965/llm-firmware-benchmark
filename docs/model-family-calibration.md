@@ -264,3 +264,13 @@ all 48 compile-valid controlled mutations are rejected. Its coupled lifecycle
 and failure-recovery requirements should provide a broader discrimination
 surface than the two uniformly scored pilots while retaining repeatable host
 validation.
+
+An exploratory generation attempt on 2026-08-29 used the prior prompt SHA-256
+`86316bf5fd663cf6562ed6b37cee9c12503ca0d79d0dd67589e454c7ae28a5c3`, which
+included a 1,900-word whole-answer limit without a canonical automated count.
+That limit had no defined treatment of source-code formatting and was removed
+before blinded scoring. The revised prompt SHA-256 is
+`9d82a074db34b9257d26b573fd87d76c717f4602195b8b7de812a3ebb5fa1508`.
+Only samples generated from the revised prompt may be compared in this pilot;
+the exploratory records remain private and excluded from the calibration
+cohort.
