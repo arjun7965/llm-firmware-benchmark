@@ -573,6 +573,110 @@ test("published static-memory-pool human scores match the reviewed summary", () 
   );
 });
 
+test("published fixed-point-filter human scores match the reviewed summary", () => {
+  const resultPath = new URL(
+    "../docs/calibration/fixed-point-filter-optimization-2026-08-28.json",
+    import.meta.url,
+  );
+  const summary = JSON.parse(readFileSync(resultPath, "utf8"));
+
+  assert.equal(summary.schemaVersion, "1.0");
+  assert.equal(summary.taskId, "fixed-point-filter-optimization");
+  assert.equal(
+    summary.packetSha256,
+    "790c322abcfa185f25614106db72e565657dad89f763cc03a1a63ab9de6c2c58",
+  );
+  assert.equal(
+    summary.scoreSheetSha256,
+    "b30576dd226ab56a8f7b70d07585b53ee8431c54afa786a14ac924c831be5bc4",
+  );
+  assert.deepEqual(summary.scorer, {
+    completedAt: "2026-08-28T22:40:29-07:00",
+    identity: "reviewer-me",
+    type: "human",
+  });
+  assert.deepEqual(
+    summary.models.map(({ model }) => model).sort(),
+    ["glm53", "gpt-5.6-luna", "kimi-k3"],
+  );
+
+  const scores = [];
+  for (const model of summary.models) {
+    assert.deepEqual(model.runs.map(({ run }) => run), [1, 2, 3]);
+    assert.deepEqual(model.runs.map(({ score }) => score), [10, 10, 10]);
+    assert.deepEqual(
+      { mean: model.mean, range: model.range, sd: model.sd },
+      { mean: 10, range: 0, sd: 0 },
+    );
+    scores.push(...model.runs.map(({ score }) => score));
+  }
+  const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  const variance = scores.reduce(
+    (sum, score) => sum + (score - mean) ** 2,
+    0,
+  ) / scores.length;
+  assert.deepEqual(summary.overall, {
+    sampleCount: scores.length,
+    mean,
+    range: Math.max(...scores) - Math.min(...scores),
+    sd: Math.sqrt(variance),
+  });
+
+  const calibration = readFileSync(
+    new URL("../docs/model-family-calibration.md", import.meta.url),
+    "utf8",
+  );
+  const rubric = readFileSync(
+    new URL(
+      "../docs/benchmarks/fixed-point-filter-optimization.md",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const todo = readFileSync(new URL("../TODO.md", import.meta.url), "utf8");
+  assert.match(
+    calibration,
+    /\[`fixed-point-filter-optimization-2026-08-28\.json`\]\(calibration\/fixed-point-filter-optimization-2026-08-28\.json\)/u,
+  );
+  assert.match(
+    rubric,
+    /\[`fixed-point-filter-optimization-2026-08-28\.json`\]\(\.\.\/calibration\/fixed-point-filter-optimization-2026-08-28\.json\)/u,
+  );
+  assert.ok(calibration.includes(summary.packetSha256));
+  assert.ok(calibration.includes(summary.scoreSheetSha256));
+  const displayNames = new Map([
+    ["glm53", "GLM-5.3"],
+    ["gpt-5.6-luna", "GPT-5.6 Luna"],
+    ["kimi-k3", "Kimi K3"],
+  ]);
+  for (const model of summary.models) {
+    const scoresText = model.runs.map(({ score }) => score).join(", ");
+    const expectedRow = [
+      displayNames.get(model.model),
+      scoresText,
+      model.mean.toFixed(3),
+      model.sd.toFixed(3),
+      model.range.toFixed(1),
+    ].join(" | ");
+    assert.ok(
+      calibration.includes(`| ${expectedRow} |`),
+      `missing published score row for ${model.model}`,
+    );
+  }
+  assert.match(
+    calibration,
+    /Across all nine samples, the mean was 10\.000 with a population standard\s+deviation and range of zero\./u,
+  );
+  assert.match(
+    rubric,
+    /reviewer scored all nine answers at 10; the\s+aggregate mean was 10\.000 with zero population standard deviation and range\./u,
+  );
+  assert.match(
+    todo,
+    /- \[x\] Run the `fixed-point-filter-optimization` cross-model pilot/u,
+  );
+});
+
 test("the selected next calibration pilot is active and deterministic", () => {
   const calibration = readFileSync(
     new URL("../docs/model-family-calibration.md", import.meta.url),
@@ -601,7 +705,8 @@ test("the selected next calibration pilot is active and deterministic", () => {
   assert.equal(manifest.taskId, taskId);
   assert.equal(manifest.status, "active");
   assert.equal(manifest.validationProfile, selectedTask.validationProfile);
-  const mutationCount = calibration.match(
+  const nextPilotSection = calibration.slice(matches[0].index);
+  const mutationCount = nextPilotSection.match(
     /all ([0-9]+) compile-valid controlled\s+mutations are rejected/u,
   );
   assert.ok(mutationCount, "next-pilot rationale must record mutation coverage");

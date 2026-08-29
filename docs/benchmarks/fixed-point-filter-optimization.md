@@ -45,3 +45,25 @@ Using seven MACs, rounding each tap independently, truncating negative ties,
 wrapping overshoot, shifting history after a failed commit, or claiming a
 hardware cycle count beyond the supplied model cannot receive the relevant
 correctness, timing, recovery, or portability credit.
+
+## Calibration
+
+Run `npm run fixture:fixed-point-filter:self-test` to exercise the trusted
+reference. The mutation suite rejects all 33 compile-valid controlled defects
+covering symmetry, MAC accounting, rounding, saturation, validation ordering,
+transactional commit, history publication, and recovery behavior.
+
+The 2026-08-28 executable pilot generated three samples each from GPT-5.6 Luna,
+GLM-5.3, and Kimi K3. All nine distinct answers extracted and passed the
+deterministic validator under the same `c11-host` revision 4 profile and
+`debian-13-x86-64-c11-host` revision 1 environment. See
+[Model-Family Calibration](../model-family-calibration.md) for the protocol,
+provider differences, and reproducibility metadata.
+
+An independent blinded human review completed on 2026-08-28 under the sealed
+identity-key workflow. The reviewer scored all nine answers at 10; the
+aggregate mean was 10.000 with zero population standard deviation and range.
+The validated, sanitized result is available as
+[`fixed-point-filter-optimization-2026-08-28.json`](../calibration/fixed-point-filter-optimization-2026-08-28.json).
+This completes the pilot's independent-review gate, but two uniformly scored
+tasks are not a broad model-family ranking.

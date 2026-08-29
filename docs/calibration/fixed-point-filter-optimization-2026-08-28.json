@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "fixed-point-filter-optimization",
+  "packetSha256": "790c322abcfa185f25614106db72e565657dad89f763cc03a1a63ab9de6c2c58",
+  "scoreSheetSha256": "b30576dd226ab56a8f7b70d07585b53ee8431c54afa786a14ac924c831be5bc4",
+  "scorer": {
+    "completedAt": "2026-08-28T22:40:29-07:00",
+    "identity": "reviewer-me",
+    "type": "human"
+  },
+  "models": [
+    {
+      "model": "glm53",
+      "runs": [
+        {
+          "run": 1,
+          "score": 10
+        },
+        {
+          "run": 2,
+          "score": 10
+        },
+        {
+          "run": 3,
+          "score": 10
+        }
+      ],
+      "mean": 10,
+      "range": 0,
+      "sd": 0
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "runs": [
+        {
+          "run": 1,
+          "score": 10
+        },
+        {
+          "run": 2,
+          "score": 10
+        },
+        {
+          "run": 3,
+          "score": 10
+        }
+      ],
+      "mean": 10,
+      "range": 0,
+      "sd": 0
+    },
+    {
+      "model": "kimi-k3",
+      "runs": [
+        {
+          "run": 1,
+          "score": 10
+        },
+        {
+          "run": 2,
+          "score": 10
+        },
+        {
+          "run": 3,
+          "score": 10
+        }
+      ],
+      "mean": 10,
+      "range": 0,
+      "sd": 0
+    }
+  ],
+  "overall": {
+    "sampleCount": 9,
+    "mean": 10,
+    "range": 0,
+    "sd": 0
+  }
+}
