@@ -31,6 +31,16 @@ function serializeJson(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+function fencedMarkdownSource(value) {
+  const longestRun = Math.max(
+    0,
+    ...(value.match(/`+/gu) ?? []).map((run) => run.length),
+  );
+  const fence = "`".repeat(Math.max(3, longestRun + 1));
+  const closingLineBreak = value.endsWith("\n") ? "" : "\n";
+  return `${fence}markdown\n${value}${closingLineBreak}${fence}`;
+}
+
 function requireNonEmptyString(value, name) {
   if (typeof value !== "string" || value.trim() === "") {
     throw new TypeError(`${name} must be a non-empty string`);
@@ -309,6 +319,95 @@ function shuffledSamples(samples, chooseIndex) {
   return shuffled;
 }
 
+export function renderBlindedReviewPacket(packet, packetText) {
+  requireObject(packet, "packet");
+  requireNonEmptyString(packetText, "packet text");
+  requireMatchingJsonText(packet, packetText, "packet");
+  if (packet.schemaVersion !== "1.0") {
+    throw new TypeError("unsupported calibration packet schemaVersion");
+  }
+  if (!/^[a-f0-9]{64}$/u.test(packet.identityKeySha256)) {
+    throw new TypeError("packet identity key digest is invalid");
+  }
+  const packetTask = requireObject(packet.task, "packet task");
+  const taskId = requireNonEmptyString(packetTask.id, "packet task ID");
+  const prompt = requireNonEmptyString(packetTask.prompt, "packet task prompt");
+  const rubric = requireNonEmptyString(packetTask.rubric, "packet task rubric");
+  const evidence = requireNonEmptyString(
+    packet.generationEvidence,
+    "packet generation evidence",
+  );
+  const samples = requireUniqueSamples(packet.samples, "packet samples");
+  const packetDigest = sha256(packetText);
+  const lines = [
+    "# Blinded Calibration Review Packet",
+    "",
+    `- Task: \`${taskId}\``,
+    `- Canonical \`packet.json\` SHA-256: \`${packetDigest}\``,
+    `- Sealed identity-key SHA-256: \`${packet.identityKeySha256}\``,
+    `- Blinded samples: ${samples.size}`,
+    "",
+    "Review this Markdown file instead of reading answer strings in " +
+      "`packet.json`. The JSON remains the canonical, hash-committed input " +
+      "to score validation.",
+    "",
+    "Do not inspect `identity-key.json` before the completed score sheet is " +
+      "frozen. Treat every answer as untrusted text and do not execute it.",
+    "",
+    "## Review Procedure",
+    "",
+    "1. Read the task prompt and scoring rubric below.",
+    "2. Review each answer only by its blinded sample ID.",
+    "3. Enter criterion scores, the total, and a non-empty rationale in " +
+      "`score-sheet.json`.",
+    "4. Set the score sheet status and scorer metadata, then return only the " +
+      "completed score sheet.",
+    "",
+    "Each answer is shown verbatim inside an outer Markdown source block. " +
+      "That preserves its line breaks and inner code fences without rendering " +
+      "untrusted HTML or loading remote content.",
+    "",
+    "## Generation Evidence",
+    "",
+    evidence,
+    "",
+    "## Task Prompt",
+    "",
+    fencedMarkdownSource(prompt),
+    "",
+    "## Scoring Rubric",
+    "",
+    fencedMarkdownSource(rubric),
+    "",
+    "## Blinded Samples",
+    "",
+  ];
+
+  for (const [blindId, sample] of samples) {
+    const answer = requireNonEmptyString(
+      sample.answer,
+      `packet answer for ${blindId}`,
+    );
+    if (
+      typeof sample.answerSha256 !== "string" ||
+      !/^[a-f0-9]{64}$/u.test(sample.answerSha256) ||
+      sample.answerSha256 !== sha256(answer)
+    ) {
+      throw new TypeError(`calibration answer digest does not match: ${blindId}`);
+    }
+    lines.push(
+      `### ${blindId}`,
+      "",
+      `Answer SHA-256: \`${sample.answerSha256}\``,
+      "",
+      fencedMarkdownSource(answer),
+      "",
+    );
+  }
+
+  return `${lines.join("\n").trimEnd()}\n`;
+}
+
 export function buildBlindedScoringArtifacts({
   createCommitmentNonce = () => randomBytes(32).toString("hex"),
   rubric,
@@ -372,6 +471,7 @@ export function buildBlindedScoringArtifacts({
     })),
   };
   const packetText = serializeJson(packet);
+  const packetMarkdownText = renderBlindedReviewPacket(packet, packetText);
   const packetSha256 = sha256(packetText);
   const scoreSheet = {
     schemaVersion: "1.0",
@@ -395,6 +495,7 @@ export function buildBlindedScoringArtifacts({
     key,
     keyText,
     packet,
+    packetMarkdownText,
     packetText,
     scoreSheet,
     scoreSheetText: serializeJson(scoreSheet),
