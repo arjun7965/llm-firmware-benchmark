@@ -142,3 +142,50 @@ blinded human-review gate for publication-grade benchmark scores.
 This dry run predated the identity-key commitment now required by the workflow,
 so its packet and score-sheet hashes do not independently prove that the
 model/run mapping remained unchanged before unblinding.
+
+### Independent blinded human review — 2026-08-28
+
+An independent human reviewer scored a new packet prepared after the
+identity-key commitment and rubric-anchoring protections were in place. The
+review bundle contained only `packet.json` and the blank `score-sheet.json`;
+the packet omitted the rubric's prior calibration outcomes. The completed
+score sheet was frozen before unblinding and identified the scorer by the
+pseudonym `reviewer-01`.
+
+The packet SHA-256 was
+`7263938819eec9bfbeb7c04cbfedd95b650cc50fa03e5a94654d3bc2bbea9bef`, and the
+completed score-sheet SHA-256 was
+`d724fe5a02eef9333c8c411abb07ea803af93ef8bdc088e7554be19873609af2`.
+The calibration summarizer validated the identity-key commitment, packet and
+answer digests, rubric bounds and arithmetic, and model/run uniqueness before
+producing the following result:
+
+| Model family | Run scores | Mean | Population SD | Range |
+| --- | --- | ---: | ---: | ---: |
+| GPT-5.6 Luna | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+| GLM-5.3 | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+| Kimi K3 | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+
+Across all nine samples, the mean was 10.000 with a population standard
+deviation and range of zero. The reviewed, sanitized machine-readable summary
+is committed as
+[`static-memory-pool-2026-08-28.json`](calibration/static-memory-pool-2026-08-28.json).
+Raw outputs, answer text, the packet, the completed score sheet, and the
+identity key remain private under ignored `results/` paths.
+
+This completes the independent-review gate for this pilot, but one reviewer
+and one task do not establish a broad model-family ranking. The uniform scores
+also motivate selecting a task intended to provide a broader discrimination
+surface for the next pilot.
+
+## Selected Next Pilot
+
+Next pilot: `fixed-point-filter-optimization`.
+
+This active portable-C11 fixture moves calibration into the still-partial
+resource-optimization capability. Its deterministic cost model makes four-MAC
+ordering and the 28-cycle budget observable, while signed Q1.15 rounding,
+saturation, and transactional commit failure exercise numerical and state
+reasoning. The trusted reference passes, and all 33 compile-valid controlled
+mutations are rejected. This is intended to improve discrimination without
+introducing physical-hardware or service-runtime variability.

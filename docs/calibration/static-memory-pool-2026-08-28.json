@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "static-memory-pool",
+  "packetSha256": "7263938819eec9bfbeb7c04cbfedd95b650cc50fa03e5a94654d3bc2bbea9bef",
+  "scoreSheetSha256": "d724fe5a02eef9333c8c411abb07ea803af93ef8bdc088e7554be19873609af2",
+  "scorer": {
+    "completedAt": "2026-08-28T05:39:03Z",
+    "identity": "reviewer-01",
+    "type": "human"
+  },
+  "models": [
+    {
+      "model": "glm53",
+      "runs": [
+        {
+          "run": 1,
+          "score": 10
+        },
+        {
+          "run": 2,
+          "score": 10
+        },
+        {
+          "run": 3,
+          "score": 10
+        }
+      ],
+      "mean": 10,
+      "range": 0,
+      "sd": 0
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "runs": [
+        {
+          "run": 1,
+          "score": 10
+        },
+        {
+          "run": 2,
+          "score": 10
+        },
+        {
+          "run": 3,
+          "score": 10
+        }
+      ],
+      "mean": 10,
+      "range": 0,
+      "sd": 0
+    },
+    {
+      "model": "kimi-k3",
+      "runs": [
+        {
+          "run": 1,
+          "score": 10
+        },
+        {
+          "run": 2,
+          "score": 10
+        },
+        {
+          "run": 3,
+          "score": 10
+        }
+      ],
+      "mean": 10,
+      "range": 0,
+      "sd": 0
+    }
+  ],
+  "overall": {
+    "sampleCount": 9,
+    "mean": 10,
+    "range": 0,
+    "sd": 0
+  }
+}
