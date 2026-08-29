@@ -15,6 +15,7 @@ import {
   buildBlindedScoringArtifacts,
   loadCalibrationSamples,
   parseCalibrationRubric,
+  renderBlindedReviewPacket,
   resolvePrivateResultsPath,
   summarizeCompletedCalibrationScoring,
 } from "../src/calibration-scoring.mjs";
@@ -117,7 +118,9 @@ test("blinded artifacts separate answers from the identity key", () => {
   const samples = [
     {
       answer: "answer alpha",
-      answerSha256: "a".repeat(64),
+      answerSha256: createHash("sha256")
+        .update("answer alpha")
+        .digest("hex"),
       modelId: "provider/alpha",
       modelName: "model-alpha",
       provider: "provider-a",
@@ -126,7 +129,9 @@ test("blinded artifacts separate answers from the identity key", () => {
     },
     {
       answer: "answer beta",
-      answerSha256: "b".repeat(64),
+      answerSha256: createHash("sha256")
+        .update("answer beta")
+        .digest("hex"),
       modelId: "provider/beta",
       modelName: "model-beta",
       provider: "provider-b",
@@ -145,6 +150,10 @@ test("blinded artifacts separate answers from the identity key", () => {
   assert.equal(artifacts.packet.samples[0].answer, "answer beta");
   assert.equal(artifacts.key.samples[0].modelName, "model-beta");
   assert.doesNotMatch(artifacts.packetText, /model-alpha|model-beta|provider-a/u);
+  assert.doesNotMatch(
+    artifacts.packetMarkdownText,
+    /model-alpha|model-beta|provider-a/u,
+  );
   assert.match(artifacts.keyText, /model-alpha|model-beta/u);
   assert.equal(artifacts.key.commitmentNonce, "c".repeat(64));
   assert.doesNotMatch(artifacts.packetText, /c{64}/u);
@@ -159,6 +168,65 @@ test("blinded artifacts separate answers from the identity key", () => {
   assert.deepEqual(
     Object.keys(artifacts.scoreSheet.samples[0].scores),
     artifacts.scoreSheet.criteria.map((criterion) => criterion.id),
+  );
+});
+
+test("blinded packets include a readable digest-bound Markdown view", () => {
+  const answer = [
+    "```c",
+    "int example(void)",
+    "{",
+    "    return 1;",
+    "}",
+    "```",
+    "",
+    "The implementation is deterministic.",
+  ].join("\n");
+  const artifacts = buildBlindedScoringArtifacts({
+    createCommitmentNonce: () => "c".repeat(64),
+    rubric,
+    samples: [{
+      answer,
+      answerSha256: createHash("sha256").update(answer).digest("hex"),
+      modelId: "provider/alpha",
+      modelName: "model-alpha",
+      provider: "provider-a",
+      run: 1,
+      source: "example-task--model-alpha.json",
+    }],
+    task,
+    chooseIndex: () => 0,
+  });
+  const packetDigest = createHash("sha256")
+    .update(artifacts.packetText)
+    .digest("hex");
+
+  assert.match(
+    artifacts.packetMarkdownText,
+    /^# Blinded Calibration Review Packet$/mu,
+  );
+  assert.ok(artifacts.packetMarkdownText.includes(packetDigest));
+  assert.ok(
+    artifacts.packetMarkdownText.includes(artifacts.packet.identityKeySha256),
+  );
+  assert.ok(artifacts.packetMarkdownText.includes(answer));
+  assert.match(
+    artifacts.packetMarkdownText,
+    /````markdown\n```c\nint example\(void\)/u,
+  );
+  assert.doesNotMatch(artifacts.packetMarkdownText, /\\nint example/u);
+  assert.doesNotMatch(artifacts.packetMarkdownText, /model-alpha|provider-a/u);
+  assert.equal(
+    renderBlindedReviewPacket(artifacts.packet, artifacts.packetText),
+    artifacts.packetMarkdownText,
+  );
+
+  const tamperedPacket = structuredClone(artifacts.packet);
+  tamperedPacket.samples[0].answer += "\ntampered";
+  const tamperedPacketText = `${JSON.stringify(tamperedPacket, null, 2)}\n`;
+  assert.throws(
+    () => renderBlindedReviewPacket(tamperedPacket, tamperedPacketText),
+    /answer digest does not match/u,
   );
 });
 
@@ -183,7 +251,9 @@ test("blinded packets omit prior calibration outcomes from the rubric", () => {
     ].join("\n"),
     samples: [{
       answer: "answer alpha",
-      answerSha256: "a".repeat(64),
+      answerSha256: createHash("sha256")
+        .update("answer alpha")
+        .digest("hex"),
       modelId: "provider/alpha",
       modelName: "model-alpha",
       provider: "provider-a",

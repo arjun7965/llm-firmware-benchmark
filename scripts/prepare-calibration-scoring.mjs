@@ -64,6 +64,10 @@ writeFileSync(resolve(output, "packet.json"), artifacts.packetText, {
   flag: "wx",
   mode: 0o600,
 });
+writeFileSync(resolve(output, "packet.md"), artifacts.packetMarkdownText, {
+  flag: "wx",
+  mode: 0o600,
+});
 writeFileSync(resolve(output, "score-sheet.json"), artifacts.scoreSheetText, {
   flag: "wx",
   mode: 0o600,
@@ -74,4 +78,4 @@ writeFileSync(resolve(output, "identity-key.json"), artifacts.keyText, {
 });
 
 console.log(`Prepared ${samples.length} blinded samples in ${output}`);
-console.log("Score packet.json and complete score-sheet.json before opening identity-key.json.");
+console.log("Review packet.md and complete score-sheet.json before opening identity-key.json.");

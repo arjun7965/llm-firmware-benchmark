@@ -188,16 +188,19 @@ npm run calibration:summarize -- \
 
 The preparation command extracts complete provider answers, rejects failed
 samples and normalized literal model/provider identifiers in answer text,
-randomizes their order, and writes `packet.json`, `score-sheet.json`, and a
-separate `identity-key.json`. It omits the rubric's `## Calibration` section
-from the reviewer packet so prior outcomes cannot anchor new scores. The
-summary command
-fails closed on identity-key, packet, answer, criterion, total, or model/run
-mismatches. The packet commits the sealed identity key's SHA-256 before
-scoring; the hidden key includes a random 256-bit nonce so the small set of
-possible model/run permutations cannot be brute-forced from that commitment.
+randomizes their order, and writes canonical `packet.json`, a readable
+`packet.md` rendering, `score-sheet.json`, and a separate `identity-key.json`.
+Review `packet.md`, where answer line breaks and inner code fences are preserved
+inside inert Markdown source blocks, then enter scores in `score-sheet.json`.
+The Markdown view records the canonical packet and per-answer SHA-256 values;
+score validation remains bound to `packet.json`. The packet omits the rubric's
+`## Calibration` section so prior outcomes cannot anchor new scores. The
+summary command fails closed on identity-key, packet, answer, criterion, total,
+or model/run mismatches. The packet commits the sealed identity key's SHA-256
+before scoring; the hidden key includes a random 256-bit nonce so the small set
+of possible model/run permutations cannot be brute-forced from that commitment.
 Post-review remapping is therefore detectable without revealing the mapping.
-Keep all three files private; only publish reviewed aggregate findings.
+Keep all four files private; only publish reviewed aggregate findings.
 Packet inclusion attests successful provider generation and answer extraction
 from its envelope, not fixture answer-contract extraction or deterministic
 validation; verify those records separately before scoring.

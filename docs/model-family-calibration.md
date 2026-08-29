@@ -39,19 +39,24 @@ npm run calibration:blind -- \
 The command extracts complete answers through the provider envelope parser,
 rejects failed results and normalized literal model/provider identifiers in
 answer text, randomly assigns `sample-NN` identifiers, and writes the answer
-packet, blank score sheet, and identity key separately. The reviewer packet
+packet, a readable Markdown rendering, blank score sheet, and identity key
+separately. Open `packet.md` for review instead of reading JSON-escaped answer
+strings. It preserves line breaks and inner code fences inside inert Markdown
+source blocks, and records the canonical `packet.json` and per-answer SHA-256
+values. Score validation remains bound to `packet.json`. The reviewer packet
 omits the rubric's `## Calibration` section so prior outcomes do not anchor the
 new review while retaining the prompt, scoring criteria, and other rubric
 sections. Manually review the packet for aliases or stylistic identity clues
 that literal screening cannot detect. The packet records the sealed identity
-key's SHA-256,
-committing the model/run mapping before review without disclosing it. The key
-contains a random 256-bit nonce, preventing a reviewer from brute-forcing the
-small permutation space from the public commitment. Give a reviewer only
-`packet.json` and `score-sheet.json`. Complete the sheet and preserve its
-SHA-256 before anyone opens `identity-key.json`. After that boundary, validate
-the key commitment, packet digest, answer digests, rubric bounds, arithmetic,
-and model/run uniqueness while summarizing the scores:
+key's SHA-256, committing the model/run mapping before review without
+disclosing it. The key contains a random 256-bit nonce, preventing a reviewer
+from brute-forcing the small permutation space from the public commitment.
+Give a reviewer only
+`packet.md`, `packet.json`, and `score-sheet.json`; tell them to open the
+Markdown view and leave both packet files unchanged. Complete the sheet and
+preserve its SHA-256 before anyone opens `identity-key.json`. After that
+boundary, validate the key commitment, packet digest, answer digests, rubric
+bounds, arithmetic, and model/run uniqueness while summarizing the scores:
 
 ```bash
 npm run calibration:summarize -- \
