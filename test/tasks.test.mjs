@@ -228,6 +228,17 @@ test("fixed-point filter prompt is a self-contained fixture contract", () => {
   }
 });
 
+test("supervised process service prompt avoids ambiguous word counting", () => {
+  const task = loadTasks(new URL("../tasks.json", import.meta.url))
+    .find((item) => item.id === "supervised-process-service");
+  assert.ok(task);
+  assert.match(task.prompt, /followed by a concise explanation/u);
+  assert.doesNotMatch(
+    task.prompt,
+    /Keep the answer under \d[\d,]* words\./u,
+  );
+});
+
 test("firmware security prompts are self-contained fixture contracts", () => {
   const tasks = new Map(
     loadTasks(new URL("../tasks.json", import.meta.url))

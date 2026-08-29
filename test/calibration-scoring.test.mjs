@@ -706,6 +706,15 @@ test("the selected next calibration pilot is active and deterministic", () => {
   assert.equal(manifest.status, "active");
   assert.equal(manifest.validationProfile, selectedTask.validationProfile);
   const nextPilotSection = calibration.slice(matches[0].index);
+  assert.match(
+    nextPilotSection,
+    new RegExp(
+      "revised prompt SHA-256 is\\s+`" +
+        promptSha256(selectedTask.prompt) +
+        "`",
+      "u",
+    ),
+  );
   const mutationCount = nextPilotSection.match(
     /all ([0-9]+) compile-valid controlled\s+mutations are rejected/u,
   );
