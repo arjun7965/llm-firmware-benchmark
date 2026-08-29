@@ -183,14 +183,84 @@ and one task do not establish a broad model-family ranking. The uniform scores
 also motivate selecting a task intended to provide a broader discrimination
 surface for the next pilot.
 
+### `fixed-point-filter-optimization` — 2026-08-28
+
+The pilot used the unchanged task prompt with SHA-256
+`d56e3b38edbc561018e4bd5efbbf55a01857ae2fc84e0d9a7731826481db5cab`.
+It ran from harness commit `b4fe078` under Node.js 22.21.0. Each family
+produced three independent samples:
+
+```bash
+npm run benchmark -- \
+  --models gpt-5.6-luna,glm53,kimi-k3 \
+  --tasks fixed-point-filter-optimization \
+  --runs 1,2,3 \
+  --concurrency 3 \
+  --output results/fixed-point-filter-optimization-cross-family-20260828
+```
+
+| Model family | Provider path | Material options | Generation | Validation |
+| --- | --- | --- | ---: | ---: |
+| GPT-5.6 Luna | Codex CLI 0.150.1 | `effort=medium`, 600 s timeout | 3/3 | 3/3 |
+| GLM-5.3 | OpenCode 1.18.25 | 900 s timeout | 3/3 | 3/3 |
+| Kimi K3 | OpenCode 1.18.25 | `variant=max`, 600 s timeout | 3/3 | 3/3 |
+
+The Codex adapter ran ephemerally in a read-only sandbox with tools and web
+search disabled. The OpenCode adapter used its isolated benchmark agent with
+all permissions denied; its provider-configuration SHA-256 was
+`ab82a7cc2d121908666852f90bd880bebade7af665b8ab826965f4e493e889c6`.
+The Codex adapter did not expose a provider-configuration fingerprint, so its
+invocation controls and CLI version are the available provenance.
+
+All nine generated answers were distinct, extracted through the fixture-owned
+single-file answer contract, and passed the deterministic validator. Validation
+used `c11-host` revision 4, profile SHA-256
+`366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3`,
+and `debian-13-x86-64-c11-host` revision 1 with GCC 14.2.0 under Bubblewrap
+0.11.0. The environment SHA-256 was
+`3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7`.
+The trusted reference passed, and the validator rejected all 33 compile-valid
+controlled mutations.
+
+An independent human reviewer scored the nine-answer Markdown packet after
+the identity-key commitment was sealed. The completed score sheet was frozen
+before unblinding and identified the scorer by the pseudonym `reviewer-me`.
+The packet SHA-256 was
+`790c322abcfa185f25614106db72e565657dad89f763cc03a1a63ab9de6c2c58`,
+and the completed score-sheet SHA-256 was
+`b30576dd226ab56a8f7b70d07585b53ee8431c54afa786a14ac924c831be5bc4`.
+The calibration summarizer validated the identity-key commitment, packet and
+answer digests, rubric bounds and arithmetic, and model/run uniqueness before
+producing the following result:
+
+| Model family | Run scores | Mean | Population SD | Range |
+| --- | --- | ---: | ---: | ---: |
+| GPT-5.6 Luna | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+| GLM-5.3 | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+| Kimi K3 | 10, 10, 10 | 10.000 | 0.000 | 0.0 |
+
+Across all nine samples, the mean was 10.000 with a population standard
+deviation and range of zero. The reviewed, sanitized machine-readable summary
+is committed as
+[`fixed-point-filter-optimization-2026-08-28.json`](calibration/fixed-point-filter-optimization-2026-08-28.json).
+Raw outputs, extracted answers, validation reports, the review packet, the
+completed score sheet, and the identity key remain under ignored `results/`
+paths.
+
+This completes the independent-review gate for the second pilot. The uniform
+scores reinforce that two tasks and their human reviews remain insufficient
+for a broad model-family ranking and motivate a more interaction-heavy next
+pilot.
+
 ## Selected Next Pilot
 
-Next pilot: `fixed-point-filter-optimization`.
+Next pilot: `supervised-process-service`.
 
-This active portable-C11 fixture moves calibration into the still-partial
-resource-optimization capability. Its deterministic cost model makes four-MAC
-ordering and the 28-cycle budget observable, while signed Q1.15 rounding,
-saturation, and transactional commit failure exercise numerical and state
-reasoning. The trusted reference passes, and all 33 compile-valid controlled
-mutations are rejected. This is intended to improve discrimination without
-introducing physical-hardware or service-runtime variability.
+This active embedded-Linux C fixture targets the still-partial supervised
+service capability. Its deterministic POSIX mock makes process, pidfd,
+`SOCK_SEQPACKET`, signal, timeout, restart, and bounded-shutdown interactions
+observable without launching a real child. The trusted reference passes, and
+all 48 compile-valid controlled mutations are rejected. Its coupled lifecycle
+and failure-recovery requirements should provide a broader discrimination
+surface than the two uniformly scored pilots while retaining repeatable host
+validation.

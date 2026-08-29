@@ -299,7 +299,12 @@ record exact versions in validation reports.
     because its cost-model and numerical boundaries broaden the calibration
     surface without introducing physical-hardware or service-runtime
     variability.
-  - [ ] Run the `fixed-point-filter-optimization` cross-model pilot under the
+  - [x] Run the `fixed-point-filter-optimization` cross-model pilot under the
+    established three-family, three-run, blinded-review protocol.
+  - [x] Select `supervised-process-service` as the next deterministic task
+    because its mocked process, IPC, signal, timeout, and restart interactions
+    broaden the calibration surface while retaining repeatable host validation.
+  - [ ] Run the `supervised-process-service` cross-model pilot under the
     established three-family, three-run, blinded-review protocol.
 
 ## Repository Operations
