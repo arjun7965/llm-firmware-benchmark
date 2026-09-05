@@ -228,10 +228,22 @@ test("fixed-point filter prompt is a self-contained fixture contract", () => {
   }
 });
 
-test("supervised process service prompt avoids ambiguous word counting", () => {
+test("supervised process service prompt is self-contained", () => {
   const task = loadTasks(new URL("../tasks.json", import.meta.url))
     .find((item) => item.id === "supervised-process-service");
   assert.ok(task);
+  for (const requiredText of [
+    "Providers receive this prompt, not fixture files.",
+    "The complete public API is:",
+    "#define SUPERVISED_SERVICE_MAX_MESSAGES 8u",
+    "uint8_t payload[SUPERVISED_SERVICE_PAYLOAD_BYTES]",
+    "SUPERVISED_SERVICE_RESTART_LIMIT",
+    "supervised_service_result_t supervised_service_run(",
+    "#define SUPERVISOR_WORKER_CHANNEL_FD 3",
+    "int supervisor_os_spawn_worker(",
+  ]) {
+    assert.ok(task.prompt.includes(requiredText), "prompt omits " + requiredText);
+  }
   assert.match(task.prompt, /followed by a concise explanation/u);
   assert.doesNotMatch(
     task.prompt,

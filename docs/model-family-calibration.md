@@ -269,8 +269,13 @@ An exploratory generation attempt on 2026-08-29 used the prior prompt SHA-256
 `86316bf5fd663cf6562ed6b37cee9c12503ca0d79d0dd67589e454c7ae28a5c3`, which
 included a 1,900-word whole-answer limit without a canonical automated count.
 That limit had no defined treatment of source-code formatting and was removed
-before blinded scoring. The revised prompt SHA-256 is
-`9d82a074db34b9257d26b573fd87d76c717f4602195b8b7de812a3ebb5fa1508`.
-Only samples generated from the revised prompt may be compared in this pilot;
-the exploratory records remain private and excluded from the calibration
-cohort.
+before blinded scoring. A preliminary 2026-09-04 cohort used prompt SHA-256
+`9d82a074db34b9257d26b573fd87d76c717f4602195b8b7de812a3ebb5fa1508`, which
+referenced `supervised_service.h` and `supervisor_os.h` without embedding their
+exact declarations. Two tool-isolated samples declined to implement the task
+rather than guess that unavailable API. The self-contained revision embeds the
+complete public types, constants, and function signatures.
+The revised prompt SHA-256 is
+`4bd89610aa3a5ba9169ccbf8c8f0b2f3286b61ff12f60ea2b7ca3e6980de7c86`.
+Only samples generated from the self-contained revision may be compared; both
+earlier cohorts remain private and excluded from that calibration cohort.
