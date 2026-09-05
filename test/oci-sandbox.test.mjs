@@ -203,6 +203,7 @@ test("OCI runtime inspection requires local rootless Podman security", () => {
     ["--version"],
     ["info", "--format=json"],
   ]);
+  assert.ok(calls.every((call) => call.options.timeout === 15_000));
   assert.ok(calls.every((call) => call.options.env.LANG === "C"));
   assert.deepEqual(seccompInspection, {
     expectedSha256: seccompProfile.sha256,
