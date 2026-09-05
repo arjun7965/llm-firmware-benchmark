@@ -235,12 +235,30 @@ test("supervised process service prompt is self-contained", () => {
   for (const requiredText of [
     "Providers receive this prompt, not fixture files.",
     "The complete public API is:",
+    "#include <stddef.h>",
+    "#include <stdint.h>",
     "#define SUPERVISED_SERVICE_MAX_MESSAGES 8u",
+    "#define SUPERVISED_SERVICE_PAYLOAD_BYTES 32u",
+    "#define SUPERVISED_SERVICE_ACK_TIMEOUT_MS 1000",
+    "#define SUPERVISED_SERVICE_SHUTDOWN_GRACE_MS 500",
+    "#define SUPERVISED_SERVICE_KILL_TIMEOUT_MS 1000",
+    "#define SUPERVISED_SERVICE_RESTART_INITIAL_MS 100",
+    "#define SUPERVISED_SERVICE_RESTART_MAX_MS 400",
+    "#define SUPERVISED_SERVICE_MAX_RESTARTS 3u",
+    "typedef struct { uint32_t sequence; size_t length;",
     "uint8_t payload[SUPERVISED_SERVICE_PAYLOAD_BYTES]",
+    "SUPERVISED_SERVICE_OK = 0",
+    "SUPERVISED_SERVICE_INVALID_ARGUMENT",
+    "SUPERVISED_SERVICE_OS_ERROR",
+    "SUPERVISED_SERVICE_PROTOCOL_ERROR",
+    "SUPERVISED_SERVICE_WORKER_REJECTED",
     "SUPERVISED_SERVICE_RESTART_LIMIT",
-    "supervised_service_result_t supervised_service_run(",
+    "supervised_service_result_t supervised_service_run(const char *worker_path, " +
+      "const supervised_service_message_t *messages, size_t message_count)",
+    "#include <sys/types.h>",
     "#define SUPERVISOR_WORKER_CHANNEL_FD 3",
-    "int supervisor_os_spawn_worker(",
+    "int supervisor_os_spawn_worker(const char *worker_path, pid_t *pid_out, " +
+      "int *pidfd_out, int *channel_fd_out)",
   ]) {
     assert.ok(task.prompt.includes(requiredText), "prompt omits " + requiredText);
   }
