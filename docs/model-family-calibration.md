@@ -10,8 +10,10 @@ For each task:
 
 1. Run the trusted reference and require every controlled mutation to be
    rejected in the task's declared validation environment.
-2. Select at least three distinct model families and generate three independent
-   samples from each. Keep the task prompt and task metadata identical.
+2. Declare at least three distinct model families and three independent
+   scheduled attempts per model in a cohort plan before generation. Keep the
+   task prompt and task metadata identical. Failed generations count as
+   attempts; nine successful answers are not required.
 3. Treat every raw result file as immutable once written. The harness preserves
    successful results but replaces unsuccessful records when the same jobs run
    again, so use a new attempt-specific output directory for every retry and
@@ -19,9 +21,11 @@ For each task:
 4. Record model IDs, provider adapters, material provider options, prompt and
    provider-configuration hashes, run count, and tool versions. Disclose
    provider differences rather than treating different adapters as identical.
-5. Extract each answer through the manifest-owned answer contract, then run it
-   in the same validation-profile and environment revision used by every other
-   sample in the comparison.
+5. For every generation that supplies an answer, record answer-contract
+   extraction and, when extraction succeeds, deterministic validation in the
+   same pinned profile/environment revision. Record extraction failure without
+   repairing the answer. For a generation without an answer, extraction and
+   validation are not applicable; retain the generation outcome instead.
 6. Keep raw provider records and generated answers under ignored paths. Publish
    answer text only through the reviewed public-result export process.
 7. Blind model identities before assigning rubric scores. An executable pass
@@ -32,13 +36,15 @@ Create the private scoring artifacts under ignored `results/` paths:
 ```bash
 npm run calibration:blind -- \
   --input results/<pilot> \
+  --cohort results/<pilot>/cohort.json \
   --task <task-id> \
   --output results/<pilot>/blind-scoring
 ```
 
-The command extracts complete answers through the provider envelope parser,
-rejects failed results and normalized literal model/provider identifiers in
-answer text, randomly assigns `sample-NN` identifiers, and writes the answer
+With `--cohort`, the command retains every declared attempt, extracts available
+answers through the provider envelope parser, rejects normalized literal
+model/provider identifiers in answer text, randomly assigns `sample-NN`
+identifiers, and writes the answer
 packet, a readable Markdown rendering, blank score sheet, and identity key
 separately. Open `packet.md` for review instead of reading JSON-escaped answer
 strings. It preserves line breaks and inner code fences inside inert Markdown
@@ -69,10 +75,77 @@ a reviewer, separately verify the manifest-owned answer extraction and the
 deterministic validation reports required by steps 1 and 5.
 
 A task completes the executable part of this protocol when its trusted
-reference passes, all controlled mutations are rejected, and every selected
-sample has current prompt provenance plus a recorded extraction and validation
-outcome. A model failure is useful calibration evidence and must not be silently
-rerun away.
+reference passes, all controlled mutations are rejected, and every scheduled
+attempt has current prompt provenance and a recorded generation outcome.
+Available answers additionally require recorded extraction and applicable
+validation outcomes. A missing result file is an incomplete attempt, not an
+observed failure. Compilation, runtime, extraction, and generation failures
+are useful calibration evidence and must not be silently rerun away.
+
+Independent blinded human review is still required before publication-grade
+rubric scores. Generation failures have no rubric score; answer-quality means
+are conditional on available answers and must accompany generation reliability.
+An all-failure cohort supports a generation-reliability finding, not an
+answer-quality ranking. The summarizer verifies scoring artifacts; it does not
+attest fixture validation, model-family independence, or completion of every
+publication gate.
+
+## Declaring a Cohort and Generation Budgets
+
+Copy `calibration-cohort.example.json` under the private pilot directory and
+replace its placeholder model IDs, family labels, options, and configuration
+fingerprints. Its contract is `schemas/calibration-cohort.schema.json`.
+Freeze the plan and record its SHA-256 before generation. Each model entry
+pins `modelName`, `modelId`, `provider`, `family`, `modelOptions`,
+`providerConfigSha256` (null when unavailable), and unique positive `runs`.
+The plan also pins the task ID and prompt SHA-256. Family labels are an
+explicit researcher assertion and require review; distinct model aliases alone
+do not prove different families.
+
+Pass all original result records to `calibration:blind --cohort`, including
+failures. Do not use an answer-only selection directory. The loader rejects
+unplanned model/runs, mismatched prompts or options, and duplicate model/runs.
+Retain retries in separate attempt-specific directories, disclose them
+separately, and never substitute a successful retry into the original cohort.
+A deliberately revised generation configuration requires a new prospectively
+declared cohort, consistent settings within each model, and disclosure of
+changes to reasoning, timeouts, provider context, or concurrency.
+
+New raw records contain `generationBudget`: effective harness timeout,
+configured reasoning control, allowlisted configured token limits, and unknown
+provider token limits represented as null. An unreported limit is not an
+unlimited budget. Historical records retain only explicitly recorded options;
+current adapter defaults are not retroactively inferred. OpenCode currently
+exposes `variant` and `timeoutMs` through this adapter, not a numeric output or
+reasoning-token ceiling. The compatible HTTP adapter records supported numeric
+limits supplied in `options.request`; those fields are provider-specific.
+Changing reasoning settings may improve answer completion but is not guaranteed
+to do so. Model-option changes invalidate result reuse; use a fresh output
+directory to preserve the original cohort.
+
+Cohort-aware artifacts use version 1.1. The sealed identity key commits the
+plan, every scheduled slot, raw-result hashes, generation outcomes, budgets,
+and the answer mapping. Reviewer packets expose only aggregate generation
+counts plus anonymized available answers. Detailed failure records remain in
+the sealed key so they cannot reveal model identities before scoring.
+A cohort with zero answers still has an empty score sheet: a reviewer records
+completion metadata after verifying that no answer is available, without
+inventing rubric scores.
+
+The summary reports `scheduled`, `recorded`, `answers`, `answerRate` (answers
+per scheduled attempt), and outcome counts for each model and the cohort.
+Outcomes are `answer`, `timeout`, `generation-limit`, `provider-error`,
+`no-answer`, or `missing`. A length stop is classified only from provider event
+metadata, not prose; otherwise a failed execution remains a provider error.
+Rubric `runs` include scored answers only. Models with none remain in the
+summary with empty runs and null mean, standard deviation, and range.
+`cohortRecorded` means no planned result is missing, not that the task has
+passed validation or human review. `plannedFamilyCount` describes the declared
+plan, not a verified family classification.
+
+Existing version 1.0 packets and summaries remain readable. Invoking
+`calibration:blind` without `--cohort` retains the legacy successful-answer-only
+workflow and cannot establish a generation denominator.
 
 ## Completed Pilots
 
@@ -275,7 +348,75 @@ referenced `supervised_service.h` and `supervisor_os.h` without embedding their
 exact declarations. Two tool-isolated samples declined to implement the task
 rather than guess that unavailable API. The self-contained revision embeds the
 complete public types, constants, and function signatures.
-The revised prompt SHA-256 is
+That self-contained prompt SHA-256 was
 `4bd89610aa3a5ba9169ccbf8c8f0b2f3286b61ff12f60ea2b7ca3e6980de7c86`.
-Only samples generated from the self-contained revision may be compared; both
-earlier cohorts remain private and excluded from that calibration cohort.
+Only samples generated from that self-contained revision may be compared
+within its historical cohort; both earlier cohorts remain private and excluded.
+
+On 2026-09-06, the environment declaration was aligned with the actual pinned
+validator: `c11-host` revision 4, `debian-13-x86-64-c11-host` revision 1,
+Debian 13 x86-64 LP64, and GCC 14.2.0. No API, behavior, or scoring criteria
+changed. The revised prompt SHA-256 is
+`c74f0150c4baeae3ba927f2bf8e03e2ff38baaa543af06a1f606ef541f8bec44`.
+This environment correction changes prompt provenance: future runs require a
+fresh cohort; do not relabel or merge earlier records into it.
+
+### Current-prompt calibration attempt — 2026-09-06
+
+The attempt reused the three immutable current-prompt Luna samples generated
+on 2026-09-05 UTC and generated three samples each from GLM-5.3 and Kimi K3.
+All nine records have the pre-environment-correction self-contained prompt
+hash `4bd89610aa3a5ba9169ccbf8c8f0b2f3286b61ff12f60ea2b7ca3e6980de7c86`. New generations
+used harness commit `cecd00ff0b881d01453f7b2fb5e071aa88697446`, Node.js
+22.21.0, OpenCode 1.18.29, and concurrency 3. GLM retained its 900-second
+timeout; Kimi retained `variant=max` and its 600-second timeout. Luna's
+recorded options were `effort=medium` and a 600-second timeout.
+
+| Model family | Original generations with answers | Extraction | Deterministic validation |
+| --- | ---: | ---: | --- |
+| GPT-5.6 Luna | 3/3 | 3/3 | Two compilation failures; one runtime-test failure |
+| GLM-5.3 | 0/3 | Not attempted | No answer to validate |
+| Kimi K3 | 1/3 | 1/1 | One compilation failure |
+
+GLM run 1 ended at the provider generation limit without answer text, run 2
+failed with a provider database lock, and run 3 hit the 900-second harness
+timeout. Kimi runs 1 and 3 ended at the provider generation limit without
+answer text. These are generation outcomes, not rubric scores of zero, and
+must remain in the original-attempt denominator even if later attempts
+produce answers. Code-validation failures were retained without repair or
+regeneration.
+
+One separately recorded retry each for GLM run 2 and Kimi run 1 also ended
+at the provider generation limit without answer text. Both retained the
+original model options and used single-job runner invocations with staggered
+launches; their generation periods overlapped other still-running jobs.
+The original failures remain immutable. These two retries did not add any
+answers to the scoring cohort.
+
+The trusted reference passed in the pinned `c11-host` revision 4 environment
+`debian-13-x86-64-c11-host` revision 1, using GCC 14.2.0 and Bubblewrap 0.11.0.
+All four extracted answers used that same environment. Separately, the
+reference baseline and all 48 controlled mutations passed their expected
+checks. The prompt and rubric name Ubuntu 24.04; this attempt instead used
+the profile's supported Debian 13 environment. That difference is disclosed
+and must be retained with any interpretation of these results.
+
+Raw records, isolated extracted answers, validation reports, mutation logs,
+and the attempt audit remain private under
+`results/supervised-process-service-cross-family-20260906-attempt-01/`.
+Retry records are in the sibling directories ending
+`20260906-retry-glm-r2-01` and `20260906-retry-kimi-r1-01`. A fresh private
+`blind-scoring/` packet contains the four available answers, a blank score
+sheet, and anonymized compiler/test evidence. A separate private
+`ai-assisted-review-20260906/` draft reuses three verified prior AI ratings and
+adds one provisional AI assessment. Its completed score sheet was hashed
+before unblinding and passed the calibration summarizer. The user reviewed
+and accepted the draft; it retains its AI-assisted provenance and does not
+constitute independent blinded human review. The original human score sheet
+remains blank.
+At the time this attempt was prepared, the workflow required an answer-only
+scoring cohort. The revised policy above counts failed generations as observed
+attempts and requires no fabricated replacement answers. This historical
+packet still uses the legacy workflow and does not commit the generation
+cohort; its independent human review is pending. Do not label it a completed
+calibration or infer a model-family ranking from the available answers.

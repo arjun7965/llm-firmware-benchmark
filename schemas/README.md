@@ -1,5 +1,12 @@
 # Schema Evolution
 
+`calibration-cohort.schema.json` declares the planned model families, runs,
+prompt hash, options, and provider configuration fingerprints for calibration.
+Runtime validation additionally rejects duplicate models, unplanned or
+duplicate result slots, and configuration drift. See
+`docs/model-family-calibration.md` for version 1.1 private scoring artifacts
+and the separate generation-reliability and available-answer score summaries.
+
 Versioned schemas declare their data-contract version through
 `properties.schemaVersion.const`. Breaking changes, including new required
 fields, require a version bump in the schema and every producer, validator,

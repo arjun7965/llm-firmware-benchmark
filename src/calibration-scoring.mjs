@@ -19,6 +19,7 @@ import {
 import { isDeepStrictEqual } from "node:util";
 import { extractAnswer } from "./answers.mjs";
 import { promptSha256 } from "./harness.mjs";
+import { describeGenerationBudget } from "./generation-budget.mjs";
 
 const maximumResultBytes = 5 * 1024 * 1024;
 const taskIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -118,7 +119,7 @@ function resultPaths(inputRoot, taskId) {
   return paths.sort();
 }
 
-function parseResult(path, inputRoot, task) {
+function parseResult(path, inputRoot, task, { allowFailure = false } = {}) {
   const size = statSync(path).size;
   if (size > maximumResultBytes) {
     throw new RangeError(
@@ -152,13 +153,6 @@ function parseResult(path, inputRoot, task) {
       );
     }
   }
-  if (
-    result.exitCode !== 0 ||
-    result.signal !== null ||
-    result.error !== null
-  ) {
-    throw new TypeError(`calibration result was not successful: ${path}`);
-  }
   if (!Number.isSafeInteger(result.run) || result.run < 1) {
     throw new TypeError(`calibration result has an invalid run: ${path}`);
   }
@@ -178,11 +172,48 @@ function parseResult(path, inputRoot, task) {
   if (result.promptSha256 !== expectedPromptSha256) {
     throw new TypeError(`calibration result prompt does not match: ${path}`);
   }
-
-  const answer = extractAnswer(result.stdout);
-  if (answer.trim() === "") {
-    throw new TypeError(`calibration result answer is empty: ${path}`);
+  if ((result.exitCode !== null && !Number.isSafeInteger(result.exitCode)) ||
+      (result.signal !== null && typeof result.signal !== "string") ||
+      (result.error !== null && typeof result.error !== "string") ||
+      typeof result.stdout !== "string") {
+    throw new TypeError(`calibration result has malformed execution metadata: ${path}`);
   }
+  const generationBudget = describeGenerationBudget(
+    provider, result.modelOptions ?? {}, result.generationBudget !== undefined,
+  );
+  if (result.generationBudget !== undefined &&
+      !isDeepStrictEqual(result.generationBudget, generationBudget)) {
+    throw new TypeError(`calibration result generation budget does not match: ${path}`);
+  }
+
+  const successful = result.exitCode === 0 && result.signal === null &&
+    result.error === null;
+  if (!successful && !allowFailure) {
+    throw new TypeError(`calibration result was not successful: ${path}`);
+  }
+  let answer = null;
+  if (successful) {
+    try {
+      answer = extractAnswer(result.stdout);
+      if (answer.trim() === "") throw new TypeError("answer is empty");
+    } catch (error) {
+      if (!allowFailure) throw error;
+      answer = null;
+    }
+  }
+  const metadata = {
+    modelId,
+    modelName,
+    provider,
+    run: result.run,
+    source: relative(inputRoot, path),
+    resultSha256: sha256(readFileSync(path)),
+    modelOptions: result.modelOptions ?? {},
+    providerConfigSha256: result.providerConfigSha256 ?? null,
+    generationBudget,
+    generationOutcome: answer === null ? generationFailure(result) : "answer",
+  };
+  if (answer === null) return metadata;
   const normalizedAnswer = normalizedIdentity(answer);
   const leakedIdentity = [modelName, modelId, provider]
     .map(normalizedIdentity)
@@ -197,11 +228,7 @@ function parseResult(path, inputRoot, task) {
   return {
     answer,
     answerSha256: sha256(answer),
-    modelId,
-    modelName,
-    provider,
-    run: result.run,
-    source: relative(inputRoot, path),
+    ...metadata,
   };
 }
 
@@ -234,6 +261,176 @@ export function loadCalibrationSamples(input, task) {
     identities.add(identity);
   }
   return samples;
+}
+
+const generationOutcomes = [
+  "answer", "timeout", "generation-limit", "provider-error", "no-answer", "missing",
+];
+
+function generationFailure(result) {
+  if (/^timed out after [0-9]+ ms/u.test(result.error ?? "")) return "timeout";
+  // Only provider event metadata is evidence of a length stop, not answer prose.
+  if (result.provider === "opencode") {
+    let finish;
+    for (const line of (result.stdout ?? "").split("\n")) {
+      try {
+        const event = JSON.parse(line);
+        if (event.type === "step_finish") finish = event.part?.reason;
+      } catch { /* Non-event text is not stop-reason evidence. */ }
+    }
+    if (finish === "length") return "generation-limit";
+  }
+  return result.exitCode === 0 && result.signal === null && result.error === null
+    ? "no-answer" : "provider-error";
+}
+
+export function validateCalibrationPlan(plan, task) {
+  requireObject(plan, "cohort plan");
+  const planFields = ["schemaVersion", "taskId", "promptSha256", "models"];
+  if (Object.keys(plan).some((field) => !planFields.includes(field))) {
+    throw new TypeError("unknown cohort plan field");
+  }
+  if (plan.schemaVersion !== "1.0" || plan.taskId !== task.id ||
+      plan.promptSha256 !== promptSha256(task.prompt)) {
+    throw new TypeError("cohort plan version, task, or prompt does not match");
+  }
+  if (!Array.isArray(plan.models) || plan.models.length === 0) {
+    throw new TypeError("cohort plan models must be a non-empty array");
+  }
+  const names = new Set();
+  for (const model of plan.models) {
+    requireObject(model, "cohort model");
+    const modelFields = [
+      "modelName", "modelId", "provider", "family", "modelOptions",
+      "providerConfigSha256", "runs",
+    ];
+    if (Object.keys(model).some((field) => !modelFields.includes(field))) {
+      throw new TypeError("unknown cohort model field");
+    }
+    for (const field of ["modelName", "modelId", "provider", "family"]) {
+      requireNonEmptyString(model[field], `cohort model ${field}`);
+    }
+    if (names.has(model.modelName)) throw new TypeError("duplicate cohort model");
+    names.add(model.modelName);
+    requireObject(model.modelOptions, "cohort modelOptions");
+    if (model.providerConfigSha256 !== null &&
+        !/^[a-f0-9]{64}$/u.test(model.providerConfigSha256)) {
+      throw new TypeError("cohort provider configuration digest is invalid");
+    }
+    if (!Array.isArray(model.runs) || model.runs.length === 0 ||
+        model.runs.some((run) => !Number.isSafeInteger(run) || run < 1) ||
+        new Set(model.runs).size !== model.runs.length) {
+      throw new TypeError("cohort runs must be unique positive integers");
+    }
+  }
+  return plan;
+}
+
+export function loadCalibrationCohort(input, task, plan) {
+  validateCalibrationPlan(plan, task);
+  const inputRoot = resolve(requireNonEmptyString(input, "input"));
+  const records = resultPaths(inputRoot, task.id).map((path) =>
+    parseResult(path, inputRoot, task, { allowFailure: true }));
+  const byRun = new Map();
+  const budgets = new Map();
+  for (const record of records) {
+    const model = plan.models.find((entry) => entry.modelName === record.modelName);
+    if (!model || !model.runs.includes(record.run)) {
+      throw new TypeError("result is outside the declared cohort");
+    }
+    for (const field of ["modelId", "provider", "modelOptions", "providerConfigSha256"]) {
+      if (!isDeepStrictEqual(record[field], model[field])) {
+        throw new TypeError(`cohort result ${field} does not match the plan`);
+      }
+    }
+    if (budgets.has(record.modelName) &&
+        !isDeepStrictEqual(budgets.get(record.modelName), record.generationBudget)) {
+      throw new TypeError("cohort model has inconsistent recorded generation budgets");
+    }
+    budgets.set(record.modelName, record.generationBudget);
+    const id = `${record.modelName}\0${record.run}`;
+    if (byRun.has(id)) {
+      throw new TypeError("duplicate cohort run; keep retries in a separate cohort");
+    }
+    byRun.set(id, record);
+  }
+  const attempts = plan.models.flatMap((model) => model.runs.map((run) => {
+    const record = byRun.get(`${model.modelName}\0${run}`);
+    return {
+      modelName: model.modelName,
+      run,
+      outcome: record?.generationOutcome ?? "missing",
+      source: record?.source ?? null,
+      resultSha256: record?.resultSha256 ?? null,
+      answerSha256: record?.answerSha256 ?? null,
+      generationBudget: record?.generationBudget ?? null,
+    };
+  }));
+  return {
+    samples: records.filter((record) => record.generationOutcome === "answer"),
+    cohort: { plan, attempts },
+  };
+}
+
+function validateCohort(cohort, task, samples) {
+  requireObject(cohort, "cohort");
+  validateCalibrationPlan(cohort.plan, task);
+  const expected = new Map(cohort.plan.models.flatMap((model) =>
+    model.runs.map((run) => [`${model.modelName}\0${run}`, model])));
+  if (!Array.isArray(cohort.attempts) || cohort.attempts.length !== expected.size) {
+    throw new TypeError("cohort attempt set does not match the plan");
+  }
+  const answers = new Map(samples.map((sample) =>
+    [`${sample.modelName}\0${sample.run}`, sample]));
+  if (answers.size !== samples.length) throw new TypeError("duplicate cohort answer");
+  for (const attempt of cohort.attempts) {
+    requireObject(attempt, "cohort attempt");
+    if (!Number.isSafeInteger(attempt.run) || attempt.run < 1) {
+      throw new TypeError("invalid cohort attempt run");
+    }
+    const id = `${attempt.modelName}\0${attempt.run}`;
+    const model = expected.get(id);
+    if (!model || !generationOutcomes.includes(attempt.outcome)) {
+      throw new TypeError("invalid or duplicate cohort attempt");
+    }
+    expected.delete(id);
+    if (attempt.outcome === "missing") {
+      if (attempt.source !== null || attempt.resultSha256 !== null ||
+          attempt.generationBudget !== null) {
+        throw new TypeError("missing cohort attempt contains result evidence");
+      }
+    } else {
+      requireNonEmptyString(attempt.source, "cohort result source");
+      if (!/^[a-f0-9]{64}$/u.test(attempt.resultSha256)) {
+        throw new TypeError("cohort result digest is invalid");
+      }
+      requireObject(attempt.generationBudget, "cohort generation budget");
+    }
+    const answer = answers.get(id);
+    if (attempt.outcome === "answer") {
+      if (!answer || attempt.answerSha256 !== answer.answerSha256 ||
+          answer.modelId !== model.modelId || answer.provider !== model.provider ||
+          answer.source !== attempt.source) {
+        throw new TypeError("cohort answer set does not match scoring samples");
+      }
+      answers.delete(id);
+    } else if (answer || attempt.answerSha256 !== null) {
+      throw new TypeError("failed cohort attempt cannot have a rubric score");
+    }
+  }
+  if (answers.size) throw new TypeError("scoring samples outside cohort");
+}
+
+function generationCounts(attempts) {
+  const outcomes = Object.fromEntries(generationOutcomes.map((name) => [name, 0]));
+  for (const attempt of attempts) outcomes[attempt.outcome]++;
+  return {
+    scheduled: attempts.length,
+    recorded: attempts.length - outcomes.missing,
+    answers: outcomes.answer,
+    answerRate: attempts.length ? outcomes.answer / attempts.length : null,
+    outcomes,
+  };
 }
 
 function criterionId(label, index) {
@@ -323,7 +520,7 @@ export function renderBlindedReviewPacket(packet, packetText) {
   requireObject(packet, "packet");
   requireNonEmptyString(packetText, "packet text");
   requireMatchingJsonText(packet, packetText, "packet");
-  if (packet.schemaVersion !== "1.0") {
+  if (!["1.0", "1.1"].includes(packet.schemaVersion)) {
     throw new TypeError("unsupported calibration packet schemaVersion");
   }
   if (!/^[a-f0-9]{64}$/u.test(packet.identityKeySha256)) {
@@ -337,7 +534,9 @@ export function renderBlindedReviewPacket(packet, packetText) {
     packet.generationEvidence,
     "packet generation evidence",
   );
-  const samples = requireUniqueSamples(packet.samples, "packet samples");
+  const samples = requireUniqueSamples(
+    packet.samples, "packet samples", packet.schemaVersion === "1.1",
+  );
   const packetDigest = sha256(packetText);
   const lines = [
     "# Blinded Calibration Review Packet",
@@ -370,6 +569,13 @@ export function renderBlindedReviewPacket(packet, packetText) {
     "## Generation Evidence",
     "",
     evidence,
+    ...(packet.generation ? [
+      "",
+      `Scheduled attempts: ${packet.generation.scheduled}; ` +
+        `recorded: ${packet.generation.recorded}; ` +
+        `answers available for scoring: ${packet.generation.answers}. ` +
+        "Missing answers receive no rubric score.",
+    ] : []),
     "",
     "## Task Prompt",
     "",
@@ -409,18 +615,21 @@ export function renderBlindedReviewPacket(packet, packetText) {
 }
 
 export function buildBlindedScoringArtifacts({
+  cohort = null,
   createCommitmentNonce = () => randomBytes(32).toString("hex"),
   rubric,
   samples,
   task,
   chooseIndex = (upper) => randomInt(upper),
 }) {
-  if (!Array.isArray(samples) || samples.length === 0) {
-    throw new TypeError("samples must be a non-empty array");
+  if (!Array.isArray(samples) || (samples.length === 0 && cohort === null)) {
+    throw new TypeError("samples must be a non-empty array without a cohort");
   }
   if (!task || typeof task !== "object" || Array.isArray(task)) {
     throw new TypeError("task must be an object");
   }
+  if (cohort !== null) validateCohort(cohort, task, samples);
+  const schemaVersion = cohort === null ? "1.0" : "1.1";
   const reviewRubric = rubricForBlindReview(rubric);
   const criteria = parseCalibrationRubric(reviewRubric);
   const shuffled = shuffledSamples(samples, chooseIndex);
@@ -438,7 +647,8 @@ export function buildBlindedScoringArtifacts({
     throw new TypeError("identity key commitment nonce must be 32-byte hex");
   }
   const key = {
-    schemaVersion: "1.0",
+    schemaVersion,
+    ...(cohort === null ? {} : { cohort }),
     taskId: task.id,
     commitmentNonce,
     samples: keyedSamples.map((sample) => ({
@@ -453,7 +663,8 @@ export function buildBlindedScoringArtifacts({
   };
   const keyText = serializeJson(key);
   const packet = {
-    schemaVersion: "1.0",
+    schemaVersion,
+    ...(cohort === null ? {} : { generation: generationCounts(cohort.attempts) }),
     identityKeySha256: sha256(keyText),
     task: {
       id: task.id,
@@ -474,7 +685,7 @@ export function buildBlindedScoringArtifacts({
   const packetMarkdownText = renderBlindedReviewPacket(packet, packetText);
   const packetSha256 = sha256(packetText);
   const scoreSheet = {
-    schemaVersion: "1.0",
+    schemaVersion,
     taskId: task.id,
     packetSha256,
     status: "in-progress",
@@ -509,8 +720,8 @@ function requireObject(value, name) {
   return value;
 }
 
-function requireUniqueSamples(samples, name) {
-  if (!Array.isArray(samples) || samples.length === 0) {
+function requireUniqueSamples(samples, name, allowEmpty = false) {
+  if (!Array.isArray(samples) || (!allowEmpty && samples.length === 0)) {
     throw new TypeError(`${name} must be a non-empty array`);
   }
   const byBlindId = new Map();
@@ -533,6 +744,7 @@ function sameKeys(left, right) {
 }
 
 function summarizeTotals(values) {
+  if (values.length === 0) return { mean: null, range: null, sd: null };
   const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
   const variance = values.reduce(
     (sum, value) => sum + (value - mean) ** 2,
@@ -575,9 +787,9 @@ export function summarizeCompletedCalibrationScoring({
   requireMatchingJsonText(packet, packetText, "packet");
   requireMatchingJsonText(scoreSheet, scoreSheetText, "score sheet");
   if (
-    identityKey.schemaVersion !== "1.0" ||
-    packet.schemaVersion !== "1.0" ||
-    scoreSheet.schemaVersion !== "1.0"
+    !["1.0", "1.1"].includes(packet.schemaVersion) ||
+    identityKey.schemaVersion !== packet.schemaVersion ||
+    scoreSheet.schemaVersion !== packet.schemaVersion
   ) {
     throw new TypeError("unsupported calibration scoring schemaVersion");
   }
@@ -596,9 +808,16 @@ export function summarizeCompletedCalibrationScoring({
   if (scoreSheet.packetSha256 !== packetDigest) {
     throw new TypeError("calibration scoring packet digest does not match");
   }
-  const packetSamples = requireUniqueSamples(packet.samples, "packet samples");
-  const keySamples = requireUniqueSamples(identityKey.samples, "identity key samples");
-  const scoredSamples = requireUniqueSamples(scoreSheet.samples, "scored samples");
+  const hasCohort = packet.schemaVersion === "1.1";
+  const packetSamples = requireUniqueSamples(packet.samples, "packet samples", hasCohort);
+  const keySamples = requireUniqueSamples(identityKey.samples, "identity key samples", hasCohort);
+  const scoredSamples = requireUniqueSamples(scoreSheet.samples, "scored samples", hasCohort);
+  if (hasCohort) {
+    validateCohort(identityKey.cohort, packet.task, identityKey.samples);
+    if (!isDeepStrictEqual(packet.generation, generationCounts(identityKey.cohort.attempts))) {
+      throw new TypeError("cohort generation counts do not match the packet");
+    }
+  }
   if (
     packetSamples.size !== keySamples.size ||
     packetSamples.size !== scoredSamples.size
@@ -691,15 +910,37 @@ export function summarizeCompletedCalibrationScoring({
     if (!byModel.has(score.model)) byModel.set(score.model, []);
     byModel.get(score.model).push(score);
   }
-  const models = [...byModel].map(([model, runs]) => ({
-    model,
-    runs: runs.map(({ run, score }) => ({ run, score })),
-    ...summarizeTotals(runs.map(({ score }) => score)),
-  }));
+  if (hasCohort) {
+    for (const model of identityKey.cohort.plan.models) {
+      if (!byModel.has(model.modelName)) byModel.set(model.modelName, []);
+    }
+  }
+  const models = [...byModel]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([model, runs]) => ({
+      model,
+      runs: runs.map(({ run, score }) => ({ run, score })),
+      ...summarizeTotals(runs.map(({ score }) => score)),
+      ...(hasCohort ? {
+        generation: generationCounts(identityKey.cohort.attempts.filter((attempt) =>
+          attempt.modelName === model)),
+        generationRuns: identityKey.cohort.attempts.filter((attempt) =>
+          attempt.modelName === model).map(({ run, outcome, generationBudget }) =>
+          ({ run, outcome, generationBudget })),
+      } : {}),
+    }));
   const allScores = unblinded.map(({ score }) => score);
 
   return {
-    schemaVersion: "1.0",
+    schemaVersion: packet.schemaVersion,
+    ...(hasCohort ? {
+      generation: packet.generation,
+      scorePopulation: "available-answers-only",
+      cohortRecorded: packet.generation.outcomes.missing === 0,
+      plannedFamilyCount: new Set(
+        identityKey.cohort.plan.models.map((model) => model.family),
+      ).size,
+    } : {}),
     taskId,
     packetSha256: packetDigest,
     scoreSheetSha256: sha256(scoreSheetText),

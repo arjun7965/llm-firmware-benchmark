@@ -25,6 +25,14 @@ provider- and model-specific; examples include reasoning levels such as
 integer. Prefer pinned model identifiers and variants over moving aliases when
 collecting results for comparison.
 
+Raw results record `generationBudget`: the effective harness timeout and
+configured variant, with numeric provider token limits marked null because
+this adapter does not expose them. A timeout is distinct from a provider
+`step_finish` event with `reason=length`. Cohort calibration preserves both
+outcomes without inventing answer scores. Lowering a supported variant may
+reduce reasoning use, but requires a fresh declared cohort and does not
+guarantee that the provider will produce an answer.
+
 Each job invokes `opencode --pure run --format json` with the configured model.
 The adapter uses an empty temporary working directory, removes it after the
 process exits, and applies all of the following controls:

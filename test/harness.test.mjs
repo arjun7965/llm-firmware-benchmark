@@ -189,6 +189,7 @@ test("executeJob skips an existing successful result without generating", async 
   mkdirSync(outputRoot, { recursive: true });
   writeFileSync(path, JSON.stringify({
     exitCode: 0,
+    modelOptions: job.modelOptions,
     providerConfigSha256: "a".repeat(64),
     promptSha256: promptSha256(job.task.prompt),
     scoringMode: job.task.scoringMode,
@@ -257,4 +258,26 @@ test("executeJob rejects malformed provider configuration fingerprints", async (
     }),
     /lowercase SHA-256 digest/,
   );
+});
+
+test("changed reasoning settings invalidate reuse and record the configured budget", async (t) => {
+  const outputRoot = temporaryDirectory(t);
+  const [job] = createJobs(tasks, [{
+    ...models[0], provider: "opencode", options: { variant: "high", timeoutMs: 600000 },
+  }]);
+  let calls = 0;
+  const generate = async () => {
+    calls++;
+    return { exitCode: 0, stdout: "answer", signal: null, error: null };
+  };
+  const first = await executeJob({ job, outputRoot, generate });
+  assert.equal(first.record.generationBudget.reasoning.value, "high");
+  await executeJob({ job, outputRoot, generate });
+  assert.equal(calls, 1);
+  const revised = { ...job, modelOptions: { ...job.modelOptions, variant: "low" } };
+  const second = await executeJob({ job: revised, outputRoot, generate });
+  assert.equal(calls, 2);
+  assert.equal(second.record.generationBudget.reasoning.value, "low");
+  assert.equal(second.record.generationBudget.timeoutMs, 600000);
+  assert.equal(second.record.generationBudget.providerTokenLimits, null);
 });

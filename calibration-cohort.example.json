@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "supervised-process-service",
+  "promptSha256": "c74f0150c4baeae3ba927f2bf8e03e2ff38baaa543af06a1f606ef541f8bec44",
+  "models": [
+    {
+      "modelName": "model-a",
+      "modelId": "provider/model-a",
+      "provider": "opencode",
+      "family": "family-a",
+      "modelOptions": {
+        "variant": "high",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": "ab82a7cc2d121908666852f90bd880bebade7af665b8ab826965f4e493e889c6",
+      "runs": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "modelName": "model-b",
+      "modelId": "provider/model-b",
+      "provider": "opencode",
+      "family": "family-b",
+      "modelOptions": {
+        "variant": "high",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": "ab82a7cc2d121908666852f90bd880bebade7af665b8ab826965f4e493e889c6",
+      "runs": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "modelName": "model-c",
+      "modelId": "provider/model-c",
+      "provider": "opencode",
+      "family": "family-c",
+      "modelOptions": {
+        "variant": "high",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": "ab82a7cc2d121908666852f90bd880bebade7af665b8ab826965f4e493e889c6",
+      "runs": [
+        1,
+        2,
+        3
+      ]
+    }
+  ]
+}

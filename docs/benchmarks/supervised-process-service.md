@@ -13,8 +13,9 @@ supplied process-launch boundary and the stated Linux/POSIX interfaces.
 
 ## Target Assumptions
 
-Target profile: `embedded-linux-posix`. Validation uses little-endian Ubuntu
-24.04 x86-64 LP64 and GCC 13.3.0. One supervisor invocation runs on the main
+Target profile: `embedded-linux-posix`. Validation uses `c11-host` revision 4
+and `debian-13-x86-64-c11-host` revision 1: little-endian Debian 13 x86-64
+LP64 and GCC 14.2.0. One supervisor invocation runs on the main
 thread. A supplied launcher owns safe fork/exec setup and returns one pidfd and
 one nonblocking `SOCK_SEQPACKET` channel. The fixture redirects process, IPC,
 polling, signal, termination, and reaping calls, so tests create no real child.
