@@ -6,6 +6,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
+import { describeGenerationBudget } from "./generation-budget.mjs";
 import { validateModels } from "./models.mjs";
 import {
   targetProfileRequiredCategories,
@@ -132,6 +134,7 @@ export function promptSha256(prompt) {
 }
 
 export function hasSuccessfulResult(path, {
+  expectedModelOptions,
   expectedProviderConfigSha256,
   expectedPromptSha256,
   expectedScoringMode,
@@ -141,6 +144,8 @@ export function hasSuccessfulResult(path, {
   try {
     const result = JSON.parse(readFileSync(path, "utf8"));
     return result.exitCode === 0 &&
+      (expectedModelOptions === undefined ||
+       isDeepStrictEqual(result.modelOptions, expectedModelOptions)) &&
       (expectedProviderConfigSha256 === undefined ||
        result.providerConfigSha256 === expectedProviderConfigSha256) &&
       (expectedPromptSha256 === undefined ||
@@ -196,6 +201,7 @@ export async function executeJob({
   const path = resultFilePath(outputRoot, job);
   const currentPromptSha256 = promptSha256(job.task.prompt);
   if (hasSuccessfulResult(path, {
+    expectedModelOptions: job.modelOptions,
     expectedProviderConfigSha256: providerConfigSha256,
     expectedPromptSha256: currentPromptSha256,
     expectedScoringMode: job.task.scoringMode,
@@ -231,6 +237,7 @@ export async function executeJob({
     modelName: job.modelName,
     modelId: job.modelId,
     modelOptions: job.modelOptions,
+    generationBudget: describeGenerationBudget(job.provider, job.modelOptions),
     providerConfigSha256: providerConfigSha256 ?? null,
     promptSha256: currentPromptSha256,
     startedAt,

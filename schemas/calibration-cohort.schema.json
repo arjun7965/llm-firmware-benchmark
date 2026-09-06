@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Calibration cohort plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "taskId", "promptSha256", "models"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "taskId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "promptSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["modelName", "modelId", "provider", "family", "modelOptions", "providerConfigSha256", "runs"],
+        "properties": {
+          "modelName": { "type": "string", "minLength": 1 },
+          "modelId": { "type": "string", "minLength": 1 },
+          "provider": { "type": "string", "minLength": 1 },
+          "family": { "type": "string", "minLength": 1 },
+          "modelOptions": { "type": "object" },
+          "providerConfigSha256": {
+            "anyOf": [
+              { "type": "null" },
+              { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            ]
+          },
+          "runs": {
+            "type": "array", "minItems": 1, "uniqueItems": true,
+            "items": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

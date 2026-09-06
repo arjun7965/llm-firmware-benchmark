@@ -10,6 +10,7 @@ import {
 import { parseArgs } from "node:util";
 import {
   buildBlindedScoringArtifacts,
+  loadCalibrationCohort,
   loadCalibrationSamples,
   resolvePrivateResultsPath,
 } from "../src/calibration-scoring.mjs";
@@ -18,6 +19,7 @@ import { loadTasks } from "../src/harness.mjs";
 const { values } = parseArgs({
   allowPositionals: false,
   options: {
+    cohort: { type: "string" },
     input: { type: "string" },
     output: { type: "string" },
     rubric: { type: "string" },
@@ -56,8 +58,14 @@ const rubricPath = resolve(
   values.rubric ?? `docs/benchmarks/${taskId}.md`,
 );
 const rubric = readFileSync(rubricPath, "utf8");
-const samples = loadCalibrationSamples(input, task);
-const artifacts = buildBlindedScoringArtifacts({ rubric, samples, task });
+const { samples, cohort = null } = values.cohort
+  ? loadCalibrationCohort(
+    input,
+    task,
+    JSON.parse(readFileSync(resolve(values.cohort), "utf8")),
+  )
+  : { samples: loadCalibrationSamples(input, task) };
+const artifacts = buildBlindedScoringArtifacts({ cohort, rubric, samples, task });
 
 mkdirSync(output, { mode: 0o700 });
 writeFileSync(resolve(output, "packet.json"), artifacts.packetText, {

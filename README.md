@@ -177,19 +177,29 @@ For a cross-model calibration pilot, prepare a private identity-blinded packet
 inside the ignored `results/` tree, complete its score sheet before opening the
 identity key, then validate and summarize the locked scores:
 
+Before generation, copy `calibration-cohort.example.json` into the pilot
+directory as `cohort.json` and pin the intended task, model families, options,
+provider configuration hashes, and runs. Include every original result in the
+input directory, including unsuccessful generations.
+
 ```bash
 npm run calibration:blind -- \
   --input results/<pilot> \
+  --cohort results/<pilot>/cohort.json \
   --task <task-id> \
   --output results/<pilot>/blind-scoring
 npm run calibration:summarize -- \
   --directory results/<pilot>/blind-scoring
 ```
 
-The preparation command extracts complete provider answers, rejects failed
-samples and normalized literal model/provider identifiers in answer text,
-randomizes their order, and writes canonical `packet.json`, a readable
+The preparation command retains all declared attempts, extracts available
+provider answers, rejects normalized literal model/provider identifiers in
+answer text, randomizes answer order, and writes canonical `packet.json`, a readable
 `packet.md` rendering, `score-sheet.json`, and a separate `identity-key.json`.
+Only available answers receive rubric scores. Generation counts retain failed
+and missing attempts; models with no answers have null score statistics.
+Without `--cohort`, the legacy answer-only workflow remains available but
+cannot report generation reliability.
 Review `packet.md`, where answer line breaks and inner code fences are preserved
 inside inert Markdown source blocks, then enter scores in `score-sheet.json`.
 The Markdown view records the canonical packet and per-answer SHA-256 values;
