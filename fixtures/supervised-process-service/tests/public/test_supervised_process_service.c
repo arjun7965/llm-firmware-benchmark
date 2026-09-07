@@ -182,6 +182,9 @@ static bool test_sends_bounded_frames_and_cleans_up(void) {
   mock_supervisor_io_call_t second_send;
   mock_supervisor_poll_call_t writable_poll;
   mock_supervisor_poll_call_t ack_poll;
+  const int owned_fds[] = {
+    82, 81, MOCK_SUPERVISOR_WAKE_WRITE_FD, MOCK_SUPERVISOR_WAKE_READ_FD,
+  };
 
   mock_supervisor_reset();
   queue_spawn(1001, 81, 82);
@@ -240,21 +243,28 @@ static bool test_sends_bounded_frames_and_cleans_up(void) {
   ASSERT(mock_supervisor_wait_pid(0u) == 1001);
   ASSERT(mock_supervisor_wait_options(0u) == WNOHANG);
   ASSERT(mock_supervisor_close_call_count() == 4u);
-  ASSERT(mock_supervisor_close_fd(0u) == 82);
-  ASSERT(mock_supervisor_close_fd(1u) == 81);
-  ASSERT(
-    mock_supervisor_close_fd(2u) == MOCK_SUPERVISOR_WAKE_WRITE_FD
-  );
-  ASSERT(
-    mock_supervisor_close_fd(3u) == MOCK_SUPERVISOR_WAKE_READ_FD
-  );
+  /* The contract requires ownership cleanup, not a particular close order. */
+  for (size_t fd_index = 0u; fd_index < 4u; ++fd_index) {
+    size_t matches = 0u;
+
+    for (size_t call_index = 0u; call_index < 4u; ++call_index) {
+      if (mock_supervisor_close_fd(call_index) == owned_fds[fd_index]) {
+        ++matches;
+      }
+    }
+    ASSERT(matches == 1u);
+  }
   ASSERT(mock_supervisor_sigaction_call_count() == 4u);
   ASSERT(mock_supervisor_sigaction_signal(0u) == SIGINT);
   ASSERT(mock_supervisor_sigaction_signal(1u) == SIGTERM);
   ASSERT(mock_supervisor_sigaction_is_restore(2u));
-  ASSERT(mock_supervisor_sigaction_signal(2u) == SIGTERM);
   ASSERT(mock_supervisor_sigaction_is_restore(3u));
-  ASSERT(mock_supervisor_sigaction_signal(3u) == SIGINT);
+  ASSERT(
+    (mock_supervisor_sigaction_signal(2u) == SIGTERM &&
+     mock_supervisor_sigaction_signal(3u) == SIGINT) ||
+    (mock_supervisor_sigaction_signal(2u) == SIGINT &&
+     mock_supervisor_sigaction_signal(3u) == SIGTERM)
+  );
   ASSERT(mock_supervisor_sigaction_flags(0u) == 0);
   ASSERT(mock_supervisor_sigaction_flags(1u) == 0);
   return true;

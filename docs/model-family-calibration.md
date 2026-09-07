@@ -333,7 +333,7 @@ This active embedded-Linux C fixture targets the still-partial supervised
 service capability. Its deterministic POSIX mock makes process, pidfd,
 `SOCK_SEQPACKET`, signal, timeout, restart, and bounded-shutdown interactions
 observable without launching a real child. The trusted reference passes, and
-all 48 compile-valid controlled mutations are rejected. Its coupled lifecycle
+all 50 compile-valid controlled mutations are rejected. Its coupled lifecycle
 and failure-recovery requirements should provide a broader discrimination
 surface than the two uniformly scored pilots while retaining repeatable host
 validation.
@@ -420,3 +420,100 @@ attempts and requires no fabricated replacement answers. This historical
 packet still uses the legacy workflow and does not commit the generation
 cohort; its independent human review is pending. Do not label it a completed
 calibration or infer a model-family ranking from the available answers.
+
+### Environment-corrected cohort — 2026-09-06
+
+The fresh prospective cohort completed all nine scheduled attempts under ignored
+`results/supervised-process-service-cross-family-20260906-attempt-02/`.
+Its frozen `cohort.json` and `cohort.sha256` declare three attempts each for
+GPT-5.6 Luna, GLM-5.3, and Kimi K3 with prompt SHA-256
+`c74f0150c4baeae3ba927f2bf8e03e2ff38baaa543af06a1f606ef541f8bec44`.
+Generation used harness commit `550e757` and preserved the previous model
+reasoning settings and 600/900/600-second timeouts. Concurrency was reduced
+from three to one to avoid overlapping provider invocations after the earlier
+database-lock failure. No historical samples or retries replace these attempts.
+
+The trusted reference passed the pinned Debian 13 validation environment, and
+all 48 controlled mutations were rejected before generation completed.
+The follow-up script recorded all generation outcomes and extracted and validated
+five answers: three from Luna and two from Kimi. GLM's three attempts ended
+with provider `length` stops and no extractable answer; Kimi's other attempt
+hit its 600-second harness timeout. All five original answers failed the
+original validator (one compilation failure and four first-assertion runtime
+failures). Raw records and validation reports remain unchanged.
+
+The user requested an AI rubric review and then requested copying those
+ratings into the original review sheet. That sheet retains `scorer.type` of
+`ai-review`; a blank backup and the separate `ai-review-20260907/` artifacts
+are preserved privately. This does not satisfy independent human review.
+Means remain conditional on available answers, with generation failures kept
+in the nine-attempt denominator and assigned no rubric score.
+
+### Generation and fixture diagnostics — 2026-09-07
+
+A separate prospective two-sample diagnostic plan completed under ignored
+`results/supervised-process-service-diagnostics-20260907-01/`. It keeps the
+corrected prompt unchanged and runs sequentially: one GLM attempt with the
+catalog-supported `variant=low` and its existing 900-second timeout, followed
+by one Kimi attempt with unchanged `variant=max` and a 1,200-second timeout.
+It is not a three-family calibration cohort. Neither diagnostic replaces an
+original attempt or contributes to the existing AI score means.
+
+| Diagnostic | Duration | Provider completion | Extraction / original validation |
+| --- | ---: | --- | --- |
+| GLM-5.3, `variant=low`, 900 s timeout | 282.227 s | Normal stop; 18,894 reasoning and 4,990 output tokens | Extracted and compiled; nominal shutdown kill-count assertion failed |
+| Kimi K3, `variant=max`, 1,200 s timeout | 577.141 s | An initial `unknown` step with zero reported usage, then `length`; 31,895 reasoning and 105 output tokens in the final step | Partial text with an unterminated C fence; extraction failed, validation not applicable |
+
+GLM's sample supports lowering reasoning effort as a way to obtain an answer
+within the current cap, not as proof of answer correctness or reliable
+completion. Its source includes an extra zero-time pidfd probe, encountering
+the mock-sequence limitation described below. Kimi stopped before even the
+original 600-second timeout, so this attempt provides no evidence that a
+longer timeout improves completion. Its nonempty partial text is classified
+as an available answer by the cohort loader, but must be reported alongside
+the explicit length stop and extraction failure, not as a complete solution.
+The original fixture was snapshotted before the cleanup-order correction and
+used for these diagnostic validation reports. Private `diagnostic-summary.json`
+contains the plan digest, raw-result digests, budgets, stop events, and outcomes.
+
+The installed OpenCode 1.18.29 catalog advertises a 131,072-token output limit
+for both models. Inspection of that executable found a default 32,000-token
+output cap and a transform taking the smaller of that cap and the model's
+limit. The current diagnostic process has no
+`OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX` override. This matches the
+[upstream provider transform](https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/provider/transform.ts)
+and the documented
+[experimental CLI control](https://dev.opencode.ai/docs/cli/).
+The original GLM records report about 32,000 reasoning tokens and no text
+event, consistent with exhausting this cap before a final answer. The
+historical records do not attest the effective numeric request limit; this
+finding must not be retroactively inserted into their raw metadata.
+
+The original Kimi timeout has only a `step_start` event, so its upstream cause
+is unknown. Its two successful attempts took about 232 and 558 seconds,
+making a longer-timeout diagnostic useful without establishing that a longer
+wait would have rescued the failed attempt.
+
+The fixture audit found that the nominal test prescribed pipe close order
+and handler restoration order beyond the prompt. Those assertions now check
+exactly-once descriptor cleanup and restoration of both signals without
+prescribing the relative cleanup order. The trusted reference and three
+valid cleanup reorderings pass. All original 48 controlled mutations remain
+rejected, along with two new missing/duplicate pipe-close mutations.
+
+Supplemental validation of the five unchanged answers is stored separately
+under the diagnostic directory's `fixture-audit/`. All five still fail after
+this narrow correction: Luna run 1 reaches a restart-result failure, Luna
+run 2 polls the pipe's write end, Luna run 3 retains its compiler failure,
+Kimi run 1 encounters the scripted pidfd-probe mismatch, and Kimi run 3
+reaches a graceful-cleanup EINTR failure. This is new validation evidence,
+not a replacement for the original reports or a new rubric score.
+
+Remaining contract issues need a separate revision before stronger comparative
+claims: the mock consumes positional poll steps, so an extra zero-time pidfd
+probe can consume the next shutdown event; poll descriptor order is also
+script-dependent. The trusted reference tolerates `kill` returning `ESRCH`,
+whereas the prompt's blanket termination-error wording does not state that
+exception. These are audit findings, not reasons to silently change the
+frozen prompt, repair candidates, or describe all runtime failures as model
+quality defects. Any future prompt correction requires fresh provenance.

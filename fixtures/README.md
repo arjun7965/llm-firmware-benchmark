@@ -266,6 +266,9 @@ termination, and reaping calls into a deterministic script. Its public tests
 cover exact bounded request/ack records, at-least-once resend, exit and timeout
 recovery, capped/resetting restart backoff, signal priority, protocol rejection,
 zombie-free cleanup, and bounded SIGTERM-to-SIGKILL escalation.
+Cleanup checks require each owned descriptor to close exactly once and both
+signal handlers to be restored, without prescribing their relative cleanup
+order. The self-test also accepts equivalent reference cleanup permutations.
 
 The active `timer-dma-handoff` fixture uses opaque deterministic TIMER0/DMA0
 models with explicit compare-stream ownership, terminal status latches, and
