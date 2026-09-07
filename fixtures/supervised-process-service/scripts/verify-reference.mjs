@@ -1,7 +1,9 @@
 import { spawnSync } from "node:child_process";
 import {
   mkdtempSync,
+  readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -26,7 +28,7 @@ function run(command, args) {
   }
 }
 
-try {
+function verify(sourcePath) {
   run("cc", [
     "-D_GNU_SOURCE",
     "-std=c11",
@@ -39,7 +41,7 @@ try {
     "-include",
     "mocks/redirect_posix.h",
     "-c",
-    "reference/supervised_process_service.c",
+    sourcePath,
     "-o",
     object,
   ]);
@@ -59,7 +61,43 @@ try {
     binary,
   ]);
   run(binary, []);
-  console.log("Supervised process service trusted reference passed.");
+}
+
+function replaceExactlyOnce(source, find, replacement) {
+  if (source.split(find).length !== 2) {
+    throw new Error("Reference cleanup transformation must match exactly once");
+  }
+  return source.replace(find, replacement);
+}
+
+try {
+  const referencePath = join(fixtureRoot, "reference/supervised_process_service.c");
+  const source = readFileSync(referencePath, "utf8");
+  const pipeCleanup = "  close_if_open(&wake_pipe[1]);\n  close_if_open(&wake_pipe[0]);";
+  const handlerCleanup = [
+    "  if (terminate_installed) {",
+    "    (void)sigaction(SIGTERM, &old_terminate_action, NULL);",
+    "  }",
+    "  if (interrupt_installed) {",
+    "    (void)sigaction(SIGINT, &old_interrupt_action, NULL);",
+    "  }",
+  ].join("\n");
+  const reversedHandlers = handlerCleanup.split("\n").slice(3)
+    .concat(handlerCleanup.split("\n").slice(0, 3)).join("\n");
+  const reorderedPipe = replaceExactlyOnce(source, pipeCleanup,
+    "  close_if_open(&wake_pipe[0]);\n  close_if_open(&wake_pipe[1]);");
+  const variants = [
+    ["reference", source],
+    ["pipe-close-order", reorderedPipe],
+    ["handler-restore-order", replaceExactlyOnce(source, handlerCleanup, reversedHandlers)],
+    ["combined-cleanup-order", replaceExactlyOnce(reorderedPipe, handlerCleanup, reversedHandlers)],
+  ];
+  for (const [name, contents] of variants) {
+    const candidatePath = join(temporaryRoot, `${name}.c`);
+    writeFileSync(candidatePath, contents);
+    verify(candidatePath);
+    console.log(`Supervised process service ${name} passed.`);
+  }
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true });
 }

@@ -289,6 +289,18 @@
       "description": "Restore SIGINT twice and leave the prior SIGTERM action displaced.",
       "find": "    (void)sigaction(SIGTERM, &old_terminate_action, NULL);",
       "replace": "    (void)sigaction(SIGINT, &old_terminate_action, NULL);"
+    },
+    {
+      "id": "omit-wake-read-close",
+      "description": "Leave the self-pipe read descriptor open during terminal cleanup.",
+      "find": "  close_if_open(&wake_pipe[0]);",
+      "replace": "  (void)wake_pipe[0];"
+    },
+    {
+      "id": "duplicate-wake-write-close",
+      "description": "Close the self-pipe write descriptor twice instead of closing both pipe descriptors.",
+      "find": "  close_if_open(&wake_pipe[1]);\n  close_if_open(&wake_pipe[0]);",
+      "replace": "  (void)close(wake_pipe[1]);\n  close_if_open(&wake_pipe[1]);"
     }
   ]
 }
