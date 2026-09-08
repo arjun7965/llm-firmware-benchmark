@@ -301,6 +301,24 @@
       "description": "Close the self-pipe write descriptor twice instead of closing both pipe descriptors.",
       "find": "  close_if_open(&wake_pipe[1]);\n  close_if_open(&wake_pipe[0]);",
       "replace": "  (void)close(wake_pipe[1]);\n  close_if_open(&wake_pipe[1]);"
+    },
+    {
+      "id": "reject-sigterm-esrch",
+      "description": "Treat the explicitly benign ESRCH termination race as a cleanup failure.",
+      "find": "if (kill(pid, SIGTERM) != 0 && errno != ESRCH)",
+      "replace": "if (kill(pid, SIGTERM) != 0)"
+    },
+    {
+      "id": "reject-sigkill-esrch",
+      "description": "Treat the explicitly benign ESRCH termination race as a cleanup failure.",
+      "find": "if (kill(pid, SIGKILL) != 0 && errno != ESRCH)",
+      "replace": "if (kill(pid, SIGKILL) != 0)"
+    },
+    {
+      "id": "poll-wake-write-end",
+      "description": "Poll the self-pipe write end instead of its read end.",
+      "find": "    wake_fd,\n    pidfd,\n    channel_fd,\n    POLLOUT,",
+      "replace": "    wake_fd + 1,\n    pidfd,\n    channel_fd,\n    POLLOUT,"
     }
   ]
 }

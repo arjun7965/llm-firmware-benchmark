@@ -7,6 +7,10 @@ export function describeGenerationBudget(provider, options = {}, current = true)
     (current && ["codex", "claude-code"].includes(provider) ? "medium" : null);
   const request = options.request ?? {};
   const tokenLimits = {};
+  if (provider === "opencode" && Number.isSafeInteger(options.maxOutputTokens) &&
+      options.maxOutputTokens > 0) {
+    tokenLimits.max_output_tokens = options.maxOutputTokens;
+  }
   for (const name of ["max_tokens", "max_completion_tokens", "max_output_tokens"]) {
     if (Number.isSafeInteger(request[name]) && request[name] > 0) {
       tokenLimits[name] = request[name];

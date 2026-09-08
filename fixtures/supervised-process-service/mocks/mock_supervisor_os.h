@@ -24,6 +24,7 @@ typedef struct {
 typedef struct {
   int result;
   int error_number;
+  /* Semantic roles: wake-pipe read end, current pidfd, current channel. */
   short revents[3];
   int signal_number;
 } mock_supervisor_poll_step_t;

@@ -23,6 +23,31 @@
   } \
 } while (0)
 
+/* Optional zero-time observations must not shift assertions about bounded waits. */
+static size_t blocking_poll_count(void) {
+  size_t count = 0u;
+  for (size_t index = 0u; index < mock_supervisor_poll_call_count(); ++index) {
+    if (mock_supervisor_poll_call(index).timeout_ms != 0) ++count;
+  }
+  return count;
+}
+
+static mock_supervisor_poll_call_t blocking_poll_call(size_t wanted) {
+  size_t count = 0u;
+  for (size_t index = 0u; index < mock_supervisor_poll_call_count(); ++index) {
+    const mock_supervisor_poll_call_t call = mock_supervisor_poll_call(index);
+    if (call.timeout_ms != 0 && count++ == wanted) return call;
+  }
+  return (mock_supervisor_poll_call_t){0};
+}
+
+static short interest_for_fd(mock_supervisor_poll_call_t call, int fd) {
+  for (nfds_t index = 0u; index < call.descriptor_count; ++index) {
+    if (call.fds[index] == fd) return call.events[index];
+  }
+  return 0;
+}
+
 static supervised_service_message_t message(
   uint32_t sequence,
   const uint8_t *payload,
@@ -74,7 +99,7 @@ static void queue_timeout(void) {
 }
 
 static void queue_child_exit(void) {
-  queue_poll(1, 0, POLLIN, 0, 0, 0);
+  queue_poll(1, 0, 0, POLLIN, 0, 0);
 }
 
 static void queue_ack(uint32_t sequence, uint8_t status) {
@@ -105,6 +130,37 @@ static uint32_t decode_u32(const uint8_t *input) {
     ((uint32_t)input[1] << 8) |
     ((uint32_t)input[2] << 16) |
     ((uint32_t)input[3] << 24);
+}
+
+static bool test_mock_pidfd_probe_observes_without_advancing(void) {
+  pid_t pid;
+  int pidfd;
+  int channel;
+  struct pollfd probe;
+  struct pollfd reordered[3];
+
+  mock_supervisor_reset();
+  queue_spawn(9991, 191, 192);
+  ASSERT(supervisor_os_spawn_worker("/worker", &pid, &pidfd, &channel) == 0);
+  queue_worker_ready(POLLOUT);
+  queue_child_exit();
+  probe = (struct pollfd){.fd = pidfd, .events = POLLIN};
+  ASSERT(fixture_supervisor_poll(&probe, 1u, 0) == 0);
+  ASSERT(fixture_supervisor_poll(&probe, 1u, 0) == 0);
+  reordered[0] = (struct pollfd){.fd = channel, .events = POLLOUT};
+  reordered[1] = (struct pollfd){.fd = MOCK_SUPERVISOR_WAKE_READ_FD, .events = POLLIN};
+  reordered[2] = probe;
+  ASSERT(fixture_supervisor_poll(reordered, 3u, 1000) == 1);
+  ASSERT(reordered[0].revents == POLLOUT);
+  ASSERT(reordered[1].revents == 0 && reordered[2].revents == 0);
+  ASSERT(fixture_supervisor_poll(&probe, 1u, 0) == 0);
+  ASSERT(fixture_supervisor_poll(&probe, 1u, 500) == 1);
+  ASSERT(fixture_supervisor_poll(&probe, 1u, 0) == 1);
+  ASSERT(probe.revents == POLLIN);
+  queue_spawn(9992, 191, 192);
+  ASSERT(supervisor_os_spawn_worker("/worker", &pid, &pidfd, &channel) == 0);
+  ASSERT(fixture_supervisor_poll(&probe, 1u, 0) == 0);
+  return true;
 }
 
 static bool test_invalid_arguments_have_no_os_effects(void) {
@@ -223,19 +279,16 @@ static bool test_sends_bounded_frames_and_cleans_up(void) {
   ASSERT(mock_supervisor_recv_call_count() == 2u);
   ASSERT(mock_supervisor_recv_call(0u).flags == MSG_TRUNC);
   ASSERT(mock_supervisor_recv_call(0u).length == 6u);
-  writable_poll = mock_supervisor_poll_call(0u);
-  ack_poll = mock_supervisor_poll_call(1u);
+  writable_poll = blocking_poll_call(0u);
+  ack_poll = blocking_poll_call(1u);
   ASSERT(writable_poll.descriptor_count == 3u);
   ASSERT(writable_poll.timeout_ms == SUPERVISED_SERVICE_ACK_TIMEOUT_MS);
-  ASSERT(writable_poll.fds[0] == MOCK_SUPERVISOR_WAKE_READ_FD);
-  ASSERT(writable_poll.events[0] == POLLIN);
-  ASSERT(writable_poll.fds[1] == 81);
-  ASSERT(writable_poll.events[1] == POLLIN);
-  ASSERT(writable_poll.fds[2] == 82);
-  ASSERT(writable_poll.events[2] == POLLOUT);
+  ASSERT(interest_for_fd(writable_poll, MOCK_SUPERVISOR_WAKE_READ_FD) == POLLIN);
+  ASSERT(interest_for_fd(writable_poll, 81) == POLLIN);
+  ASSERT(interest_for_fd(writable_poll, 82) == POLLOUT);
   ASSERT(ack_poll.descriptor_count == 3u);
   ASSERT(ack_poll.timeout_ms == SUPERVISED_SERVICE_ACK_TIMEOUT_MS);
-  ASSERT(ack_poll.events[2] == POLLIN);
+  ASSERT(interest_for_fd(ack_poll, 82) == POLLIN);
   ASSERT(mock_supervisor_kill_call_count() == 1u);
   ASSERT(mock_supervisor_kill_pid(0u) == 1001);
   ASSERT(mock_supervisor_kill_signal(0u) == SIGTERM);
@@ -355,7 +408,7 @@ static bool test_restarts_and_resends_unacknowledged_message(void) {
   ASSERT(
     memcmp(first_send.data, second_send.data, first_send.length) == 0
   );
-  restart_wait = mock_supervisor_poll_call(3u);
+  restart_wait = blocking_poll_call(3u);
   ASSERT(restart_wait.descriptor_count == 1u);
   ASSERT(restart_wait.fds[0] == MOCK_SUPERVISOR_WAKE_READ_FD);
   ASSERT(restart_wait.timeout_ms == SUPERVISED_SERVICE_RESTART_INITIAL_MS);
@@ -394,10 +447,10 @@ static bool test_restart_policy_caps_consecutive_failures(void) {
   ASSERT(mock_supervisor_kill_call_count() == 4u);
   ASSERT(mock_supervisor_wait_call_count() == 4u);
   for (poll_index = 0u;
-       poll_index < mock_supervisor_poll_call_count();
+       poll_index < blocking_poll_count();
        ++poll_index) {
     const mock_supervisor_poll_call_t call =
-      mock_supervisor_poll_call(poll_index);
+      blocking_poll_call(poll_index);
 
     if (
       call.descriptor_count == 1u &&
@@ -443,10 +496,10 @@ static bool test_successful_ack_resets_restart_policy(void) {
       SUPERVISED_SERVICE_OK
   );
   for (poll_index = 0u;
-       poll_index < mock_supervisor_poll_call_count();
+       poll_index < blocking_poll_count();
        ++poll_index) {
     const mock_supervisor_poll_call_t call =
-      mock_supervisor_poll_call(poll_index);
+      blocking_poll_call(poll_index);
 
     if (
       call.descriptor_count == 1u &&
@@ -740,7 +793,7 @@ static bool test_short_send_is_fatal(void) {
   );
   ASSERT(mock_supervisor_spawn_call_count() == 1u);
   ASSERT(mock_supervisor_send_call_count() == 1u);
-  ASSERT(mock_supervisor_poll_call_count() == 2u);
+  ASSERT(blocking_poll_count() == 2u);
   ASSERT(mock_supervisor_kill_call_count() == 1u);
   return true;
 }
@@ -812,8 +865,8 @@ static bool test_shutdown_escalates_after_bounded_grace(void) {
   ASSERT(mock_supervisor_kill_call_count() == 2u);
   ASSERT(mock_supervisor_kill_signal(0u) == SIGTERM);
   ASSERT(mock_supervisor_kill_signal(1u) == SIGKILL);
-  grace = mock_supervisor_poll_call(2u);
-  forced = mock_supervisor_poll_call(3u);
+  grace = blocking_poll_call(2u);
+  forced = blocking_poll_call(3u);
   ASSERT(grace.descriptor_count == 1u);
   ASSERT(grace.fds[0] == 161);
   ASSERT(grace.timeout_ms == SUPERVISED_SERVICE_SHUTDOWN_GRACE_MS);
@@ -903,6 +956,31 @@ static bool test_shutdown_failures_report_os_error_and_preserve_primary(void) {
   return true;
 }
 
+static bool test_termination_esrch_still_waits_and_reaps(void) {
+  const uint8_t payload = 1u;
+  const supervised_service_message_t input = message(90u, &payload, 1u);
+
+  for (int forced = 0; forced < 2; ++forced) {
+    mock_supervisor_reset();
+    queue_spawn(8201, 181, 182);
+    queue_successful_message(input.sequence);
+    mock_supervisor_queue_kill(-1, ESRCH);
+    if (forced) {
+      queue_timeout();
+      mock_supervisor_queue_kill(-1, ESRCH);
+    }
+    queue_child_exit();
+    ASSERT(supervised_service_run("/worker", &input, 1u) == SUPERVISED_SERVICE_OK);
+    ASSERT(mock_supervisor_kill_call_count() == (size_t)(1 + forced));
+    ASSERT(blocking_poll_count() == (size_t)(3 + forced));
+    ASSERT(mock_supervisor_wait_call_count() == 1u);
+    ASSERT(mock_supervisor_wait_pid(0u) == 8201);
+    ASSERT(mock_supervisor_wait_options(0u) == WNOHANG);
+    ASSERT(mock_supervisor_close_call_count() == 4u);
+  }
+  return true;
+}
+
 static bool test_setup_and_fatal_spawn_failures_cleanup(void) {
   const uint8_t payload = 12u;
   const supervised_service_message_t input = message(77u, &payload, 1u);
@@ -945,7 +1023,7 @@ static bool test_setup_and_fatal_spawn_failures_cleanup(void) {
       SUPERVISED_SERVICE_OS_ERROR
   );
   ASSERT(mock_supervisor_spawn_call_count() == 1u);
-  ASSERT(mock_supervisor_poll_call_count() == 0u);
+  ASSERT(blocking_poll_count() == 0u);
   ASSERT(mock_supervisor_sigaction_call_count() == 4u);
   ASSERT(mock_supervisor_close_call_count() == 2u);
   return true;
@@ -998,6 +1076,8 @@ typedef struct {
 
 int main(void) {
   const test_case_t tests[] = {
+    {"pidfd probes observe without advancing", test_mock_pidfd_probe_observes_without_advancing},
+    {"termination ESRCH still waits and reaps", test_termination_esrch_still_waits_and_reaps},
     {
       "invalid arguments have no OS effects",
       test_invalid_arguments_have_no_os_effects,

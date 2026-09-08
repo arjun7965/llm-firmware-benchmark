@@ -40,6 +40,9 @@ static size_t poll_step_count;
 static size_t poll_step_index;
 static mock_supervisor_poll_call_t poll_calls[MOCK_SUPERVISOR_MAX_CALLS];
 static size_t poll_call_count;
+static int current_pidfd;
+static int current_channel_fd;
+static bool child_ready;
 
 static mock_supervisor_result_step_t send_steps[MOCK_SUPERVISOR_MAX_CALLS];
 static size_t send_step_count;
@@ -122,6 +125,9 @@ void mock_supervisor_reset(void) {
   poll_step_count = 0u;
   poll_step_index = 0u;
   poll_call_count = 0u;
+  current_pidfd = -1;
+  current_channel_fd = -1;
+  child_ready = false;
   send_step_count = 0u;
   send_step_index = 0u;
   send_call_count = 0u;
@@ -265,12 +271,17 @@ int supervisor_os_spawn_worker(
   *pid_out = step.pid;
   *pidfd_out = step.pidfd;
   *channel_fd_out = step.channel_fd;
+  current_pidfd = step.pidfd;
+  current_channel_fd = step.channel_fd;
+  child_ready = false;
   return 0;
 }
 
 int fixture_supervisor_close(int fd) {
   require_capacity(close_call_count, "close call");
   close_calls[close_call_count++] = fd;
+  if (fd == current_pidfd) current_pidfd = -1;
+  if (fd == current_channel_fd) current_channel_fd = -1;
   return 0;
 }
 
@@ -297,6 +308,7 @@ int fixture_supervisor_poll(
   mock_supervisor_poll_step_t step;
   mock_supervisor_poll_call_t *call;
   nfds_t index;
+  int ready_count = 0;
 
   require_capacity(poll_call_count, "poll call");
   if (descriptor_count == 0u || descriptor_count > 3u || fds == NULL) abort();
@@ -306,14 +318,49 @@ int fixture_supervisor_poll(
   for (index = 0u; index < descriptor_count; ++index) {
     call->fds[index] = fds[index].fd;
     call->events[index] = fds[index].events;
+    fds[index].revents = 0;
+    if (fds[index].fd >= 0 &&
+        fds[index].fd != MOCK_SUPERVISOR_WAKE_READ_FD &&
+        fds[index].fd != current_pidfd &&
+        fds[index].fd != current_channel_fd) {
+      fds[index].revents = POLLNVAL;
+      ++ready_count;
+    }
+  }
+  if (ready_count > 0) return ready_count;
+  /* A probe observes current state; it cannot advance future script events. */
+  if (timeout_ms == 0) {
+    for (index = 0u; index < descriptor_count; ++index) {
+      if (fds[index].fd >= 0 && fds[index].fd == current_pidfd &&
+          child_ready && (fds[index].events & POLLIN) != 0) {
+        fds[index].revents = POLLIN;
+        ++ready_count;
+      }
+    }
+    return ready_count;
   }
   if (poll_step_index >= poll_step_count) {
     errno = EINVAL;
     return -1;
   }
   step = poll_steps[poll_step_index++];
+  if (step.result > 0 && (step.revents[1] & POLLIN) != 0) {
+    child_ready = true;
+  }
   for (index = 0u; index < descriptor_count; ++index) {
-    fds[index].revents = step.revents[index];
+    const int fd = fds[index].fd;
+    const int role = fd == MOCK_SUPERVISOR_WAKE_READ_FD ? 0 :
+      fd >= 0 && fd == current_pidfd ? 1 :
+      fd >= 0 && fd == current_channel_fd ? 2 : -1;
+
+    if (step.result > 0 && role >= 0) {
+      const short always = POLLERR | POLLHUP | POLLNVAL;
+      fds[index].revents = step.revents[role] & (fds[index].events | always);
+      if (role == 1 && child_ready && (fds[index].events & POLLIN) != 0) {
+        fds[index].revents |= POLLIN;
+      }
+      if (fds[index].revents != 0) ++ready_count;
+    }
   }
   if (step.signal_number != 0) {
     const struct sigaction *action = &current_actions[step.signal_number];
@@ -324,7 +371,7 @@ int fixture_supervisor_poll(
     observed_signal_handler_errno = errno;
   }
   if (step.result < 0) errno = step.error_number;
-  return step.result;
+  return step.result > 0 ? ready_count : step.result;
 }
 
 int fixture_supervisor_pipe2(int pipe_fds[2], int flags) {

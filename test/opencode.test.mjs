@@ -50,6 +50,7 @@ test("OpenCode invocation isolates configuration and disables tools", () => {
       PATH: "/bin",
       OPENCODE_CONFIG: "/tmp/user-config.json",
       OPENCODE_PERMISSION: '{"*":"allow"}',
+      OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX: "99999",
     },
   });
 
@@ -71,6 +72,7 @@ test("OpenCode invocation isolates configuration and disables tools", () => {
   assert.equal(invocation.options.env.PATH, "/bin");
   assert.equal(invocation.options.env.OPENCODE_CONFIG, undefined);
   assert.equal(invocation.options.env.OPENCODE_PERMISSION, undefined);
+  assert.equal(invocation.options.env.OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX, undefined);
   assert.equal(
     invocation.options.env.OPENCODE_CONFIG_DIR,
     "/tmp/opencode-test/.opencode",
@@ -256,6 +258,23 @@ test("OpenCode invocation applies and validates model options", () => {
     }, { cwd: "/tmp/opencode-test" }),
     /provider\/model format/,
   );
+});
+
+test("OpenCode output budget overrides ambient configuration and rejects invalid limits", () => {
+  const invocation = buildOpenCodeInvocation({
+    ...job,
+    modelOptions: { maxOutputTokens: 64000 },
+  }, {
+    cwd: "/tmp/opencode-test",
+    environment: { OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX: "1" },
+  });
+  assert.equal(invocation.options.env.OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX, "64000");
+  for (const value of [0, -1, 1.5, "64000", null, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => buildOpenCodeInvocation({
+      ...job,
+      modelOptions: { maxOutputTokens: value },
+    }, { cwd: "/tmp/opencode-test" }), /maxOutputTokens/);
+  }
 });
 
 test("OpenCode execution records spawn errors once and cleans up", async () => {

@@ -115,9 +115,10 @@ New raw records contain `generationBudget`: effective harness timeout,
 configured reasoning control, allowlisted configured token limits, and unknown
 provider token limits represented as null. An unreported limit is not an
 unlimited budget. Historical records retain only explicitly recorded options;
-current adapter defaults are not retroactively inferred. OpenCode currently
-exposes `variant` and `timeoutMs` through this adapter, not a numeric output or
-reasoning-token ceiling. The compatible HTTP adapter records supported numeric
+current adapter defaults are not retroactively inferred. OpenCode exposes
+`variant`, `timeoutMs`, and optional `maxOutputTokens` through this adapter.
+The latter records the configured experimental output ceiling, not an attested
+effective provider limit or a separate reasoning budget. The compatible HTTP adapter records supported numeric
 limits supplied in `options.request`; those fields are provider-specific.
 Changing reasoning settings may improve answer completion but is not guaranteed
 to do so. Model-option changes invalidate result reuse; use a fresh output
@@ -333,7 +334,7 @@ This active embedded-Linux C fixture targets the still-partial supervised
 service capability. Its deterministic POSIX mock makes process, pidfd,
 `SOCK_SEQPACKET`, signal, timeout, restart, and bounded-shutdown interactions
 observable without launching a real child. The trusted reference passes, and
-all 50 compile-valid controlled mutations are rejected. Its coupled lifecycle
+all 53 compile-valid controlled mutations are rejected. Its coupled lifecycle
 and failure-recovery requirements should provide a broader discrimination
 surface than the two uniformly scored pilots while retaining repeatable host
 validation.
@@ -517,3 +518,18 @@ whereas the prompt's blanket termination-error wording does not state that
 exception. These are audit findings, not reasons to silently change the
 frozen prompt, repair candidates, or describe all runtime failures as model
 quality defects. Any future prompt correction requires fresh provenance.
+
+### Poll-contract revision — 2026-09-07
+
+The fixture now routes poll events by descriptor role and keeps optional
+zero-time pidfd observations from advancing the blocking-event script. The
+reference and six valid cleanup/probe/descriptor-order variants pass. The
+catalog now contains 53 controlled mutations, including explicit ESRCH
+handling and incorrect wake-pipe descriptor checks.
+
+The prompt explicitly permits optional zero-time probes and arbitrary poll
+array order, and defines ESRCH from termination as benign while preserving
+bounded waiting and exactly-once reaping. The revised prompt SHA-256 is
+`6bdeb104ba14c437674e2da5da43c9578a2dc873c21a05458b2344059a3a7e01`.
+Earlier cohorts and diagnostic records retain their original provenance.
+Fresh diagnostic and calibration records are required for this revision.

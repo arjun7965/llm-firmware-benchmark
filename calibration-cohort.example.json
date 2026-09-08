@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "taskId": "supervised-process-service",
-  "promptSha256": "c74f0150c4baeae3ba927f2bf8e03e2ff38baaa543af06a1f606ef541f8bec44",
+  "promptSha256": "6bdeb104ba14c437674e2da5da43c9578a2dc873c21a05458b2344059a3a7e01",
   "models": [
     {
       "modelName": "model-a",
@@ -12,7 +12,7 @@
         "variant": "high",
         "timeoutMs": 600000
       },
-      "providerConfigSha256": "ab82a7cc2d121908666852f90bd880bebade7af665b8ab826965f4e493e889c6",
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
       "runs": [
         1,
         2,
@@ -28,7 +28,7 @@
         "variant": "high",
         "timeoutMs": 600000
       },
-      "providerConfigSha256": "ab82a7cc2d121908666852f90bd880bebade7af665b8ab826965f4e493e889c6",
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
       "runs": [
         1,
         2,
@@ -44,7 +44,7 @@
         "variant": "high",
         "timeoutMs": 600000
       },
-      "providerConfigSha256": "ab82a7cc2d121908666852f90bd880bebade7af665b8ab826965f4e493e889c6",
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
       "runs": [
         1,
         2,
