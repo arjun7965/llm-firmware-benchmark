@@ -188,6 +188,9 @@ test("generation budgets distinguish configured limits from unreported provider 
     configuredTokenLimits: null, providerTokenLimits: null,
   });
   assert.equal(describeGenerationBudget("opencode", {}, false).timeoutMs, null);
+  assert.deepEqual(describeGenerationBudget("opencode", {
+    maxOutputTokens: 64000,
+  }).configuredTokenLimits, { max_output_tokens: 64000 });
   assert.equal(describeGenerationBudget("codex", {}, false).reasoning, null);
   const budget = describeGenerationBudget("openai-compatible", { request: {
     max_completion_tokens: 4096, reasoning_effort: "low", unrelated_option: "excluded",

@@ -25,9 +25,16 @@ provider- and model-specific; examples include reasoning levels such as
 integer. Prefer pinned model identifiers and variants over moving aliases when
 collecting results for comparison.
 
-Raw results record `generationBudget`: the effective harness timeout and
-configured variant, with numeric provider token limits marked null because
-this adapter does not expose them. A timeout is distinct from a provider
+`maxOutputTokens` optionally sets a positive safe integer through OpenCode's
+[experimental output-token control](https://dev.opencode.ai/docs/cli/#experimental),
+`OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX`. The adapter removes any ambient value
+and sets it only from this recorded model option. When omitted, OpenCode uses
+its own version-dependent default. OpenCode may further clamp the configured
+ceiling to the model's supported limit; reasoning may consume this same budget.
+
+Raw results record `generationBudget`: the effective harness timeout,
+configured variant, and explicit `max_output_tokens` ceiling when supplied.
+Unattested effective provider limits remain null. A timeout is distinct from a provider
 `step_finish` event with `reason=length`. Cohort calibration preserves both
 outcomes without inventing answer scores. Lowering a supported variant may
 reduce reasoning use, but requires a fresh declared cohort and does not

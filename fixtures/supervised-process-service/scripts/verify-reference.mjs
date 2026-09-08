@@ -65,7 +65,7 @@ function verify(sourcePath) {
 
 function replaceExactlyOnce(source, find, replacement) {
   if (source.split(find).length !== 2) {
-    throw new Error("Reference cleanup transformation must match exactly once");
+    throw new Error("Reference transformation must match exactly once");
   }
   return source.replace(find, replacement);
 }
@@ -86,11 +86,32 @@ try {
     .concat(handlerCleanup.split("\n").slice(0, 3)).join("\n");
   const reorderedPipe = replaceExactlyOnce(source, pipeCleanup,
     "  close_if_open(&wake_pipe[0]);\n  close_if_open(&wake_pipe[1]);");
+  const withProbe = replaceExactlyOnce(source,
+    "  if (!child_ready) {\n    if (kill(pid, SIGTERM)",
+    "  if (!child_ready) child_ready = poll_pidfd(pidfd, 0) > 0;\n" +
+    "  if (!child_ready) {\n    if (kill(pid, SIGTERM)");
+  function reorderPolls(input) {
+    let output = replaceExactlyOnce(input,
+      "  const int result = poll(descriptors, 3u, timeout_ms);",
+      "  const struct pollfd temporary = descriptors[0];\n" +
+      "  descriptors[0] = descriptors[2];\n" +
+      "  descriptors[2] = temporary;\n" +
+      "  const int result = poll(descriptors, 3u, timeout_ms);");
+    output = replaceExactlyOnce(output,
+      "events->wake_events = descriptors[0].revents;",
+      "events->wake_events = descriptors[2].revents;");
+    return replaceExactlyOnce(output,
+      "events->channel_events = descriptors[2].revents;",
+      "events->channel_events = descriptors[0].revents;");
+  }
   const variants = [
     ["reference", source],
     ["pipe-close-order", reorderedPipe],
     ["handler-restore-order", replaceExactlyOnce(source, handlerCleanup, reversedHandlers)],
     ["combined-cleanup-order", replaceExactlyOnce(reorderedPipe, handlerCleanup, reversedHandlers)],
+    ["zero-time-pidfd-probe", withProbe],
+    ["poll-descriptor-order", reorderPolls(source)],
+    ["probe-and-poll-order", reorderPolls(withProbe)],
   ];
   for (const [name, contents] of variants) {
     const candidatePath = join(temporaryRoot, `${name}.c`);

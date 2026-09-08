@@ -22,6 +22,11 @@ polling, signal, termination, and reaping calls, so tests create no real child.
 There is no heap, thread, shared memory, filesystem durability, MMIO, DMA,
 cache, or hard real-time deadline.
 
+Poll array ordering is unrestricted. Optional zero-time pidfd observations
+do not replace bounded waits. A termination call returning `ESRCH` is benign,
+but the supervisor must still perform the bounded pidfd wait and exactly one
+reap. Other termination errors remain cleanup failures.
+
 ## Scoring
 
 Scoring profile: `firmware-v1`.

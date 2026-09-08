@@ -7,7 +7,7 @@ import { extractAnswer } from "../answers.mjs";
 
 const defaultTimeoutMs = 600_000;
 const modelIdPattern = /^[^\s/]+\/[^\s/]+(?:\/[^\s/]+)*$/u;
-const supportedOptions = new Set(["timeoutMs", "variant"]);
+const supportedOptions = new Set(["timeoutMs", "variant", "maxOutputTokens"]);
 const benchmarkAgentPrompt = [
   "Answer the user's benchmark prompt directly without using tools.",
   "The prompt is self-contained. Do not inspect or modify files.",
@@ -46,6 +46,7 @@ const providerConfiguration = {
     disableLspDownload: true,
     disableProjectConfig: true,
     disableShare: true,
+    outputTokenMax: "modelOptions.maxOutputTokens-or-unset",
   },
   config: benchmarkConfiguration,
 };
@@ -78,6 +79,11 @@ function readOpenCodeOptions(job) {
     throw new TypeError("OpenCode timeoutMs must be a positive integer");
   }
   const variant = options.variant;
+  const maxOutputTokens = options.maxOutputTokens;
+  if (maxOutputTokens !== undefined &&
+      (!Number.isSafeInteger(maxOutputTokens) || maxOutputTokens < 1)) {
+    throw new TypeError("OpenCode maxOutputTokens must be a positive safe integer");
+  }
   if (variant !== undefined &&
       (typeof variant !== "string" || !/^\S+$/u.test(variant))) {
     throw new TypeError(
@@ -95,7 +101,7 @@ function readOpenCodeOptions(job) {
     throw new TypeError("OpenCode task prompt must be a non-empty string");
   }
 
-  return { timeoutMs, variant };
+  return { timeoutMs, variant, maxOutputTokens };
 }
 
 export function buildOpenCodeInvocation(job, {
@@ -106,7 +112,7 @@ export function buildOpenCodeInvocation(job, {
   if (typeof cwd !== "string" || cwd.trim() === "") {
     throw new TypeError("OpenCode cwd must be a non-empty string");
   }
-  const { variant } = readOpenCodeOptions(job);
+  const { variant, maxOutputTokens } = readOpenCodeOptions(job);
   const env = {
     ...environment,
     OPENCODE_CONFIG_CONTENT: benchmarkConfig,
@@ -119,6 +125,10 @@ export function buildOpenCodeInvocation(job, {
   };
   delete env.OPENCODE_CONFIG;
   delete env.OPENCODE_PERMISSION;
+  delete env.OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX;
+  if (maxOutputTokens !== undefined) {
+    env.OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX = String(maxOutputTokens);
+  }
 
   return {
     command,

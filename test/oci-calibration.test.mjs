@@ -62,7 +62,7 @@ test("OCI C11 calibration covers every active C11 mutation catalog", () => {
   assert.equal(tasks.length, 41);
   assert.equal(
     tasks.reduce((total, task) => total + task.mutationCount, 0),
-    597,
+    600,
   );
   assert.equal(new Set(tasks.map(({ taskId }) => taskId)).size, tasks.length);
 });
