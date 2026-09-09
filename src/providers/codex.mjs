@@ -14,6 +14,13 @@ const supportedEfforts = new Set([
   "ultra",
 ]);
 const supportedOptions = new Set(["effort", "timeoutMs"]);
+
+export function validateCodexEffort(effort) {
+  if (!supportedEfforts.has(effort)) {
+    throw new TypeError(`unsupported Codex effort: ${effort}`);
+  }
+}
+
 const disabledFeatures = [
   "apps",
   "browser_use",
@@ -49,9 +56,7 @@ function readCodexOptions(job) {
   }
 
   const effort = options.effort ?? "medium";
-  if (!supportedEfforts.has(effort)) {
-    throw new TypeError(`unsupported Codex effort: ${effort}`);
-  }
+  validateCodexEffort(effort);
   const timeoutMs = options.timeoutMs ?? defaultTimeoutMs;
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1) {
     throw new TypeError("Codex timeoutMs must be a positive integer");

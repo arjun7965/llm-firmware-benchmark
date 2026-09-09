@@ -7,7 +7,9 @@ import {
   loadTasks,
   mapWithConcurrency,
 } from "./harness.mjs";
-import { loadModels } from "./models.mjs";
+import { loadModels, validateModels } from "./models.mjs";
+import { validateCodexEffort } from "./providers/codex.mjs";
+import { validateClaudeCodeEffort } from "./providers/claude-code.mjs";
 import {
   generateWithProvider,
   getProviderConfigSha256,
@@ -55,6 +57,64 @@ function parseRuns(values, defaults) {
   return entries.map((value) => parsePositiveInteger(value, "runs"));
 }
 
+function parseReasoning(values = []) {
+  const selections = new Map();
+  for (const value of values) {
+    const match = /^([a-z0-9]+(?:[._-][a-z0-9]+)*)=(.+)$/.exec(value);
+    if (!match) throw new TypeError("reasoning must use model-id=level[,level]");
+    const [, modelId, levelsText] = match;
+    const levels = parseList([levelsText], "reasoning levels");
+    if (levels.some((level) => !/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(level))) {
+      throw new TypeError("reasoning levels must be lowercase labels");
+    }
+    const previous = selections.get(modelId) ?? [];
+    if (levels.some((level) => previous.includes(level))) {
+      throw new TypeError(`duplicate reasoning level for ${modelId}`);
+    }
+    selections.set(modelId, [...previous, ...levels]);
+  }
+  return [...selections].map(([modelId, levels]) => ({ modelId, levels }));
+}
+
+export function expandReasoningModels(models, selections) {
+  const selectedIds = new Set(models.map((model) => model.id));
+  for (const { modelId } of selections) {
+    if (!selectedIds.has(modelId)) {
+      throw new TypeError(`reasoning model is not selected: ${modelId}`);
+    }
+  }
+  const levelsById = new Map(
+    selections.map(({ modelId, levels }) => [modelId, levels]),
+  );
+  const expanded = models.flatMap((model) => {
+    const levels = levelsById.get(model.id);
+    if (!levels) return [model];
+    return levels.map((level) => {
+      const options = { ...model.options };
+      switch (model.provider) {
+        case "codex":
+          validateCodexEffort(level);
+          options.effort = level;
+          break;
+        case "claude-code":
+          validateClaudeCodeEffort(level);
+          options.effort = level;
+          break;
+        case "opencode":
+          options.variant = level;
+          break;
+        case "openai-compatible":
+          options.request = { ...options.request, reasoning_effort: level };
+          break;
+        default:
+          throw new TypeError(`reasoning control is unsupported for ${model.provider}`);
+      }
+      return { ...model, id: `${model.id}.reasoning-${level}`, options };
+    });
+  });
+  return validateModels(expanded);
+}
+
 function parseSuites(values) {
   const suites = parseList(values, "suites");
   if (suites === null) return null;
@@ -85,6 +145,7 @@ export function parseBenchmarkArgs(args, {
       models: { type: "string", short: "m", multiple: true },
       "models-file": { type: "string" },
       output: { type: "string", short: "o" },
+      reasoning: { type: "string", multiple: true },
       runs: { type: "string", short: "r", multiple: true },
       suites: { type: "string", short: "s", multiple: true },
       tasks: { type: "string", short: "t", multiple: true },
@@ -104,6 +165,7 @@ export function parseBenchmarkArgs(args, {
     modelIds: parseList(values.models, "models"),
     modelsFile: resolve(cwd, modelsFile),
     outputRoot: resolve(cwd, output),
+    reasoning: parseReasoning(values.reasoning),
     runs: parseRuns(values.runs, defaultRuns),
     suiteIds: parseSuites(values.suites),
     taskIds: parseList(values.tasks, "tasks"),
@@ -143,6 +205,7 @@ export function benchmarkHelp(defaultRuns = [1], commandName = "benchmark") {
     "  -o, --output <path>      Result directory (default: results)",
     "      --models-file <path> Model configuration file",
     "      --tasks-file <path>  Task definition file",
+    "      --reasoning <id=levels> Per-model reasoning level(s), comma-separated; repeatable",
     "  -h, --help               Show this help",
   ].join("\n");
 }
@@ -169,11 +232,12 @@ export async function runBenchmarkCli({
     "task IDs",
   );
   const tasks = filterBySuites(selectedTasks, configuration.suiteIds);
-  const models = filterByIds(
+  const selectedModels = filterByIds(
     loadModels(configuration.modelsFile),
     configuration.modelIds,
     "model IDs",
   );
+  const models = expandReasoningModels(selectedModels, configuration.reasoning);
   const jobs = createJobs(tasks, models, configuration.runs);
 
   await mapWithConcurrency(

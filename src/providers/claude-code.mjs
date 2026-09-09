@@ -14,6 +14,12 @@ const supportedEfforts = new Set([
 ]);
 const supportedOptions = new Set(["effort", "timeoutMs"]);
 
+export function validateClaudeCodeEffort(effort) {
+  if (!supportedEfforts.has(effort)) {
+    throw new TypeError(`unsupported Claude Code effort: ${effort}`);
+  }
+}
+
 function isPlainObject(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
@@ -34,9 +40,7 @@ function readClaudeCodeOptions(job) {
   }
 
   const effort = options.effort ?? "medium";
-  if (!supportedEfforts.has(effort)) {
-    throw new TypeError(`unsupported Claude Code effort: ${effort}`);
-  }
+  validateClaudeCodeEffort(effort);
   const timeoutMs = options.timeoutMs ?? defaultTimeoutMs;
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1) {
     throw new TypeError("Claude Code timeoutMs must be a positive integer");
