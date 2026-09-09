@@ -1,0 +1,208 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "supervised-process-service",
+  "cohortId": "supervised-process-service-cross-family-20260908-attempt-03",
+  "startedDate": "2026-09-08",
+  "dateTimezone": "America/Los_Angeles",
+  "harnessCommit": "2ebb49c20d2eb4b637831576e54373a47b1b5f18",
+  "promptSha256": "6bdeb104ba14c437674e2da5da43c9578a2dc873c21a05458b2344059a3a7e01",
+  "packetSha256": "9752daa63eeaffa1fb083f567f88cf720daf55f2e95da10c8eeb418bf8681818",
+  "scoreSheetSha256": "d106dc5d4e1e0b27153681fe3e292598a345c429372d03ae27f9c96c45954c5e",
+  "review": {
+    "status": "complete",
+    "provenance": "ai-assisted-human-reviewed",
+    "decision": "approved-without-score-changes",
+    "completedAt": "2026-09-09T04:42:46.174Z",
+    "aiScoresFrozenBeforeUnblinding": true,
+    "independentHumanScoring": false
+  },
+  "methodology": {
+    "concurrency": 1,
+    "automaticRetries": 0,
+    "scheduledRunsPerModel": 3,
+    "scorePopulation": "available-answers-only",
+    "generationFailuresHaveNoRubricScore": true,
+    "candidateRepairs": false,
+    "cliVersions": {
+      "node": "22.21.0",
+      "codex": "0.153.4",
+      "opencode": "1.18.29"
+    },
+    "providerDifferences": "Identical prompts; provider adapters, reasoning controls, wall-clock timeouts and configured output ceilings differ. Effective provider token limits are unknown. No model-family ranking is inferred."
+  },
+  "validation": {
+    "profile": "c11-host",
+    "profileRevision": 4,
+    "profileSha256": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3",
+    "environmentId": "debian-13-x86-64-c11-host",
+    "environmentSha256": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7",
+    "sandbox": "Bubblewrap 0.11.0",
+    "compiler": "GCC 14.2.0",
+    "answers": 6,
+    "compileFailures": 3,
+    "runtimeFailures": 3,
+    "passes": 0
+  },
+  "generation": {
+    "scheduled": 9,
+    "recorded": 9,
+    "answers": 6,
+    "answerRate": 0.6666666666666666,
+    "outcomes": {
+      "answer": 6,
+      "timeout": 1,
+      "generation-limit": 2,
+      "provider-error": 0,
+      "no-answer": 0,
+      "missing": 0
+    }
+  },
+  "models": [
+    {
+      "model": "glm53",
+      "modelId": "opencode-go/glm-5.3",
+      "provider": "opencode",
+      "family": "GLM",
+      "controls": {
+        "variant": "low",
+        "timeoutMs": 900000,
+        "maxOutputTokens": 32000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 0,
+        "answerRate": 0,
+        "outcomes": {
+          "answer": 0,
+          "timeout": 1,
+          "generation-limit": 2,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "generation-limit",
+          "score": null,
+          "validationOutcome": "not-run"
+        },
+        {
+          "run": 2,
+          "generationOutcome": "generation-limit",
+          "score": null,
+          "validationOutcome": "not-run"
+        },
+        {
+          "run": 3,
+          "generationOutcome": "timeout",
+          "score": null,
+          "validationOutcome": "not-run"
+        }
+      ],
+      "mean": null,
+      "sd": null,
+      "range": null
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "modelId": "gpt-5.6-luna",
+      "provider": "codex",
+      "family": "GPT",
+      "controls": {
+        "effort": "medium",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": null,
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 2.5,
+          "validationOutcome": "compile-failure"
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 4,
+          "validationOutcome": "compile-failure"
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 3.5,
+          "validationOutcome": "compile-failure"
+        }
+      ],
+      "mean": 3.3333333333333335,
+      "sd": 0.6236095644623235,
+      "range": 1.5
+    },
+    {
+      "model": "kimi-k3",
+      "modelId": "opencode-go/kimi-k3",
+      "provider": "opencode",
+      "family": "Kimi",
+      "controls": {
+        "variant": "max",
+        "timeoutMs": 1200000,
+        "maxOutputTokens": 64000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 9,
+          "validationOutcome": "runtime-failure"
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "validationOutcome": "runtime-failure"
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "validationOutcome": "runtime-failure"
+        }
+      ],
+      "mean": 8.666666666666666,
+      "sd": 0.8498365855987975,
+      "range": 2
+    }
+  ]
+}
