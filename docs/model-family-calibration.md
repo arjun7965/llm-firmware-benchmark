@@ -533,3 +533,57 @@ bounded waiting and exactly-once reaping. The revised prompt SHA-256 is
 `6bdeb104ba14c437674e2da5da43c9578a2dc873c21a05458b2344059a3a7e01`.
 Earlier cohorts and diagnostic records retain their original provenance.
 Fresh diagnostic and calibration records are required for this revision.
+
+### Completed revised-prompt cohort — 2026-09-08
+
+The fresh cohort completed all nine scheduled attempts against the poll-contract
+revision at harness commit `2ebb49c20d2eb4b637831576e54373a47b1b5f18`.
+The cohort date uses America/Los_Angeles; generation finished on September 9 UTC.
+All models received the identical revised prompt above. Runs were sequential
+with concurrency one, no automatic retries, and no candidate repairs.
+
+| Model | Reasoning control | Timeout | Configured output ceiling |
+| --- | --- | ---: | ---: |
+| GPT-5.6 Luna (Codex) | medium effort | 600 s | Not configured |
+| GLM-5.3 (OpenCode Go) | low variant | 900 s | 32,000 tokens |
+| Kimi K3 (OpenCode Go) | max variant | 1,200 s | 64,000 tokens |
+
+Node 22.21.0, Codex CLI 0.153.4, and OpenCode 1.18.29 were used.
+The provider adapters and controls differ, and effective provider token limits
+are unknown. The machine-readable aggregate records the exact model IDs and
+available provider fingerprints.
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Full validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 2.5 | 4.0 | 3.5 | 3.333 | 0/3 answers |
+| GLM-5.3 | — | — | — | — | No answers |
+| Kimi K3 | 9.0 | 9.5 | 7.5 | 8.667 | 0/3 answers |
+
+GLM runs 1 and 2 ended at a generation limit; run 3 timed out. These attempts
+remain recorded and unscored, rather than receiving zero rubric points. Means
+use available answers only. All three Luna answers failed compilation; all
+three Kimi answers compiled but failed runtime assertions. Validation used
+`c11-host` revision 4, Debian 13 x86-64, GCC 14.2.0, and Bubblewrap 0.11.0.
+The deterministic pass count is zero, independently of rubric partial credit.
+
+Scoring is **AI-assisted and human-reviewed**, not independent human scoring.
+The AI reviewed the six anonymized answers and validation evidence, then froze
+the criterion scores before opening the model/run identity key. The user
+approved those scores without changes. Compiler failures received zero
+functional credit; other dimensions were reviewed statically without repairing
+the code. Defects were assigned to their owning dimensions to avoid duplicate
+deductions. High rubric scores do not establish executable correctness.
+
+The approved, sanitized aggregate is
+[`supervised-process-service-2026-09-08.json`](calibration/supervised-process-service-2026-09-08.json).
+It includes generation failures, per-run validation outcomes, score statistics,
+review provenance, and prompt/packet/score hashes. The six answer projections
+passed `export:public` with no redactions or review flags; the exporter cannot
+project attempts lacking answer text, whose outcomes are retained in the
+aggregate. Only the aggregate is published. Raw records, generated code,
+review sheets, and identity keys remain private.
+
+This completes the revised cohort and its approved review. The small sample,
+missing GLM answers, differing provider budgets, and AI-assisted grading do not
+support a broad model-family ranking. Earlier cohorts remain historical evidence
+under their original prompts and fixtures.
