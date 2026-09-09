@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createJobs, executeJob } from "../src/harness.mjs";
@@ -11,6 +11,7 @@ import {
   filterByIds,
   filterBySuites,
   parseBenchmarkArgs,
+  runBenchmarkCli,
 } from "../src/benchmark-cli.mjs";
 
 test("benchmark CLI parses filters and execution controls", () => {
@@ -219,5 +220,37 @@ test("reasoning sweep smoke preserves prompts, provider invocation, metadata and
     assert.equal(paths.size, 6);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
+  }
+});
+
+test("reasoning CLI rejects collisions with filtered-out models before writing results", async () => {
+  const root = mkdtempSync(join(tmpdir(), "benchmark-reasoning-collision-"));
+  try {
+    const modelsFile = join(root, "models.json");
+    const tasksFile = join(root, "tasks.json");
+    const output = join(root, "output");
+    writeFileSync(modelsFile, JSON.stringify({ models: [
+      { id: "gpt", provider: "codex", model: "first-model" },
+      { id: "gpt.reasoning-high", provider: "codex", model: "other-model" },
+    ] }));
+    writeFileSync(tasksFile, JSON.stringify([{
+      id: "test-task", category: "test", suite: "auxiliary", scoringMode: "deterministic",
+      validationProfile: "python3-stdlib", prompt: "Same prompt",
+    }]));
+    await assert.rejects(runBenchmarkCli({ args: [
+      "--models-file", modelsFile, "--tasks-file", tasksFile,
+      "--models", "gpt", "--reasoning", "gpt=high", "--output", output,
+    ] }), /conflicts with the model catalog/);
+    assert.equal(existsSync(output), false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("reasoning override does not mask malformed compatible request configuration", () => {
+  for (const request of ["invalid", 12, false, []]) {
+    assert.throws(() => expandReasoningModels([
+      { id: "local", provider: "openai-compatible", model: "local", options: { request } },
+    ], [{ modelId: "local", levels: ["high"] }]), /request must be an object/);
   }
 });

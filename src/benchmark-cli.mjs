@@ -76,8 +76,9 @@ function parseReasoning(values = []) {
   return [...selections].map(([modelId, levels]) => ({ modelId, levels }));
 }
 
-export function expandReasoningModels(models, selections) {
+export function expandReasoningModels(models, selections, catalog = models) {
   const selectedIds = new Set(models.map((model) => model.id));
+  const configuredIds = new Set(catalog.map((model) => model.id));
   for (const { modelId } of selections) {
     if (!selectedIds.has(modelId)) {
       throw new TypeError(`reasoning model is not selected: ${modelId}`);
@@ -90,6 +91,10 @@ export function expandReasoningModels(models, selections) {
     const levels = levelsById.get(model.id);
     if (!levels) return [model];
     return levels.map((level) => {
+      const id = `${model.id}.reasoning-${level}`;
+      if (configuredIds.has(id)) {
+        throw new TypeError(`duplicate model id: ${id} conflicts with the model catalog`);
+      }
       const options = { ...model.options };
       switch (model.provider) {
         case "codex":
@@ -104,12 +109,16 @@ export function expandReasoningModels(models, selections) {
           options.variant = level;
           break;
         case "openai-compatible":
+          if (options.request != null &&
+              (typeof options.request !== "object" || Array.isArray(options.request))) {
+            throw new TypeError("OpenAI-compatible request must be an object");
+          }
           options.request = { ...options.request, reasoning_effort: level };
           break;
         default:
           throw new TypeError(`reasoning control is unsupported for ${model.provider}`);
       }
-      return { ...model, id: `${model.id}.reasoning-${level}`, options };
+      return { ...model, id, options };
     });
   });
   return validateModels(expanded);
@@ -232,12 +241,13 @@ export async function runBenchmarkCli({
     "task IDs",
   );
   const tasks = filterBySuites(selectedTasks, configuration.suiteIds);
+  const catalog = loadModels(configuration.modelsFile);
   const selectedModels = filterByIds(
-    loadModels(configuration.modelsFile),
+    catalog,
     configuration.modelIds,
     "model IDs",
   );
-  const models = expandReasoningModels(selectedModels, configuration.reasoning);
+  const models = expandReasoningModels(selectedModels, configuration.reasoning, catalog);
   const jobs = createJobs(tasks, models, configuration.runs);
 
   await mapWithConcurrency(

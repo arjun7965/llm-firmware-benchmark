@@ -181,6 +181,8 @@ models file.
 
 Each level uses a distinct result ID, such as
 `gpt-5.6-luna.reasoning-high`, while retaining the actual provider model ID.
+Generated IDs cannot overlap configured model IDs, even when those configured
+entries are excluded by `--models`.
 Raw records preserve the effective model options and generation-budget control.
 Keep a separate output directory for each cohort; changes to prompts or other
 budgets still constitute a new cohort. Frozen calibration plans must list the
