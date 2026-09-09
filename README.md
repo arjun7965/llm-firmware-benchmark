@@ -143,6 +143,52 @@ values. Suite and task filters intersect. `--models-file` and `--tasks-file`
 select alternate input documents. Run `npm run benchmark -- --help` or
 `npm run benchmark:repeats -- --help` for the complete interface.
 
+### Reasoning controls and sweeps
+
+Use `--reasoning model-id=level` to override one selected model's configured
+reasoning control. Comma-separated levels create separate benchmark entries:
+
+```bash
+npm run benchmark -- \
+  --models gpt-5.6-luna \
+  --reasoning gpt-5.6-luna=low,medium,high \
+  --tasks supervised-process-service \
+  --runs 1,2,3 \
+  --concurrency 1 \
+  --output results/reasoning-sweep
+```
+
+This schedules nine attempts with identical task prompts. Repeat `--reasoning`
+for other selected models. Models without an override keep their configured
+settings; a targeted model runs only the requested levels. The same option works
+with `benchmark:repeats`.
+
+| Provider | Control set by `--reasoning` |
+| --- | --- |
+| Codex | `options.effort` |
+| Claude Code | `options.effort` |
+| OpenCode | `options.variant` |
+| OpenAI-compatible | `options.request.reasoning_effort` |
+
+Use levels supported by the specific model and provider. Existing Codex and
+Claude adapter effort allowlists are checked before any jobs start. The harness
+does not discover model-specific support for OpenCode variants or compatible
+endpoints; verify those capabilities before freezing a cohort. The harness
+passes the requested labels without translating them. Labels such as `high`
+do not establish equal reasoning or token budgets across providers. Existing
+timeouts and token ceilings are preserved; configure those separately in the
+models file.
+
+Each level uses a distinct result ID, such as
+`gpt-5.6-luna.reasoning-high`, while retaining the actual provider model ID.
+Generated IDs cannot overlap configured model IDs, even when those configured
+entries are excluded by `--models`.
+Raw records preserve the effective model options and generation-budget control.
+Keep a separate output directory for each cohort; changes to prompts or other
+budgets still constitute a new cohort. Frozen calibration plans must list the
+expanded IDs and exact effective options. Reasoning levels from one model are
+not independent model families.
+
 Raw records include the scoring mode, validation and target profiles, plus a
 SHA-256 of the task prompt. Providers can also record a SHA-256 of their fixed
 execution context; OpenCode fingerprints its isolated agent and invocation
