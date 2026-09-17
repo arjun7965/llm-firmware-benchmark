@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "supervised-process-service",
+  "promptSha256": "6bdeb104ba14c437674e2da5da43c9578a2dc873c21a05458b2344059a3a7e01",
+  "plannedFamilyCount": 1,
+  "validation": {
+    "profile": "c11-host",
+    "profileRevision": 4,
+    "profileSha256": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3",
+    "environmentId": "debian-13-x86-64-c11-host",
+    "environmentRevision": 1,
+    "environmentSha256": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7"
+  },
+  "groups": [
+    {
+      "modelName": "gpt-5.6-luna.reasoning-low",
+      "scheduled": 3,
+      "answers": 2,
+      "outcomes": {
+        "answer": 2,
+        "timeout": 0,
+        "generation-limit": 0,
+        "provider-error": 1,
+        "no-answer": 0
+      },
+      "extracted": 2,
+      "candidateCompiled": 2,
+      "compiled": 2,
+      "passed": 0,
+      "meanAttemptSeconds": 46.23766666666666,
+      "meanAnswerSeconds": 67.873
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-medium",
+      "scheduled": 3,
+      "answers": 2,
+      "outcomes": {
+        "answer": 2,
+        "timeout": 0,
+        "generation-limit": 0,
+        "provider-error": 1,
+        "no-answer": 0
+      },
+      "extracted": 2,
+      "candidateCompiled": 0,
+      "compiled": 0,
+      "passed": 0,
+      "meanAttemptSeconds": 83.24733333333333,
+      "meanAnswerSeconds": 123.615
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-high",
+      "scheduled": 3,
+      "answers": 1,
+      "outcomes": {
+        "answer": 1,
+        "timeout": 1,
+        "generation-limit": 0,
+        "provider-error": 1,
+        "no-answer": 0
+      },
+      "extracted": 1,
+      "candidateCompiled": 1,
+      "compiled": 1,
+      "passed": 0,
+      "meanAttemptSeconds": 328.8006666666667,
+      "meanAnswerSeconds": 383.721
+    }
+  ],
+  "attempts": [
+    {
+      "modelName": "gpt-5.6-luna.reasoning-low",
+      "run": 1,
+      "generationOutcome": "answer",
+      "durationMs": 64835,
+      "resultSha256": "f8d5309871240e5305e355b016618caf2dc01695cad4a914ea29d75176180f9b",
+      "extracted": true,
+      "candidateCompiled": true,
+      "compiled": true,
+      "validationOutcome": "runtime-failure",
+      "validationReportSha256": "9158bfedc5275e61e8dbed0ade023c25a11cfbe934da5645786e349611d788de"
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-low",
+      "run": 2,
+      "generationOutcome": "answer",
+      "durationMs": 70911,
+      "resultSha256": "726a5e157afd3c5a94293e3c8adebfd7f0ec1a2d6456c4df5e7a38b59fd27c2a",
+      "extracted": true,
+      "candidateCompiled": true,
+      "compiled": true,
+      "validationOutcome": "runtime-failure",
+      "validationReportSha256": "c27c0f38f4719e14a0fb599acea436e70a92af9bfbbe36bbff878433261e18b0"
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-low",
+      "run": 3,
+      "generationOutcome": "provider-error",
+      "durationMs": 2967,
+      "resultSha256": "f52139d0fe2da9c514fd69e2e72977f5ab9f34201b2a45b8cc95506e80a05961",
+      "extracted": false,
+      "candidateCompiled": false,
+      "compiled": false,
+      "validationOutcome": "not-run",
+      "validationReportSha256": null
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-medium",
+      "run": 1,
+      "generationOutcome": "answer",
+      "durationMs": 120498,
+      "resultSha256": "b46eed9faf9d612d84af7994179e437926e34dd3d9f840df63e6cd6ef4a004ff",
+      "extracted": true,
+      "candidateCompiled": false,
+      "compiled": false,
+      "validationOutcome": "compile-failure",
+      "validationReportSha256": "e3697f3b5b619f46cdc730f6dd8fcced2d49f9cdea106ccc37c227bb1c2ee7b3"
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-medium",
+      "run": 2,
+      "generationOutcome": "answer",
+      "durationMs": 126732,
+      "resultSha256": "38f372741bb689248d27623404f7ec65acd975da991d53c64b4243601b8faf1f",
+      "extracted": true,
+      "candidateCompiled": false,
+      "compiled": false,
+      "validationOutcome": "compile-failure",
+      "validationReportSha256": "933d5dd6d0f55dbc3421df85459cc4553b97da7aaa7a62d8d0ea729bab5c4d3e"
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-medium",
+      "run": 3,
+      "generationOutcome": "provider-error",
+      "durationMs": 2512,
+      "resultSha256": "eb18a0eb81541defb841293fd33b273e409d7efb54389a1c6695f376580db316",
+      "extracted": false,
+      "candidateCompiled": false,
+      "compiled": false,
+      "validationOutcome": "not-run",
+      "validationReportSha256": null
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-high",
+      "run": 1,
+      "generationOutcome": "answer",
+      "durationMs": 383721,
+      "resultSha256": "52ff6d9f9bd992a7349c0335b97fc8046a66761f821b331e8ce7cb73fec3215c",
+      "extracted": true,
+      "candidateCompiled": true,
+      "compiled": true,
+      "validationOutcome": "runtime-failure",
+      "validationReportSha256": "3121d06af2a0cebd7c0c3d0b915346800bf3de6cb7c460a3f53b663d9d222b5a"
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-high",
+      "run": 2,
+      "generationOutcome": "timeout",
+      "durationMs": 600102,
+      "resultSha256": "cfd10cba5455569b0a74bc537ea97ff73ef761f10da8f1105a682416ccb25c35",
+      "extracted": false,
+      "candidateCompiled": false,
+      "compiled": false,
+      "validationOutcome": "not-run",
+      "validationReportSha256": null
+    },
+    {
+      "modelName": "gpt-5.6-luna.reasoning-high",
+      "run": 3,
+      "generationOutcome": "provider-error",
+      "durationMs": 2579,
+      "resultSha256": "5af3d38042c0ecd77990762a2706883455156a403fcfa0204eebd43fe069be36",
+      "extracted": false,
+      "candidateCompiled": false,
+      "compiled": false,
+      "validationOutcome": "not-run",
+      "validationReportSha256": null
+    }
+  ],
+  "cohortSha256": "c26e0dbad75739d1d117cbab4da2dbb562509d229d08ec53d3d2431564c6316e",
+  "planSha256": "586780bfb46d192404ef4c04c171192e805650bf0fae9c2f805ca497e2efd783",
+  "fixtureHashesSha256": "dea56f41741151a01cfe45e20f8c410d7581156160b90a5fe0173240d38fbb35",
+  "cohortId": "supervised-process-service-luna-reasoning-20260908-01",
+  "startedDate": "2026-09-08",
+  "dateTimezone": "America/Los_Angeles",
+  "harnessCommit": "df749bf335968bc24b67880a41671485cf54e876",
+  "methodology": {
+    "modelId": "gpt-5.6-luna",
+    "provider": "codex",
+    "reasoningLevels": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "timeoutMs": 600000,
+    "concurrency": 1,
+    "automaticRetries": 0,
+    "candidateRepairs": false,
+    "configuredOutputCeiling": null,
+    "effectiveProviderTokenLimits": null,
+    "tokenUsageComparisonAvailable": false,
+    "cliVersions": {
+      "node": "22.21.0",
+      "codex": "0.153.4"
+    },
+    "rubricScoring": "not-performed",
+    "comparison": "within-model-descriptive"
+  },
+  "limitations": [
+    "Three scheduled attempts per effort on one task; five answers total.",
+    "All run-3 attempts failed at the account usage limit; high run 2 timed out.",
+    "Quota failures and timeout remain in scheduled denominators and mean attempt duration.",
+    "Mean answer duration is conditional on completed answers.",
+    "No full validation passes, preferred effort, statistical significance, or model-family ranking is established."
+  ]
+}

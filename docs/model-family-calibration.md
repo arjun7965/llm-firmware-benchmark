@@ -82,8 +82,12 @@ validation outcomes. A missing result file is an incomplete attempt, not an
 observed failure. Compilation, runtime, extraction, and generation failures
 are useful calibration evidence and must not be silently rerun away.
 
-Independent blinded human review is still required before publication-grade
-rubric scores. Generation failures have no rubric score; answer-quality means
+The current scoring workflow is AI-assisted, human-reviewed: freeze the AI
+criterion scores before unblinding, then obtain human review of the concrete
+scores before publishing. Label that provenance explicitly and do not describe
+approval of AI scores as independent human scoring. Independent blinded human
+scoring remains a separate, stronger form of evidence, not a prerequisite for
+this workflow. Generation failures have no rubric score; answer-quality means
 are conditional on available answers and must accompany generation reliability.
 An all-failure cohort supports a generation-reliability finding, not an
 answer-quality ranking. The summarizer verifies scoring artifacts; it does not
@@ -326,9 +330,9 @@ scores reinforce that two tasks and their human reviews remain insufficient
 for a broad model-family ranking and motivate a more interaction-heavy next
 pilot.
 
-## Selected Next Pilot
+## Supervisor Pilot
 
-Next pilot: `supervised-process-service`.
+Selected pilot: `supervised-process-service`.
 
 This active embedded-Linux C fixture targets the still-partial supervised
 service capability. Its deterministic POSIX mock makes process, pidfd,
@@ -587,3 +591,77 @@ This completes the revised cohort and its approved review. The small sample,
 missing GLM answers, differing provider budgets, and AI-assisted grading do not
 support a broad model-family ranking. Earlier cohorts remain historical evidence
 under their original prompts and fixtures.
+
+## Completed Luna Reasoning Sweep — 2026-09-08
+
+The frozen `supervised-process-service-luna-reasoning-20260908-01` cohort
+scheduled three attempts each at low, medium, and high effort using GPT-5.6
+Luna through the Codex adapter. All nine attempts are recorded. Generation
+started on September 8 in America/Los_Angeles (September 9 UTC), using harness
+commit `df749bf335968bc24b67880a41671485cf54e876`, Node 22.21.0, and Codex CLI
+0.153.4. The prompt hash is
+`6bdeb104ba14c437674e2da5da43c9578a2dc873c21a05458b2344059a3a7e01`.
+Each level retained a 600-second timeout, concurrency one, no configured output
+ceiling, and no retries or candidate repairs. Effective provider token limits
+are unknown. These are three configurations of one family, not three families.
+
+The existing frozen records were audited to completion on September 17.
+The task, model, plan, rubric, fixture snapshot, and validation-profile catalog
+hashes matched the preserved provenance. The trusted reference, six valid
+variants, and all 53 controlled mutations were rechecked successfully. All five
+answers were extracted and validated under `c11-host` revision 4, Debian 13
+x86-64, GCC 14.2.0, and Bubblewrap 0.11.0. Original records and candidate
+validation reports were preserved.
+
+| Effort | Answers / attempts | Compiled and linked / attempts | Full passes / attempts | Mean attempt seconds | Mean answer seconds |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| low | 2/3 | 2/3 | 0/3 | 46.2 | 67.9 |
+| medium | 2/3 | 0/3 | 0/3 | 83.2 | 123.6 |
+| high | 1/3 | 1/3 | 0/3 | 328.8 | 383.7 |
+
+All three run-3 attempts encountered the account usage limit and remain
+`provider-error` outcomes. High run 2 hit the harness timeout. These outcomes
+are generation failures, not zero rubric scores or evidence of inferior code.
+Mean attempt duration includes these failures; mean answer duration includes
+only completed answers and is subject to that selection. The adapter did not
+record structured per-attempt token usage. CLI stderr contains token totals for
+completed answers, but no input/output/reasoning breakdown or totals for the
+failed attempts; this aggregate makes no token-efficiency comparison.
+
+Both medium answers omitted declarations for `O_NONBLOCK` and `O_CLOEXEC` and
+failed compilation. The low answers and high answer compiled and linked but
+failed runtime assertions: low run 1 failed nominal delivery/shutdown, low run
+2 failed bounded-shutdown signaling, and high run 1 failed an invalid-pidfd poll
+cleanup check. No effort level achieved a full deterministic pass. Five answers
+on one task, ordered attempts, and quota-limited availability do not establish
+a preferred reasoning level or a general model ranking.
+
+The prospective plan excluded rubric scoring from this deterministic
+comparison. No new rubric scores or human score approvals are claimed. The
+current AI-assisted, human-reviewed rubric workflow remains unchanged.
+The reviewed aggregate is
+[`supervised-process-service-luna-reasoning-2026-09-08.json`](calibration/supervised-process-service-luna-reasoning-2026-09-08.json).
+Only this allowlisted aggregate is committed; raw answers, diagnostics, paths,
+and validation reports remain private. All five answer projections were checked
+through `export:public` before publication.
+
+### Reproducing the private sweep summary
+
+```bash
+npm run calibration:sweep:summary -- \
+  --directory results/supervised-process-service-luna-reasoning-20260908-01 \
+  --output results/supervised-process-service-luna-reasoning-20260908-01/new-summary.json
+```
+
+This command reads the frozen `cohort.json`, `cohort.sha256`, `tasks.json`,
+`plan.json`, `provenance.json`, `fixture-hashes.json`, `fixture-snapshot/`,
+`raw/`, and `validation-audit.json`. Each audit entry identifies `modelName`,
+`run`, `outcome`, `resultSha256`, and `durationMs`, with nullable `extraction`
+and `validation` evidence. Successful extraction supplies `success`, `sha256`,
+and `outputPath`; validation supplies `success` and `reportPath`. Paths must
+remain inside the private cohort directory. The command supports single-file
+fenced answers, rechecks extraction against raw output, binds reports to answer
+digests, requires the declared phase sequence and one validation environment,
+and refuses missing attempts, duplicate evidence, or overwriting an output.
+It does not execute candidates, repair evidence, score answers, or authorize
+publication. Review the aggregate and model labels before copying it into docs.
