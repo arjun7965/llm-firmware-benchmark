@@ -304,8 +304,15 @@ record exact versions in validation reports.
   - [x] Select `supervised-process-service` as the next deterministic task
     because its mocked process, IPC, signal, timeout, and restart interactions
     broaden the calibration surface while retaining repeatable host validation.
-  - [ ] Run the `supervised-process-service` cross-model pilot under the
-    established three-family, three-run, blinded-review protocol.
+  - [x] Run the `supervised-process-service` cross-model pilot under the
+    established three-family, three-run protocol; publish the revised cohort
+    with disclosed AI-assisted, human-reviewed scoring.
+  - [x] Complete the frozen Luna low/medium/high reasoning sweep for
+    `supervised-process-service`, retaining quota failures and timeouts in the
+    planned denominator and publishing deterministic outcomes separately from
+    rubric scores.
+  - [ ] Select the next task for cross-family calibration; retain AI-assisted,
+    human-reviewed scoring with explicit review provenance.
 
 ## Repository Operations
 

@@ -677,13 +677,13 @@ test("published fixed-point-filter human scores match the reviewed summary", () 
   );
 });
 
-test("the selected next calibration pilot is active and deterministic", () => {
+test("the completed supervisor pilot retains its active deterministic contract", () => {
   const calibration = readFileSync(
     new URL("../docs/model-family-calibration.md", import.meta.url),
     "utf8",
   );
-  const matches = [...calibration.matchAll(/^Next pilot: `([^`]+)`\.$/gmu)];
-  assert.equal(matches.length, 1, "calibration guide must name one next pilot");
+  const matches = [...calibration.matchAll(/^Selected pilot: `([^`]+)`\.$/gmu)];
+  assert.equal(matches.length, 1, "calibration guide must identify the supervisor pilot");
 
   const taskId = matches[0][1];
   const selectedTask = loadTasks(
@@ -732,7 +732,7 @@ test("the selected next calibration pilot is active and deterministic", () => {
   assert.match(
     todo,
     new RegExp(
-      "- \\[ \\] Run the `" + taskId + "` cross-model pilot",
+      "- \\[x\\] Run the `" + taskId + "` cross-model pilot",
       "u",
     ),
   );
