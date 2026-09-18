@@ -152,6 +152,73 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Next Pilot — `secure-maintenance-command`
+
+Selected on 2026-09-17; cross-family generation started on September 17 in
+America/Los_Angeles (September 18 UTC). Rubric review remains pending.
+
+The private cohort is `secure-maintenance-command-cross-family-20260917-01`.
+Before freezing it, the prompt's abbreviated lifecycle and slot enum names
+were expanded to the exact identifiers in the supplied header. All attempts
+use prompt SHA-256
+`7edde09044cf23fba280110bd91254ce4bc99f8a7a1d6288616e5c805a110f92`.
+The cohort SHA-256 is
+`04b831ae578152b75a21f2ae96aed9e3bb4c215a1d5cb52f3924342803da947a`.
+
+The plan schedules three attempts each from GPT-5.6 Luna (Codex, medium,
+600 seconds), GLM-5.3 (OpenCode, low, 900 seconds, configured 32,000-token
+output ceiling), and Kimi K3 (OpenCode, max, 1,200 seconds, configured
+64,000-token output ceiling). These retain the completed supervisor cohort's
+settings, with concurrency one and no retries. Effective provider token limits
+remain unknown. CLI versions are Codex 0.155.0 and OpenCode 1.18.31.
+Before generation, the frozen reference passed and all 40 compile-valid
+mutations were rejected in `c11-host` revision 4,
+`debian-13-x86-64-c11-host` revision 1, under GCC 14.2.0 and Bubblewrap 0.11.0.
+The private worker preserves each result, validates extractable answers, and
+prepares a blinded packet; it does not assign rubric scores or publish results.
+
+The completed pilots cover static allocation, numerical optimization, and
+supervised process lifecycles. This active firmware-security fixture adds
+attacker-controlled byte parsing, independent replay domains, one-time
+challenges, wrap-safe expiry, cumulative lockout, and ordered authorization
+revocation. These interacting requirements provide a new calibration surface;
+whether they distinguish model families remains an empirical question.
+
+The prompt embeds the public API and opaque SEC0 signatures. The fixture uses
+`c11-host` and `armv7m-bare-metal`, with a single fenced C answer and eight
+public test groups. Its catalog contains 40 controlled mutations. SEC0 provides
+immutable verifier verdicts, so the task needs neither real cryptography nor
+physical hardware. Findings concern the specified mock policy, not production
+cryptographic security or resistance to physical attacks.
+
+`mpu-fault-containment` is another ready security candidate, but the maintenance
+task combines malformed-input handling with persistent authorization state.
+A further supervisor variant would add less capability breadth after the
+completed cross-family pilot and reasoning sweep.
+
+Before generation, apply the protocol above:
+
+1. Revalidate the trusted reference and all 40 mutations in the exact pinned
+   scoring environment. Freeze the prompt, rubric, fixture, harness revision,
+   and validation-profile/environment hashes; resolve any contract discrepancy
+   before freezing the cohort.
+2. Declare three distinct model families and three scheduled attempts each.
+   Pin actual model IDs, provider options, reasoning controls, timeouts, output
+   limits, concurrency, and configuration fingerprints in a new private cohort.
+   The previous pilots' model availability and budgets are not assumed current.
+3. Preserve every scheduled outcome, including quota failures and timeouts.
+   Extract and validate available answers without repairs, and report generation
+   reliability and deterministic pass counts separately from rubric scores.
+4. Prepare the blinded packet, freeze AI criterion scores before unblinding,
+   and obtain human review of the concrete scores before publication. Record
+   the AI scorer, human reviewer, review date, any revisions, and artifact
+   hashes; label the result **AI-assisted, human-reviewed**.
+5. Publish only a reviewed sanitized aggregate through the established
+   publication process. Keep raw records, answers, and review artifacts private.
+
+Selection does not establish a completed calibration or authorize treating
+pending results as scored benchmark evidence.
+
 ## Completed Pilots
 
 ### `static-memory-pool` — 2026-08-25
