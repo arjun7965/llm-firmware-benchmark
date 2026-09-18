@@ -311,8 +311,13 @@ record exact versions in validation reports.
     `supervised-process-service`, retaining quota failures and timeouts in the
     planned denominator and publishing deterministic outcomes separately from
     rubric scores.
-  - [ ] Select the next task for cross-family calibration; retain AI-assisted,
-    human-reviewed scoring with explicit review provenance.
+  - [x] Select `secure-maintenance-command` as the next task for cross-family
+    calibration: its replay, challenge, lockout, and authorization interactions
+    add firmware-security coverage through a deterministic opaque mock.
+  - [ ] Run the `secure-maintenance-command` cross-family pilot under the
+    declared three-family, three-attempt protocol; retain AI-assisted,
+    human-reviewed scoring with explicit review provenance. See the
+    [selection and execution gates](docs/model-family-calibration.md#next-pilot--secure-maintenance-command).
 
 ## Repository Operations
 
