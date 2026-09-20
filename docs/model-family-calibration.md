@@ -152,6 +152,90 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed RTOS Coordination Pilot — `rtos-event-flags-deadlock`
+
+The revised cohort `rtos-event-flags-deadlock-cross-family-20260919-02`
+adds event consumption, bounded mutex contention, global lock ordering, and
+failure cleanup to the cross-family calibration surface. All nine revised
+attempts are recorded and the AI criterion scores were frozen before
+unblinding. The conversation user approved the scores and publication without
+changes on September 19, 2026 (America/Los_Angeles).
+
+The first cohort (`rtos-event-flags-deadlock-cross-family-20260919-01`)
+recorded nine answers: eight extracted, two passed, six failed compilation, and
+one failed extraction. Anonymized review exposed a prompt defect: RTOS function
+names were listed without full signatures, and two answers supplied an extra
+argument to `rtos_configuration_apply`. These records remain diagnostic evidence
+under their original prompt; they are not replaced or pooled with the revised
+cohort. No criterion scores were assigned or identities unblinded for cohort 01.
+
+Before the revised cohort, both exact supplied headers were embedded in the
+prompt, retaining the initial zero-initialization and valid-supervisor
+clarifications. The revised frozen prompt SHA-256 is
+`efc51538fbd562fef4b4538cc7928ade99def6d5adcd5363b5e18182ef192508`;
+the cohort SHA-256 is
+`c0680e0ebffc3d65da19c2d1caf680f2f95cfdfba73826ff1787ec0c62046540`.
+The private snapshot preserves harness base
+`b657b3e225c7081d35c5cd809838a44d4c808f4b` and the revised prompt.
+The reviewer saw anonymized diagnostic answers before this revised cohort;
+review of the revised answers retains its own identity blinding and score freeze.
+
+The trusted reference passed all six public test groups and all seven
+compile-valid mutations were rejected under `c11-host` revision 4,
+`debian-13-x86-64-c11-host`, GCC 14.2.0, and Bubblewrap 0.11.0.
+The cohort scheduled three attempts each for GPT-5.6 Luna (medium, 600 s),
+GLM-5.3 (low, 900 s, 32,000 configured output tokens), and Kimi K3
+(max, 1,200 s, 64,000 configured output tokens). Runs use concurrency one,
+run-major ordering, no retries, and no candidate repairs. Provider budgets
+differ and effective provider token limits remain unknown. Recorded versions
+are Node 22.21.0, Codex CLI 0.155.1, and OpenCode 1.18.31.
+
+Every attempt retains its original generation outcome. All nine revised answers
+extracted; three compiled and passed all six public test groups, while six
+failed compilation because they used `NULL` without including a defining
+standard header. Candidates were not repaired or rerun.
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Full validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 7.5 | 7.5 | 7.5 | 7.500 | 0/3 |
+| GLM-5.3 | 7.0 | 7.5 | 7.5 | 7.333 | 0/3 |
+| Kimi K3 | 9.5 | 9.5 | 9.5 | 9.500 | 3/3 |
+
+All Luna and GLM answers failed compilation; all Kimi answers passed. Rubric
+means include all three answers per model. Compilation failures received zero
+functional credit, with static partial credit in other dimensions; the missing
+header was not deducted again in portability. These scores do not establish
+executable correctness. GLM run 1 additionally retained previously created
+handles after mutex creation failed (static finding, fault recovery minus 0.5).
+Its `initialized` flag stays false and operational API guards reject the state,
+so the deduction reflects incomplete cleanup without a valid-state bypass.
+
+All answers received 0.5/1 for clarity and validation. Luna omitted concrete
+deterministic test scenarios. GLM and Kimi offered test discussion but overstated
+lock cleanup, event-delivery, or deadlock/progress guarantees: attempting unlock
+does not ensure it succeeds, event bits do not count repeated occurrences, and
+this component's lock order cannot constrain an opposing peer. Timeout and
+rollback bound that contention. Test code was forbidden and its absence was
+not penalized. Each independent defect was deducted in its owning criterion.
+
+Scoring is **AI-assisted, human-reviewed**, not independent human scoring.
+Codex (GPT-6) reviewed anonymized answers and hash-matched validation evidence,
+froze criterion scores, then unblinded model identities. The user approved the
+model averages and individual scores with the linked deduction breakdown,
+without changes. The packet SHA-256 is
+`386bd26d6f92ca72f87b5c94a85ec12a6f13d05738bd028c95f902d2231008b1`;
+the approved score-sheet SHA-256 is
+`d84dc10c2dbc5282796a62878c8bf6491a54515cc4f995413b97cb7c3e9b9985`.
+
+The approved, sanitized aggregate is
+[`rtos-event-flags-deadlock-2026-09-19.json`](calibration/rtos-event-flags-deadlock-2026-09-19.json).
+It includes per-criterion scores, deduction rationales, generation and validation
+outcomes, provider controls, prior-cohort disposition, and review provenance.
+All nine public-export projections passed with no redactions or review flags.
+Only the aggregate is published; raw answers, projections, and review artifacts
+remain private. Nine attempts on one deterministic mock task with different
+provider budgets and AI-assisted scoring do not support a broad model ranking.
+
 ## Completed Security Pilot — `secure-maintenance-command`
 
 The cohort `secure-maintenance-command-cross-family-20260917-01` completed

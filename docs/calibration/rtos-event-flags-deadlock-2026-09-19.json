@@ -1,0 +1,342 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "rtos-event-flags-deadlock",
+  "cohortId": "rtos-event-flags-deadlock-cross-family-20260919-02",
+  "startedDate": "2026-09-19",
+  "dateTimezone": "America/Los_Angeles",
+  "harnessCommit": "b657b3e225c7081d35c5cd809838a44d4c808f4b",
+  "promptSha256": "efc51538fbd562fef4b4538cc7928ade99def6d5adcd5363b5e18182ef192508",
+  "cohortSha256": "c0680e0ebffc3d65da19c2d1caf680f2f95cfdfba73826ff1787ec0c62046540",
+  "packetSha256": "386bd26d6f92ca72f87b5c94a85ec12a6f13d05738bd028c95f902d2231008b1",
+  "scoreSheetSha256": "d84dc10c2dbc5282796a62878c8bf6491a54515cc4f995413b97cb7c3e9b9985",
+  "review": {
+    "status": "complete",
+    "provenance": "ai-assisted-human-reviewed",
+    "decision": "approved-without-changes",
+    "reviewDate": "2026-09-19",
+    "dateTimezone": "America/Los_Angeles",
+    "recordedAt": "2026-09-20T02:25:19.358258+00:00",
+    "aiScorer": "Codex (GPT-6)",
+    "humanReviewer": "Conversation user",
+    "reviewScope": "User approved the model averages, individual scores, linked deduction breakdown, and publication without changes.",
+    "aiScoresFrozenBeforeUnblinding": true,
+    "independentHumanScoring": false,
+    "scoreSheetSha256": "d84dc10c2dbc5282796a62878c8bf6491a54515cc4f995413b97cb7c3e9b9985",
+    "priorExposure": "The AI reviewer inspected anonymized diagnostic-cohort answers before the revised cohort; diagnostic identities remained sealed."
+  },
+  "methodology": {
+    "concurrency": 1,
+    "automaticRetries": 0,
+    "scheduledRunsPerModel": 3,
+    "order": "Run-major: Luna, GLM, Kimi for each of runs 1, 2, 3",
+    "scorePopulation": "available-answers-only",
+    "generationFailuresHaveNoRubricScore": true,
+    "candidateRepairs": false,
+    "cliVersions": {
+      "node": "22.21.0",
+      "codex": "0.155.1",
+      "opencode": "1.18.31"
+    },
+    "providerDifferences": "Luna medium/600s; GLM low/900s/32000 configured output ceiling; Kimi max/1200s/64000 configured output ceiling. Effective provider limits unknown; no parity claim.",
+    "scoringNotes": [
+      "All nine attempts produced answers; means include compilation failures with static rubric partial credit.",
+      "Compilation failure receives zero functional credit. The missing-header defect is not deducted again in portability.",
+      "Each independent defect is deducted in its owning dimension; public passes do not establish full rubric credit.",
+      "GLM run 1 loses 0.5 fault-recovery points for retaining handles after mutex creation failure. initialized remains false and operational guards reject the state; this is not a safety-critical valid-state bypass.",
+      "All answers receive 0.5/1 clarity and validation: Luna omits concrete deterministic test cases; GLM and Kimi explanations overstate deadlock, cleanup, or event-delivery guarantees. The prompt forbids test code, whose absence is not penalized."
+    ]
+  },
+  "priorCohort": {
+    "cohortId": "rtos-event-flags-deadlock-cross-family-20260919-01",
+    "disposition": "diagnostic-only",
+    "scheduled": 9,
+    "answers": 9,
+    "extracted": 8,
+    "compileFailures": 6,
+    "passes": 2,
+    "extractionFailures": 1,
+    "reason": "The first prompt omitted full RTOS function signatures. Two answers supplied an extra rtos_configuration_apply argument. Both exact headers were embedded before a fresh prospective cohort.",
+    "pooledWithCurrentCohort": false,
+    "scored": false,
+    "originalRecordsPreserved": true
+  },
+  "validation": {
+    "profile": "c11-host",
+    "profileRevision": 4,
+    "profileSha256": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3",
+    "environmentId": "debian-13-x86-64-c11-host",
+    "environmentRevision": 1,
+    "environmentSha256": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7",
+    "sandbox": "Bubblewrap 0.11.0",
+    "compiler": "GCC 14.2.0",
+    "referencePassed": true,
+    "compileValidMutationsRejected": 7,
+    "publicTestGroups": 6,
+    "answers": 9,
+    "extracted": 9,
+    "compileFailures": 6,
+    "runtimeFailures": 0,
+    "passes": 3
+  },
+  "generation": {
+    "scheduled": 9,
+    "recorded": 9,
+    "answers": 9,
+    "answerRate": 1,
+    "outcomes": {
+      "answer": 9,
+      "timeout": 0,
+      "generation-limit": 0,
+      "provider-error": 0,
+      "no-answer": 0,
+      "missing": 0
+    }
+  },
+  "models": [
+    {
+      "model": "gpt-5.6-luna",
+      "modelId": "gpt-5.6-luna",
+      "provider": "codex",
+      "family": "OpenAI GPT",
+      "controls": {
+        "effort": "medium",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": null,
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "rationale": "Compilation fails because NULL is used without a defining standard header; functional correctness is zero (-2). Static review finds correct local-handle initialization, invalid-call guards, event semantics, exact time bounds, lock order, rollback and status precedence. Clarity/validation -0.5: the explanation does not provide concrete deterministic test cases or expected observations."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "rationale": "Compilation fails because NULL is used without a defining standard header; functional correctness is zero (-2). Static review finds correct guards, local-handle initialization and failure reset, signal/wait behavior, bounded lock order, rollback and error precedence. Clarity/validation -0.5: saying fixed call counts make testing straightforward does not supply concrete test cases and expected observations."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "rationale": "Compilation fails because NULL is used without a defining standard header; functional correctness is zero (-2). Static review finds the required valid-state guards, creation-failure reset, event mask/flags, exact time bounds, lock order, contention rollback, both unlock attempts, and status precedence. Clarity/validation -0.5: the short explanation gives no concrete deterministic test scenarios or expected observations."
+        }
+      ],
+      "mean": 7.5,
+      "sd": 0,
+      "range": 0,
+      "fullValidationPasses": 0
+    },
+    {
+      "model": "glm53",
+      "modelId": "opencode-go/glm-5.3",
+      "provider": "opencode",
+      "family": "Z.ai GLM",
+      "controls": {
+        "variant": "low",
+        "timeoutMs": 900000,
+        "maxOutputTokens": 32000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 7.0,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 0.5,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "rationale": "Compilation fails because NULL is used without a defining standard header; functional correctness is zero (-2). Independently, failed configuration or actuator creation retains previously created handles, violating the all-NULL failure-state contract (fault recovery -0.5). initialized remains false and operational APIs reject that state, so this is partial recovery credit, not a claim of safe-state bypass. Other static guards, event semantics, bounded locks, rollback and error precedence are correct. Clarity/validation -0.5: the explanation incorrectly claims this component ordering alone prevents a circular wait with an actuator-owning peer waiting on configuration; timeout/rollback resolves that opposing wait. The incorrect cleanup prose is not separately penalized for the same recovery defect."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "rationale": "Compilation fails because NULL is used without a defining standard header; functional correctness is zero (-2). Static review finds correct behavior for caller-zeroed initialization and valid reinitialization, guards, failure-state clearing, bounded waits, lock order, rollback and status precedence. No extra requirement is inferred for reinitializing a corrupted object with initialized=true. Clarity/validation -0.5: although test categories are provided, the explanation claims cleanup means locks are never leaked even though an unlock can fail and leave a mutex held. Code correctly attempts both unlocks; this is an explanatory defect only."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "rationale": "Compilation fails because NULL is used without a defining standard header; functional correctness is zero (-2). Static review finds creation-failure reset, valid-state guards, event semantics, bounded calls, ordered locking, contention rollback and correct error precedence. Clarity/validation -0.5: useful scripted test cases are present, but the explanation guarantees no lock leak on any path despite possible unlock failures; attempting release is not a guarantee of release. No duplicate deduction is made against the correct cleanup code."
+        }
+      ],
+      "mean": 7.333333333333333,
+      "sd": 0.23570226039551584,
+      "range": 0.5,
+      "fullValidationPasses": 0
+    },
+    {
+      "model": "kimi-k3",
+      "modelId": "opencode-go/kimi-k3",
+      "provider": "opencode",
+      "family": "Moonshot Kimi",
+      "controls": {
+        "variant": "max",
+        "timeoutMs": 1200000,
+        "maxOutputTokens": 64000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "rationale": "Compiles and passes all six public groups. Static review finds correct guards, all creation-failure resets, event semantics, exact time bounds, lock order, rollback and error precedence; no code defect identified. Clarity/validation -0.5: concrete tests are supplied, but the explanation/comments claim one tick is enough for a well-behaved peer, guarantees forward progress without livelock, and says ownership can never leak. A timeout bounds an attempt, not eventual success, and failed unlocks can leave ownership held."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "rationale": "Compiles and passes all six public groups. Static review finds the required guards, all creation-failure resets, event semantics, exact time bounds, lock order, rollback and error precedence; no code defect identified. Clarity/validation -0.5: despite useful failure-injection tests, the explanation incorrectly says an actuator-owning peer requesting configuration cannot form a wait cycle merely because this path orders its own locks. Such opposing requests can form a temporary cycle; bounded timeout and rollback prevent indefinite blocking."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "rationale": "Compiles and passes all six public groups. Static review finds correct state guards, creation-failure reset, event semantics, bounded ordered locking, rollback and error precedence; no code defect identified. Clarity/validation -0.5: concrete tests are present, but the claim that each event is consumed exactly once conflates event bits with counted occurrences, and the code comment claims a peer can never wait on configuration although this component cannot enforce peer behavior."
+        }
+      ],
+      "mean": 9.5,
+      "sd": 0,
+      "range": 0,
+      "fullValidationPasses": 3
+    }
+  ],
+  "publication": {
+    "content": "Sanitized aggregate only; raw answers and review artifacts remain private.",
+    "exportedAnswers": 9,
+    "redactions": 0,
+    "reviewFlags": 0
+  }
+}

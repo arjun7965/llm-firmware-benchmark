@@ -318,6 +318,14 @@ record exact versions in validation reports.
     declared three-family, three-attempt protocol; retain AI-assisted,
     human-reviewed scoring with explicit review provenance. See the
     [approved results](docs/model-family-calibration.md#completed-security-pilot--secure-maintenance-command).
+  - [x] Select `rtos-event-flags-deadlock` for the next cross-family pilot to
+    add deterministic event consumption, bounded mutex contention, global lock
+    ordering, and cleanup coverage.
+  - [x] Run the revised `rtos-event-flags-deadlock` three-family, three-attempt
+    pilot, preserving the initial underspecified-prompt cohort separately;
+    freeze AI criterion scores before unblinding and prepare human review.
+  - [x] Obtain human review of the `rtos-event-flags-deadlock` scores and
+    publish the sanitized aggregate with explicit scoring provenance.
 
 ## Repository Operations
 
