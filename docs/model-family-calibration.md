@@ -152,6 +152,89 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed DMA Cache Pilot — `dma-cache-coherency`
+
+The revised cohort `dma-cache-coherency-cross-family-20260919-02` adds
+cache-range arithmetic, maintenance ordering, and DMA receive ownership to the
+cross-family calibration surface. All nine scheduled attempts are recorded.
+AI criterion scores were frozen before unblinding, and the conversation user
+approved the scores, plot, and publication without changes on September 19,
+2026 (America/Los_Angeles).
+
+The initial nine-attempt cohort remains unscored diagnostic evidence with
+identities sealed. Seven compiled answers rejected a second receive with
+`BUSY`, while the fixture required `INVALID_ARGUMENT`; the initial prompt did
+not explicitly name that rejection status. Another compiled answer assumed
+`uintmax_t` was wider than `uintptr_t`, which holds on the nominal 32-bit target
+but not the 64-bit host validator. One provider final-message answer was an
+incomplete C fragment and failed compilation. None passed the full validator.
+These records were preserved and are not pooled with the revised cohort.
+
+Before the first cohort, both exact supplied headers, caller-state and
+serialization assumptions, independent TX/RX behavior, and opaque address
+recording were embedded in the prompt. Public checks were extended from four
+to six groups and the mutation catalog from six to 13, adding exact cache-line
+endpoints, maximum length, buffer-end and cache-rounding overflow, the last
+representable range, status propagation, state preservation, and reinitialization.
+The revised prompt then explicitly named the overlap rejection status and the
+host's 64-bit `uintptr_t`/`uintmax_t` widths. Fixture, rubric, and provider budgets
+were unchanged between cohorts.
+
+The revised prompt SHA-256 is
+`73d297090f49a44f63ec68bb2e3ad73171c2bb162861ed6047b4f52ec4e83b0d`;
+the cohort SHA-256 is
+`e0b039055fa87a50b5046392771585960b06a87cb3464a95787329158c144193`.
+The private snapshot preserves harness base
+`6fd6854dbb99dc9c43b0f33c7353bf1510e87b67` and the pre-generation changes.
+The trusted reference passed all six public groups and all 13 compile-valid
+mutations were rejected under `c11-host` revision 4,
+`debian-13-x86-64-c11-host`, GCC 14.2.0, and Bubblewrap 0.11.0.
+
+Three attempts per family ran in run-major order at concurrency one, with no
+retries or candidate repairs. Settings were Luna medium/600 seconds, GLM
+low/900 seconds/32,000 configured output tokens, and Kimi max/1,200 seconds/
+64,000 configured output tokens. Provider budgets differ and effective provider
+limits remain unknown. Recorded tools were Node 22.21.0, Codex CLI 0.155.1, and
+OpenCode 1.18.31. Generation began on September 19 local time (September 20 UTC).
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Full validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 9.5 | 9.5 | 9.5 | 9.500 | 3/3 |
+| GLM-5.3 | 10.0 | 9.5 | 7.5 | 9.000 | 2/3 |
+| Kimi K3 | 9.5 | 10.0 | 10.0 | 9.833 | 3/3 |
+
+![Reviewed DMA cache-coherency rubric scores and deterministic validation passes](calibration/dma-cache-coherency-2026-09-19.svg)
+
+All nine revised answers extracted. Eight compiled and passed every public
+test group. GLM run 3 failed compilation because its comment contained the
+nested opener in `*base/*span`, rejected by `-Werror=comment`. It received zero
+functional credit; static evidence supports other dimensions, and that same
+defect was not deducted again elsewhere. Its score does not establish
+executable correctness.
+
+Clarity/validation deductions of 0.5 apply to Luna's three answers for test
+guidance without concrete cases and expected observations; GLM run 2 for a
+misaligned offset-31 test and incorrect range; GLM run 3 for a 32-bit overflow
+example that is valid on the 64-bit host; and Kimi run 1 for an eight-byte
+transfer at offset 0x1c incorrectly described as fitting within one cache line.
+The public aggregate records each criterion and deduction rationale. Test code
+was forbidden, and its absence was not penalized.
+
+Scoring is **AI-assisted, human-reviewed**, not independent human scoring.
+The AI reviewer had seen anonymized diagnostic answers before the revised
+cohort. Revised answers were reviewed anonymously with hash-matched validation
+evidence, scores were frozen, then model identities were revealed. The packet
+SHA-256 is `2995e5f883e1d337ba14d3e6b3e97a282a40c97d0166b788aa2501736bd37104`;
+the approved score-sheet SHA-256 is
+`a68dffd69ee523a51776aa96937acd83e90e42c61c8a34e49fdd5f9bbf0ac29c`.
+
+The approved [sanitized aggregate](calibration/dma-cache-coherency-2026-09-19.json)
+and its derived plot are published. All nine answer projections passed
+`export:public` with no redactions or review flags; raw records, projections,
+identity keys, and review artifacts remain private. Three attempts per model
+on one deterministic mock task, with different provider budgets and AI-assisted
+grading, do not establish a broad model ranking.
+
 ## Completed RTOS Coordination Pilot — `rtos-event-flags-deadlock`
 
 The revised cohort `rtos-event-flags-deadlock-cross-family-20260919-02`

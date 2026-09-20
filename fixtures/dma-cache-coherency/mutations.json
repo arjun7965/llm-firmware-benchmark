@@ -37,6 +37,48 @@
       "description": "Leave a terminally failed receive transfer active.",
       "find": "clear_rx_state(transfer);\n    return status;",
       "replace": "return status;"
+    },
+    {
+      "id": "unchecked-buffer-end",
+      "description": "Allow the last byte of a transfer to wrap uintptr_t.",
+      "find": "if (address > UINTPTR_MAX - (uintptr_t)(length - 1u)) return false;",
+      "replace": "if (false) return false;"
+    },
+    {
+      "id": "unchecked-cache-end",
+      "description": "Allow cache-line round-up to wrap uintptr_t.",
+      "find": "if (last_address > UINTPTR_MAX - (uintptr_t)DMA_CACHE_LINE_BYTES) {",
+      "replace": "if (false) {"
+    },
+    {
+      "id": "extra-cache-line",
+      "description": "Round an exact cache-line endpoint up by an extra line.",
+      "find": "rounded_end = (last_address + (uintptr_t)DMA_CACHE_LINE_BYTES) & ~line_mask;",
+      "replace": "rounded_end = (last_address + 1u + (uintptr_t)DMA_CACHE_LINE_BYTES) & ~line_mask;"
+    },
+    {
+      "id": "reject-maximum-length",
+      "description": "Reject the maximum allowed transfer length.",
+      "find": "length > DMA_MAX_TRANSFER_BYTES ||",
+      "replace": "length >= DMA_MAX_TRANSFER_BYTES ||"
+    },
+    {
+      "id": "rounded-dma-pointer",
+      "description": "Pass the rounded cache address to TX DMA.",
+      "find": "return dma_cache_start_tx(buffer, length);",
+      "replace": "return dma_cache_start_tx((const uint8_t *)cache_address, length);"
+    },
+    {
+      "id": "publish-busy-start",
+      "description": "Publish an in-flight receive after a BUSY start.",
+      "find": "if (status != DMA_CACHE_STATUS_OK) return status;",
+      "replace": "if (status != DMA_CACHE_STATUS_OK && status != DMA_CACHE_STATUS_BUSY) return status;"
+    },
+    {
+      "id": "reject-pending-reinit",
+      "description": "Refuse to reinitialize a pending receiver.",
+      "find": "if (transfer == NULL) return false;",
+      "replace": "if (transfer == NULL || transfer->rx_in_flight) return false;"
     }
   ]
 }

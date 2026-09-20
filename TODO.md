@@ -327,6 +327,15 @@ record exact versions in validation reports.
   - [x] Obtain human review of the `rtos-event-flags-deadlock` scores and
     publish the sanitized aggregate with explicit scoring provenance.
 
+  - [x] Select `dma-cache-coherency` for the next cross-family pilot to add
+    cache-range arithmetic, maintenance ordering, and DMA ownership coverage.
+  - [x] Audit `dma-cache-coherency` with a diagnostic cohort; clarify overlap
+    rejection status and host integer widths while preserving original records.
+  - [x] Run the revised `dma-cache-coherency` three-family, three-attempt pilot
+    and freeze blinded criterion scores before unblinding.
+  - [x] Obtain human review of the `dma-cache-coherency` scores and publish its
+    sanitized aggregate with explicit scoring provenance.
+
 ## Repository Operations
 
 - [x] Confirm GitHub Actions passes after the first push.
