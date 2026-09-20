@@ -33,3 +33,21 @@ Scoring profile: `firmware-v1`.
 No concurrency credit is earned by inverted lock order, retaining consumed
 events, leaking the first mutex after second-lock contention, or relying on
 manual priority changes instead of the stated lock discipline.
+
+## Calibration
+
+The September 19, 2026 revised pilot recorded three attempts each from GPT-5.6
+Luna, GLM-5.3, and Kimi K3. All nine returned extractable answers. Luna and GLM
+failed compilation in all three runs because `NULL` lacked a defining header;
+Kimi passed all six public test groups in all three runs. Approved rubric means
+were 7.500, 7.333, and 9.500 respectively. Static partial credit is separate from
+executable correctness.
+
+The first cohort is preserved as diagnostic evidence after omitted RTOS
+signatures were found in its prompt. Both exact supplied headers were included
+before the revised cohort. Scores were frozen before unblinding and approved
+without changes by the conversation user; provenance is AI-assisted,
+human-reviewed, not independent human scoring. Provider budgets differ.
+
+See the [methodology and results](../model-family-calibration.md#completed-rtos-coordination-pilot--rtos-event-flags-deadlock)
+and [sanitized aggregate](../calibration/rtos-event-flags-deadlock-2026-09-19.json).
