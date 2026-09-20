@@ -8,20 +8,49 @@
   "promptSha256": "7edde09044cf23fba280110bd91254ce4bc99f8a7a1d6288616e5c805a110f92",
   "cohortSha256": "04b831ae578152b75a21f2ae96aed9e3bb4c215a1d5cb52f3924342803da947a",
   "packetSha256": "4ebeb833a7594431f803d1e3ce2d07e1526028ea863dbb266df896d225869aeb",
-  "scoreSheetSha256": "aa2d1db9328c06a7d2a097cc54255d0f4727dd4ac8560e29d2f2990d57714200",
+  "scoreSheetSha256": "6bb1f1d541c2de4a2201520466d5db2b99d40e5445893f909c9caffe06933ffe",
   "review": {
     "status": "complete",
     "provenance": "ai-assisted-human-reviewed",
-    "decision": "approved-without-score-changes",
+    "decision": "approved-original-scores-with-user-requested-policy-correction",
     "reviewDate": "2026-09-19",
     "dateTimezone": "America/Los_Angeles",
     "recordedAt": "2026-09-19T22:41:50.492Z",
     "aiScorer": "Codex (GPT-6)",
     "humanReviewer": "Repository owner (conversation user)",
-    "reviewScope": "Three-run model averages and accompanying per-run scores, validation counts and linked scoring breakdown",
-    "aiScoresFrozenBeforeUnblinding": true,
+    "reviewScope": "Original model averages and accompanying scores approved; user subsequently requested the two identified fault-recovery policy corrections.",
+    "aiScoresFrozenBeforeUnblinding": false,
     "independentHumanScoring": false,
-    "scoreSheetSha256": "aa2d1db9328c06a7d2a097cc54255d0f4727dd4ac8560e29d2f2990d57714200"
+    "scoreSheetSha256": "6bb1f1d541c2de4a2201520466d5db2b99d40e5445893f909c9caffe06933ffe",
+    "originalAiScoresFrozenBeforeUnblinding": true,
+    "originalScoreSheetSha256": "aa2d1db9328c06a7d2a097cc54255d0f4727dd4ac8560e29d2f2990d57714200",
+    "correction": {
+      "revision": 1,
+      "afterUnblinding": true,
+      "authorization": "User requested the identified policy corrections after PR review.",
+      "independentHumanRescoring": false,
+      "originalApprovalDate": "2026-09-19",
+      "changes": [
+        {
+          "model": "gpt-5.6-luna",
+          "run": 1,
+          "before": 1,
+          "after": 0,
+          "reason": "expire returns DENIED without locking gates or revoking existing update authorization.",
+          "originalTotal": 8.5,
+          "correctedTotal": 7.5
+        },
+        {
+          "model": "glm53",
+          "run": 2,
+          "before": 0.5,
+          "after": 0,
+          "reason": "Malformed-length frames return INVALID without the mandatory gate-lock/revoke sequence; this is a static finding in a noncompiling answer.",
+          "originalTotal": 6,
+          "correctedTotal": 5.5
+        }
+      ]
+    }
   },
   "methodology": {
     "concurrency": 1,
@@ -41,7 +70,8 @@
       "Compilation failure receives zero functional credit; remaining credit is static and does not establish executable behavior.",
       "Distinct defects are deducted once in their owning criterion.",
       "Missing NULL SEC0-handle guards lose 0.5 functional points under the invalid-API rule; this case is a static finding outside public test coverage.",
-      "All answers receive 0.5/1 clarity/validation: explanations lack concrete validation cases and expected observations. The prompt forbids test code; absence of test code is not penalized."
+      "All answers receive 0.5/1 clarity/validation: explanations lack concrete validation cases and expected observations. The prompt forbids test code; absence of test code is not penalized.",
+      "Revision 1 applies the firmware-v1 safety-critical zero-credit rule to Luna run 1 and GLM run 2 fault recovery. Corrections were user-requested after unblinding; the original frozen score sheet and approval are retained. No other criterion or validation outcome changed."
     ]
   },
   "validation": {
@@ -119,13 +149,13 @@
         {
           "run": 2,
           "generationOutcome": "answer",
-          "score": 6,
+          "score": 5.5,
           "criteria": {
             "functional-correctness": 0,
             "bounded-resource-use": 1,
             "timing-behavior": 1,
             "concurrency-safety": 1,
-            "fault-recovery": 0.5,
+            "fault-recovery": 0,
             "portability": 2,
             "clarity-and-validation": 0.5
           },
@@ -147,9 +177,9 @@
           "validationOutcome": "runtime-failure"
         }
       ],
-      "mean": 7.833333333333333,
-      "sd": 1.3123346456686351,
-      "range": 3,
+      "mean": 7.666666666666667,
+      "sd": 1.5456030825826172,
+      "range": 3.5,
       "fullValidationPasses": 0
     },
     {
@@ -180,13 +210,13 @@
         {
           "run": 1,
           "generationOutcome": "answer",
-          "score": 8.5,
+          "score": 7.5,
           "criteria": {
             "functional-correctness": 2,
             "bounded-resource-use": 1,
             "timing-behavior": 1,
             "concurrency-safety": 1,
-            "fault-recovery": 1,
+            "fault-recovery": 0,
             "portability": 2,
             "clarity-and-validation": 0.5
           },
@@ -223,9 +253,9 @@
           "validationOutcome": "passed"
         }
       ],
-      "mean": 9,
-      "sd": 0.408248290463863,
-      "range": 1,
+      "mean": 8.666666666666666,
+      "sd": 0.8498365855987975,
+      "range": 2,
       "fullValidationPasses": 2
     },
     {

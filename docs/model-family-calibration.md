@@ -157,7 +157,8 @@ workflow and cannot establish a generation denominator.
 The cohort `secure-maintenance-command-cross-family-20260917-01` completed
 all nine scheduled attempts, with generation starting on September 17 in
 America/Los_Angeles (September 18 UTC). The user approved the three-run model
-averages and accompanying scores without changes on September 19.
+averages and accompanying scores on September 19, then requested the two
+fault-recovery policy corrections identified during PR review.
 
 Before freezing the cohort, the prompt's abbreviated lifecycle and slot enum
 names were expanded to the exact identifiers in the supplied header. Every
@@ -188,8 +189,8 @@ were verified during scoring; candidates were not repaired or rerun.
 
 | Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Full validation passes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| GPT-5.6 Luna | 8.5 | 9.5 | 9.0 | 9.000 | 2/3 |
-| GLM-5.3 | 9.0 | 6.0 | 8.5 | 7.833 | 0/3 |
+| GPT-5.6 Luna | 7.5 | 9.5 | 9.0 | 8.667 | 2/3 |
+| GLM-5.3 | 9.0 | 5.5 | 8.5 | 7.667 | 0/3 |
 | Kimi K3 | 9.0 | 8.5 | 9.0 | 8.833 | 2/3 |
 
 All models supplied three answers, so each mean includes every scheduled run,
@@ -205,7 +206,15 @@ Scoring is **AI-assisted, human-reviewed**. Codex (GPT-6) scored the anonymized
 answers and hash-matched validation evidence, froze criterion scores before
 opening the identity key, and presented model averages with individual scores,
 pass counts, and a linked deduction breakdown. The conversation user approved
-those results without changes. This is not independent blinded human scoring.
+the original results without changes. PR review subsequently identified that
+Luna run 1 and GLM run 2 retained fault-recovery credit despite mandatory
+authorization-revocation violations. At the user's request, revision 1 applies
+the `firmware-v1` safety-critical rule: fault recovery is zero for both runs.
+Luna run 1 changes from 8.5 to 7.5 overall; GLM run 2 changes from 6.0 to 5.5.
+These corrections occurred **after unblinding**. The original frozen scores and
+approval remain preserved, and the aggregate records both score-sheet hashes
+and the correction history. All other criterion scores and validation outcomes
+are unchanged. This is not independent blinded human scoring.
 
 Each distinct defect was deducted in its owning criterion. Compilation failure
 received zero functional credit; other dimensions could receive static partial
