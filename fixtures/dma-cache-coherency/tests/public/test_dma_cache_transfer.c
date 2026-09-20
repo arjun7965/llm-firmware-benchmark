@@ -263,6 +263,126 @@ static bool test_rx_failure_does_not_publish_or_invalidate_after_error(void) {
   return true;
 }
 
+static bool test_range_boundaries_and_overflow(void) {
+  alignas(DMA_CACHE_LINE_BYTES) uint8_t storage[160u] = { 0 };
+  dma_cache_transfer_t transfer = { 0 };
+  const struct {
+    size_t offset;
+    size_t length;
+    size_t cache_length;
+  } cases[] = {
+    { 0u, 1u, 32u },
+    { 0u, 32u, 32u },
+    { 4u, 28u, 32u },
+    { 28u, 5u, 64u },
+    { 0u, 96u, 96u },
+    { 28u, 96u, 128u },
+  };
+
+  CHECK(dma_cache_transfer_init(&transfer));
+  for (size_t index = 0u; index < sizeof(cases) / sizeof(cases[0]); index++) {
+    uint8_t *buffer = storage + cases[index].offset;
+    mock_dma_cache_reset();
+    CHECK(dma_cache_transfer_start_tx(&transfer, buffer, cases[index].length) ==
+      DMA_CACHE_STATUS_OK);
+    CHECK(mock_dma_cache_operation_count() == 2u);
+    CHECK(operation_matches(0u, MOCK_DMA_CACHE_OPERATION_CLEAN,
+      storage, cases[index].cache_length));
+    CHECK(operation_matches(1u, MOCK_DMA_CACHE_OPERATION_START_TX,
+      buffer, cases[index].length));
+    mock_dma_cache_reset();
+    CHECK(dma_cache_transfer_start_rx(&transfer, buffer, cases[index].length) ==
+      DMA_CACHE_STATUS_OK);
+    CHECK(dma_cache_transfer_finish_rx(&transfer) == DMA_CACHE_STATUS_OK);
+    CHECK(mock_dma_cache_operation_count() == 4u);
+    CHECK(operation_matches(0u, MOCK_DMA_CACHE_OPERATION_INVALIDATE,
+      storage, cases[index].cache_length));
+    CHECK(operation_matches(1u, MOCK_DMA_CACHE_OPERATION_START_RX,
+      buffer, cases[index].length));
+    CHECK(operation_matches(3u, MOCK_DMA_CACHE_OPERATION_INVALIDATE,
+      storage, cases[index].cache_length));
+  }
+
+  /* Synthetic addresses are observed only as integers by the opaque mock. */
+  const struct {
+    uintptr_t address;
+    size_t length;
+  } invalid[] = {
+    { UINTPTR_MAX - 3u, 8u }, /* buffer + length overflows */
+    { UINTPTR_MAX - 3u, 4u }, /* exclusive end overflows */
+    { UINTPTR_MAX - 31u, 1u }, /* cache rounding overflows */
+  };
+  for (size_t index = 0u; index < sizeof(invalid) / sizeof(invalid[0]); index++) {
+    uint8_t *buffer = (uint8_t *)invalid[index].address;
+    const dma_cache_transfer_t before = transfer;
+    mock_dma_cache_reset();
+    CHECK(dma_cache_transfer_start_tx(&transfer, buffer, invalid[index].length) ==
+      DMA_CACHE_STATUS_INVALID_ARGUMENT);
+    CHECK(dma_cache_transfer_start_rx(&transfer, buffer, invalid[index].length) ==
+      DMA_CACHE_STATUS_INVALID_ARGUMENT);
+    CHECK(mock_dma_cache_operation_count() == 0u);
+    CHECK(transfer_state_equals(&transfer, &before));
+  }
+
+  uint8_t *last_valid_line = (uint8_t *)(UINTPTR_MAX - 63u);
+  mock_dma_cache_reset();
+  CHECK(dma_cache_transfer_start_tx(&transfer, last_valid_line, 32u) ==
+    DMA_CACHE_STATUS_OK);
+  CHECK(mock_dma_cache_operation_count() == 2u);
+  CHECK(operation_matches(0u, MOCK_DMA_CACHE_OPERATION_CLEAN, last_valid_line, 32u));
+  return true;
+}
+
+static bool test_status_propagation_and_reinitialization(void) {
+  alignas(DMA_CACHE_LINE_BYTES) uint8_t storage[128u] = { 0 };
+  dma_cache_transfer_t transfer = { 0 };
+  const dma_cache_status_t statuses[] = {
+    DMA_CACHE_STATUS_BUSY, DMA_CACHE_STATUS_ERROR, DMA_CACHE_STATUS_INVALID_ARGUMENT,
+  };
+
+  CHECK(dma_cache_transfer_init(&transfer));
+  mock_dma_cache_reset();
+  CHECK(dma_cache_transfer_start_tx(NULL, storage, 4u) == DMA_CACHE_STATUS_INVALID_ARGUMENT);
+  CHECK(dma_cache_transfer_start_rx(NULL, storage, 4u) == DMA_CACHE_STATUS_INVALID_ARGUMENT);
+  CHECK(dma_cache_transfer_finish_rx(NULL) == DMA_CACHE_STATUS_INVALID_ARGUMENT);
+  CHECK(mock_dma_cache_operation_count() == 0u);
+  for (size_t index = 0u; index < sizeof(statuses) / sizeof(statuses[0]); index++) {
+    mock_dma_cache_reset();
+    mock_dma_cache_force_next_tx_status(statuses[index]);
+    CHECK(dma_cache_transfer_start_tx(&transfer, storage, 4u) == statuses[index]);
+    CHECK(mock_dma_cache_operation_count() == 2u);
+    mock_dma_cache_reset();
+    mock_dma_cache_force_next_rx_start_status(statuses[index]);
+    CHECK(dma_cache_transfer_start_rx(&transfer, storage, 4u) == statuses[index]);
+    CHECK(mock_dma_cache_operation_count() == 2u);
+    CHECK(!transfer.rx_in_flight && transfer.rx_buffer == NULL && transfer.rx_length == 0u);
+  }
+  mock_dma_cache_reset();
+  CHECK(dma_cache_transfer_start_rx(&transfer, storage, 4u) == DMA_CACHE_STATUS_OK);
+  const dma_cache_transfer_t pending = transfer;
+  CHECK(dma_cache_transfer_start_rx(&transfer, storage + 32u, 8u) == DMA_CACHE_STATUS_INVALID_ARGUMENT);
+  CHECK(transfer_state_equals(&transfer, &pending));
+  mock_dma_cache_force_next_rx_finish_status(DMA_CACHE_STATUS_BUSY);
+  CHECK(dma_cache_transfer_finish_rx(&transfer) == DMA_CACHE_STATUS_BUSY);
+  CHECK(transfer_state_equals(&transfer, &pending));
+  CHECK(mock_dma_cache_operation_count() == 3u);
+  /* TX uses its independent channel while the single RX slot is occupied. */
+  CHECK(dma_cache_transfer_start_tx(&transfer, storage + 32u, 4u) == DMA_CACHE_STATUS_OK);
+  CHECK(transfer_state_equals(&transfer, &pending));
+  mock_dma_cache_force_next_rx_finish_status(DMA_CACHE_STATUS_INVALID_ARGUMENT);
+  CHECK(dma_cache_transfer_finish_rx(&transfer) == DMA_CACHE_STATUS_INVALID_ARGUMENT);
+  CHECK(mock_dma_cache_operation_count() == 6u);
+  CHECK(!transfer.rx_in_flight && transfer.rx_buffer == NULL && transfer.rx_length == 0u);
+  CHECK(dma_cache_transfer_start_rx(&transfer, storage, 4u) == DMA_CACHE_STATUS_OK);
+  mock_dma_cache_reset();
+  CHECK(dma_cache_transfer_init(&transfer));
+  CHECK(transfer.initialized && !transfer.rx_in_flight);
+  CHECK(transfer.rx_buffer == NULL && transfer.rx_length == 0u);
+  CHECK(dma_cache_transfer_finish_rx(&transfer) == DMA_CACHE_STATUS_INVALID_ARGUMENT);
+  CHECK(mock_dma_cache_operation_count() == 0u);
+  return true;
+}
+
 int main(void) {
   const struct {
     const char *name;
@@ -272,6 +392,8 @@ int main(void) {
     { "tx clean order and cache rounding", test_tx_clean_order_and_cache_line_rounding },
     { "rx invalidation, completion, and busy retry", test_rx_invalidation_completion_and_busy_retry },
     { "rx failure cleanup", test_rx_failure_does_not_publish_or_invalidate_after_error },
+    { "range boundaries and overflow", test_range_boundaries_and_overflow },
+    { "status propagation and reinitialization", test_status_propagation_and_reinitialization },
   };
 
   for (size_t index = 0u; index < sizeof(tests) / sizeof(tests[0]); index++) {
