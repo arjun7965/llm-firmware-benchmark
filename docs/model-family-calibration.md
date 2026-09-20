@@ -157,8 +157,8 @@ workflow and cannot establish a generation denominator.
 The cohort `secure-maintenance-command-cross-family-20260917-01` completed
 all nine scheduled attempts, with generation starting on September 17 in
 America/Los_Angeles (September 18 UTC). The user approved the three-run model
-averages and accompanying scores on September 19, then requested the two
-fault-recovery policy corrections identified during PR review.
+averages and accompanying scores on September 19, then requested the
+fault-recovery policy corrections identified in two rounds of PR review.
 
 Before freezing the cohort, the prompt's abbreviated lifecycle and slot enum
 names were expanded to the exact identifiers in the supplied header. Every
@@ -190,8 +190,8 @@ were verified during scoring; candidates were not repaired or rerun.
 | Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Full validation passes |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | GPT-5.6 Luna | 7.5 | 9.5 | 9.0 | 8.667 | 2/3 |
-| GLM-5.3 | 9.0 | 5.5 | 8.5 | 7.667 | 0/3 |
-| Kimi K3 | 9.0 | 8.5 | 9.0 | 8.833 | 2/3 |
+| GLM-5.3 | 7.5 | 5.5 | 7.0 | 6.667 | 0/3 |
+| Kimi K3 | 9.0 | 7.0 | 9.0 | 8.333 | 2/3 |
 
 All models supplied three answers, so each mean includes every scheduled run,
 including compilation and runtime failures. Luna run 1 omitted the mandatory
@@ -211,10 +211,19 @@ Luna run 1 and GLM run 2 retained fault-recovery credit despite mandatory
 authorization-revocation violations. At the user's request, revision 1 applies
 the `firmware-v1` safety-critical rule: fault recovery is zero for both runs.
 Luna run 1 changes from 8.5 to 7.5 overall; GLM run 2 changes from 6.0 to 5.5.
-These corrections occurred **after unblinding**. The original frozen scores and
-approval remain preserved, and the aggregate records both score-sheet hashes
-and the correction history. All other criterion scores and validation outcomes
-are unchanged. This is not independent blinded human scoring.
+A second full review identified the same safety-critical rule applying to
+expired-challenge retention in GLM runs 1 and 3 and Kimi run 2. At the user's
+request, revision 2 sets their fault-recovery credit from 1.5 to zero. Their
+totals change from 9.0 to 7.5, 8.5 to 7.0, and 8.5 to 7.0 respectively.
+Once expiry has been observed, retaining an active challenge allows it to
+become eligible again when the half-range time comparison flips. That further
+consequence is static analysis, not a newly executed candidate test.
+
+Both corrections occurred **after unblinding**. The original frozen scores,
+approval, and revision-1 scores remain preserved. The aggregate records all
+three score-sheet hashes and both revisions. Across the two revisions, only
+five fault-recovery scores changed; all other criterion scores and validation
+outcomes are unchanged. This is not independent blinded human scoring.
 
 Each distinct defect was deducted in its owning criterion. Compilation failure
 received zero functional credit; other dimensions could receive static partial
