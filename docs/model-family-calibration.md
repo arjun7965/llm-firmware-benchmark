@@ -152,72 +152,106 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
-## Next Pilot — `secure-maintenance-command`
+## Completed Security Pilot — `secure-maintenance-command`
 
-Selected on 2026-09-17; cross-family generation started on September 17 in
-America/Los_Angeles (September 18 UTC). Rubric review remains pending.
+The cohort `secure-maintenance-command-cross-family-20260917-01` completed
+all nine scheduled attempts, with generation starting on September 17 in
+America/Los_Angeles (September 18 UTC). The user approved the three-run model
+averages and accompanying scores on September 19, then requested the
+fault-recovery policy corrections identified in two rounds of PR review.
 
-The private cohort is `secure-maintenance-command-cross-family-20260917-01`.
-Before freezing it, the prompt's abbreviated lifecycle and slot enum names
-were expanded to the exact identifiers in the supplied header. All attempts
-use prompt SHA-256
+Before freezing the cohort, the prompt's abbreviated lifecycle and slot enum
+names were expanded to the exact identifiers in the supplied header. Every
+attempt uses prompt SHA-256
 `7edde09044cf23fba280110bd91254ce4bc99f8a7a1d6288616e5c805a110f92`.
 The cohort SHA-256 is
 `04b831ae578152b75a21f2ae96aed9e3bb4c215a1d5cb52f3924342803da947a`.
+The frozen harness base was `68eadeab3c440ff81366ed3c89c91b5222a50240`;
+the private snapshot also preserves the pre-generation prompt correction.
 
-The plan schedules three attempts each from GPT-5.6 Luna (Codex, medium,
-600 seconds), GLM-5.3 (OpenCode, low, 900 seconds, configured 32,000-token
-output ceiling), and Kimi K3 (OpenCode, max, 1,200 seconds, configured
-64,000-token output ceiling). These retain the completed supervisor cohort's
-settings, with concurrency one and no retries. Effective provider token limits
-remain unknown. CLI versions are Codex 0.155.0 and OpenCode 1.18.31.
-Before generation, the frozen reference passed and all 40 compile-valid
-mutations were rejected in `c11-host` revision 4,
-`debian-13-x86-64-c11-host` revision 1, under GCC 14.2.0 and Bubblewrap 0.11.0.
-The private worker preserves each result, validates extractable answers, and
-prepares a blinded packet; it does not assign rubric scores or publish results.
+| Model | Reasoning control | Timeout | Configured output ceiling |
+| --- | --- | ---: | ---: |
+| GPT-5.6 Luna (Codex) | medium effort | 600 s | Not configured |
+| GLM-5.3 (OpenCode) | low variant | 900 s | 32,000 tokens |
+| Kimi K3 (OpenCode) | max variant | 1,200 s | 64,000 tokens |
 
-The completed pilots cover static allocation, numerical optimization, and
-supervised process lifecycles. This active firmware-security fixture adds
-attacker-controlled byte parsing, independent replay domains, one-time
-challenges, wrap-safe expiry, cumulative lockout, and ordered authorization
-revocation. These interacting requirements provide a new calibration surface;
-whether they distinguish model families remains an empirical question.
+Runs used concurrency one, no retries, and no candidate repairs. Node 22.21.0,
+Codex CLI 0.155.0, and OpenCode 1.18.31 were recorded. Provider adapters,
+reasoning controls, timeouts, and configured output ceilings differ; effective
+provider token limits remain unknown.
 
-The prompt embeds the public API and opaque SEC0 signatures. The fixture uses
-`c11-host` and `armv7m-bare-metal`, with a single fenced C answer and eight
-public test groups. Its catalog contains 40 controlled mutations. SEC0 provides
-immutable verifier verdicts, so the task needs neither real cryptography nor
-physical hardware. Findings concern the specified mock policy, not production
-cryptographic security or resistance to physical attacks.
+The frozen reference passed and all 40 compile-valid mutations were rejected
+under `c11-host` revision 4, `debian-13-x86-64-c11-host` revision 1, GCC 14.2.0,
+and Bubblewrap 0.11.0. All nine answers were extracted and validated in that
+same environment: eight compiled, four passed all eight public test groups,
+four failed at runtime, and one failed compilation. Existing evidence hashes
+were verified during scoring; candidates were not repaired or rerun.
 
-`mpu-fault-containment` is another ready security candidate, but the maintenance
-task combines malformed-input handling with persistent authorization state.
-A further supervisor variant would add less capability breadth after the
-completed cross-family pilot and reasoning sweep.
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Full validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 7.5 | 9.5 | 9.0 | 8.667 | 2/3 |
+| GLM-5.3 | 7.5 | 5.5 | 7.0 | 6.667 | 0/3 |
+| Kimi K3 | 9.0 | 7.0 | 9.0 | 8.333 | 2/3 |
 
-Before generation, apply the protocol above:
+All models supplied three answers, so each mean includes every scheduled run,
+including compilation and runtime failures. Luna run 1 omitted the mandatory
+lock/revoke sequence in `expire`. Kimi run 2 and GLM run 1 retained expired
+challenges. GLM run 2 used `sec0_handle_t` before its declaration and failed
+compilation; static review additionally found malformed-length and expiry
+handling defects. GLM run 3 omitted both success-state authorization flags and
+retained expired challenges. Runtime tests stop at the first failure; additional
+findings are static review, not further observed test outcomes.
 
-1. Revalidate the trusted reference and all 40 mutations in the exact pinned
-   scoring environment. Freeze the prompt, rubric, fixture, harness revision,
-   and validation-profile/environment hashes; resolve any contract discrepancy
-   before freezing the cohort.
-2. Declare three distinct model families and three scheduled attempts each.
-   Pin actual model IDs, provider options, reasoning controls, timeouts, output
-   limits, concurrency, and configuration fingerprints in a new private cohort.
-   The previous pilots' model availability and budgets are not assumed current.
-3. Preserve every scheduled outcome, including quota failures and timeouts.
-   Extract and validate available answers without repairs, and report generation
-   reliability and deterministic pass counts separately from rubric scores.
-4. Prepare the blinded packet, freeze AI criterion scores before unblinding,
-   and obtain human review of the concrete scores before publication. Record
-   the AI scorer, human reviewer, review date, any revisions, and artifact
-   hashes; label the result **AI-assisted, human-reviewed**.
-5. Publish only a reviewed sanitized aggregate through the established
-   publication process. Keep raw records, answers, and review artifacts private.
+Scoring is **AI-assisted, human-reviewed**. Codex (GPT-6) scored the anonymized
+answers and hash-matched validation evidence, froze criterion scores before
+opening the identity key, and presented model averages with individual scores,
+pass counts, and a linked deduction breakdown. The conversation user approved
+the original results without changes. PR review subsequently identified that
+Luna run 1 and GLM run 2 retained fault-recovery credit despite mandatory
+authorization-revocation violations. At the user's request, revision 1 applies
+the `firmware-v1` safety-critical rule: fault recovery is zero for both runs.
+Luna run 1 changes from 8.5 to 7.5 overall; GLM run 2 changes from 6.0 to 5.5.
+A second full review identified the same safety-critical rule applying to
+expired-challenge retention in GLM runs 1 and 3 and Kimi run 2. At the user's
+request, revision 2 sets their fault-recovery credit from 1.5 to zero. Their
+totals change from 9.0 to 7.5, 8.5 to 7.0, and 8.5 to 7.0 respectively.
+Once expiry has been observed, retaining an active challenge allows it to
+become eligible again when the half-range time comparison flips. That further
+consequence is static analysis, not a newly executed candidate test.
 
-Selection does not establish a completed calibration or authorize treating
-pending results as scored benchmark evidence.
+Both corrections occurred **after unblinding**. The original frozen scores,
+approval, and revision-1 scores remain preserved. The aggregate records all
+three score-sheet hashes and both revisions. Across the two revisions, only
+five fault-recovery scores changed; all other criterion scores and validation
+outcomes are unchanged. This is not independent blinded human scoring.
+
+Each distinct defect was deducted in its owning criterion. Compilation failure
+received zero functional credit; other dimensions could receive static partial
+credit. Missing NULL SEC0-handle guards lost 0.5 functional points in Luna run 3
+and all Kimi runs under the invalid-API rule; that case is outside the public
+test coverage. All answers received 0.5/1 for clarity and validation because
+they lacked concrete validation cases and expected observations. Test code was
+forbidden by the prompt, and its absence was not penalized. These scoring
+interpretations were included in the approved review breakdown. Passing the
+public fixture is therefore separate from receiving full rubric credit.
+
+The reviewed sanitized aggregate is
+[`secure-maintenance-command-2026-09-17.json`](calibration/secure-maintenance-command-2026-09-17.json).
+It records criterion scores, run outcomes, statistics, provider controls,
+review provenance, and artifact hashes. All nine answer projections passed
+`export:public` with zero redactions or review flags. Only the aggregate is
+published; raw provider records, answers, scoring sheets, and identity keys
+remain private.
+
+This pilot broadens calibration to attacker-controlled byte parsing, independent
+replay domains, one-time challenges, cumulative lockout, and authorization
+revocation. SEC0 supplies immutable verifier verdicts; these findings concern
+the specified mock policy, not production cryptographic security or physical
+attack resistance. Nine attempts on one task with different provider budgets
+and AI-assisted scoring do not support a general model-family ranking.
+
+`mpu-fault-containment` remains a ready candidate for further security
+calibration. A new pilot requires its own prospective cohort and review.
 
 ## Completed Pilots
 
