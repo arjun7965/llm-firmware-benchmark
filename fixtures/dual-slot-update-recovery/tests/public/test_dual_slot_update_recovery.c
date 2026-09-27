@@ -466,11 +466,168 @@ static bool test_invalid_foreground_transitions_restore_interrupts(void) {
   return true;
 }
 
+static bool test_journal_at_operation_boundaries(void) {
+  update_manager_t manager = { 0 };
+  update_record_t record = { 0 };
+  size_t offset;
+
+  mock_flash0_reset();
+  CHECK(initialize(&manager, &record));
+  mock_flash0_watch_record(&record);
+  CHECK(update_manager_start(&manager, UPDATE_SLOT_B, 6u, 1u));
+  CHECK(mock_flash0_record_at(1u)->phase == UPDATE_PHASE_IDLE);
+  CHECK(mock_flash0_record_at(2u)->phase == UPDATE_PHASE_WRITING);
+  CHECK(record_is_valid(mock_flash0_record_at(2u)));
+  offset = mock_flash0_event_count();
+  CHECK(update_manager_write_chunk(&manager, UINT32_C(0x12345678)));
+  CHECK(mock_flash0_record_at(offset + 1u)->next_chunk == 0u);
+  CHECK(mock_flash0_record_at(offset + 2u)->next_chunk == 1u);
+  CHECK(record_is_valid(mock_flash0_record_at(offset + 2u)));
+  offset = mock_flash0_event_count();
+  CHECK(update_manager_finalize(&manager));
+  CHECK(mock_flash0_record_at(offset + 1u)->phase == UPDATE_PHASE_WRITING);
+  CHECK(mock_flash0_record_at(offset + 2u)->phase == UPDATE_PHASE_TRIAL);
+  offset = mock_flash0_event_count();
+  CHECK(update_manager_boot(&manager) == UPDATE_BOOT_TRIAL);
+  CHECK(mock_flash0_record_at(offset)->phase == UPDATE_PHASE_TRIAL);
+  CHECK(mock_flash0_record_at(offset + 1u)->phase == UPDATE_PHASE_ATTEMPTED);
+  CHECK(record_is_valid(mock_flash0_record_at(offset + 1u)));
+  offset = mock_flash0_event_count();
+  CHECK(update_manager_boot(&manager) == UPDATE_BOOT_ROLLED_BACK);
+  CHECK(mock_flash0_record_at(offset)->phase == UPDATE_PHASE_IDLE);
+  CHECK(record_is_valid(mock_flash0_record_at(offset)));
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_ROLLED_BACK);
+
+  CHECK(update_manager_start(&manager, UPDATE_SLOT_B, 6u, 1u));
+  offset = mock_flash0_event_count();
+  CHECK(update_manager_boot(&manager) == UPDATE_BOOT_ROLLED_BACK);
+  CHECK(mock_flash0_record_at(offset)->phase == UPDATE_PHASE_IDLE);
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_ROLLED_BACK);
+
+  CHECK(update_manager_start(&manager, UPDATE_SLOT_B, 6u, 1u));
+  CHECK(update_manager_write_chunk(&manager, 1u));
+  mock_flash0_set_verify_valid(UPDATE_SLOT_B, false);
+  offset = mock_flash0_event_count();
+  CHECK(!update_manager_finalize(&manager));
+  CHECK(mock_flash0_record_at(offset + 2u)->phase == UPDATE_PHASE_IDLE);
+  CHECK(record_is_valid(mock_flash0_record_at(offset + 2u)));
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_CANDIDATE_REJECTED);
+
+  mock_flash0_set_verify_valid(UPDATE_SLOT_B, true);
+  CHECK(stage_one_chunk(&manager, 6u, 1u));
+  mock_flash0_set_verify_valid(UPDATE_SLOT_B, false);
+  offset = mock_flash0_event_count();
+  CHECK(update_manager_boot(&manager) == UPDATE_BOOT_ROLLED_BACK);
+  CHECK(events_match_from(offset, (const expected_event_t[]) {
+    { MOCK_FLASH0_EVENT_VERIFY, verify_value(UPDATE_SLOT_B, 6u) },
+    { MOCK_FLASH0_EVENT_ERASE, UPDATE_SLOT_B },
+    { MOCK_FLASH0_EVENT_BOOT_SLOT_WRITE, UPDATE_SLOT_A },
+  }, 3u));
+  CHECK(mock_flash0_record_at(offset + 1u)->phase == UPDATE_PHASE_IDLE);
+  CHECK(record_is_valid(&record));
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_ROLLED_BACK);
+  CHECK(!mock_flash0_invalid_access());
+  return true;
+}
+
+static bool test_individual_record_corruption(void) {
+  update_manager_t manager = { 0 };
+  update_record_t record = { 0 };
+  update_record_t valid;
+
+  mock_flash0_reset();
+  CHECK(initialize(&manager, &record));
+  CHECK(stage_one_chunk(&manager, 6u, 1u));
+  valid = record;
+  for (unsigned int index = 0u; index < 17u; index++) {
+    record = valid;
+    switch (index) {
+      case 0: record.magic ^= 1u; break;
+      case 1: record.confirmed_slot = UPDATE_SLOT_NONE; break;
+      case 2: record.confirmed_version = 0u; break;
+      case 3: record.confirmed_version = UPDATE_MAX_VERSION + 1u; break;
+      case 4: record.reserved[0] = 1u; break;
+      case 5: record.reserved[1] = 1u; break;
+      case 6: record.reserved[2] = 1u; break;
+      case 7: record.candidate_slot = UPDATE_SLOT_NONE; break;
+      case 8: record.candidate_slot = record.confirmed_slot; break;
+      case 9: record.candidate_version = record.confirmed_version; break;
+      case 10: record.candidate_version = UPDATE_MAX_VERSION + 1u; break;
+      case 11: record.total_chunks = 0u; break;
+      case 12: record.total_chunks = UPDATE_MAX_CHUNKS + 1u; break;
+      case 13: record.next_chunk = record.total_chunks + 1u; break;
+      case 14: record.next_chunk = 0u; break;
+      case 15: record.phase = UINT8_MAX; break;
+      default: break;
+    }
+    record.checksum = record_checksum(&record);
+    if (index == 16u) record.checksum ^= 1u;
+    mock_flash0_reset();
+    CHECK(initialize(&manager, &record));
+    CHECK(record_is_valid(&record));
+    CHECK(record.phase == UPDATE_PHASE_IDLE);
+    CHECK(record.confirmed_slot == UPDATE_SLOT_A);
+    CHECK(record.confirmed_version == 5u);
+    CHECK(mock_flash0_event_count() == 0u);
+  }
+  return true;
+}
+
+static bool test_event_gating_and_reverse_slot_update(void) {
+  update_manager_t manager = { 0 };
+  update_record_t record = { 0 };
+  update_record_t before;
+  size_t offset;
+
+  mock_flash0_reset();
+  CHECK(update_manager_init(&manager, mock_flash0(), &record, UPDATE_SLOT_B, 5u));
+  CHECK(update_manager_start(&manager, UPDATE_SLOT_A, UPDATE_MAX_VERSION, UPDATE_MAX_CHUNKS));
+  CHECK(!update_manager_finalize(&manager));
+  for (uint8_t index = 0u; index < UPDATE_MAX_CHUNKS; index++) {
+    CHECK(update_manager_write_chunk(&manager, (uint32_t)index));
+  }
+  CHECK(!update_manager_write_chunk(&manager, 0u));
+  CHECK(update_manager_finalize(&manager));
+  CHECK(!update_manager_confirm(&manager));
+  CHECK(update_manager_boot(&manager) == UPDATE_BOOT_TRIAL);
+  mock_flash0_set_irq_state(0u);
+  CHECK(update_manager_confirm(&manager));
+  CHECK(mock_flash0_irq_state() == 0u);
+  CHECK(record.confirmed_slot == UPDATE_SLOT_A);
+  CHECK(record.confirmed_version == UPDATE_MAX_VERSION);
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_CONFIRMED);
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_NONE);
+
+  mock_flash0_reset();
+  record = (update_record_t) { 0 };
+  CHECK(initialize(&manager, &record));
+  CHECK(update_manager_start(&manager, UPDATE_SLOT_B, 6u, 1u));
+  CHECK(update_manager_write_chunk(&manager, 1u));
+  mock_flash0_set_verify_valid(UPDATE_SLOT_B, false);
+  CHECK(!update_manager_finalize(&manager));
+  before = record;
+  offset = mock_flash0_event_count();
+  mock_flash0_set_irq_state(UINT32_C(0xA5));
+  CHECK(!update_manager_start(&manager, UPDATE_SLOT_B, 6u, 1u));
+  CHECK(events_match_from(offset, (const expected_event_t[]) {
+    { MOCK_FLASH0_EVENT_IRQ_SAVE_DISABLE, UINT32_C(0xA5) },
+    { MOCK_FLASH0_EVENT_IRQ_RESTORE, UINT32_C(0xA5) },
+  }, 2u));
+  CHECK(record_equals(&record, &before));
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_CANDIDATE_REJECTED);
+  CHECK(update_manager_take_event(&manager) == UPDATE_EVENT_NONE);
+  CHECK(!mock_flash0_invalid_access());
+  return true;
+}
+
 int main(void) {
   const struct {
     const char *name;
     bool (*run)(void);
   } tests[] = {
+    { "journal operation boundaries", test_journal_at_operation_boundaries },
+    { "individual record corruption", test_individual_record_corruption },
+    { "event gating and reverse slot", test_event_gating_and_reverse_slot_update },
     { "initialization repairs untrusted records", test_initialization_repairs_only_untrusted_records },
     { "strict version and chunk ordering", test_start_requires_a_strict_newer_version_and_orders_chunks },
     { "interruption and verification rejection", test_interruption_and_failed_verification_preserve_confirmed_boot },

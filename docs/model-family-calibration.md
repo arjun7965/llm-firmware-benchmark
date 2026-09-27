@@ -152,6 +152,71 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed Dual-Slot Update Pilot — `dual-slot-update-recovery`
+
+The `dual-slot-update-recovery-cross-family-20260926-01` cohort has completed
+its nine scheduled attempts with the established Luna, GLM, and Kimi settings,
+concurrency one, and no retries or candidate repairs. All nine returned answers;
+eight satisfied the source-extraction contract. Three passed deterministic
+validation, three failed compilation, two failed runtime tests, and one answer
+contained multiple C fences requiring manual assembly and was not compiled.
+
+Before generation, the prompt was expanded with the exact supplied headers,
+usable-manager behavior, compiler flags, and the accessor-boundary persistence
+model. The fixture gained journal snapshots at flash-operation boundaries,
+individual retained-field corruption cases, reverse-slot maximum-boundary
+updates, and pending-event checks. Its trusted reference passes eight test
+groups and all 20 compile-valid mutations are rejected under
+`debian-13-x86-64-c11-host`, profile revision 4, GCC 14.2.0, and Bubblewrap 0.11.0.
+The resource-use rubric now allows the bounded operation sequences required by
+rejection and rollback. This does not establish physical torn-write resilience.
+
+The private packet, frozen AI criterion scores, validation reports, draft
+aggregate, and human-review document are retained under the ignored cohort
+directory. Scores were frozen before opening the identity key. The coordinating
+AI had seen per-model validation outcomes in progress logs; the detailed scoring
+policy was recorded during the first generation, before reading answer content.
+The task rubric and cohort plan were frozen before generation. Independent
+human scoring is not claimed. The conversation user approved the scores and
+linked evidence for publication without changes on September 27, 2026
+(America/Los_Angeles).
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 7 | 9 | 6.5 | 7.500 | 0/3 |
+| GLM-5.3 | 7.5 | 7 | 7 | 7.167 | 0/3 |
+| Kimi K3 | 10 | 10 | 10 | 10.000 | 3/3 |
+
+Luna's first answer failed compilation on an unmatched parenthesis. Its second
+masked interrupts before rejecting same-slot and non-advancing-version inputs;
+its third cleared the candidate slot before using it for rejected-image erasure.
+Static review also found narrowing of full-width slot arguments before input
+validation in its first and third answers; that case was not separately executed.
+GLM's first two answers omitted a header defining `NULL`; its third returned two
+C fences with a replacement helper and manual assembly instructions, violating
+the extraction contract. Kimi's three answers passed the eight public groups and
+static review, including concrete deterministic test scenarios.
+
+Compile and extraction failures receive zero functional-correctness credit;
+other dimensions retain credit supported by static review. Extra interrupt
+masking on malformed inputs receives 0.5/1 for concurrency because exact
+restoration and atomic event clearing remain correct. The rejected-image erase
+failure receives 0/2 for fault recovery. Each defect is deducted only in its
+owning dimension. Non-executable answers were not repaired, assembled, or rerun,
+and their rubric scores do not imply executable success.
+
+Three attempts per family used the previous settings: Luna medium/600 seconds,
+GLM low/900 seconds/32,000 configured output tokens, and Kimi max/1,200 seconds/
+64,000 configured output tokens. Effective provider limits remain unknown;
+these different budgets and a single small task cohort do not establish a broad
+model ranking.
+
+The approved [sanitized aggregate](calibration/dual-slot-update-recovery-2026-09-27.json)
+records prompt, cohort, snapshot, packet, score-sheet and environment hashes,
+per-run outcomes, criterion scores, and review provenance. All nine answer
+projections passed `export:public` without redactions or review flags. Raw
+records, answer projections, identity keys, and review artifacts remain private.
+
 ## Completed MPU Containment Pilot — `mpu-fault-containment`
 
 The revised cohort `mpu-fault-containment-cross-family-20260926-02` adds

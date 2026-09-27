@@ -351,6 +351,16 @@ record exact versions in validation reports.
   - [x] Obtain human review of the `mpu-fault-containment` scores and publish
     its sanitized aggregate with explicit scoring provenance.
 
+  - [x] Select `dual-slot-update-recovery` for the next cross-family pilot to
+    add interrupted staging, retained journal integrity, trial boots,
+    confirmation, and rollback coverage.
+  - [x] Supply exact headers and clarify the mock persistence boundary; add
+    accessor-boundary journal checks and calibrate 20 controlled mutations.
+  - [x] Run the three-family, three-attempt pilot and freeze blinded criterion
+    scores before unblinding.
+  - [x] Obtain human review and publish the sanitized aggregate with explicit
+    scoring provenance.
+
 ## Repository Operations
 
 - [x] Confirm GitHub Actions passes after the first push.

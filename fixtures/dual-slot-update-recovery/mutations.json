@@ -49,6 +49,78 @@
       "description": "Restore interrupts disabled after consuming an update lifecycle event.",
       "find": "  manager->event = UPDATE_EVENT_NONE;\n  flash0_irq_restore(irq_state);\n  return event;",
       "replace": "  manager->event = UPDATE_EVENT_NONE;\n  flash0_irq_restore(irq_state ^ irq_state);\n  return event;"
+    },
+    {
+      "id": "ignore-record-magic",
+      "description": "Trust a retained record with invalid magic.",
+      "find": "record->magic != UPDATE_RECORD_MAGIC",
+      "replace": "false"
+    },
+    {
+      "id": "ignore-record-checksum",
+      "description": "Trust a retained record with invalid checksum.",
+      "find": "record->checksum != record_checksum(record)",
+      "replace": "false"
+    },
+    {
+      "id": "ignore-reserved-0",
+      "description": "Trust nonzero reserved journal bytes.",
+      "find": "record->reserved[0] != 0u",
+      "replace": "false"
+    },
+    {
+      "id": "ignore-reserved-1",
+      "description": "Trust nonzero reserved journal bytes.",
+      "find": "record->reserved[1] != 0u",
+      "replace": "false"
+    },
+    {
+      "id": "ignore-reserved-2",
+      "description": "Trust nonzero reserved journal bytes.",
+      "find": "record->reserved[2] != 0u",
+      "replace": "false"
+    },
+    {
+      "id": "skip-trial-reverification",
+      "description": "Boot a trial image that no longer verifies.",
+      "find": "      if (!flash0_verify_slot(\n        manager->flash,\n        candidate_slot,\n        manager->record->candidate_version\n      )) {",
+      "replace": "      if (false) {"
+    },
+    {
+      "id": "persist-writing-before-erase",
+      "description": "Persist WRITING before erasing the target.",
+      "find": "  flash0_erase_slot(manager->flash, target_slot);\n  write_record(\n    manager->record,\n    (update_slot_t)manager->record->confirmed_slot,\n    manager->record->confirmed_version,\n    target_slot,\n    candidate_version,\n    0u,\n    total_chunks,\n    UPDATE_PHASE_WRITING\n  );\n",
+      "replace": "  write_record(\n    manager->record,\n    (update_slot_t)manager->record->confirmed_slot,\n    manager->record->confirmed_version,\n    target_slot,\n    candidate_version,\n    0u,\n    total_chunks,\n    UPDATE_PHASE_WRITING\n  );\n  flash0_erase_slot(manager->flash, target_slot);\n"
+    },
+    {
+      "id": "persist-progress-before-program",
+      "description": "Advance retained progress before programming.",
+      "find": "  flash0_program_word(\n    manager->flash,\n    (update_slot_t)manager->record->candidate_slot,\n    manager->record->next_chunk,\n    word\n  );\n  write_record(\n    manager->record,\n    (update_slot_t)manager->record->confirmed_slot,\n    manager->record->confirmed_version,\n    (update_slot_t)manager->record->candidate_slot,\n    manager->record->candidate_version,\n    (uint8_t)(manager->record->next_chunk + UINT8_C(1)),\n    manager->record->total_chunks,\n    UPDATE_PHASE_WRITING\n  );\n",
+      "replace": "  write_record(\n    manager->record,\n    (update_slot_t)manager->record->confirmed_slot,\n    manager->record->confirmed_version,\n    (update_slot_t)manager->record->candidate_slot,\n    manager->record->candidate_version,\n    (uint8_t)(manager->record->next_chunk + UINT8_C(1)),\n    manager->record->total_chunks,\n    UPDATE_PHASE_WRITING\n  );\n  flash0_program_word(\n    manager->flash,\n    (update_slot_t)manager->record->candidate_slot,\n    (uint8_t)(manager->record->next_chunk - 1u),\n    word\n  );\n"
+    },
+    {
+      "id": "select-trial-before-attempt",
+      "description": "Select a trial before recording its single attempt.",
+      "find": "      write_record(\n        manager->record,\n        confirmed_slot,\n        confirmed_version,\n        candidate_slot,\n        manager->record->candidate_version,\n        manager->record->total_chunks,\n        manager->record->total_chunks,\n        UPDATE_PHASE_ATTEMPTED\n      );\n      flash0_write_boot_slot(manager->flash, candidate_slot);\n",
+      "replace": "      flash0_write_boot_slot(manager->flash, candidate_slot);\n      write_record(\n        manager->record,\n        confirmed_slot,\n        confirmed_version,\n        candidate_slot,\n        manager->record->candidate_version,\n        manager->record->total_chunks,\n        manager->record->total_chunks,\n        UPDATE_PHASE_ATTEMPTED\n      );\n"
+    },
+    {
+      "id": "erase-interrupted-before-idle",
+      "description": "Erase an interrupted candidate before persisting rollback.",
+      "find": "    case UPDATE_PHASE_WRITING:\n      write_idle(manager->record, confirmed_slot, confirmed_version);\n      flash0_erase_slot(manager->flash, candidate_slot);",
+      "replace": "    case UPDATE_PHASE_WRITING:\n      flash0_erase_slot(manager->flash, candidate_slot);\n      write_idle(manager->record, confirmed_slot, confirmed_version);"
+    },
+    {
+      "id": "retain-consumed-event",
+      "description": "Return an event without consuming it.",
+      "find": "  manager->event = UPDATE_EVENT_NONE;\n  flash0_irq_restore(irq_state);\n  return event;",
+      "replace": "  flash0_irq_restore(irq_state);\n  return event;"
+    },
+    {
+      "id": "ignore-pending-start-event",
+      "description": "Start another update before consuming the prior event.",
+      "find": "manager->record->phase != UPDATE_PHASE_IDLE ||\n    manager->event != UPDATE_EVENT_NONE",
+      "replace": "manager->record->phase != UPDATE_PHASE_IDLE"
     }
   ]
 }
