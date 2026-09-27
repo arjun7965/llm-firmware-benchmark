@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "fixture_dual_slot_update.h"
+#include "dual_slot_update_recovery.h"
 
 typedef enum {
   MOCK_FLASH0_EVENT_ERASE,
@@ -18,6 +18,8 @@ typedef enum {
 } mock_flash0_event_t;
 
 void mock_flash0_reset(void);
+void mock_flash0_watch_record(const update_record_t *record);
+const update_record_t *mock_flash0_record_at(size_t index);
 volatile flash0_registers_t *mock_flash0(void);
 void mock_flash0_set_verify_valid(update_slot_t slot, bool valid);
 void mock_flash0_set_irq_state(uint32_t state);

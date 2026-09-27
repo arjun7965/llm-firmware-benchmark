@@ -27,8 +27,8 @@ Scoring profile: `firmware-v1`.
   slot/chunk bounds, strict version advancement, and the defined lifecycle
   results and events.
 - 1 point — **Bounded resource use:** Uses caller-owned state and at most one
-  bounded flash operation per transition, with no allocation, polling, retry,
-  or global state.
+  bounded sequence of flash operations per transition, with no allocation,
+  polling, retry, or global state.
 - 2 points — **Timing behavior:** Erases before recording WRITING, records
   chunk progress after each program operation, verifies before TRIAL, and
   records ATTEMPTED before selecting a trial target.
@@ -46,3 +46,22 @@ Scoring profile: `firmware-v1`.
 Erasing the confirmed slot, booting an interrupted candidate, granting repeated
 unconfirmed trials, or promoting a non-advancing version is a substantial
 update-safety defect.
+
+## Validation Boundary
+
+The prompt supplies both headers and defines usable manager state. Public tests
+observe journal snapshots at FLASH0 accessor boundaries, including erase before
+WRITING, progress after programming, verification before TRIAL, ATTEMPTED before
+trial selection, and idle before rollback erasure. This is a deterministic
+journal-transition model; it does not establish byte-level torn-write resilience,
+physical flash durability, or cryptographic image authenticity.
+
+## Calibration
+
+The trusted reference passes eight public test groups and all 20 compile-valid
+controlled mutations are rejected in the pinned C11 sandbox. The completed
+[three-family pilot](../model-family-calibration.md#completed-dual-slot-update-pilot--dual-slot-update-recovery)
+records nine attempts with identical task prompts, no retries, and no candidate
+repairs. AI criterion scores were frozen before unblinding and subsequently
+human-reviewed. Report deterministic pass rates separately from rubric scores:
+static credit for a failed extraction or compilation is not executable success.

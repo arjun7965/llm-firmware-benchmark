@@ -9,6 +9,7 @@ struct flash0_registers {
 typedef struct {
   mock_flash0_event_t event;
   uint32_t value;
+  update_record_t record;
 } mock_flash0_event_record_t;
 
 typedef struct {
@@ -21,6 +22,7 @@ typedef struct {
   uint32_t irq_state;
   mock_flash0_event_record_t events[MOCK_FLASH0_HISTORY_CAPACITY];
   size_t event_count;
+  const update_record_t *watched_record;
   bool invalid_access;
 } mock_flash0_state_t;
 
@@ -51,6 +53,8 @@ static void record_event(mock_flash0_event_t event, uint32_t value) {
     state.events[state.event_count] = (mock_flash0_event_record_t) {
       .event = event,
       .value = value,
+      .record = state.watched_record != NULL
+        ? *state.watched_record : (update_record_t) { 0 },
     };
   } else {
     state.invalid_access = true;
@@ -64,6 +68,15 @@ void mock_flash0_reset(void) {
     .boot_slot = UPDATE_SLOT_NONE,
     .irq_state = UINT32_C(1),
   };
+}
+
+void mock_flash0_watch_record(const update_record_t *record) {
+  state.watched_record = record;
+}
+
+const update_record_t *mock_flash0_record_at(size_t index) {
+  return index < state.event_count && index < MOCK_FLASH0_HISTORY_CAPACITY
+    ? &state.events[index].record : NULL;
 }
 
 volatile flash0_registers_t *mock_flash0(void) {
