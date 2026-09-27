@@ -1,0 +1,366 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "mpu-fault-containment",
+  "cohortId": "mpu-fault-containment-cross-family-20260926-02",
+  "startedDate": "2026-09-26",
+  "dateTimezone": "America/Los_Angeles",
+  "harnessCommit": "fd79ca58fa6c193b9823f8621742ee1f14fee491",
+  "promptSha256": "d6e1d1e201863390fb51d56b41c9d48e9951d09f66e3aae4b908f85ca626b852",
+  "cohortSha256": "a44dde32e05e1a4a4fc48ea984c005c51c28e1cb4f190f7981ee994bbbc14fae",
+  "packetSha256": "9124a89aa61bbc3b9a433b4296f13ca97b46963b5c7bf7055f0c8c953d3215ad",
+  "scoreSheetSha256": "502ef118bd0de9bdbb2668649ef746b3d33e5a0fe24ae3e3f2f4d164fa279ec0",
+  "review": {
+    "status": "complete",
+    "provenance": "ai-assisted-human-reviewed",
+    "aiScorer": "Codex (GPT-6)",
+    "aiScoresFrozenBeforeUnblinding": true,
+    "independentHumanScoring": false,
+    "priorExposure": "Audited trusted reference, task and fixture. Reviewed diagnostic cohort anonymized compiler failures and first answer header excerpt; diagnostic identity key remains sealed. No revised-cohort candidate text inspected before blinding.",
+    "decision": "approved-without-changes",
+    "reviewDate": "2026-09-26",
+    "dateTimezone": "America/Los_Angeles",
+    "recordedAt": "2026-09-27T00:07:33.475Z",
+    "humanReviewer": "Conversation user",
+    "reviewScope": "Approved the proposed model averages, individual criterion scores and linked review packet, including the post-generation regression audit and exactly-once containment interpretation, for publication without changes.",
+    "scoreSheetSha256": "502ef118bd0de9bdbb2668649ef746b3d33e5a0fe24ae3e3f2f4d164fa279ec0"
+  },
+  "methodology": {
+    "concurrency": 1,
+    "automaticRetries": 0,
+    "scheduledRunsPerModel": 3,
+    "order": "Run-major: Luna, GLM, Kimi for each of runs 1, 2, 3",
+    "scorePopulation": "available-answers-only",
+    "generationFailuresHaveNoRubricScore": true,
+    "candidateRepairs": false,
+    "cliVersions": {
+      "node": "v22.21.0",
+      "codex": "codex-cli 0.157.1",
+      "opencode": "1.18.32"
+    },
+    "providerDifferences": "Luna medium/600s; GLM low/900s/32000 configured output ceiling; Kimi max/1200s/64000 configured output ceiling. Effective provider limits unknown; no parity claim."
+  },
+  "priorCohort": {
+    "cohortId": "mpu-fault-containment-cross-family-20260926-01",
+    "disposition": "diagnostic-only",
+    "scheduled": 9,
+    "answers": 9,
+    "extracted": 9,
+    "compileFailures": 5,
+    "runtimeFailures": 0,
+    "passes": 4,
+    "reason": "Four answers redefined fixture macros with incompatible replacement tokens; one reproduced header declarations before opaque types were available. Revised prompt lists exact macros, states header ownership, and discloses compiler flags.",
+    "pooledWithCurrentCohort": false,
+    "scored": false,
+    "identityKeyOpened": false,
+    "originalRecordsPreserved": true
+  },
+  "supplementalValidation": {
+    "postHoc": true,
+    "reason": "Blinded code review found duplicate containment of pre-latched faults that the original tests missed. The new regression checks exactly one containment and no subsequent MPU programming. Applied uniformly to every unchanged answer before score freeze and unblinding.",
+    "referencePassed": true,
+    "compileValidMutationsRejected": 35,
+    "originalRegressionSurvived": true,
+    "originalValidationPreserved": true,
+    "answers": 9,
+    "passes": 6,
+    "failures": 3,
+    "fixtureChanges": {
+      "tests/public/test_mpu_fault_containment.c": "57f4f520d73ca6512a99a8e89145d954b855e2cf71affb400234bfa7eb37f6e2",
+      "mutations.json": "2d4eb9ff2de87174589f053647b344fbeca2ede8f553d927c4ce426e52b87535"
+    }
+  },
+  "validation": {
+    "profile": "c11-host",
+    "profileRevision": 4,
+    "profileSha256": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3",
+    "environmentId": "debian-13-x86-64-c11-host",
+    "environmentRevision": 1,
+    "environmentSha256": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7",
+    "sandbox": "bubblewrap 0.11.0",
+    "compiler": "GCC 14.2.0",
+    "referencePassed": true,
+    "compileValidMutationsRejected": 34,
+    "publicTestGroups": 7,
+    "answers": 9,
+    "extracted": 9,
+    "compileFailures": 0,
+    "runtimeFailures": 0,
+    "passes": 9
+  },
+  "generation": {
+    "scheduled": 9,
+    "recorded": 9,
+    "answers": 9,
+    "answerRate": 1,
+    "outcomes": {
+      "answer": 9,
+      "timeout": 0,
+      "generation-limit": 0,
+      "provider-error": 0,
+      "no-answer": 0,
+      "missing": 0
+    }
+  },
+  "models": [
+    {
+      "model": "gpt-5.6-luna",
+      "modelId": "gpt-5.6-luna",
+      "provider": "codex",
+      "family": "OpenAI GPT",
+      "controls": {
+        "effort": "medium",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": null,
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 2,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "passed",
+          "durationMs": 57576,
+          "rationale": "Passed original seven public test groups. Also passed the uniformly applied post-generation pre-latch regression audit. Static review confirms immutable region table, full state replacement before access, short-circuit-safe readback comparison, early pre-latch termination, one-shot containment, and exact event interrupt restoration. Clarity/validation -0.5: the brief explanation gives no concrete test cases or mock-versus-physical security limits."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 2,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "passed",
+          "durationMs": 39665,
+          "rationale": "Passed original seven public test groups. Also passed the uniformly applied post-generation pre-latch regression audit. Static review confirms fixed local policy table and bounded helper, early pre-latch return, complete comparisons, safe read-failure ordering, and exact event save/restore. Failure helpers retain ready=false established before any accessor. Clarity/validation -0.5: short explanation lacks concrete tests and mock-versus-physical security limits."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 2,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "passed",
+          "durationMs": 48545,
+          "rationale": "Passed original seven public test groups. Also passed the uniformly applied post-generation pre-latch regression audit. Static review confirms exact local four-region table, five-field comparison, early pre-latch termination, fault precedence even on failed reads, exact IRQ/event masking, and pure queries. Clarity/validation -0.5: concise behavioral explanation supplies no concrete ordering/readback test cases or distinction between the mock policy and physical fault resistance."
+        }
+      ],
+      "mean": 9.5,
+      "sd": 0,
+      "range": 0,
+      "fullValidationPasses": 3,
+      "supplementalValidationPasses": 3
+    },
+    {
+      "model": "glm53",
+      "modelId": "opencode-go/glm-5.3",
+      "provider": "opencode",
+      "family": "Z.ai GLM",
+      "controls": {
+        "variant": "low",
+        "timeoutMs": 900000,
+        "maxOutputTokens": 32000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 0,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "runtime-failure",
+          "durationMs": 394181,
+          "rationale": "Passed original seven public test groups. Failed the uniformly applied post-generation pre-latch regression audit. Fault recovery 0/2: pre-latched CLOCK|GLITCH is contained, then the MPU is disabled and region 0 programmed, and the preserved latch causes a second containment call. The strengthened test rejects the duplicate; deduct only in fault recovery. Exact clean-path policy, bounded immutable table, status/barrier ordering, full readback comparison, event masking and opaque C11 use are otherwise supported. Clarity/validation -0.5: no concrete tests, and prose incorrectly lists event retrieval as an exit from contained although code preserves containment; physical-resistance limits are stated."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 0,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "runtime-failure",
+          "durationMs": 77897,
+          "rationale": "Passed original seven public test groups. Failed the uniformly applied post-generation pre-latch regression audit. Fault recovery 0/2: pre-latched CLOCK|GLITCH is contained without terminating initialization; programming starts, the still-latched bits trigger the failure path, and secctl_contain_fault runs a second time. The strengthened test rejects the duplicate. Assign this safety-critical defect only to fault recovery. Other dimensions have static support: exact region plan, bounded loops/storage, prescribed normal-path barriers/readback precedence, protected event consumption, and opaque C11 access. Masking status to MPU0_FAULT_ALL is noted but no additional deduction assumes unspecified extra fault bits. Clarity/validation -0.5: detailed explanation distinguishes mock from physical resistance but provides no concrete tests; do not double-count the faulty pre-latch explanation."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 0,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "runtime-failure",
+          "durationMs": 42161,
+          "rationale": "Passed original seven public test groups. Failed the uniformly applied post-generation pre-latch regression audit. Fault recovery 0/2: on pre-latched CLOCK|GLITCH, init calls secctl_contain_fault, continues through disable and region-0 programming, then calls containment again for the same preserved latch. The strengthened test rejects the duplicate call. This violates exactly-once fail-closed containment; assign the defect only to fault recovery, without an additional timing or functional deduction. Clean-path policy, bounded locals, readback ordering, event synchronization and C11 opaque access are correct. Clarity/validation -0.5: lengthy implementation narrative supplies no concrete test cases or physical-boundary discussion; do not separately deduct for its explanation of the already-scored pre-latch defect."
+        }
+      ],
+      "mean": 7.5,
+      "sd": 0,
+      "range": 0,
+      "fullValidationPasses": 3,
+      "supplementalValidationPasses": 0
+    },
+    {
+      "model": "kimi-k3",
+      "modelId": "opencode-go/kimi-k3",
+      "provider": "opencode",
+      "family": "Moonshot Kimi",
+      "controls": {
+        "variant": "max",
+        "timeoutMs": 1200000,
+        "maxOutputTokens": 64000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 2,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "passed",
+          "durationMs": 189332,
+          "rationale": "Passed original seven public test groups. Also passed the uniformly applied post-generation pre-latch regression audit. Static review confirms immutable designated policy table, immediate pre-latch return, single-shot failure helpers, five-field comparison after fault checks, bounded barriers/status counts and exact IRQ/event handling. Clarity/validation -0.5: explanation supplies no concrete test cases or explicit physical-security boundary; references to deterministic calls do not establish tests were executed."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 2,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "passed",
+          "durationMs": 84454,
+          "rationale": "Passed original seven public test groups. Also passed the uniformly applied post-generation pre-latch regression audit. Static review confirms immutable region plan, explicit immediate pre-latch return, fault-before-readback-error precedence, complete field comparisons, bounded counts, contain-before-clear and exact interrupt restoration. Clarity/validation -0.5: explanation correctly limits claims to the mock envelope but provides no concrete ordering/readback test cases."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 1,
+            "fault-recovery": 2,
+            "portability": 2,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "supplementalValidationOutcome": "passed",
+          "durationMs": 83021,
+          "rationale": "Passed original seven public test groups. Also passed the uniformly applied post-generation pre-latch regression audit. Static review confirms bounded switch-built configurations, explicit early pre-latch termination, complete readback comparison with fault precedence, one-shot failure latches, exact IRQ clear bits and event interrupt restoration. Clarity/validation -0.5: clear implementation narrative contains no concrete ordering/readback test cases or explicit mock-versus-physical resistance discussion."
+        }
+      ],
+      "mean": 9.5,
+      "sd": 0,
+      "range": 0,
+      "fullValidationPasses": 3,
+      "supplementalValidationPasses": 3
+    }
+  ]
+}

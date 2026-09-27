@@ -136,6 +136,11 @@ static bool test_invalid_and_fault_injection_fails_closed(void) {
   CHECK(mpu_fault_containment_contained(&containment));
   CHECK(mock_mpu_contained_bits() == (MPU0_FAULT_CLOCK | MPU0_FAULT_GLITCH));
   CHECK(mock_mpu_cleared_bits() == 0u);
+  CHECK(event_type_count(MOCK_MPU_EVENT_CONTAIN) == 1u);
+  CHECK(event_type_count(MOCK_MPU_EVENT_DISABLE) == 0u);
+  CHECK(event_type_count(MOCK_MPU_EVENT_PROGRAM) == 0u);
+  CHECK(mock_mpu_event_count() == 5u);
+  CHECK(mock_mpu_event_at(4u) == MOCK_MPU_EVENT_CONTAIN);
 
   mock_mpu_reset();
   mock_mpu_set_fault_on_program(2u, MPU0_FAULT_VOLTAGE);

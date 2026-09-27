@@ -2,6 +2,7 @@
   "schemaVersion": "1.3",
   "source": "reference/mpu_fault_containment.c",
   "mutations": [
+    {"id": "continue-after-prelatched-containment", "description": "Continue MPU programming after containing a pre-latched fault, causing duplicate containment of preserved evidence.", "find": "faults = mpu0_read_fault_status(mpu);\n  if (faults != 0u) return fail_closed(containment, faults);\n\n  mpu0_disable(mpu);", "replace": "faults = mpu0_read_fault_status(mpu);\n  if (faults != 0u) secctl_contain_fault(security, faults);\n\n  mpu0_disable(mpu);"},
     { "id": "enter-ready-before-readback", "description": "Leave normal mode marked ready after a readback or fault failure.", "find": "containment->ready = false;\n  containment->contained = true;\n  return false;", "replace": "containment->ready = true;\n  containment->contained = true;\n  return false;" },
     { "id": "omit-sram-xn", "description": "Make SRAM executable.", "find": ".execute_never = MPU0_XN_SRAM", "replace": ".execute_never = false" },
     { "id": "expose-key-vault", "description": "Permit unprivileged key-vault access.", "find": ".permissions = MPU0_PERM_KEY_VAULT", "replace": ".permissions = MPU0_PERM_SRAM" },

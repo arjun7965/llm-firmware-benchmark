@@ -152,6 +152,93 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed MPU Containment Pilot — `mpu-fault-containment`
+
+The revised cohort `mpu-fault-containment-cross-family-20260926-02` adds
+least-privilege MPU policy, fault precedence, and containment ordering to the
+cross-family calibration surface. All nine scheduled attempts produced
+extractable answers. AI criterion scores were frozen before unblinding; the
+conversation user approved the scores, linked review packet, and publication
+without changes on September 26, 2026 (America/Los_Angeles).
+
+The first nine-attempt cohort remains unscored diagnostic evidence with its
+identity key sealed. Four answers passed; five failed compilation. Four of
+those failures redefined supplied macros with incompatible replacement tokens;
+one reproduced header declarations before the opaque types were available.
+The prompt gave constant values but omitted most exact macro names. Before the
+revised cohort, it explicitly named every supplied macro and replacement
+expression, clarified that the fixture owns both headers, prohibited reproducing
+header declarations, and disclosed the warning-as-error compiler flags. The
+fixture, rubric, model settings, and budgets were unchanged at generation.
+The two cohorts are preserved separately and are not pooled.
+
+The revised prompt SHA-256 is
+`d6e1d1e201863390fb51d56b41c9d48e9951d09f66e3aae4b908f85ca626b852`;
+the cohort SHA-256 is
+`a44dde32e05e1a4a4fc48ea984c005c51c28e1cb4f190f7981ee994bbbc14fae`.
+The private snapshot preserves harness base
+`fd79ca58fa6c193b9823f8621742ee1f14fee491` and pre-generation changes.
+The trusted reference passed seven public groups and all 34 original
+compile-valid mutations were rejected under `c11-host` revision 4,
+`debian-13-x86-64-c11-host`, GCC 14.2.0, and Bubblewrap 0.11.0.
+
+Three attempts per family ran in run-major order at concurrency one, with no
+retries or candidate repairs. Settings were Luna medium/600 seconds, GLM
+low/900 seconds/32,000 configured output tokens, and Kimi max/1,200 seconds/
+64,000 configured output tokens. Provider budgets differ and effective provider
+limits remain unknown. Recorded tools were Node 22.21.0, Codex CLI 0.157.1, and
+OpenCode 1.18.32.
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Original validation | Strengthened audit |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 9.5 | 9.5 | 9.5 | 9.500 | 3/3 | 3/3 |
+| GLM-5.3 | 7.5 | 7.5 | 7.5 | 7.500 | 3/3 | 0/3 |
+| Kimi K3 | 9.5 | 9.5 | 9.5 | 9.500 | 3/3 | 3/3 |
+
+All nine answers compiled and passed the original frozen validator. Blinded
+code review then found a coverage gap: three answers contained pre-latched
+faults, continued through MPU disable and region-0 programming, and contained
+the same preserved latch again. The original tests checked final containment
+state but did not enforce the single containment call on that path.
+
+A **post-generation regression audit** added exact containment-count and
+no-further-programming assertions and a controlled mutation. The new mutation
+survives the original tests and is rejected by the strengthened checks. The
+trusted reference still passes, and all 35 compile-valid mutations are rejected.
+Every unchanged answer was audited in the same pinned validation environment
+before score freeze and unblinding: six passed, while all three GLM answers
+failed the duplicate-containment assertion. Original reports remain intact;
+these later results are separate evidence, not a replacement for the original
+nine-pass result. The public aggregate records both outcomes and changed
+fixture hashes.
+
+The reviewed interpretation applies the prompt's exactly-once containment rule
+and the rubric's pre-configuration fault coverage. GLM's three answers receive
+0/2 for fault recovery; the same defect is not deducted again from functional
+correctness or timing. Their explanations treat pre-latch containment as a
+separate remediation, which was explicitly disclosed for human review. All
+nine answers receive 0.5/1 for clarity/validation because none gives concrete
+ordering/readback test cases. Test code was forbidden and its absence was not
+penalized. Future wording can make immediate pre-latch termination clearer;
+this cohort's prompt remains frozen.
+
+Scoring is **AI-assisted, human-reviewed**, not independent human scoring.
+The AI reviewer audited the reference and inspected anonymized diagnostic
+compiler failures and a header excerpt before the revised cohort. Revised
+answers were reviewed anonymously, including the uniformly applied later
+audit; criterion scores were frozen before identities were revealed. The packet
+SHA-256 is `9124a89aa61bbc3b9a433b4296f13ca97b46963b5c7bf7055f0c8c953d3215ad`;
+the approved score-sheet SHA-256 is
+`502ef118bd0de9bdbb2668649ef746b3d33e5a0fe24ae3e3f2f4d164fa279ec0`.
+
+The approved [sanitized aggregate](calibration/mpu-fault-containment-2026-09-26.json)
+is published. All nine answer projections passed `export:public` with no
+redactions or review flags; raw records, projections, identity keys, and review
+artifacts remain private. Three attempts per model on one deterministic mock
+task, different provider budgets, and a post-generation test addition do not
+establish a broad model ranking or a prospectively fixed nine-answer pass rate
+for the strengthened validator.
+
 ## Completed DMA Cache Pilot — `dma-cache-coherency`
 
 The revised cohort `dma-cache-coherency-cross-family-20260919-02` adds

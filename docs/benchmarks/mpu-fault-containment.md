@@ -49,6 +49,18 @@ authoritative for deterministic rejection.
 ## Calibration
 
 Run `npm run fixture:mpu-fault:self-test` to exercise the trusted reference
-and its seven public test groups. The C mutation suite rejects all 34
+and its seven public test groups. The C mutation suite rejects all 35
 compile-valid controlled defects for region policy, readback, injected faults,
 containment ordering, event handling, and initialization state publication.
+
+The pre-latched fault check requires exactly one containment call and no MPU
+disable or programming afterward. Cross-family calibration exposed a gap in
+the original final-state-only assertion: continuing after containment could
+contain the same preserved latch twice and still pass. The added mutation
+captures that defect. Keep original frozen validation reports separate from
+later audits using this strengthened check.
+
+The prompt names every supplied macro and makes header ownership explicit;
+answers include the supplied API header without reproducing its declarations
+or redefining its macros. These clarifications avoid incidental integration
+failures under the declared warning-as-error compiler flags.
