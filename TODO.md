@@ -336,6 +336,21 @@ record exact versions in validation reports.
   - [x] Obtain human review of the `dma-cache-coherency` scores and publish its
     sanitized aggregate with explicit scoring provenance.
 
+  - [x] Select `mpu-fault-containment` for the next cross-family pilot to add
+    least-privilege MPU policy, fault precedence, and fail-closed containment
+    coverage.
+  - [x] Audit its prompt and clarify initial state, usable-state validation,
+    and event consumption; verify the reference and all 34 controlled mutations.
+  - [x] Preserve the first `mpu-fault-containment` cohort as diagnostic evidence;
+    clarify supplied headers and exact macro definitions before a fresh cohort.
+  - [x] Run the revised `mpu-fault-containment` three-family, three-attempt
+    pilot and freeze blinded criterion scores before unblinding.
+  - [x] Close the duplicate pre-latched containment test gap with a controlled
+    mutation; audit every unchanged answer before score freeze and disclose
+    the stronger checks separately from original validation.
+  - [x] Obtain human review of the `mpu-fault-containment` scores and publish
+    its sanitized aggregate with explicit scoring provenance.
+
 ## Repository Operations
 
 - [x] Confirm GitHub Actions passes after the first push.
