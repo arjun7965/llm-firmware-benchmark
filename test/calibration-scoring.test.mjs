@@ -841,6 +841,14 @@ test("published fault-crash scores preserve approval and supplemental validation
   assert.equal(summary.generation.scheduled, 9);
   assert.equal(summary.generation.recorded, 9);
   assert.equal(summary.generation.answers, 9);
+  assert.deepEqual(summary.models.map((model) => ({
+    model: model.model,
+    scores: model.runs.map(({ score }) => score),
+  })), [
+    { model: "gpt-5.6-luna", scores: [7.5, 7.5, 9.5] },
+    { model: "glm53", scores: [7.5, 7.5, 9.5] },
+    { model: "kimi-k3", scores: [10, 10, 9.5] },
+  ]);
   const outcomes = {};
   for (const model of summary.models) {
     assert.deepEqual(model.runs.map(({ run }) => run), [1, 2, 3]);
