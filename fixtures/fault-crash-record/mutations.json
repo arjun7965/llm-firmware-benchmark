@@ -37,6 +37,186 @@
       "description": "Leave a taken fault event pending and block explicit recovery.",
       "find": "  capture->event = FAULT_EVENT_NONE;\n  fault0_irq_restore(irq_state);\n  return event;",
       "replace": "  capture->event = event;\n  fault0_irq_restore(irq_state);\n  return event;"
+    },
+    {
+      "id": "ignore-retained-magic",
+      "description": "Accept checksum-consistent records with incorrect magic.",
+      "find": "return record->magic == FAULT_RECORD_MAGIC &&\n    record->checksum == record_checksum(record);",
+      "replace": "return record->checksum == record_checksum(record);"
+    },
+    {
+      "id": "omit-xpsr-from-record",
+      "description": "Lose the supplied exception status register.",
+      "find": ".xpsr = frame->xpsr,",
+      "replace": ".xpsr = 0u,"
+    },
+    {
+      "id": "omit-link-register-from-record",
+      "description": "Lose the supplied return address.",
+      "find": ".link_register = frame->link_register,",
+      "replace": ".link_register = 0u,"
+    },
+    {
+      "id": "retain-raw-status",
+      "description": "Persist and acknowledge reserved hardware status bits.",
+      "find": "status = fault0_read_status(capture->fault) & FAULT0_STATUS_ALL;",
+      "replace": "status = fault0_read_status(capture->fault);"
+    },
+    {
+      "id": "clear-all-status",
+      "description": "Clear fault bits absent from the captured snapshot.",
+      "find": "fault0_write_status_clear(capture->fault, status);",
+      "replace": "fault0_write_status_clear(capture->fault, FAULT0_STATUS_ALL);"
+    },
+    {
+      "id": "clear-zero-status",
+      "description": "Acknowledge zero status despite the no-clear contract.",
+      "find": "if (status != 0u) {",
+      "replace": "if (true) {"
+    },
+    {
+      "id": "saturate-sequence",
+      "description": "Saturate the sequence instead of wrapping modulo 2^32.",
+      "find": "? capture->record->sequence + UINT32_C(1)",
+      "replace": "? (capture->record->sequence == UINT32_MAX ? UINT32_MAX : capture->record->sequence + UINT32_C(1))"
+    },
+    {
+      "id": "increment-invalid-sequence",
+      "description": "Trust the sequence of an invalid old record.",
+      "find": ": UINT32_C(1);",
+      "replace": ": capture->record->sequence + UINT32_C(1);"
+    },
+    {
+      "id": "lose-captured-event",
+      "description": "Keep a pending retained event instead of publishing CAPTURED.",
+      "find": "capture->event = FAULT_EVENT_CAPTURED;",
+      "replace": "if (capture->event == FAULT_EVENT_NONE) capture->event = FAULT_EVENT_CAPTURED;"
+    },
+    {
+      "id": "read-corrupt-record",
+      "description": "Copy a corrupted retained record to the caller.",
+      "find": "if (!capture->faulted || !record_is_valid(capture->record)) {",
+      "replace": "if (!capture->faulted) {"
+    },
+    {
+      "id": "consume-event-on-read",
+      "description": "Consume the pending event during a read.",
+      "find": "*output = *capture->record;",
+      "replace": "*output = *capture->record;\n  ((fault_capture_t *)capture)->event = FAULT_EVENT_NONE;"
+    },
+    {
+      "id": "clobber-output-on-read-failure",
+      "description": "Zero caller output on failed reads.",
+      "find": "if (!capture->faulted || !record_is_valid(capture->record)) {",
+      "replace": "if (!capture->faulted || !record_is_valid(capture->record)) {\n    *output = (fault_record_t) { 0 };"
+    },
+    {
+      "id": "clear-corrupt-record",
+      "description": "Recover from a checksum-invalid record.",
+      "find": "    !capture->faulted || capture->event != FAULT_EVENT_NONE ||\n    !record_is_valid(capture->record)",
+      "replace": "    !capture->faulted || capture->event != FAULT_EVENT_NONE"
+    },
+    {
+      "id": "lose-pending-event-on-clear-failure",
+      "description": "Discard the event during rejected recovery.",
+      "find": "    !record_is_valid(capture->record)\n  ) {",
+      "replace": "    !record_is_valid(capture->record)\n  ) {\n    capture->event = FAULT_EVENT_NONE;"
+    },
+    {
+      "id": "retain-cleared-fields",
+      "description": "Clear only magic while retaining sensitive crash fields.",
+      "find": "*record = (fault_record_t) { 0 };",
+      "replace": "record->magic = 0u;"
+    },
+    {
+      "id": "retain-faulted-after-clear",
+      "description": "Leave the capture faulted after successful recovery.",
+      "find": "capture->faulted = false;",
+      "replace": "capture->faulted = true;"
+    },
+    {
+      "id": "omit-cleared-event",
+      "description": "Skip recovery event publication.",
+      "find": "capture->event = FAULT_EVENT_CLEARED;",
+      "replace": "capture->event = FAULT_EVENT_NONE;"
+    },
+    {
+      "id": "restore-disabled-on-read",
+      "description": "Lose the original IRQ state after a successful read.",
+      "find": "*output = *capture->record;\n  fault0_irq_restore(irq_state);",
+      "replace": "*output = *capture->record;\n  fault0_irq_restore(0u);"
+    },
+    {
+      "id": "restore-disabled-on-clear",
+      "description": "Lose the original IRQ state after recovery.",
+      "find": "capture->event = FAULT_EVENT_CLEARED;\n  fault0_irq_restore(irq_state);",
+      "replace": "capture->event = FAULT_EVENT_CLEARED;\n  fault0_irq_restore(0u);"
+    },
+    {
+      "id": "restore-disabled-on-take",
+      "description": "Lose the original IRQ state while consuming an event.",
+      "find": "capture->event = FAULT_EVENT_NONE;\n  fault0_irq_restore(irq_state);",
+      "replace": "capture->event = FAULT_EVENT_NONE;\n  fault0_irq_restore(irq_state & UINT32_C(0));"
+    },
+    {
+      "id": "persist-before-containment",
+      "description": "Overwrite retained evidence before SAFE is asserted.",
+      "find": "  fault0_write_control(capture->fault, FAULT0_CONTROL_SAFE);\n  sequence =",
+      "replace": "  capture->record->magic = 0u;\n  fault0_write_control(capture->fault, FAULT0_CONTROL_SAFE);\n  sequence ="
+    },
+    {
+      "id": "acknowledge-before-record",
+      "description": "Acknowledge a fault before persisting its new record.",
+      "find": "  write_record(capture->record, sequence, status, frame);\n  if (status != 0u) {\n    fault0_write_status_clear(capture->fault, status);\n  }",
+      "replace": "  if (status != 0u) {\n    fault0_write_status_clear(capture->fault, status);\n  }\n  write_record(capture->record, sequence, status, frame);"
+    },
+    {
+      "id": "enable-before-zeroing",
+      "description": "Enable outputs before clearing the crash record.",
+      "find": "  clear_record(capture->record);\n  fault0_write_control(capture->fault, FAULT0_CONTROL_NORMAL);",
+      "replace": "  fault0_write_control(capture->fault, FAULT0_CONTROL_NORMAL);\n  clear_record(capture->record);"
+    },
+    {
+      "id": "repair-after-enabling",
+      "description": "Repair corrupt retained memory only after enabling outputs.",
+      "find": "  if (!retained) clear_record(record);\n  fault0_write_control(\n    fault,\n    retained ? FAULT0_CONTROL_SAFE : FAULT0_CONTROL_NORMAL\n  );",
+      "replace": "  fault0_write_control(\n    fault,\n    retained ? FAULT0_CONTROL_SAFE : FAULT0_CONTROL_NORMAL\n  );\n  if (!retained) clear_record(record);"
+    },
+    {
+      "id": "discard-retained-sequence",
+      "description": "Mutate a valid retained record during initialization.",
+      "find": "  if (!retained) clear_record(record);",
+      "replace": "  if (!retained) clear_record(record);\n  else { record->sequence = 0u; record->checksum = record_checksum(record); }"
+    },
+    {
+      "id": "accept-uninitialized-capture",
+      "description": "Accept a capture whose initialized flag is false.",
+      "find": "return capture != NULL && capture->initialized && capture->fault != NULL &&",
+      "replace": "return capture != NULL && capture->fault != NULL &&"
+    },
+    {
+      "id": "reject-valid-reserved-record",
+      "description": "Reject checksum-valid retained status with reserved bits.",
+      "find": "record->checksum == record_checksum(record);",
+      "replace": "record->checksum == record_checksum(record) && (record->status & ~FAULT0_STATUS_ALL) == 0u;"
+    },
+    {
+      "id": "lose-retained-event",
+      "description": "Fail to publish the retained crash event at boot.",
+      "find": ".event = retained ? FAULT_EVENT_RETAINED : FAULT_EVENT_NONE,",
+      "replace": ".event = FAULT_EVENT_NONE,"
+    },
+    {
+      "id": "clear-faulted-on-event-consumption",
+      "description": "Treat event consumption as recovery.",
+      "find": "capture->event = FAULT_EVENT_NONE;\n  fault0_irq_restore(irq_state);",
+      "replace": "capture->event = FAULT_EVENT_NONE;\n  capture->faulted = false;\n  fault0_irq_restore(irq_state);"
+    },
+    {
+      "id": "omit-status-on-read",
+      "description": "Leave output status unchanged during an otherwise successful read.",
+      "find": "*output = *capture->record;",
+      "replace": "const uint32_t old_status = output->status;\n  *output = *capture->record;\n  output->status = old_status;"
     }
   ]
 }

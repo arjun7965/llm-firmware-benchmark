@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "fixture_fault_crash_record.h"
+#include "fault_crash_record.h"
 
 typedef enum {
   MOCK_FAULT_EVENT_STATUS_READ,
@@ -17,6 +17,8 @@ typedef enum {
 } mock_fault_event_t;
 
 void mock_fault0_reset(void);
+void mock_fault0_watch_record(const fault_record_t *record);
+fault_record_t mock_fault0_record_at(size_t index);
 volatile fault0_registers_t *mock_fault0(void);
 void mock_fault0_set_status(uint32_t value);
 void mock_fault0_set_irq_state(uint32_t value);
