@@ -9,6 +9,7 @@ struct pwr0_registers {
 typedef struct {
   mock_pwr_event_t event;
   uint32_t value;
+  brownout_persistent_t persistent;
 } mock_pwr_event_record_t;
 
 typedef struct {
@@ -20,6 +21,7 @@ typedef struct {
   mock_pwr_event_record_t events[MOCK_PWR_HISTORY_CAPACITY];
   size_t event_count;
   bool invalid_access;
+  const brownout_persistent_t *watched_persistent;
 } mock_pwr_state_t;
 
 static mock_pwr_state_t state;
@@ -33,6 +35,8 @@ static void record_event(mock_pwr_event_t event, uint32_t value) {
     state.events[state.event_count] = (mock_pwr_event_record_t) {
       .event = event,
       .value = value,
+      .persistent = state.watched_persistent != NULL
+        ? *state.watched_persistent : (brownout_persistent_t) { 0 },
     };
   } else {
     state.invalid_access = true;
@@ -46,6 +50,15 @@ void mock_pwr0_reset(void) {
     .load_control = PWR0_LOAD_SAFE,
     .irq_state = UINT32_C(1),
   };
+}
+
+void mock_pwr0_watch_persistent(const brownout_persistent_t *persistent) {
+  state.watched_persistent = persistent;
+}
+
+brownout_persistent_t mock_pwr0_persistent_at(size_t index) {
+  return index < state.event_count && index < MOCK_PWR_HISTORY_CAPACITY
+    ? state.events[index].persistent : (brownout_persistent_t) { 0 };
 }
 
 volatile pwr0_registers_t *mock_pwr0(void) {

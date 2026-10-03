@@ -272,6 +272,224 @@ static bool test_invalid_foreground_calls_have_no_side_effects(void) {
   return true;
 }
 
+static brownout_persistent_t valid_record(uint16_t count, uint8_t safe) {
+  brownout_persistent_t record = {
+    .magic = BROWNOUT_PERSISTENT_MAGIC,
+    .brownout_count = count,
+    .safe_mode = safe,
+  };
+  record.checksum = record_checksum(&record);
+  return record;
+}
+
+static bool test_individual_retained_corruption(void) {
+  for (unsigned field = 0u; field < 5u; field++) {
+    for (unsigned active = 0u; active < 2u; active++) {
+      brownout_manager_t manager = { 0 };
+      brownout_persistent_t record = valid_record(UINT16_C(17), UINT8_C(1));
+      brownout_persistent_t observed;
+      switch (field) {
+        case 0u: record.magic ^= UINT32_C(1); break;
+        case 1u: record.safe_mode = UINT8_C(2); break;
+        case 2u: record.reserved = UINT8_C(1); break;
+        case 3u: record.brownout_count ^= UINT16_C(1); break;
+        default: record.checksum ^= UINT32_C(1); break;
+      }
+      /* Isolate structural checks from the checksum check. */
+      if (field < 3u) record.checksum = record_checksum(&record);
+      mock_pwr0_reset();
+      mock_pwr0_watch_persistent(&record);
+      if (active != 0u) mock_pwr0_set_status(PWR0_STATUS_BROWNOUT);
+      CHECK(initialize(&manager, &record));
+      observed = mock_pwr0_persistent_at(0u);
+      CHECK(record_is_valid(&observed));
+      CHECK(observed.brownout_count == 0u && observed.safe_mode == 0u);
+      CHECK(record_is_valid(&record));
+      CHECK(record.brownout_count == active && record.safe_mode == active);
+      CHECK(manager.event == (active != 0u
+        ? BROWNOUT_EVENT_ENTERED_SAFE_MODE : BROWNOUT_EVENT_NONE));
+      CHECK(!mock_pwr0_invalid_access());
+    }
+  }
+  return true;
+}
+
+static bool test_thresholds_and_latched_resume(void) {
+  const uint16_t thresholds[][2] = {
+    { BROWNOUT_MINIMUM_MV, BROWNOUT_MINIMUM_MV + UINT16_C(1) },
+    { BROWNOUT_MAXIMUM_MV - UINT16_C(1), BROWNOUT_MAXIMUM_MV },
+  };
+  for (size_t index = 0u; index < 2u; index++) {
+    brownout_manager_t manager = { 0 };
+    brownout_persistent_t record = valid_record(UINT16_C(6), 0u);
+    size_t offset;
+    mock_pwr0_reset();
+    CHECK(brownout_manager_init(&manager, mock_pwr0(), &record,
+      thresholds[index][0], thresholds[index][1]));
+    CHECK(record.brownout_count == UINT16_C(6));
+    mock_pwr0_set_irq_state(0u);
+    mock_pwr0_set_supply_mv(thresholds[index][0] + UINT16_C(1));
+    CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_NONE);
+    CHECK(record.safe_mode == 0u);
+    mock_pwr0_set_supply_mv(thresholds[index][0]);
+    offset = mock_pwr0_event_count();
+    CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+    CHECK(events_match_from(offset, (const expected_event_t[]) {
+      { MOCK_PWR_EVENT_IRQ_SAVE_DISABLE, 0u },
+      { MOCK_PWR_EVENT_STATUS_READ, 0u },
+      { MOCK_PWR_EVENT_SUPPLY_READ, thresholds[index][0] },
+      { MOCK_PWR_EVENT_LOAD_WRITE, PWR0_LOAD_SAFE },
+      { MOCK_PWR_EVENT_IRQ_RESTORE, 0u },
+    }, 5u));
+    CHECK(record.brownout_count == UINT16_C(7));
+    CHECK(brownout_manager_take_event(&manager) == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+    CHECK(brownout_manager_take_event(&manager) == BROWNOUT_EVENT_NONE);
+    mock_pwr0_set_supply_mv(thresholds[index][1]);
+    mock_pwr0_set_status(PWR0_STATUS_BROWNOUT);
+    offset = mock_pwr0_event_count();
+    CHECK(!brownout_manager_resume(&manager));
+    CHECK(events_match_from(offset, (const expected_event_t[]) {
+      { MOCK_PWR_EVENT_IRQ_SAVE_DISABLE, 0u },
+      { MOCK_PWR_EVENT_STATUS_READ, PWR0_STATUS_BROWNOUT },
+      { MOCK_PWR_EVENT_SUPPLY_READ, thresholds[index][1] },
+      { MOCK_PWR_EVENT_LOAD_WRITE, PWR0_LOAD_SAFE },
+      { MOCK_PWR_EVENT_IRQ_RESTORE, 0u },
+    }, 5u));
+    CHECK(mock_pwr0_status() == PWR0_STATUS_BROWNOUT);
+    CHECK(record.safe_mode == UINT8_C(1));
+    CHECK(manager.event == BROWNOUT_EVENT_NONE);
+    CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_NONE);
+    CHECK(record.brownout_count == UINT16_C(7));
+    CHECK(brownout_manager_resume(&manager));
+    CHECK(record_is_valid(&record));
+    CHECK(mock_pwr0_irq_state() == 0u);
+    CHECK(!mock_pwr0_invalid_access());
+
+    /* Voltage alone must also cause active boot at the inclusive low boundary. */
+    mock_pwr0_reset();
+    record = valid_record(0u, 0u);
+    mock_pwr0_set_supply_mv(thresholds[index][0]);
+    CHECK(brownout_manager_init(&manager, mock_pwr0(), &record,
+      thresholds[index][0], thresholds[index][1]));
+    CHECK(record.safe_mode == UINT8_C(1) && record.brownout_count == UINT16_C(1));
+    CHECK(manager.event == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+    CHECK(!mock_pwr0_invalid_access());
+  }
+  return true;
+}
+
+static bool test_retained_order_and_repeated_resets(void) {
+  brownout_manager_t manager = { 0 };
+  brownout_persistent_t record = valid_record(UINT16_MAX - UINT16_C(1), 0u);
+  brownout_persistent_t observed;
+  size_t offset;
+  mock_pwr0_reset();
+  mock_pwr0_watch_persistent(&record);
+  mock_pwr0_set_status(PWR0_STATUS_BROWNOUT);
+  CHECK(initialize(&manager, &record));
+  observed = mock_pwr0_persistent_at(2u); /* SAFE write precedes retaining entry. */
+  CHECK(observed.safe_mode == 0u && observed.brownout_count == UINT16_MAX - UINT16_C(1));
+  observed = mock_pwr0_persistent_at(3u); /* Latch clear sees complete safe record. */
+  CHECK(record_is_valid(&observed));
+  CHECK(observed.safe_mode == UINT8_C(1) && observed.brownout_count == UINT16_MAX);
+
+  for (unsigned reboot = 0u; reboot < 3u; reboot++) {
+    mock_pwr0_reset();
+    mock_pwr0_watch_persistent(&record);
+    mock_pwr0_set_status(PWR0_STATUS_BROWNOUT);
+    CHECK(initialize(&manager, &record));
+    CHECK(record.brownout_count == UINT16_MAX);
+    CHECK(manager.event == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+    CHECK(mock_pwr0_load_control() == PWR0_LOAD_SAFE);
+    CHECK(record_is_valid(&record));
+    CHECK(!mock_pwr0_invalid_access());
+  }
+  mock_pwr0_reset();
+  mock_pwr0_watch_persistent(&record);
+  CHECK(initialize(&manager, &record));
+  CHECK(manager.event == BROWNOUT_EVENT_NONE);
+  CHECK(mock_pwr0_load_control() == PWR0_LOAD_SAFE);
+  offset = mock_pwr0_event_count();
+  CHECK(brownout_manager_resume(&manager));
+  observed = mock_pwr0_persistent_at(offset + 3u);
+  CHECK(record_is_valid(&observed) && observed.safe_mode == UINT8_C(1));
+  observed = mock_pwr0_persistent_at(offset + 4u);
+  CHECK(record_is_valid(&observed) && observed.safe_mode == 0u);
+
+  /* A new entry replaces RESUMED; repeated/healthy polls retain pending entry. */
+  mock_pwr0_set_status(PWR0_STATUS_BROWNOUT);
+  offset = mock_pwr0_event_count();
+  CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+  observed = mock_pwr0_persistent_at(offset + 3u);
+  CHECK(observed.safe_mode == 0u);
+  observed = mock_pwr0_persistent_at(offset + 4u);
+  CHECK(record_is_valid(&observed) && observed.safe_mode == UINT8_C(1));
+  CHECK(record.brownout_count == UINT16_MAX);
+  mock_pwr0_set_supply_mv(UINT16_C(2900));
+  offset = mock_pwr0_event_count();
+  CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_NONE);
+  CHECK(events_match_from(offset, (const expected_event_t[]) {
+    { MOCK_PWR_EVENT_IRQ_SAVE_DISABLE, UINT32_C(1) },
+    { MOCK_PWR_EVENT_STATUS_READ, 0u },
+    { MOCK_PWR_EVENT_SUPPLY_READ, UINT16_C(2900) },
+    { MOCK_PWR_EVENT_LOAD_WRITE, PWR0_LOAD_SAFE },
+    { MOCK_PWR_EVENT_IRQ_RESTORE, UINT32_C(1) },
+  }, 5u));
+  mock_pwr0_set_supply_mv(BROWNOUT_MAXIMUM_MV);
+  CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_NONE);
+  CHECK(manager.event == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+  CHECK(mock_pwr0_load_control() == PWR0_LOAD_SAFE);
+  CHECK(!brownout_manager_resume(&manager));
+  CHECK(brownout_manager_take_event(&manager) == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+  CHECK(brownout_manager_take_event(&manager) == BROWNOUT_EVENT_NONE);
+  CHECK(brownout_manager_resume(&manager));
+  CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_NONE);
+  CHECK(manager.event == BROWNOUT_EVENT_RESUMED);
+  offset = mock_pwr0_event_count();
+  CHECK(!brownout_manager_resume(&manager));
+  CHECK(events_match_from(offset, (const expected_event_t[]) {
+    { MOCK_PWR_EVENT_IRQ_SAVE_DISABLE, UINT32_C(1) },
+    { MOCK_PWR_EVENT_IRQ_RESTORE, UINT32_C(1) },
+  }, 2u));
+  CHECK(!mock_pwr0_invalid_access());
+  return true;
+}
+
+static bool test_partial_managers_and_invalid_bounds(void) {
+  brownout_persistent_t record = valid_record(UINT16_C(8), UINT8_C(1));
+  brownout_manager_t manager = { 0 };
+  const uint16_t invalid[][2] = {
+    { BROWNOUT_MAXIMUM_MV, BROWNOUT_MAXIMUM_MV },
+    { UINT16_MAX, UINT16_MAX },
+    { UINT16_C(2900), UINT16_C(2899) },
+    { 0u, BROWNOUT_MAXIMUM_MV },
+  };
+  mock_pwr0_reset();
+  for (size_t index = 0u; index < 4u; index++) {
+    CHECK(!brownout_manager_init(&manager, mock_pwr0(), &record,
+      invalid[index][0], invalid[index][1]));
+    CHECK(!manager.initialized);
+    CHECK(record_is_valid(&record));
+    CHECK(record.brownout_count == UINT16_C(8) && record.safe_mode == UINT8_C(1));
+  }
+  for (unsigned missing = 0u; missing < 2u; missing++) {
+    manager = (brownout_manager_t) {
+      .initialized = true,
+      .pwr = missing == 0u ? NULL : mock_pwr0(),
+      .persistent = missing == 1u ? NULL : &record,
+      .event = BROWNOUT_EVENT_RESUMED,
+    };
+    const brownout_manager_t before = manager;
+    CHECK(brownout_manager_poll(&manager) == BROWNOUT_EVENT_NONE);
+    CHECK(!brownout_manager_resume(&manager));
+    CHECK(brownout_manager_take_event(&manager) == BROWNOUT_EVENT_NONE);
+    CHECK(manager_equals(&manager, &before));
+  }
+  CHECK(mock_pwr0_event_count() == 0u);
+  CHECK(!mock_pwr0_invalid_access());
+  return true;
+}
+
 int main(void) {
   const struct {
     const char *name;
@@ -281,6 +499,10 @@ int main(void) {
     { "brownout entry and hysteresis", test_brownout_entry_hysteresis_and_event_gating },
     { "persistent safe boot", test_persistent_safe_boot_and_saturating_counter },
     { "invalid foreground calls", test_invalid_foreground_calls_have_no_side_effects },
+    { "individual retained corruption", test_individual_retained_corruption },
+    { "thresholds and latched resume", test_thresholds_and_latched_resume },
+    { "retained ordering and repeated resets", test_retained_order_and_repeated_resets },
+    { "partial managers and invalid bounds", test_partial_managers_and_invalid_bounds },
   };
 
   for (size_t index = 0u; index < sizeof(tests) / sizeof(tests[0]); index++) {
