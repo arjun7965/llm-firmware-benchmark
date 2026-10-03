@@ -361,6 +361,18 @@ record exact versions in validation reports.
   - [x] Obtain human review and publish the sanitized aggregate with explicit
     scoring provenance.
 
+  - [x] Complete and publish the reviewed `brownout-safe-mode` cross-family
+    pilot, retaining diagnostic cohorts and supplemental fixture checks.
+  - [x] Select `fault-crash-record` for the next cross-family pilot to add
+    retained crash integrity, status containment, sequence wraparound, and
+    explicit recovery coverage.
+  - [x] Audit its complete prompt/accessor contract and calibrate the reference
+    and controlled mutations before freezing generation.
+  - [x] Run its three-family, three-attempt pilot and freeze blinded criterion
+    scores before unblinding.
+  - [x] Obtain human review and publish its sanitized aggregate with explicit
+    scoring provenance.
+
 ## Repository Operations
 
 - [x] Confirm GitHub Actions passes after the first push.

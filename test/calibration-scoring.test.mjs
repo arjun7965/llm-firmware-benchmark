@@ -822,6 +822,84 @@ test("published brownout scores preserve reviewed outcomes and diagnostic separa
   }
 });
 
+test("published fault-crash scores preserve approval and supplemental validation", () => {
+  const summary = JSON.parse(readFileSync(new URL(
+    "../docs/calibration/fault-crash-record-2026-10-03.json",
+    import.meta.url,
+  ), "utf8"));
+  const criteria = parseCalibrationRubric(readFileSync(new URL(
+    "../docs/benchmarks/fault-crash-record.md",
+    import.meta.url,
+  ), "utf8"));
+  assert.equal(summary.review.status, "complete");
+  assert.equal(summary.review.provenance, "ai-assisted-human-reviewed");
+  assert.equal(summary.review.aiScoresFrozenBeforeUnblinding, true);
+  assert.equal(summary.review.independentHumanScoring, false);
+  assert.equal(summary.scoreSheetSha256,
+    "3d051416156df47fd387e401886c502dfdfe85971d4e7b1d32d63a1ca28be1c3");
+  assert.equal(summary.review.scoreSheetSha256, summary.scoreSheetSha256);
+  assert.equal(summary.generation.scheduled, 9);
+  assert.equal(summary.generation.recorded, 9);
+  assert.equal(summary.generation.answers, 9);
+  const outcomes = {};
+  for (const model of summary.models) {
+    assert.deepEqual(model.runs.map(({ run }) => run), [1, 2, 3]);
+    const scores = model.runs.map(({ score }) => score);
+    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum, score) =>
+      sum + (score - mean) ** 2, 0) / scores.length;
+    assert.equal(model.mean, mean);
+    assert.equal(model.sd, Math.sqrt(variance));
+    assert.equal(model.range, Math.max(...scores) - Math.min(...scores));
+    assert.equal(model.fullValidationPasses,
+      model.runs.filter((run) => run.validationOutcome === "passed").length);
+    for (const run of model.runs) {
+      assert.equal(run.generationOutcome, "answer");
+      assert.deepEqual(Object.keys(run.criteria).sort(),
+        criteria.map(({ id }) => id).sort());
+      assert.equal(run.score,
+        Object.values(run.criteria).reduce((sum, value) => sum + value, 0));
+      for (const criterion of criteria) {
+        assert.ok(run.criteria[criterion.id] >= 0);
+        assert.ok(run.criteria[criterion.id] <= criterion.maximum);
+      }
+      if (run.validationOutcome !== "passed") {
+        assert.equal(run.criteria["functional-correctness"], 0);
+      }
+      outcomes[run.validationOutcome] = (outcomes[run.validationOutcome] ?? 0) + 1;
+    }
+  }
+  assert.deepEqual(outcomes, { "compile-failure": 4, passed: 5 });
+  assert.equal(summary.validation.passes, outcomes.passed);
+  assert.equal(summary.validation.compileFailures, outcomes["compile-failure"]);
+  assert.equal(summary.validation.runtimeFailures, 0);
+  // Retain the generation-time catalog count, separate from stronger PR checks.
+  assert.equal(summary.validation.compileValidMutationsRejected, 35);
+  const verification = summary.postReviewVerification;
+  assert.equal(verification.originalCohortChanged, false);
+  assert.equal(verification.scoresChanged, false);
+  assert.equal(verification.newGenerations, 0);
+  assert.equal(verification.referencePassed, true);
+  assert.equal(verification.validVariantPasses, 2);
+  assert.equal(verification.compileValidMutationsRejected, 36);
+  assert.equal(verification.candidatesRevalidated, 9);
+  assert.equal(verification.candidateOutcomesUnchanged, true);
+  const expected = summary.models.flatMap((model) => model.runs.map((run) =>
+    [`${model.model}-run-${run.run}`, run.validationOutcome]));
+  assert.deepEqual(Object.fromEntries(verification.candidateReports.map(
+    ({ id, outcome }) => [id, outcome],
+  )), Object.fromEntries(expected));
+  assert.equal(summary.publication.artifact, "sanitized-aggregate-only");
+  assert.equal(summary.publication.answerExportsChecked, 9);
+  assert.equal(summary.publication.reviewRequiredCount, 0);
+  assert.equal(summary.publication.redactionCount, 0);
+  assert.equal(summary.publication.rawRecordsPublished, false);
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+  const task = tasks.find(({ id }) => id === summary.taskId);
+  assert.equal(summary.promptSha256,
+    createHash("sha256").update(task.prompt).digest("hex"));
+});
+
 test("brownout prompt supplies exact fixture-owned headers and accessor traces", () => {
   const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
   const brownout = tasks.find(({ id }) => id === "brownout-safe-mode");

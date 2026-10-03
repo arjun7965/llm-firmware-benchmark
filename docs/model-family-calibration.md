@@ -152,6 +152,77 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed Fault Crash-Record Pilot — `fault-crash-record`
+
+The `fault-crash-record-cross-family-20261003-01` cohort records all nine
+planned Luna, GLM, and Kimi attempts. All returned answers and met the
+single-C-fence extraction contract. Five passed all ten deterministic test
+groups; four failed compilation because `NULL` lacked a defining header.
+Runs were sequential, with concurrency one and no retries or candidate repairs.
+
+Before generation, the audited prompt supplied both exact headers,
+usable-capture rules, complete accessor traces, reserved and zero status
+behavior, modulo sequence wrap and invalid-record restart, event replacement,
+and explicit persistence limits. Its SHA-256 is
+`0fbabb89e8b6d0f0ddf120e2cd5fe72791eeb3f78457291ab9770673414117cd`.
+The reference and two valid implementation variants passed ten public test
+groups and all 35 compile-valid mutations were rejected under `c11-host`
+revision 4, Debian 13 x86-64, GCC 14.2.0 and Bubblewrap 0.11.0.
+Generation used a frozen snapshot of the audited working-tree changes based on
+`a07935fa8e1a07c0c24104861e647c1aa91481d9`; the aggregate records snapshot
+and patch hashes rather than implying the base commit alone contained them.
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 7.5 | 7.5 | 9.5 | 8.167 | 1/3 |
+| GLM-5.3 | 7.5 | 7.5 | 9.5 | 8.167 | 1/3 |
+| Kimi K3 | 10 | 10 | 9.5 | 9.833 | 3/3 |
+
+Compilation failures received zero functional credit; other criteria received
+only supported static credit, without adding a header or executing repaired
+code. Clarity deductions cover missing concrete test scenarios, inconsistent
+model-limit explanations, and an unsupported worst-case power-loss claim.
+The last is an explanation deduction based on a static XOR-cancellation
+counterexample outside the executable model, not a new implementation failure
+or a newly executed candidate test. Fixed-size standard memory helpers are not
+prohibited by the frozen prompt; passing the hosted fixture does not establish
+a target link or physical-hardware behavior.
+
+The mock checks retained fields at accessor boundaries: containment precedes
+capture, a complete valid record precedes acknowledgement, and repair or
+zeroing precedes NORMAL. Reset and corruption occur between completed API
+calls. Torn stores, power loss inside a call, physical retained-memory
+durability, and actual non-maskable fault preemption are excluded. The modeled
+IRQ critical sections do not prove exclusion of Cortex-M HardFault or NMI.
+
+Criterion ownership and the rubric were frozen before generation. The AI read
+anonymous answers and froze complete scores before opening the identity key.
+The coordinating AI knew model settings and per-model generation/validation
+progress, so this is **AI-assisted, human-reviewed** scoring, not independent
+human scoring. The conversation user approved the proposed scores and linked
+evidence for publication without changes on October 3, 2026
+(America/Los_Angeles). Deterministic pass counts remain separate from rubric
+partial credit.
+
+Luna used medium/600 seconds; GLM low/900 seconds/32,000 configured output
+ceiling; Kimi max/1,200 seconds/64,000. Effective provider limits are unknown.
+Generation used Node 22.21.0, Codex CLI 0.160.0 and OpenCode 1.18.34.
+Unequal budgets and this small single-task sample do not support a broad model
+ranking. All nine private public-export projections passed without redactions
+or review flags. Only the approved
+[sanitized aggregate](calibration/fault-crash-record-2026-10-03.json) is
+published; raw records, generated answers, keys and review artifacts remain
+private.
+
+PR review reproduced a read-copy defect that omitted status yet passed because
+the successful-read output already contained the expected value. Distinct
+sentinels now test every output field, and a controlled status-copy omission
+raises the live catalog to 36 compile-valid mutations. Supplemental sandbox
+verification passes the reference and both valid variants, rejects all 36
+mutations, and preserves the original outcomes for all nine unchanged answers.
+The aggregate records this separately; the original 35-mutation preflight,
+prompt, cohort, and approved scores are unchanged. No new generations were run.
+
 ## Completed Brownout Safe-Mode Pilot — `brownout-safe-mode`
 
 The `brownout-safe-mode-cross-family-20261003-03` cohort records all nine

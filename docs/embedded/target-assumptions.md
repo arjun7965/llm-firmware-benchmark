@@ -224,7 +224,7 @@ extension use, alignment behavior, memory map, and timer source.
 | `pwm-synchronized-update` | `armv7m-bare-metal` | Cortex-M3; opaque PWM0 shadow/load and status latches; non-nested ISR fault priority; foreground updates and recovery preserve exact interrupt state |
 | `watchdog-window-recovery` | `armv7m-bare-metal` | Cortex-M3; opaque WDT0 counter/reset-cause/feed latches; deterministic feed window and timeout reset; foreground recovery preserves exact interrupt state |
 | `brownout-safe-mode` | `armv7m-bare-metal` | Cortex-M3; opaque PWR0 brownout/supply/load model; caller-owned checksum-protected backup state; explicit hysteretic safe-mode recovery |
-| `fault-crash-record` | `armv7m-bare-metal` | Cortex-M3; non-nested fault-frame capture; opaque FAULT0 containment/status model; checksum-protected retained crash record and foreground recovery |
+| `fault-crash-record` | `armv7m-bare-metal` | Cortex-M3; serialized non-nested fault-frame capture; opaque FAULT0 containment/status model; checksum-protected retained record observed at accessor boundaries; no torn-store, physical durability, or actual NMI/HardFault exclusion claim |
 | `idempotent-system-init` | `armv7m-bare-metal` | Cortex-M3; opaque SYSTEM0 SAFE/clock/mask/READY configuration; caller-zeroed lifecycle state and retained safe-mode record |
 | `secure-boot-image-validation` | `armv7m-bare-metal` | Cortex-M3; opaque BOOT0 header/measurement/signature/target/recovery model; immutable verifier and no raw image/key access |
 | `secure-maintenance-command` | `armv7m-bare-metal` | Cortex-M3; opaque SEC0 lifecycle/presence/challenge/verifier/gate model; exact unaligned little-endian frames, replay domains, lockout, and secret boundary |

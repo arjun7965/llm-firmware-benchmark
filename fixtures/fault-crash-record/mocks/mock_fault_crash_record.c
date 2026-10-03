@@ -9,6 +9,7 @@ struct fault0_registers {
 typedef struct {
   mock_fault_event_t event;
   uint32_t value;
+  fault_record_t record;
 } mock_fault_event_record_t;
 
 typedef struct {
@@ -19,6 +20,7 @@ typedef struct {
   mock_fault_event_record_t events[MOCK_FAULT_HISTORY_CAPACITY];
   size_t event_count;
   bool invalid_access;
+  const fault_record_t *watched_record;
 } mock_fault_state_t;
 
 static mock_fault_state_t state;
@@ -32,6 +34,8 @@ static void record_event(mock_fault_event_t event, uint32_t value) {
     state.events[state.event_count] = (mock_fault_event_record_t) {
       .event = event,
       .value = value,
+      .record = state.watched_record != NULL
+        ? *state.watched_record : (fault_record_t) { 0 },
     };
   } else {
     state.invalid_access = true;
@@ -50,9 +54,17 @@ volatile fault0_registers_t *mock_fault0(void) {
   return &state.fault;
 }
 
+void mock_fault0_watch_record(const fault_record_t *record) {
+  state.watched_record = record;
+}
+
+fault_record_t mock_fault0_record_at(size_t index) {
+  return index < state.event_count && index < MOCK_FAULT_HISTORY_CAPACITY
+    ? state.events[index].record : (fault_record_t) { 0 };
+}
+
 void mock_fault0_set_status(uint32_t value) {
-  if ((value & ~FAULT0_STATUS_ALL) != 0u) state.invalid_access = true;
-  state.status = value & FAULT0_STATUS_ALL;
+  state.status = value;
 }
 
 void mock_fault0_set_irq_state(uint32_t value) {

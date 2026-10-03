@@ -39,3 +39,36 @@ Scoring profile: `firmware-v1`.
 
 Failing to force SAFE in the handler, trusting a corrupt record, or allowing a
 pending fault to be cleared silently is a substantial safety defect.
+
+## Calibration Scoring Policy
+
+Freeze criterion scores before opening the identity key. Generation failures
+have no rubric score. Extraction or compilation failure receives zero
+functional correctness; other dimensions may receive supported static credit.
+Passing all executable checks does not automatically award ten points.
+
+Assign each defect to its owning dimension to avoid duplicate deductions:
+record fields, checksum generation, sequence arithmetic, and read output belong
+to functional correctness; unbounded work to resource use; status snapshot,
+SAFE/record/acknowledgement ordering and clear-before-NORMAL to timing;
+critical sections and exact restoration to concurrency; retained integrity,
+event replacement/consumption and recovery gating to fault recovery; forbidden
+APIs or language dependencies to portability. Clarity requires both an accurate
+explanation of the modeled persistence boundary and concrete test scenarios.
+Use half-point partial credit where some of a dimension is demonstrably met.
+
+## Deterministic Model
+
+The prompt supplies both exact headers and the complete accessor contract.
+Ten public test groups cover isolated corruption of each retained field,
+wrong magic with a consistent checksum, retained reboots, zero/reserved/single
+status bits, sequence wrap and invalid-record restart, replacement of pending
+events, rejected reads/clears, successful clear ordering, and exact foreground
+interrupt restoration including an already-disabled caller.
+
+The mock snapshots retained fields at accessors to check SAFE-before-record,
+record-before-acknowledgement, repair-before-NORMAL and zero-before-NORMAL.
+Reset and corruption occur between completed calls. Torn stores, power loss
+inside a call, real non-maskable fault preemption, and physical retained-memory
+durability are excluded. Masking the modeled IRQ state does not establish
+exclusion of actual Cortex-M HardFault or NMI handlers.

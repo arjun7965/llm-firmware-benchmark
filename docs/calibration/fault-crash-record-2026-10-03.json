@@ -1,0 +1,407 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "fault-crash-record",
+  "cohortId": "fault-crash-record-cross-family-20261003-01",
+  "startedDate": "2026-10-03",
+  "dateTimezone": "America/Los_Angeles",
+  "harnessCommit": "a07935fa8e1a07c0c24104861e647c1aa91481d9",
+  "promptSha256": "0fbabb89e8b6d0f0ddf120e2cd5fe72791eeb3f78457291ab9770673414117cd",
+  "cohortSha256": "2d97fe358f8e5bb60d33d4b10d68d9811bc7abbd675cc289a881dda7f96019c5",
+  "packetSha256": "68441abe217653a30886f5a2e87547c50998c51743db912603a82f7030fbdf11",
+  "scoreSheetSha256": "3d051416156df47fd387e401886c502dfdfe85971d4e7b1d32d63a1ca28be1c3",
+  "review": {
+    "status": "complete",
+    "provenance": "ai-assisted-human-reviewed",
+    "aiScorer": "Codex (GPT-6)",
+    "aiScoresFrozenBeforeUnblinding": true,
+    "independentHumanScoring": false,
+    "priorExposure": "The coordinating AI knew settings and per-model progress, including validation outcomes. Current candidate content was read only under anonymous IDs; no identity key was opened before freezing. This is AI-assisted scoring, not independent human scoring.",
+    "decision": "approved-without-changes",
+    "reviewDate": "2026-10-03",
+    "dateTimezone": "America/Los_Angeles",
+    "recordedAt": "2026-10-03T23:14:44.776Z",
+    "humanReviewer": "Conversation user",
+    "reviewScope": "Approved the proposed scores and linked evidence for publication without changes, then requested creation and review of the PR. Static credit for compilation failures and deterministic pass rates remain separate.",
+    "scoreSheetSha256": "3d051416156df47fd387e401886c502dfdfe85971d4e7b1d32d63a1ca28be1c3"
+  },
+  "methodology": {
+    "concurrency": 1,
+    "automaticRetries": 0,
+    "scheduledRunsPerModel": 3,
+    "order": "Run-major: Luna, GLM, Kimi for each of runs 1, 2, 3",
+    "scorePopulation": "available-answers-only",
+    "generationFailuresHaveNoRubricScore": true,
+    "candidateRepairs": false,
+    "cliVersions": {
+      "node": "v22.21.0",
+      "codex": "codex-cli 0.160.0",
+      "opencode": "1.18.34"
+    },
+    "providerDifferences": "Luna medium/600s; GLM low/900s/32000 configured output ceiling; Kimi max/1200s/64000 configured output ceiling. Effective provider limits unknown; no parity claim.",
+    "preGenerationAudit": "Pre-generation audit supplies exact headers, usable-capture rules, complete accessor traces, sequence wrap and restart, reserved/zero status, record snapshots at accessors and explicit serialized-handler/persistence limits; ten public test groups and 35 compile-valid mutations; scoring ownership frozen before generation",
+    "snapshotSha256": "92515ff21942d45edb52356c29791d4205a58c81381e5c14f67b3181b36b71a5",
+    "workingTreePatchSha256": "f74b0e257dbc087466e613be79fa29353c62a12d2657dfdede20be2e1c7178c3",
+    "auditedWorkingTreeSnapshot": true,
+    "scoringPolicySha256": "7ca4df4775bc2b98c4560862f763e29c77d7214d6cab6a1328c8988d6cf32edc"
+  },
+  "validation": {
+    "profile": "c11-host",
+    "profileRevision": 4,
+    "profileSha256": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3",
+    "environmentId": "debian-13-x86-64-c11-host",
+    "environmentRevision": 1,
+    "environmentSha256": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7",
+    "sandbox": "bubblewrap 0.11.0",
+    "compiler": "GCC 14.2.0",
+    "referencePassed": true,
+    "compileValidMutationsRejected": 35,
+    "validVariantPasses": 2,
+    "publicTestGroups": 10,
+    "answers": 9,
+    "extracted": 9,
+    "compileFailures": 4,
+    "runtimeFailures": 0,
+    "passes": 5
+  },
+  "generation": {
+    "scheduled": 9,
+    "recorded": 9,
+    "answers": 9,
+    "answerRate": 1,
+    "outcomes": {
+      "answer": 9,
+      "timeout": 0,
+      "generation-limit": 0,
+      "provider-error": 0,
+      "no-answer": 0,
+      "missing": 0
+    }
+  },
+  "models": [
+    {
+      "model": "gpt-5.6-luna",
+      "modelId": "gpt-5.6-luna",
+      "provider": "codex",
+      "family": "OpenAI GPT",
+      "controls": {
+        "effort": "medium",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": null,
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "durationMs": 33783,
+          "rationale": "Compilation fails on undefined NULL with no defining header. Functional correctness 0/2, without adding a header or executing repaired code. Static review confirms the exact retained predicate, complete frame/checksum fields, sequence wrap/restart, one-shot masked status, SAFE-before-record-before-acknowledgement, repair/zero-before-NORMAL, retained safe boot, CAPTURED replacement, clear gating/CLEARED publication, failed-read preservation and exact foreground IRQ restoration. Work and state are bounded, with only opaque C11 accessors. The same header defect is not deducted again from portability. Clarity/validation 0.5/1: the brief explanation covers integrity, containment, boot, explicit recovery and limits, but provides no deterministic test scenarios."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "durationMs": 37381,
+          "rationale": "Compilation fails because NULL lacks a defining header. Functional correctness 0/2; no repairs were assembled or executed. Static review supports exact retained validity, complete local frame/checksum commit, unsigned sequence wrap and invalid-record restart, masked one-shot status, required containment/acknowledgement and repair/clear ordering, retained safe boot, event replacement/consumption/gating, unchanged failed-read output and rejected-clear state, bounded caller-owned data and exact IRQ restoration. Full other technical credit is static evidence, not executable success, and the missing header is not double-counted. Clarity/validation 0.5/1: the test paragraph lists categories without concrete input/expected outcomes; model limits are stated accurately."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 34082,
+          "rationale": "Passes all ten public groups. Static review confirms exact integrity and captured fields, modulo wrap/restart, one-shot masked status with reserved-bit preservation, SAFE-before-record-before-acknowledgement, repair and complete zero-before-NORMAL, safe retained boot, pending-event replacement/consumption and clear gating, failure preservation, bounded fixed-size operations and exact IRQ restoration. The standard string header supplies NULL and memset; the frozen prompt permits additional standard headers and does not ban fixed-size memory helpers, so no undisclosed runtime restriction is imposed. Clarity/validation 0.5/1: the explanation gives generic test categories without concrete inputs and expected outcomes. It correctly excludes power-loss atomicity, torn-write guarantees and real non-maskable fault exclusion."
+        }
+      ],
+      "mean": 8.166666666666666,
+      "sd": 0.9428090415820634,
+      "range": 2,
+      "fullValidationPasses": 1
+    },
+    {
+      "model": "glm53",
+      "modelId": "opencode-go/glm-5.3",
+      "provider": "opencode",
+      "family": "Z.ai GLM",
+      "controls": {
+        "variant": "low",
+        "timeoutMs": 900000,
+        "maxOutputTokens": 32000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "durationMs": 37317,
+          "rationale": "Compilation fails because NULL has no defining header. Functional correctness 0/2; no header was added and no repaired code was executed. Static review supports the exact magic/checksum predicate, complete frame fields, modulo sequence wrap and invalid-record restart, masked one-shot status, SAFE-before-record-before-acknowledgement, zero-before-NORMAL, retained safe boot, replacement/consumption/gating of events, unchanged failed-read output and rejected-clear state, and exact foreground IRQ restoration. Fixed caller-owned state and unsigned opaque C11 operations support the other technical dimensions; the missing header is counted only in functional correctness. Clarity/validation 0.5/1: the prose explains the model limits and accessor traces but its tests are coverage categories rather than concrete input/expected-outcome scenarios; rejected clear is also described as having no accessors although it still has the required IRQ pair."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "durationMs": 49301,
+          "rationale": "Compilation fails because NULL is used without a defining header. Functional correctness 0/2; no candidate repair or repaired execution. Static review supports the exact magic/checksum predicate (the constant-magic helper is equivalent after the explicit magic check), local checksum-valid record construction, modulo wrap/restart, one masked status snapshot, SAFE before record commit, record before acknowledgement, complete zero-before-NORMAL, safe retained boot, event replacement/gating/consumption, failed-output preservation and exact IRQ restoration. Fixed caller-owned state, a bounded local record and opaque C11 accesses support full other technical credit; the header defect is not double-counted. Clarity/validation 0.5/1: it describes accessor traces and appropriate model limits but no concrete input/expected-outcome tests; its statement that sequence is read beforehand also differs from the code reading it after SAFE, without changing the required boundary."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 50058,
+          "rationale": "Passes all ten public groups. Static review supports all integrity, sequence, status, event and recovery predicates, exact accessor counts and ordering, failed-operation preservation and exact interrupt restoration. Fixed-size memset of the 28-byte uint32 record is bounded; the frozen prompt permits needed standard headers and does not prohibit standard memory helpers, so no additional library restriction is invented or portability deduction applied. Clarity/validation 0.5/1: the explanation initially includes torn writes in the model, despite later correctly excluding them, and offers generic observable-test claims rather than concrete input/expected-outcome scenarios. These are explanation limitations, not implementation recovery failures in the declared model."
+        }
+      ],
+      "mean": 8.166666666666666,
+      "sd": 0.9428090415820634,
+      "range": 2,
+      "fullValidationPasses": 1
+    },
+    {
+      "model": "kimi-k3",
+      "modelId": "opencode-go/kimi-k3",
+      "provider": "opencode",
+      "family": "Moonshot Kimi",
+      "controls": {
+        "variant": "max",
+        "timeoutMs": 1200000,
+        "maxOutputTokens": 64000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 10,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "passed",
+          "durationMs": 34471,
+          "rationale": "Passes all ten public groups. Static review confirms full validity and field-copy predicates, modulo UINT32_MAX wrap to zero, restart at one after invalid records or clear, exact one-shot masked status and containment/record/acknowledgement order, repair and complete zeroing before NORMAL, retained safe boot, replacement of RETAINED/CLEARED with CAPTURED, failed-read output preservation, clear gating and exact saved IRQ restoration. The implementation uses bounded fieldwise operations and allowed opaque C11 accessors. Tests include restart at one after injected corruption, CAPTURED replacing RETAINED/CLEARED, rejected-clear preservation, sequence-wrap boundaries and accessor-record snapshots. The prose uses durable as shorthand for the modeled retained record, then expressly disclaims physical retained-memory durability, mid-call power-loss atomicity and real fault/NMI exclusion; no stronger hardware guarantee is inferred. Full credit requires this static evidence in addition to the executable pass."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 10,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "passed",
+          "durationMs": 137356,
+          "rationale": "Passes all ten public groups. Static review independently confirms exact retained integrity without extra range predicates, sequence wrap/restart, complete frame capture, zero/reserved status handling, SAFE-before-record-before-acknowledgement, repair/zero-before-NORMAL, safe retained boot, pending-event replacement and explicit consumption/recovery, unchanged rejected outputs/state, and exact IRQ restoration. Fixed caller-owned storage, bounded helpers, required standard headers and only opaque controller accessors satisfy resource/portability requirements. Concrete tests specify null calls, raw HARDFAULT plus a reserved bit producing stored status 1 and acknowledgement 1, UINT32_MAX wrap to zero, corruption restarting at one, pending-event clear rejection, and zero/nonzero IRQ restoration. It expressly excludes mid-call power loss, torn stores, physical durability and real non-maskable exclusion. Full credit is supported by code review and execution, not by the pass alone."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 33390,
+          "rationale": "Passes all ten public groups. Static review confirms exact record validity, frame/checksum construction, wrapping/restarting sequences, zero/reserved status treatment, containment before mutation, complete record before acknowledgement, repair/zeroing before NORMAL, retained safe boot, event replacement/consumption and clear gating, failed-output/state preservation, bounded storage and exact IRQ restoration through allowed C11 accessors. Its test scenarios are concrete, including UINT32_MAX to zero and clear rejection until event consumption. Clarity/validation 0.5/1: after excluding physical power-loss guarantees, the explanation claims the worst outcome of mid-call loss is losing a record rather than trusting a corrupt one. XOR integrity does not establish that guarantee: cancelling field changes can leave an intermediate checksum-valid mixed record. This is a static counterexample outside the declared executable model; no new candidate execution or implementation recovery deduction is claimed."
+        }
+      ],
+      "mean": 9.833333333333334,
+      "sd": 0.23570226039551584,
+      "range": 0.5,
+      "fullValidationPasses": 3
+    }
+  ],
+  "publication": {
+    "artifact": "sanitized-aggregate-only",
+    "answerExportsChecked": 9,
+    "redactionCount": 0,
+    "reviewRequiredCount": 0,
+    "rawRecordsPublished": false
+  },
+  "postReviewVerification": {
+    "verifiedAt": "2026-10-03T23:18:06.862Z",
+    "reason": "PR review reproduced a status-copy omission surviving the original read tests because successful-read output fields shared expected values. Distinct sentinels now check complete read copies, with an additional compile-valid controlled mutation.",
+    "originalCohortChanged": false,
+    "scoresChanged": false,
+    "newGenerations": 0,
+    "referencePassed": true,
+    "validVariantPasses": 2,
+    "compileValidMutationsRejected": 36,
+    "candidatesRevalidated": 9,
+    "candidateOutcomesUnchanged": true,
+    "fixtureTestsSha256": "024d100df64472e452a17650beb65e10b5c7abb0bb0cbc22f9b2510b0797a444",
+    "mutationCatalogSha256": "29046a78453c789c84f0cf591ff0e713ff12b9a1752dae6efaa481ff28a6c6e5",
+    "candidateReports": [
+      {
+        "id": "gpt-5.6-luna-run-1",
+        "outcome": "compile-failure",
+        "answerSha256": "a6aea732c82f9b0bcca7a1c09665bd45275b0b1b8f5a81f3cb4a55812f2b2f3b",
+        "reportSha256": "ab12dbca22419923d45f7e5425af85c724c5d8cbdc03bf92edbb89fe6d0586ee"
+      },
+      {
+        "id": "glm53-run-1",
+        "outcome": "compile-failure",
+        "answerSha256": "f3ff704f4007b9eea10aff2a8f55bdf57ace83747a56cd945ea6e2f4fd6c43bc",
+        "reportSha256": "91a1f20ffe1ec8d4304f2b174d8d38cff1dd3e13c84bb6e367263b5948c02eb4"
+      },
+      {
+        "id": "kimi-k3-run-1",
+        "outcome": "passed",
+        "answerSha256": "2fa9b01dfc1559e4284f334f77d9db81a5ebeef0958349a15ddb82020fbbaecb",
+        "reportSha256": "94935fbab8138f586fc5533ade76bab011350fd27f1f69e72b881ae58c0dddf0"
+      },
+      {
+        "id": "gpt-5.6-luna-run-2",
+        "outcome": "compile-failure",
+        "answerSha256": "cbee7b14bc1690852be0f0ee541c3881444828a9e3f73adfe82ee20db113a592",
+        "reportSha256": "b12c2ba31352d200d301b49a37e619fe030c6781b0b0e2c0310b245f9f12b815"
+      },
+      {
+        "id": "glm53-run-2",
+        "outcome": "compile-failure",
+        "answerSha256": "5841ec0c2b050788d4229efe476817eef94f3bdeb6866255af97e380c60b7c38",
+        "reportSha256": "45c601dd83f98351ffc24813bcc15010049b0297ae35312eaac3d50ad84fc56d"
+      },
+      {
+        "id": "kimi-k3-run-2",
+        "outcome": "passed",
+        "answerSha256": "c1afbdf8ec404ac691d02ccf04c7b2d0e0332bdec142222830d61f6ec4fa263f",
+        "reportSha256": "f5ab7571366f0e738b0658c0f282e2bec89cc2769da26b49425bc02b1954e1df"
+      },
+      {
+        "id": "gpt-5.6-luna-run-3",
+        "outcome": "passed",
+        "answerSha256": "fe9e63dcfa147070d220e77d7681c7a91a5f3ff95b5844fe03943126d89c05f1",
+        "reportSha256": "02870e66ca48c32134190d2ef09f5ff210603c29da2ea1e11fa8b7b23efea51f"
+      },
+      {
+        "id": "glm53-run-3",
+        "outcome": "passed",
+        "answerSha256": "07188efaadee25dac48b10d7e05bb5302c1ed2186b719a3c97dbb2f129246602",
+        "reportSha256": "59ae7900d74e3ab0c688dc8538b29e60ddac7f787a925d75a0d7e11a7d75d9f5"
+      },
+      {
+        "id": "kimi-k3-run-3",
+        "outcome": "passed",
+        "answerSha256": "98ef8fe8fea07535fc894cbfaaa890ae99b7d0c662a6e85e9dea4a5fb4feb184",
+        "reportSha256": "cd4bdefea7dd67b6df45c14c172eb6bd4668233bd0d6474796f63c3cc6d00faf"
+      }
+    ]
+  }
+}
