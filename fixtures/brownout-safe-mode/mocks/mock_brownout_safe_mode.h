@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "fixture_brownout_safe_mode.h"
+#include "brownout_safe_mode.h"
 
 typedef enum {
   MOCK_PWR_EVENT_STATUS_READ,
@@ -18,6 +18,8 @@ typedef enum {
 } mock_pwr_event_t;
 
 void mock_pwr0_reset(void);
+void mock_pwr0_watch_persistent(const brownout_persistent_t *persistent);
+brownout_persistent_t mock_pwr0_persistent_at(size_t index);
 volatile pwr0_registers_t *mock_pwr0(void);
 void mock_pwr0_set_status(uint32_t value);
 void mock_pwr0_set_supply_mv(uint16_t value);

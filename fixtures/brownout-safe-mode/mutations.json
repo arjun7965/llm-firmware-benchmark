@@ -37,6 +37,102 @@
       "description": "Lose the caller's exact interrupt state after event consumption.",
       "find": "  manager->event = BROWNOUT_EVENT_NONE;\n  pwr0_irq_restore(irq_state);\n  return event;",
       "replace": "  manager->event = BROWNOUT_EVENT_NONE;\n  pwr0_irq_restore(irq_state ^ irq_state);\n  return event;"
+    },
+    {
+      "id": "ignore-record-magic",
+      "description": "Accept a wrong magic with a matching checksum.",
+      "find": "persistent->magic == BROWNOUT_PERSISTENT_MAGIC &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-safe-mode-range",
+      "description": "Accept an out-of-range safe flag with a matching checksum.",
+      "find": "persistent->safe_mode <= UINT8_C(1) &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-reserved-field",
+      "description": "Accept a nonzero reserved byte.",
+      "find": "persistent->reserved == 0u &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-record-checksum",
+      "description": "Accept corrupted retained data without verifying its checksum.",
+      "find": "persistent->checksum == persistent_checksum(persistent);",
+      "replace": "persistent_checksum(persistent) == persistent_checksum(persistent);"
+    },
+    {
+      "id": "miss-exact-low-boundary",
+      "description": "Miss voltage-only brownout at the exact low threshold.",
+      "find": "supply_mv <= low_mv;",
+      "replace": "supply_mv < low_mv;"
+    },
+    {
+      "id": "ignore-resume-latch",
+      "description": "Resume at healthy voltage despite a latched brownout.",
+      "find": "    (status & PWR0_STATUS_BROWNOUT) != 0u ||\n    supply_mv < manager->recovery_mv",
+      "replace": "    (status & 0u) != 0u ||\n    supply_mv < manager->recovery_mv"
+    },
+    {
+      "id": "wrap-brownout-counter",
+      "description": "Wrap a saturated retained counter to zero.",
+      "find": "return count < UINT16_MAX ? (uint16_t)(count + UINT16_C(1)) : count;",
+      "replace": "return (uint16_t)(count + UINT16_C(1));"
+    },
+    {
+      "id": "lose-active-reboot-event",
+      "description": "Suppress the entry event when booting with an already-safe record.",
+      "find": "    event = BROWNOUT_EVENT_ENTERED_SAFE_MODE;",
+      "replace": "    event = BROWNOUT_EVENT_NONE;"
+    },
+    {
+      "id": "retain-consumed-event",
+      "description": "Return an event without clearing the pending event.",
+      "find": "  manager->event = BROWNOUT_EVENT_NONE;\n  pwr0_irq_restore(irq_state);",
+      "replace": "  manager->event = event;\n  pwr0_irq_restore(irq_state);"
+    },
+    {
+      "id": "lose-pending-event-on-healthy-poll",
+      "description": "Erase an unconsumed event during a healthy poll.",
+      "find": "  return entered_safe_mode ? BROWNOUT_EVENT_ENTERED_SAFE_MODE",
+      "replace": "  if (!brownout_active) manager->event = BROWNOUT_EVENT_NONE;\n  return entered_safe_mode ? BROWNOUT_EVENT_ENTERED_SAFE_MODE"
+    },
+    {
+      "id": "persist-before-safe-at-boot",
+      "description": "Persist the safe flag before commanding safe containment at boot.",
+      "find": "    pwr0_write_load_control(pwr, PWR0_LOAD_SAFE);\n    if (persistent->safe_mode == 0u) {\n      write_persistent(persistent, increment_count(persistent->brownout_count), true);\n    }",
+      "replace": "    if (persistent->safe_mode == 0u) {\n      write_persistent(persistent, increment_count(persistent->brownout_count), true);\n    }\n    pwr0_write_load_control(pwr, PWR0_LOAD_SAFE);"
+    },
+    {
+      "id": "persist-before-safe-on-poll",
+      "description": "Persist a new entry before commanding safe containment on poll.",
+      "find": "    pwr0_write_load_control(manager->pwr, PWR0_LOAD_SAFE);\n    if (manager->persistent->safe_mode == 0u) {",
+      "replace": "    if (manager->persistent->safe_mode == 0u) {\n      write_persistent(manager->persistent, increment_count(manager->persistent->brownout_count), true);\n      manager->event = BROWNOUT_EVENT_ENTERED_SAFE_MODE;\n      entered_safe_mode = true;\n    }\n    pwr0_write_load_control(manager->pwr, PWR0_LOAD_SAFE);\n    if (manager->persistent->safe_mode == 0u) {"
+    },
+    {
+      "id": "clear-latch-before-retaining-entry",
+      "description": "Acknowledge the hardware latch before a complete safe record exists.",
+      "find": "    if (persistent->safe_mode == 0u) {\n      write_persistent(persistent, increment_count(persistent->brownout_count), true);\n    }\n    if ((status & PWR0_STATUS_BROWNOUT) != 0u) {\n      pwr0_write_status_clear(pwr, PWR0_STATUS_BROWNOUT);\n    }",
+      "replace": "    if ((status & PWR0_STATUS_BROWNOUT) != 0u) {\n      pwr0_write_status_clear(pwr, PWR0_STATUS_BROWNOUT);\n    }\n    if (persistent->safe_mode == 0u) {\n      write_persistent(persistent, increment_count(persistent->brownout_count), true);\n    }"
+    },
+    {
+      "id": "clear-retained-safe-before-enable",
+      "description": "Clear the retained safe flag before enabling the load.",
+      "find": "  pwr0_write_load_control(manager->pwr, PWR0_LOAD_ENABLED);\n  write_persistent(\n    manager->persistent,\n    manager->persistent->brownout_count,\n    false\n  );",
+      "replace": "  write_persistent(\n    manager->persistent,\n    manager->persistent->brownout_count,\n    false\n  );\n  pwr0_write_load_control(manager->pwr, PWR0_LOAD_ENABLED);"
+    },
+    {
+      "id": "omit-safe-write-on-repeated-voltage-brownout",
+      "description": "Omit the required SAFE write on an already-safe voltage-only poll.",
+      "find": "    pwr0_write_load_control(manager->pwr, PWR0_LOAD_SAFE);\n    if (manager->persistent->safe_mode == 0u) {",
+      "replace": "    if (manager->persistent->safe_mode == 0u || (status & PWR0_STATUS_BROWNOUT) != 0u) {\n      pwr0_write_load_control(manager->pwr, PWR0_LOAD_SAFE);\n    }\n    if (manager->persistent->safe_mode == 0u) {"
+    },
+    {
+      "id": "count-already-safe-reboot",
+      "description": "Incorrectly count an active boot as a new entry when safe mode is already retained.",
+      "find": "    if (persistent->safe_mode == 0u) {\n      write_persistent(persistent, increment_count(persistent->brownout_count), true);\n    }",
+      "replace": "    write_persistent(persistent, increment_count(persistent->brownout_count), true);"
     }
   ]
 }

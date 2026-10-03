@@ -152,6 +152,71 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed Brownout Safe-Mode Pilot — `brownout-safe-mode`
+
+The `brownout-safe-mode-cross-family-20261003-03` cohort records all nine
+scheduled Luna, GLM, and Kimi attempts, with concurrency one and no retries or
+candidate repairs. All nine supplied answers; seven met the single-C-fence
+extraction contract. Two passed all eight deterministic test groups and five
+failed compilation because `NULL` lacked a defining header. Two answers
+contained multiple C fences and were neither assembled nor compiled.
+
+Before generation, the prompt supplied both exact headers, usable-manager
+rules, compiler flags, accessor-boundary persistence assumptions, and complete
+allowed accessor sequences. At generation, the trusted reference passed and
+all 21 compile-valid mutations were rejected in `debian-13-x86-64-c11-host`, C11 profile
+revision 4, GCC 14.2.0 and Bubblewrap 0.11.0. Coverage includes isolated retained
+corruption, legal threshold extremes, retained-state snapshots, repeated resets,
+event handling, saturated counting and explicit recovery traces. The model
+excludes torn C stores and physical power-loss resilience.
+
+Two earlier nine-attempt cohorts remain unscored diagnostics with sealed
+identity keys. The first found ambiguous wording for a required redundant SAFE
+write on rejected recovery (four compile failures, five runtime failures).
+The second found an unstated ban on SAFE followed by ENABLED during successful
+recovery (six compile failures, one runtime failure, two passes). The final
+prompt explicitly states every accessor sequence; its fixture also adds a
+repeated-safe-poll assertion and mutation. No cohorts are pooled.
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 7.5 | 7.5 | 7.5 | 7.500 | 0/3 |
+| GLM-5.3 | 7.5 | 7.5 | 7.5 | 7.500 | 0/3 |
+| Kimi K3 | 9.5 | 10 | 7.5 | 9.000 | 2/3 |
+
+Compile and extraction failures receive zero functional credit; supported
+static evidence can earn other credit. Missing concrete test scenarios or an
+unsupported reset-boundary explanation receives 0.5 clarity/validation credit.
+The published pass rate must remain separate from these rubric scores.
+
+The rubric, scoring policy and cohort were frozen before generation; AI scores
+were frozen before opening this cohort's identity key. The coordinating AI had
+seen anonymous diagnostic answers and per-model progress. This is AI-assisted
+scoring, not independent human scoring. The conversation user approved the
+proposed scores and linked evidence for publication without changes on
+October 3, 2026 (America/Los_Angeles).
+
+Luna used medium/600 seconds; GLM low/900 seconds/32,000 configured output
+ceiling; Kimi max/1,200 seconds/64,000. Effective provider limits are unknown.
+These unequal budgets and a small single-task cohort do not establish a broad
+model ranking. All nine private sanitized exports passed without redactions
+or review flags. Raw records, answers, keys and review artifacts remain private.
+
+PR review subsequently found that the repeated-active-reboot test used only a
+saturated count, masking erroneous increments on an already-safe reboot. An
+unsaturated count case now rejects that defect, bringing the live catalog to
+22 compile-valid mutations. Supplemental sandbox validation passes the trusted
+reference, rejects all 22 mutations, and preserves the original outcomes for
+all seven unchanged extracted answers. The two extraction failures were not
+assembled. This post-review verification is recorded separately in the aggregate;
+the original 21-mutation preflight, prompt, cohort, and approved scores remain
+unchanged. No new model generations were run.
+
+The approved [sanitized aggregate](calibration/brownout-safe-mode-2026-10-03.json)
+records the frozen prompt, cohort, snapshot, packet and score-sheet hashes,
+per-run outcomes and criterion rationales, validation environment, diagnostic
+cohort provenance, and human-review decision.
+
 ## Completed Dual-Slot Update Pilot — `dual-slot-update-recovery`
 
 The `dual-slot-update-recovery-cross-family-20260926-01` cohort has completed
