@@ -64,7 +64,8 @@ Eight public test groups cover configuration and pointer rejection, isolated
 retained-field corruption, latch- and voltage-driven entry, both legal threshold
 extremes, pending-event preservation and replacement, hysteretic recovery,
 exact interrupt restoration, saturating counts, accessor ordering, and repeated
-active and healthy reboots. The mutation catalog includes compile-valid defects
+active and healthy reboots, including unsaturated counters so saturation cannot
+hide erroneous repeat increments. The mutation catalog includes compile-valid defects
 for each retained validity check and for containment and persistence ordering.
 
 Score a defect only in its owning dimension. Record validity, input bounds,

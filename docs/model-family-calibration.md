@@ -163,8 +163,8 @@ contained multiple C fences and were neither assembled nor compiled.
 
 Before generation, the prompt supplied both exact headers, usable-manager
 rules, compiler flags, accessor-boundary persistence assumptions, and complete
-allowed accessor sequences. The trusted reference passes and all 21
-compile-valid mutations are rejected in `debian-13-x86-64-c11-host`, C11 profile
+allowed accessor sequences. At generation, the trusted reference passed and
+all 21 compile-valid mutations were rejected in `debian-13-x86-64-c11-host`, C11 profile
 revision 4, GCC 14.2.0 and Bubblewrap 0.11.0. Coverage includes isolated retained
 corruption, legal threshold extremes, retained-state snapshots, repeated resets,
 event handling, saturated counting and explicit recovery traces. The model
@@ -201,6 +201,16 @@ ceiling; Kimi max/1,200 seconds/64,000. Effective provider limits are unknown.
 These unequal budgets and a small single-task cohort do not establish a broad
 model ranking. All nine private sanitized exports passed without redactions
 or review flags. Raw records, answers, keys and review artifacts remain private.
+
+PR review subsequently found that the repeated-active-reboot test used only a
+saturated count, masking erroneous increments on an already-safe reboot. An
+unsaturated count case now rejects that defect, bringing the live catalog to
+22 compile-valid mutations. Supplemental sandbox validation passes the trusted
+reference, rejects all 22 mutations, and preserves the original outcomes for
+all seven unchanged extracted answers. The two extraction failures were not
+assembled. This post-review verification is recorded separately in the aggregate;
+the original 21-mutation preflight, prompt, cohort, and approved scores remain
+unchanged. No new model generations were run.
 
 The approved [sanitized aggregate](calibration/brownout-safe-mode-2026-10-03.json)
 records the frozen prompt, cohort, snapshot, packet and score-sheet hashes,

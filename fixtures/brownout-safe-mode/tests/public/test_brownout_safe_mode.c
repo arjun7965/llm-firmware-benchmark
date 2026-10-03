@@ -452,6 +452,25 @@ static bool test_retained_order_and_repeated_resets(void) {
     { MOCK_PWR_EVENT_IRQ_RESTORE, UINT32_C(1) },
   }, 2u));
   CHECK(!mock_pwr0_invalid_access());
+
+  /* Saturation must not hide an erroneous increment on an already-safe boot. */
+  record = valid_record(UINT16_C(17), UINT8_C(1));
+  for (unsigned reboot = 0u; reboot < 3u; reboot++) {
+    mock_pwr0_reset();
+    mock_pwr0_set_status(PWR0_STATUS_BROWNOUT);
+    CHECK(initialize(&manager, &record));
+    CHECK(record.brownout_count == UINT16_C(17));
+    CHECK(record.safe_mode == UINT8_C(1));
+    CHECK(record_is_valid(&record));
+    CHECK(manager.event == BROWNOUT_EVENT_ENTERED_SAFE_MODE);
+    CHECK(events_match_from(0u, (const expected_event_t[]) {
+      { MOCK_PWR_EVENT_STATUS_READ, PWR0_STATUS_BROWNOUT },
+      { MOCK_PWR_EVENT_SUPPLY_READ, BROWNOUT_MAXIMUM_MV },
+      { MOCK_PWR_EVENT_LOAD_WRITE, PWR0_LOAD_SAFE },
+      { MOCK_PWR_EVENT_STATUS_CLEAR_WRITE, PWR0_STATUS_BROWNOUT },
+    }, 4u));
+    CHECK(!mock_pwr0_invalid_access());
+  }
   return true;
 }
 

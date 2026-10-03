@@ -364,5 +364,72 @@
       "identityKeySha256": "5bf06625bb73db5b871b96d2eb7d0590c1d78d190c97026c51b13db3ec83ccda",
       "pooledWithScoredCohort": false
     }
-  ]
+  ],
+  "postReviewVerification": {
+    "recordedAt": "2026-10-03T21:58:41.171Z",
+    "reason": "PR review found saturated reboot counters masked erroneous repeated increments; add an unsaturated active reboot trace and mutation.",
+    "originalCohortChanged": false,
+    "scoresChanged": false,
+    "newGenerations": 0,
+    "candidateRepairs": false,
+    "fixtureTestsSha256": "5082e2e85ce6d720de72fbbab3d9e8c6e3258b8636ae87d2ba8b0c50f78c8b41",
+    "mutationCatalogSha256": "7ea5337d9877c379d029fbecb24287a775358c58fb6e3192bcfac10a17414f8c",
+    "referencePassed": true,
+    "compileValidMutationsRejected": 22,
+    "candidateOutcomesUnchanged": true,
+    "candidatesRevalidated": 7,
+    "extractionFailuresNotAssembled": 2,
+    "privateSummarySha256": "e2e42fff0b9e482b11cbe0e3ddbb6178f61f51494de54423e924852ee10d9dd0",
+    "candidateReports": [
+      {
+        "id": "gpt-5.6-luna-run-1",
+        "outcome": "compile-failure",
+        "answerSha256": "133c0f2eece3ff2af8c5a3be7d8b126c7b380f19bfd76b1d68555a7990052feb",
+        "originalReportSha256": "ae97082384d9f8e6d7dd9ab47edf568b0e969b400c10722f03d04b6e21bfec0e",
+        "reportSha256": "14cd9e1eff5bbc53e5980f0a2ce0d55a0e3d1ed0fd6783b8ef757ecd35cf59e2"
+      },
+      {
+        "id": "kimi-k3-run-1",
+        "outcome": "passed",
+        "answerSha256": "7b60a795efb19fb083472722b74789167ddacfbb3298f8ec89c61fb4b47e14b7",
+        "originalReportSha256": "f08cec4b77691bea041b6e3bdcab15ec68548c78f2860277c2a3c11e24462865",
+        "reportSha256": "094c82c73c43251b9194cf367ec930b9411416bd841a4ae172e7f99170afd24d"
+      },
+      {
+        "id": "gpt-5.6-luna-run-2",
+        "outcome": "compile-failure",
+        "answerSha256": "790c9b8d0ddc0391086bf69607359a1e0247fd770df68d05df2626ea0e3c7ad3",
+        "originalReportSha256": "2f5a8185b3014d66ca051e549159fe83da69027901c15b83c3f9f9eebd086fb5",
+        "reportSha256": "1e093c586b475d5b3df9f002ae4e179be0dd6e989db9abb405cdefff01230b8a"
+      },
+      {
+        "id": "glm53-run-2",
+        "outcome": "compile-failure",
+        "answerSha256": "0e00073ec50974808ad7e8acff3f77c6aa89b098a752c38ac8b6e6be634adaf8",
+        "originalReportSha256": "c618d34867dd8142d298352cba809e9847f7dae2d6da78e098231ef73a0e86e7",
+        "reportSha256": "8b0d0b00cbffd89faa747b4974e78fdbc9352354484d4733dfe4f0facb4fe961"
+      },
+      {
+        "id": "kimi-k3-run-2",
+        "outcome": "passed",
+        "answerSha256": "f48bb482d7adf86b5b4a9f842fd1033da8d40232d33199e2511fd936cbfb37f7",
+        "originalReportSha256": "79c7aadb701e337a9e54f26be759d10a467dbebe208a2c57f3e3a61a45cca8cf",
+        "reportSha256": "a9fa6e618ffa56b745675cf40a17a45c348070de272aa210f5501a7a376aabcc"
+      },
+      {
+        "id": "gpt-5.6-luna-run-3",
+        "outcome": "compile-failure",
+        "answerSha256": "4fc995e3b79fea3a4f3c72d6a7a47c1fb9fc9e59879f7dad7564654b59b8d47f",
+        "originalReportSha256": "52b11d5bd55420ccf1208c9be37d0cabf6a8487d24727b2e988abaf2e3cbe367",
+        "reportSha256": "b1d197d549d6c740dcca7bbb78daccc164048c5bffd7c9f7b7f09eecd3ada0e2"
+      },
+      {
+        "id": "kimi-k3-run-3",
+        "outcome": "compile-failure",
+        "answerSha256": "1a42e895cddd8a62f81f1fb292404033d51009d4cbec9d817abff0d07645d28a",
+        "originalReportSha256": "f8771d1d19768af48ec732760e21ac8415d295a72ad8b550df0f8b3f9d813bd7",
+        "reportSha256": "17916dba40dbf6d840a41b80bb7013636bcd56d80b20612068667f40fa9ad206"
+      }
+    ]
+  }
 }

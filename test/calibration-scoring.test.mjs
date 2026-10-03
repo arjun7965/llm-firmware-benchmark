@@ -737,3 +737,102 @@ test("the completed supervisor pilot retains its active deterministic contract",
     ),
   );
 });
+
+test("published brownout scores preserve reviewed outcomes and diagnostic separation", () => {
+  const summary = JSON.parse(readFileSync(new URL(
+    "../docs/calibration/brownout-safe-mode-2026-10-03.json",
+    import.meta.url,
+  ), "utf8"));
+  const criteria = parseCalibrationRubric(readFileSync(new URL(
+    "../docs/benchmarks/brownout-safe-mode.md",
+    import.meta.url,
+  ), "utf8"));
+  assert.equal(summary.review.status, "complete");
+  assert.equal(summary.review.provenance, "ai-assisted-human-reviewed");
+  assert.equal(summary.review.aiScoresFrozenBeforeUnblinding, true);
+  assert.equal(summary.review.independentHumanScoring, false);
+  assert.equal(summary.scoreSheetSha256,
+    "e092f4c8208c4c87c801fcfe96763ce7a73f9cc7913454fcdca9ffbd1f4111e0");
+  assert.equal(summary.review.scoreSheetSha256, summary.scoreSheetSha256);
+  assert.equal(summary.generation.scheduled, 9);
+  assert.equal(summary.generation.recorded, 9);
+  assert.equal(summary.generation.answers, 9);
+  assert.deepEqual(summary.models.map((model) => ({
+    model: model.model,
+    scores: model.runs.map(({ score }) => score),
+    mean: model.mean,
+    passes: model.fullValidationPasses,
+  })), [
+    { model: "gpt-5.6-luna", scores: [7.5, 7.5, 7.5], mean: 7.5, passes: 0 },
+    { model: "glm53", scores: [7.5, 7.5, 7.5], mean: 7.5, passes: 0 },
+    { model: "kimi-k3", scores: [9.5, 10, 7.5], mean: 9, passes: 2 },
+  ]);
+  const outcomes = {};
+  for (const model of summary.models) {
+    assert.deepEqual(model.runs.map(({ run }) => run), [1, 2, 3]);
+    assert.equal(model.mean,
+      model.runs.reduce((total, run) => total + run.score, 0) / 3);
+    for (const run of model.runs) {
+      assert.deepEqual(Object.keys(run.criteria).sort(),
+        criteria.map(({ id }) => id).sort());
+      assert.equal(run.score,
+        Object.values(run.criteria).reduce((total, score) => total + score, 0));
+      for (const criterion of criteria) {
+        assert.ok(run.criteria[criterion.id] >= 0);
+        assert.ok(run.criteria[criterion.id] <= criterion.maximum);
+      }
+      if (run.validationOutcome !== "passed") {
+        assert.equal(run.criteria["functional-correctness"], 0);
+      }
+      outcomes[run.validationOutcome] = (outcomes[run.validationOutcome] ?? 0) + 1;
+    }
+  }
+  assert.deepEqual(outcomes, {
+    "compile-failure": 5,
+    "extraction-failure": 2,
+    passed: 2,
+  });
+  assert.equal(summary.validation.extracted, 7);
+  assert.equal(summary.validation.passes, outcomes.passed);
+  assert.equal(summary.validation.compileFailures, outcomes["compile-failure"]);
+  assert.equal(summary.validation.runtimeFailures, 0);
+  // Preserve the historical preflight count when the live fixture is strengthened.
+  assert.equal(summary.validation.compileValidMutationsRejected, 21);
+  const verification = summary.postReviewVerification;
+  assert.equal(verification.originalCohortChanged, false);
+  assert.equal(verification.scoresChanged, false);
+  assert.equal(verification.newGenerations, 0);
+  assert.equal(verification.referencePassed, true);
+  assert.equal(verification.compileValidMutationsRejected, 22);
+  assert.equal(verification.candidatesRevalidated, 7);
+  assert.equal(verification.extractionFailuresNotAssembled, 2);
+  assert.equal(verification.candidateOutcomesUnchanged, true);
+  const expectedOutcomes = summary.models.flatMap((model) => model.runs
+    .filter((run) => run.validationOutcome !== "extraction-failure")
+    .map((run) => [`${model.model}-run-${run.run}`, run.validationOutcome]));
+  assert.deepEqual(Object.fromEntries(verification.candidateReports
+    .map(({ id, outcome }) => [id, outcome])), Object.fromEntries(expectedOutcomes));
+  assert.equal(summary.diagnosticCohorts.length, 2);
+  for (const diagnostic of summary.diagnosticCohorts) {
+    assert.equal(diagnostic.status, "unscored-diagnostic");
+    assert.equal(diagnostic.identityKeyOpened, false);
+    assert.equal(diagnostic.pooledWithScoredCohort, false);
+    assert.equal(diagnostic.scheduled, 9);
+    assert.notEqual(diagnostic.promptSha256, summary.promptSha256);
+  }
+});
+
+test("brownout prompt supplies exact fixture-owned headers and accessor traces", () => {
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+  const brownout = tasks.find(({ id }) => id === "brownout-safe-mode");
+  for (const name of ["brownout_safe_mode.h", "fixture_brownout_safe_mode.h"]) {
+    const header = readFileSync(new URL(
+      `../fixtures/brownout-safe-mode/starter/${name}`,
+      import.meta.url,
+    ), "utf8");
+    assert.ok(brownout.prompt.includes(`Supplied ${name}:\n\x60\x60\x60c\n${header}\x60\x60\x60`));
+  }
+  assert.match(brownout.prompt, /no additional PWR0 or IRQ accessor calls are allowed/u);
+  assert.match(brownout.prompt, /Never write SAFE followed by ENABLED/u);
+  assert.match(brownout.prompt, /otherwise NONE independently of a pending event/u);
+});

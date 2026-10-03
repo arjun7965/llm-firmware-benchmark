@@ -127,6 +127,12 @@
       "description": "Omit the required SAFE write on an already-safe voltage-only poll.",
       "find": "    pwr0_write_load_control(manager->pwr, PWR0_LOAD_SAFE);\n    if (manager->persistent->safe_mode == 0u) {",
       "replace": "    if (manager->persistent->safe_mode == 0u || (status & PWR0_STATUS_BROWNOUT) != 0u) {\n      pwr0_write_load_control(manager->pwr, PWR0_LOAD_SAFE);\n    }\n    if (manager->persistent->safe_mode == 0u) {"
+    },
+    {
+      "id": "count-already-safe-reboot",
+      "description": "Incorrectly count an active boot as a new entry when safe mode is already retained.",
+      "find": "    if (persistent->safe_mode == 0u) {\n      write_persistent(persistent, increment_count(persistent->brownout_count), true);\n    }",
+      "replace": "    write_persistent(persistent, increment_count(persistent->brownout_count), true);"
     }
   ]
 }
