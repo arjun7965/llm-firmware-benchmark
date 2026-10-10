@@ -908,6 +908,105 @@ test("published fault-crash scores preserve approval and supplemental validation
     createHash("sha256").update(task.prompt).digest("hex"));
 });
 
+test("published idempotent-init scores retain approval and the repair audit", () => {
+  const summary = JSON.parse(readFileSync(new URL(
+    "../docs/calibration/idempotent-system-init-2026-10-09.json",
+    import.meta.url,
+  ), "utf8"));
+  const rubric = readFileSync(new URL(
+    "../docs/benchmarks/idempotent-system-init.md",
+    import.meta.url,
+  ), "utf8");
+  const criteria = parseCalibrationRubric(rubric);
+  assert.equal(summary.review.status, "complete");
+  assert.equal(summary.review.provenance, "ai-assisted-human-reviewed");
+  assert.equal(summary.review.decision, "approved-without-changes");
+  assert.equal(summary.review.aiScoresFrozenBeforeUnblinding, true);
+  assert.equal(summary.review.independentHumanScoring, false);
+  assert.equal(summary.scoreSheetSha256,
+    "63a62e199fd09d279e8c4116e22f2d84f9017e92660a5dec64b31ceb47ef3205");
+  assert.equal(summary.review.scoreSheetSha256, summary.scoreSheetSha256);
+  assert.equal(summary.generation.scheduled, 9);
+  assert.equal(summary.generation.recorded, 9);
+  assert.equal(summary.generation.answers, 9);
+  assert.deepEqual(summary.models.map((model) => ({
+    model: model.model,
+    scores: model.runs.map(({ score }) => score),
+  })), [
+    { model: "gpt-5.6-luna", scores: [9.5, 9.5, 9.5] },
+    { model: "glm53", scores: [10, 9.5, 9.5] },
+    { model: "kimi-k3", scores: [9.5, 9.5, 9.5] },
+  ]);
+  const failures = [];
+  for (const model of summary.models) {
+    assert.deepEqual(model.runs.map(({ run }) => run), [1, 2, 3]);
+    const scores = model.runs.map(({ score }) => score);
+    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum, score) =>
+      sum + (score - mean) ** 2, 0) / scores.length;
+    assert.equal(model.mean, mean);
+    assert.equal(model.sd, Math.sqrt(variance));
+    assert.equal(model.range, Math.max(...scores) - Math.min(...scores));
+    assert.equal(model.fullValidationPasses, 3);
+    assert.equal(model.supplementalValidationPasses,
+      model.runs.filter((run) =>
+        run.supplementalValidationOutcome === "passed").length);
+    for (const run of model.runs) {
+      assert.equal(run.generationOutcome, "answer");
+      assert.equal(run.validationOutcome, "passed");
+      assert.deepEqual(Object.keys(run.criteria).sort(),
+        criteria.map(({ id }) => id).sort());
+      assert.equal(run.score,
+        Object.values(run.criteria).reduce((sum, value) => sum + value, 0));
+      for (const criterion of criteria) {
+        assert.ok(run.criteria[criterion.id] >= 0);
+        assert.ok(run.criteria[criterion.id] <= criterion.maximum);
+      }
+      if (run.supplementalValidationOutcome !== "passed") {
+        failures.push([model.model, run.run]);
+        assert.equal(run.supplementalValidationOutcome, "runtime-failure");
+        assert.equal(run.criteria["fault-recovery"], 1.5);
+        // Keep the repair defect in its owning dimension without double counting.
+        for (const criterion of criteria.filter(({ id }) =>
+          id !== "fault-recovery")) {
+          assert.equal(run.criteria[criterion.id], criterion.maximum);
+        }
+      }
+    }
+  }
+  assert.deepEqual(failures, [["kimi-k3", 1]]);
+  assert.equal(summary.validation.passes, 9);
+  assert.equal(summary.validation.publicTestGroups, 13);
+  assert.equal(summary.validation.compileValidMutationsRejected, 54);
+  const supplemental = summary.validation.supplemental;
+  assert.equal(supplemental.passes, 8);
+  assert.equal(supplemental.runtimeFailures, failures.length);
+  assert.equal(supplemental.publicTestGroups, 14);
+  assert.equal(supplemental.compileValidMutationsRejected, 55);
+  assert.equal(supplemental.referencePassed, true);
+  assert.equal(supplemental.validVariantPasses, 2);
+  assert.equal(supplemental.promptUnchanged, true);
+  assert.equal(supplemental.candidateRepairs, false);
+  assert.equal(supplemental.newGenerations, 0);
+  assert.equal(supplemental.defectPassedOriginalSuite, true);
+  assert.equal(summary.publication.artifact, "sanitized-aggregate-only");
+  assert.equal(summary.publication.answerExportsChecked, 9);
+  assert.equal(summary.publication.reviewRequiredCount, 0);
+  assert.equal(summary.publication.redactionCount, 0);
+  assert.equal(summary.publication.rawRecordsPublished, false);
+  const task = loadTasks(new URL("../tasks.json", import.meta.url))
+    .find(({ id }) => id === summary.taskId);
+  assert.equal(summary.promptSha256, promptSha256(task.prompt));
+  for (const name of ["idempotent_system_init.h", "fixture_idempotent_system_init.h"]) {
+    const header = readFileSync(new URL(
+      `../fixtures/idempotent-system-init/starter/${name}`,
+      import.meta.url,
+    ), "utf8");
+    assert.ok(task.prompt.includes(`${name}:\n\x60\x60\x60c\n${header}\x60\x60\x60`));
+  }
+  assert.ok(rubric.includes("../calibration/idempotent-system-init-2026-10-09.json"));
+});
+
 test("brownout prompt supplies exact fixture-owned headers and accessor traces", () => {
   const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
   const brownout = tasks.find(({ id }) => id === "brownout-safe-mode");

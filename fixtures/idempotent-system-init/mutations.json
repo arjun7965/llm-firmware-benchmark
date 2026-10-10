@@ -37,6 +37,300 @@
       "description": "Lose the caller's interrupt state while consuming a lifecycle event.",
       "find": "  state->event = SYSTEM_INIT_EVENT_NONE;\n  system0_irq_restore(irq_state);\n  return event;",
       "replace": "  state->event = SYSTEM_INIT_EVENT_NONE;\n  system0_irq_restore(irq_state ^ irq_state);\n  return event;"
+    },
+    {
+      "id": "ignore-minimum-clock",
+      "description": "Accept below-minimum clock.",
+      "find": "config->clock_hz >= SYSTEM0_MIN_CLOCK_HZ &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-maximum-clock",
+      "description": "Accept above-maximum clock.",
+      "find": "config->clock_hz <= SYSTEM0_MAX_CLOCK_HZ &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-clock-step",
+      "description": "Accept nonintegral clock step.",
+      "find": "config->clock_hz % SYSTEM0_CLOCK_STEP_HZ == 0u &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "reject-minimum-clock",
+      "description": "Reject legal inclusive minimum.",
+      "find": "config->clock_hz >= SYSTEM0_MIN_CLOCK_HZ &&",
+      "replace": "config->clock_hz > SYSTEM0_MIN_CLOCK_HZ &&"
+    },
+    {
+      "id": "reject-maximum-clock",
+      "description": "Reject legal inclusive maximum.",
+      "find": "config->clock_hz <= SYSTEM0_MAX_CLOCK_HZ &&",
+      "replace": "config->clock_hz < SYSTEM0_MAX_CLOCK_HZ &&"
+    },
+    {
+      "id": "omit-config-signature-shift",
+      "description": "Compute wrong config signature.",
+      "find": "(config->peripheral_mask << 16)",
+      "replace": "(config->peripheral_mask << 15)"
+    },
+    {
+      "id": "ignore-record-magic",
+      "description": "Trust wrong magic with consistent checksum.",
+      "find": "persistent->magic == SYSTEM_INIT_PERSISTENT_MAGIC &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-record-safe-range",
+      "description": "Trust safe_mode above one.",
+      "find": "persistent->safe_mode <= UINT8_C(1) &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-record-reserved",
+      "description": "Trust nonzero reserved field.",
+      "find": "persistent->reserved == 0u &&",
+      "replace": "true &&"
+    },
+    {
+      "id": "ignore-record-checksum",
+      "description": "Trust corrupted retained checksum.",
+      "find": "persistent->checksum == persistent_checksum(persistent);",
+      "replace": "true;"
+    },
+    {
+      "id": "wrong-written-magic",
+      "description": "Persist wrong magic.",
+      "find": ".magic = SYSTEM_INIT_PERSISTENT_MAGIC,",
+      "replace": ".magic = SYSTEM_INIT_PERSISTENT_MAGIC ^ 1u,"
+    },
+    {
+      "id": "wrong-written-reserved",
+      "description": "Persist nonzero reserved.",
+      "find": ".reserved = 0u,",
+      "replace": ".reserved = 1u,"
+    },
+    {
+      "id": "wrong-written-checksum",
+      "description": "Persist wrong checksum.",
+      "find": "persistent->checksum = persistent_checksum(persistent);",
+      "replace": "persistent->checksum = persistent_checksum(persistent) ^ 1u;"
+    },
+    {
+      "id": "lose-boot-saturation",
+      "description": "Wrap a saturated boot count.",
+      "find": "return boots < UINT16_MAX ? (uint16_t)(boots + UINT16_C(1)) : boots;",
+      "replace": "return (uint16_t)(boots + UINT16_C(1));"
+    },
+    {
+      "id": "omit-ready-programming",
+      "description": "Leave hardware safe on ordinary init/resume.",
+      "find": "  system0_write_control(system, SYSTEM0_CONTROL_READY);",
+      "replace": "  system0_write_control(system, SYSTEM0_CONTROL_SAFE);"
+    },
+    {
+      "id": "wrong-clock-programming",
+      "description": "Program a different valid clock.",
+      "find": "system0_write_clock_hz(system, config->clock_hz);",
+      "replace": "system0_write_clock_hz(system, SYSTEM0_MIN_CLOCK_HZ);"
+    },
+    {
+      "id": "wrong-mask-programming",
+      "description": "Program a different valid mask.",
+      "find": "system0_write_peripheral_mask(system, config->peripheral_mask);",
+      "replace": "system0_write_peripheral_mask(system, 1u);"
+    },
+    {
+      "id": "ignore-controller-pointer-conflict",
+      "description": "Ignore changed controller identity.",
+      "find": "state->system != system || state->persistent != persistent ||",
+      "replace": "false || state->persistent != persistent ||"
+    },
+    {
+      "id": "ignore-persistent-pointer-conflict",
+      "description": "Ignore changed retained pointer identity.",
+      "find": "state->system != system || state->persistent != persistent ||",
+      "replace": "state->system != system || false ||"
+    },
+    {
+      "id": "change-record-on-repeat",
+      "description": "Increment retained count on identical repeat.",
+      "find": "    return state->safe_mode\n      ?",
+      "replace": "    persistent->successful_boots++;\n    return state->safe_mode\n      ?"
+    },
+    {
+      "id": "consume-event-on-repeat",
+      "description": "Silently consume pending event on repeat.",
+      "find": "    return state->safe_mode\n      ?",
+      "replace": "    state->event = SYSTEM_INIT_EVENT_NONE;\n    return state->safe_mode\n      ?"
+    },
+    {
+      "id": "wrong-repeat-safe-result",
+      "description": "Report already ready for repeated safe state.",
+      "find": "? SYSTEM_INIT_RESULT_SAFE_MODE_LATCHED\n      : SYSTEM_INIT_RESULT_ALREADY_READY;",
+      "replace": "? SYSTEM_INIT_RESULT_ALREADY_READY\n      : SYSTEM_INIT_RESULT_ALREADY_READY;"
+    },
+    {
+      "id": "retain-corrupt-boot-count",
+      "description": "Keep corrupt boot counter when repairing record.",
+      "find": "write_persistent(persistent, signature, 0u, false);",
+      "replace": "write_persistent(persistent, signature, persistent->successful_boots, false);"
+    },
+    {
+      "id": "count-safe-boot",
+      "description": "Increment count during retained safe boot.",
+      "find": "  if (persistent->safe_mode != 0u) {",
+      "replace": "  if (persistent->safe_mode != 0u) {\n    write_persistent(persistent, signature, increment_boots(persistent->successful_boots), true);"
+    },
+    {
+      "id": "replace-retained-safe-signature",
+      "description": "Rewrite old signature on retained safe boot.",
+      "find": "  if (persistent->safe_mode != 0u) {",
+      "replace": "  if (persistent->safe_mode != 0u) {\n    write_persistent(persistent, signature, persistent->successful_boots, true);"
+    },
+    {
+      "id": "enter-with-pending-event",
+      "description": "Enter safe mode before initialization/resume event consumption.",
+      "find": "if (state->safe_mode || state->event != SYSTEM_INIT_EVENT_NONE) {",
+      "replace": "if (state->safe_mode || false) {"
+    },
+    {
+      "id": "repeat-safe-entry",
+      "description": "Allow safe entry while already safe and event empty.",
+      "find": "if (state->safe_mode || state->event != SYSTEM_INIT_EVENT_NONE) {",
+      "replace": "if (false || state->event != SYSTEM_INIT_EVENT_NONE) {"
+    },
+    {
+      "id": "resume-in-normal-mode",
+      "description": "Permit resume in normal mode.",
+      "find": "if (!state->safe_mode || state->event != SYSTEM_INIT_EVENT_NONE) {",
+      "replace": "if (false || state->event != SYSTEM_INIT_EVENT_NONE) {"
+    },
+    {
+      "id": "omit-corrupt-resume-safe-write",
+      "description": "Omit required SAFE write on corrupted resume.",
+      "find": "  if (!persistent_is_valid(state->persistent)) {\n    system0_write_control(state->system, SYSTEM0_CONTROL_SAFE);",
+      "replace": "  if (!persistent_is_valid(state->persistent)) {"
+    },
+    {
+      "id": "clear-event-on-corrupt-resume",
+      "description": "Mutate state on rejected corrupted resume.",
+      "find": "  if (!persistent_is_valid(state->persistent)) {",
+      "replace": "  if (!persistent_is_valid(state->persistent)) {\n    state->safe_mode = false;"
+    },
+    {
+      "id": "increment-resume-count",
+      "description": "Count explicit resume as another boot.",
+      "find": "    config_signature(&state->config),\n    state->persistent->successful_boots,\n    false",
+      "replace": "    config_signature(&state->config),\n    increment_boots(state->persistent->successful_boots),\n    false"
+    },
+    {
+      "id": "lose-event-consumption",
+      "description": "Keep event pending after take_event.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_NONE;",
+      "replace": "  state->event = event;"
+    },
+    {
+      "id": "wrong-initial-event",
+      "description": "Publish incorrect first lifecycle event.",
+      "find": "    .event = SYSTEM_INIT_EVENT_INITIALIZED,",
+      "replace": "    .event = SYSTEM_INIT_EVENT_RESUMED,"
+    },
+    {
+      "id": "wrong-resume-event",
+      "description": "Publish incorrect resume event.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_RESUMED;",
+      "replace": "  state->event = SYSTEM_INIT_EVENT_INITIALIZED;"
+    },
+    {
+      "id": "omit-persistent-usable-check",
+      "description": "Use initialized state with null retained pointer.",
+      "find": "    state->persistent != NULL;",
+      "replace": "    true;"
+    },
+    {
+      "id": "omit-system-usable-check",
+      "description": "Use initialized state with null controller.",
+      "find": "state->initialized && state->system != NULL &&",
+      "replace": "state->initialized && true &&"
+    },
+    {
+      "id": "enable-disabled-caller-after-event",
+      "description": "Enable an already-disabled caller during event take.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_NONE;\n  system0_irq_restore(irq_state);\n  return event;",
+      "replace": "  state->event = SYSTEM_INIT_EVENT_NONE;\n  system0_irq_restore(irq_state | 1u);\n  return event;"
+    },
+    {
+      "id": "publish-entry-after-restore",
+      "description": "Publish safe event outside critical section.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_ENTERED_SAFE_MODE;\n  system0_irq_restore(irq_state);",
+      "replace": "  system0_irq_restore(irq_state);\n  state->event = SYSTEM_INIT_EVENT_ENTERED_SAFE_MODE;"
+    },
+    {
+      "id": "publish-resume-after-restore",
+      "description": "Publish resume event outside critical section.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_RESUMED;\n  system0_irq_restore(irq_state);",
+      "replace": "  system0_irq_restore(irq_state);\n  state->event = SYSTEM_INIT_EVENT_RESUMED;"
+    },
+    {
+      "id": "clear-event-after-restore",
+      "description": "Clear event outside critical section.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_NONE;\n  system0_irq_restore(irq_state);",
+      "replace": "  system0_irq_restore(irq_state);\n  state->event = SYSTEM_INIT_EVENT_NONE;"
+    },
+    {
+      "id": "extra-interrupt-pair-on-boot",
+      "description": "Perform unnecessary interrupt access during boot.",
+      "find": "  signature = config_signature(config);",
+      "replace": "  system0_irq_restore(system0_irq_save_disable());\n  signature = config_signature(config);"
+    },
+    {
+      "id": "wrong-enter-interrupt-restore",
+      "description": "Lose opaque caller IRQ state on safe entry.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_ENTERED_SAFE_MODE;\n  system0_irq_restore(irq_state);",
+      "replace": "  state->event = SYSTEM_INIT_EVENT_ENTERED_SAFE_MODE;\n  system0_irq_restore(irq_state ^ 1u);"
+    },
+    {
+      "id": "wrong-resume-interrupt-restore",
+      "description": "Lose opaque caller IRQ state on resume.",
+      "find": "  state->event = SYSTEM_INIT_EVENT_RESUMED;\n  system0_irq_restore(irq_state);",
+      "replace": "  state->event = SYSTEM_INIT_EVENT_RESUMED;\n  system0_irq_restore(irq_state ^ 1u);"
+    },
+    {
+      "id": "omit-enter-safe-write",
+      "description": "Latch safe state without containing controller.",
+      "find": "  system0_write_control(state->system, SYSTEM0_CONTROL_SAFE);\n  write_persistent(",
+      "replace": "  write_persistent("
+    },
+    {
+      "id": "reject-valid-mismatched-resume",
+      "description": "Incorrectly reject valid old-signature record.",
+      "find": "  if (!persistent_is_valid(state->persistent)) {",
+      "replace": "  if (!persistent_is_valid(state->persistent) ||\n    state->persistent->config_signature != config_signature(&state->config)) {"
+    },
+    {
+      "id": "reject-valid-normal-record-resume",
+      "description": "Incorrectly require retained safe bit for usable safe-state resume.",
+      "find": "  if (!persistent_is_valid(state->persistent)) {",
+      "replace": "  if (!persistent_is_valid(state->persistent) || state->persistent->safe_mode == 0u) {"
+    },
+    {
+      "id": "reorder-clock-and-mask",
+      "description": "Swap required programming writes.",
+      "find": "  system0_write_clock_hz(system, config->clock_hz);\n  system0_write_peripheral_mask(system, config->peripheral_mask);",
+      "replace": "  system0_write_peripheral_mask(system, config->peripheral_mask);\n  system0_write_clock_hz(system, config->clock_hz);"
+    },
+    {
+      "id": "omit-initial-safe-write",
+      "description": "Skip explicit SAFE at start of programming.",
+      "find": "  system0_write_control(system, SYSTEM0_CONTROL_SAFE);\n  system0_write_clock_hz",
+      "replace": "  /* incorrectly relies on prior controller state */\n  system0_write_clock_hz"
+    },
+    {
+      "id": "defer-invalid-record-repair-until-ready",
+      "description": "Reset only count and latch before programming, leaving the invalid retained record unrepaired until the final READY-path write.",
+      "find": "    write_persistent(persistent, signature, 0u, false);",
+      "replace": "    persistent->successful_boots = 0u;\n    persistent->safe_mode = 0u;"
     }
   ]
 }

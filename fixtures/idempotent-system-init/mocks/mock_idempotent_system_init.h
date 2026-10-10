@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "fixture_idempotent_system_init.h"
+#include "idempotent_system_init.h"
 
 typedef enum {
   MOCK_SYSTEM_EVENT_CONTROL_WRITE,
@@ -19,6 +20,12 @@ typedef enum {
 void mock_system0_reset(void);
 volatile system0_registers_t *mock_system0(void);
 void mock_system0_set_irq_state(uint32_t value);
+void mock_system0_watch(
+  const system_init_t *watched_state,
+  const system_init_persistent_t *watched_record
+);
+const system_init_t *mock_system0_state_at(size_t index);
+const system_init_persistent_t *mock_system0_record_at(size_t index);
 
 uint32_t mock_system0_control(void);
 uint32_t mock_system0_clock_hz(void);
