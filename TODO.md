@@ -373,6 +373,16 @@ record exact versions in validation reports.
   - [x] Obtain human review and publish its sanitized aggregate with explicit
     scoring provenance.
 
+  - [x] Select `idempotent-system-init` for the next cross-family pilot to add
+    repeat/config-conflict handling, retained safe boot, event gating, and
+    explicit initialization/resume ordering coverage.
+  - [x] Audit its self-contained contract and calibrate the reference, valid
+    implementation variants, and controlled mutations before freezing generation.
+  - [x] Run its three-family, three-attempt pilot and freeze blinded criterion
+    scores before unblinding.
+  - [x] Obtain human review and publish its sanitized aggregate with explicit
+    scoring provenance.
+
 ## Repository Operations
 
 - [x] Confirm GitHub Actions passes after the first push.

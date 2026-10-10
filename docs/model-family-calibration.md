@@ -152,6 +152,72 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed Idempotent Initialization Pilot — `idempotent-system-init`
+
+The `idempotent-system-init-cross-family-20261009-01` cohort records all nine
+planned Luna, GLM, and Kimi attempts. All returned answers, met the single-C-fence
+extraction contract, and passed the original thirteen deterministic test groups.
+Runs used concurrency one with no retries or candidate repairs.
+
+Before generation, the audited prompt supplied both exact headers, inclusive
+configuration limits, usable-state rules, complete accepted/rejected accessor
+traces, retained validity and count semantics, config aliasing, and explicit
+serialized-call/persistence limits. The reference and two valid implementation
+variants passed all thirteen groups, and all 54 compile-valid mutations were
+rejected under `c11-host` revision 4, Debian 13 x86-64, GCC 14.2.0 and Bubblewrap
+0.11.0. The prompt SHA-256 is
+`4c124cefe69962aa3f01a2339829102cf76882f3d89794a29215d0b837d020fc`.
+Generation used a frozen audited working-tree snapshot based on
+`632158e012bbe9a7ade5c24df784dbc88f2dd2b5`; the aggregate records snapshot and
+patch hashes rather than implying the base commit contained those changes.
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Original passes | Supplemental passes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 9.5 | 9.5 | 9.5 | 9.500 | 3/3 | 3/3 |
+| GLM-5.3 | 10 | 9.5 | 9.5 | 9.667 | 3/3 | 3/3 |
+| Kimi K3 | 9.5 | 9.5 | 9.5 | 9.500 | 3/3 | 2/3 |
+
+Static review found Kimi run 1 deferring invalid-record repair until after
+READY, although the frozen prompt requires repair before programming. A
+supplemental accessor-snapshot test now checks that the complete valid requested-
+signature/count-zero/non-safe record precedes initial SAFE and remains intact
+through READY; the increment is committed afterward. The new mutation passes
+the original thirteen groups, reproducing the gap. The reference and both valid
+variants pass fourteen groups, all 55 compile-valid mutations are rejected, and
+eight of nine unchanged answers pass. Original outcomes, prompt, raw records,
+and the generation-time preflight remain unchanged; no new generations or
+candidate repairs were used. The aggregate records the stronger audit separately.
+
+The deferred-repair defect receives a half-point deduction only in fault
+recovery. Other deductions belong only to clarity for inaccurate expected traces,
+missing event-consumption setup, overbroad rejected-call descriptions, or omitted
+persistence limits. Executable pass rates remain separate from rubric credit.
+
+The mock snapshots caller-owned state, retained record, and event publication
+at accessor boundaries. Reset/corruption occur between completed serialized
+calls. Torn stores, power loss inside a call, physical durability, actual
+preemption, and adversarial checksum collisions are excluded. The XOR checksum
+is not authentication; hosted validation does not establish target hardware
+behavior or physical persistence guarantees.
+
+Criterion ownership was frozen before generation, and complete AI scores were
+frozen before opening the identity key. The coordinating AI knew model settings
+and per-model progress but read current candidate content and supplemental
+candidate outcomes under anonymous IDs. Scoring is **AI-assisted,
+human-reviewed**, not independent human scoring. The conversation user approved
+the proposed scores, supplemental finding, and linked evidence for publication
+without changes on October 9, 2026 (America/Los_Angeles).
+
+Luna used medium/600 seconds; GLM low/900 seconds/32,000 configured output
+ceiling; Kimi max/1,200 seconds/64,000. Effective provider limits are unknown.
+Generation used Node 22.21.0, Codex CLI 0.160.0 and OpenCode 1.18.34. Unequal
+budgets and nine attempts on one task do not establish a broad model ranking.
+All nine private public-export projections passed without redactions or review
+flags. Only the approved
+[sanitized aggregate](calibration/idempotent-system-init-2026-10-09.json) is
+published; raw records, generated answers, identities, and review artifacts
+remain private.
+
 ## Completed Fault Crash-Record Pilot — `fault-crash-record`
 
 The `fault-crash-record-cross-family-20261003-01` cohort records all nine

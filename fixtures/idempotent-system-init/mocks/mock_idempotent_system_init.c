@@ -9,6 +9,8 @@ struct system0_registers {
 typedef struct {
   mock_system_event_t event;
   uint32_t value;
+  system_init_t state_snapshot;
+  system_init_persistent_t record_snapshot;
 } mock_system_event_record_t;
 
 typedef struct {
@@ -20,6 +22,8 @@ typedef struct {
   mock_system_event_record_t events[MOCK_SYSTEM_HISTORY_CAPACITY];
   size_t event_count;
   bool invalid_access;
+  const system_init_t *watched_state;
+  const system_init_persistent_t *watched_record;
 } mock_system_state_t;
 
 static mock_system_state_t state;
@@ -33,6 +37,10 @@ static void record_event(mock_system_event_t event, uint32_t value) {
     state.events[state.event_count] = (mock_system_event_record_t) {
       .event = event,
       .value = value,
+      .state_snapshot = state.watched_state != NULL
+        ? *state.watched_state : (system_init_t) { 0 },
+      .record_snapshot = state.watched_record != NULL
+        ? *state.watched_record : (system_init_persistent_t) { 0 },
     };
   } else {
     state.invalid_access = true;
@@ -58,6 +66,24 @@ volatile system0_registers_t *mock_system0(void) {
 
 void mock_system0_set_irq_state(uint32_t value) {
   state.irq_state = value;
+}
+
+void mock_system0_watch(
+  const system_init_t *watched_state,
+  const system_init_persistent_t *watched_record
+) {
+  state.watched_state = watched_state;
+  state.watched_record = watched_record;
+}
+
+const system_init_t *mock_system0_state_at(size_t index) {
+  return index < state.event_count && index < MOCK_SYSTEM_HISTORY_CAPACITY
+    ? &state.events[index].state_snapshot : NULL;
+}
+
+const system_init_persistent_t *mock_system0_record_at(size_t index) {
+  return index < state.event_count && index < MOCK_SYSTEM_HISTORY_CAPACITY
+    ? &state.events[index].record_snapshot : NULL;
 }
 
 uint32_t mock_system0_control(void) {

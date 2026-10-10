@@ -1,0 +1,364 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "idempotent-system-init",
+  "cohortId": "idempotent-system-init-cross-family-20261009-01",
+  "startedDate": "2026-10-09",
+  "dateTimezone": "America/Los_Angeles",
+  "harnessCommit": "632158e012bbe9a7ade5c24df784dbc88f2dd2b5",
+  "promptSha256": "4c124cefe69962aa3f01a2339829102cf76882f3d89794a29215d0b837d020fc",
+  "cohortSha256": "27f2cd858b15cec07481b32f6134af48daf4109b1eaba460074c5b0043ec6f3a",
+  "packetSha256": "7e7ca96fa261abdd0478919dc169a5c4b3f2c63d267e6e73016bf02cbecc14ee",
+  "scoreSheetSha256": "63a62e199fd09d279e8c4116e22f2d84f9017e92660a5dec64b31ceb47ef3205",
+  "review": {
+    "status": "complete",
+    "provenance": "ai-assisted-human-reviewed",
+    "aiScorer": "Codex (GPT-6.1 Sol)",
+    "aiScoresFrozenBeforeUnblinding": true,
+    "independentHumanScoring": false,
+    "priorExposure": "The coordinating AI knew settings and per-model progress, including original validation outcomes. Current candidate content and supplemental candidate outcomes were read only under anonymous IDs; the identity key was not opened before freezing. This is AI-assisted scoring requiring human review, not independent human scoring.",
+    "decision": "approved-without-changes",
+    "reviewDate": "2026-10-09",
+    "dateTimezone": "America/Los_Angeles",
+    "recordedAt": "2026-10-10T06:27:26.284Z",
+    "humanReviewer": "Conversation user",
+    "reviewScope": "Approved the proposed criterion scores, supplemental repair-before-programming finding, and linked evidence for publication without changes. Original and supplemental deterministic outcomes remain separate from rubric credit.",
+    "scoreSheetSha256": "63a62e199fd09d279e8c4116e22f2d84f9017e92660a5dec64b31ceb47ef3205"
+  },
+  "methodology": {
+    "concurrency": 1,
+    "automaticRetries": 0,
+    "scheduledRunsPerModel": 3,
+    "order": "Run-major: Luna, GLM, Kimi for each of runs 1, 2, 3",
+    "scorePopulation": "available-answers-only",
+    "generationFailuresHaveNoRubricScore": true,
+    "candidateRepairs": false,
+    "cliVersions": {
+      "node": "v22.21.0",
+      "codex": "codex-cli 0.160.0",
+      "opencode": "1.18.34"
+    },
+    "providerDifferences": "Luna medium/600s; GLM low/900s/32000 configured output ceiling; Kimi max/1200s/64000 configured output ceiling. Effective provider limits unknown; no parity claim.",
+    "preGenerationAudit": "Pre-generation audit supplies exact headers, usable-state rules, inclusive config limits, repeat/conflict snapshots, complete rejected traces, structural retained validity, config aliasing, restore-boundary snapshots and explicit serialized-call/persistence limits; thirteen public test groups and 54 compile-valid mutations; scoring ownership frozen before generation",
+    "snapshotSha256": "d734a80dd44f57fc9c157242bb92227833a9d10f7a35965fe25eb75e19e80bcf",
+    "workingTreePatchSha256": "8a3f12a4be6d43496481827a52b5c945794fa38d953e4fbd9b29f431358fe74d",
+    "auditedWorkingTreeSnapshot": true,
+    "scoringPolicySha256": "ac4272ef712b56138ed2a69659c204b85c3faffe21e814da9eaf93b9acd4d82a"
+  },
+  "validation": {
+    "profile": "c11-host",
+    "profileRevision": 4,
+    "profileSha256": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3",
+    "environmentId": "debian-13-x86-64-c11-host",
+    "environmentRevision": 1,
+    "environmentSha256": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7",
+    "sandbox": "bubblewrap 0.11.0",
+    "compiler": "GCC 14.2.0",
+    "referencePassed": true,
+    "compileValidMutationsRejected": 54,
+    "validVariantPasses": 2,
+    "publicTestGroups": 13,
+    "answers": 9,
+    "extracted": 9,
+    "extractionFailures": 0,
+    "compileFailures": 0,
+    "runtimeFailures": 0,
+    "passes": 9,
+    "supplemental": {
+      "referencePassed": true,
+      "compileValidMutationsRejected": 55,
+      "validVariantPasses": 2,
+      "publicTestGroups": 14,
+      "passes": 8,
+      "runtimeFailures": 1,
+      "promptUnchanged": true,
+      "candidateRepairs": false,
+      "newGenerations": 0,
+      "defectPassedOriginalSuite": true,
+      "snapshotSha256": "80b349e7b8cbbe58e44a5395a9dfbb31b75b33e9e3cb1604ffbd18c01d071da9",
+      "disclosure": "Post-generation static review found deferred invalid-record repair until after READY. The frozen prompt already requires a complete valid count-zero repair before programming. Accessor snapshots reject one unchanged answer; original thirteen-group passes and 54-mutation preflight remain separate. Live catalog has 55 compile-valid mutations and fourteen groups."
+    }
+  },
+  "generation": {
+    "scheduled": 9,
+    "recorded": 9,
+    "answers": 9,
+    "answerRate": 1,
+    "outcomes": {
+      "answer": 9,
+      "timeout": 0,
+      "generation-limit": 0,
+      "provider-error": 0,
+      "no-answer": 0,
+      "missing": 0
+    }
+  },
+  "models": [
+    {
+      "model": "gpt-5.6-luna",
+      "modelId": "gpt-5.6-luna",
+      "provider": "codex",
+      "family": "OpenAI GPT",
+      "controls": {
+        "effort": "medium",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": null,
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 17572,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes both validation suites. Static review confirms the exact validity predicates, count-zero repair before programming, complete signatures/checksums, saturated count, alias-safe copied config, pointer and field equality for no-effect repeats/conflicts, untouched retained safe boot, accepted and rejected transition traces, one-shot events, and exact save/restore including zero with all updates inside the pair. Explicit typed null constants are valid freestanding C11, and storage/work are fixed and bounded. Clarity/validation 0.5/1: its first-boot scenario incorrectly expects clock/mask writes before the required SAFE/clock/mask/READY sequence, although the code orders them correctly; the prose also omits the modeled serialized-call and between-call persistence boundary. These are explanation limitations, not implementation timing or recovery failures."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 59328,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes both validation suites. Static review independently confirms config limits and pointer/config conflict handling, alias-safe scalar copies, complete repair before programming, exact checksum/structural validity, preservation of safe retained signatures/counts, saturated counting, unchanged explicit-resume count, controller ordering, event gates and exact critical-section/restoration behavior. All work and storage are bounded and the code uses only standard C11 and supplied opaque accessors. Clarity/validation 0.5/1: the prose omits the serialized-call/between-call persistence boundary, and its retained-safe-boot scenario says resume then replays programming without first consuming the ENTERED_SAFE_MODE event. The implementation correctly rejects such a pending-event resume; no second deduction is made in recovery."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 47890,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes both validation suites. Static review supports exact null/config/record checks, scalar config capture that preserves aliasing, no-effect repeat/conflict handling, complete count-zero repair before SAFE, valid retained safe boot with old signature preservation, saturated configure counts, unchanged resume counts, exact controller and rejected-call traces, event gates/consumption, and update-before-restore with the exact opaque IRQ value. Integer zero pointer comparisons are standard C11; no allocation, loops, mutable globals or forbidden hardware APIs are used. Clarity/validation 0.5/1: numerical scenarios include 8 MHz/all-peripherals and UINT16_MAX, but the explanation does not describe the required serialized-call/between-call corruption model or its persistence limits. No physical guarantee is inferred from the correct hosted implementation."
+        }
+      ],
+      "mean": 9.5,
+      "sd": 0,
+      "range": 0,
+      "fullValidationPasses": 3,
+      "supplementalValidationPasses": 3
+    },
+    {
+      "model": "glm53",
+      "modelId": "opencode-go/glm-5.3",
+      "provider": "opencode",
+      "family": "Z.ai GLM",
+      "controls": {
+        "variant": "low",
+        "timeoutMs": 900000,
+        "maxOutputTokens": 32000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 10,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "passed",
+          "durationMs": 124796,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes both validation suites, with static evidence supporting all seven dimensions. It validates config before repeat/conflict handling, copies aliased config, repairs invalid retained data completely before initial SAFE and preserves that count-zero record through READY, then commits the saturated count. Safe retained boot preserves old signature/count, resume uses the bound config without additional signature/safe-bit gates, and safe entry repairs a corrupt record using its raw existing count. Accepted/rejected controller traces, event consumption/gating, complete update-before-restore, and one exact opaque IRQ pair including zero match the contract. Code is bounded, caller-owned and freestanding C11 with standard zero pointer constants. The explanation correctly limits corruption/reset to completed-call boundaries and excludes torn in-call stores; concrete 48 MHz/mask 3, invalid limits, safe boot, corrupt-resume SAFE, UINT16_MAX and zero-IRQ scenarios distinguish mode/event rejection from integrity rejection. Full credit is supported by code review and execution, not the pass alone."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 110796,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes both validation suites. Static review confirms exact configuration and retained validity, copied alias-safe config, complete count-zero repair before programming, preserved retained safe boot, saturated counts, unchanged resume count, pointer/config identity handling, complete event/mode gates and accepted/rejected traces, and state/record/event publication before exact IRQ restore including zero. The integer null pointer constant is valid C11; work is bounded with no allocation, retries, mutable globals or direct register access. Clarity/validation 0.5/1: concrete invalid-clock, 100 MHz, checksum-corruption and alias scenarios accompany an accurate serialized/between-call persistence boundary, but the programming/IRQ paragraph incorrectly says rejected calls perform only the pair, despite the separately described corrupt-resume SAFE exception. That inconsistency is confined to explanation credit."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 103724,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes the original thirteen and supplemental fourteen groups. Static review confirms inclusive clock/mask validation before repeat handling, exact pointer/config conflicts and no-effect repeats, complete repair before controller programming, structural retained validity without a signature-match gate, preserved safe boot, saturated count arithmetic, alias-safe config copying, exact SAFE/clock/mask/READY and corrupt-resume SAFE traces, event gating/consumption, and publication before exact opaque IRQ restoration. Work is bounded, caller-owned, and freestanding C11 with the needed stddef header. Clarity/validation 0.5/1: the explanation states the between-call corruption/reset boundary and gives concrete numerical scenarios, but overgeneralizes that rejection paths have no other effects; an integrity-rejected resume must also write SAFE. Its reserved-corruption scenario also omits consuming the safe-entry event while expecting event NONE and the integrity-failure SAFE trace. These explanation inconsistencies are counted only in clarity; the code and both validation suites handle the exception correctly."
+        }
+      ],
+      "mean": 9.666666666666666,
+      "sd": 0.23570226039551584,
+      "range": 0.5,
+      "fullValidationPasses": 3,
+      "supplementalValidationPasses": 3
+    },
+    {
+      "model": "kimi-k3",
+      "modelId": "opencode-go/kimi-k3",
+      "provider": "opencode",
+      "family": "Moonshot Kimi",
+      "controls": {
+        "variant": "max",
+        "timeoutMs": 1200000,
+        "maxOutputTokens": 64000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 1.5,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "passed",
+          "durationMs": 202269,
+          "supplementalValidationOutcome": "runtime-failure",
+          "rationale": "Passes the original thirteen groups but fails the supplemental repair-before-programming group; compilation succeeds and the answer is unchanged. Static review finds that initialize computes old_count=0 locally for an invalid record and programs through READY before its sole valid-record write. The frozen prompt requires a complete valid requested-signature/count-zero/non-safe repair before initial programming. Accessor snapshots expose the still-invalid record, and the new compile-valid mutation reproduces the gap while passing the original suite. Fault recovery 1.5/2: deduct only here for deferred retained repair; valid safe boot preservation, corrupt-resume containment, event gates, and explicit recovery otherwise work. Functional results/final record fields, bounded resources, required controller-write order, alias-safe config self-copy, exact critical sections/restoration and opaque C11 portability retain full credit. Clarity/validation 1/1: the explanation accurately scopes serialized between-call persistence and excludes durability handling, with concrete A/B boundary configs, event-drained integrity failure, UINT16_MAX and zero/nonzero IRQ scenarios. The implementation defect is not duplicated as a prose deduction."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 94254,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes both validation suites. Static review confirms the constant-magic checksum helper is equivalent after the explicit magic check, exact config/record validation, full repair before SAFE, safe-boot preservation, saturated configure counting, valid resume without extra signature/safe-bit gates, exact no-effect repeats/conflicts, alias-safe self-copy, controller ordering, bounded caller-owned state and updates before exact IRQ restoration. Clarity/validation 0.5/1: it explains between-call reset/corruption and supplies concrete vectors, but incorrectly says all rejection paths contain only the IRQ pair, omitting integrity-rejected resume's required SAFE write. Its corruption scenario follows a successful resume without re-establishing safe mode and draining the RESUMED event while expecting a SAFE write and safe state. Code and executed outcomes remain correct; these prose/setup inconsistencies are counted only in clarity."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 1,
+            "concurrency-safety": 2,
+            "fault-recovery": 2,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 125082,
+          "supplementalValidationOutcome": "passed",
+          "rationale": "Passes both validation suites. Static review confirms copied alias-safe config, exact config/record predicates, no-effect pointer/config repeat/conflict handling, complete repair before SAFE, saturated counts, preserved safe boot and old signature, unchanged explicit-resume count, correct controller traces, event/mode gating, corrupt-resume containment, and state/record/event updates before exact IRQ restoration. Work is fixed and bounded with standard zero pointer constants and only supplied opaque C11 accessors. Clarity/validation 0.5/1: it states the between-call corruption boundary and offers concrete 48 MHz/mask 3, invalid clock 8000001, count 7 and count 65535 scenarios, but its retained-safe-boot example says resume then writes the full sequence without consuming ENTERED_SAFE_MODE first, and it never clearly explains that pending events block transitions. The code enforces the gate correctly; this deduction belongs only to clarity."
+        }
+      ],
+      "mean": 9.5,
+      "sd": 0,
+      "range": 0,
+      "fullValidationPasses": 3,
+      "supplementalValidationPasses": 2
+    }
+  ],
+  "publication": {
+    "artifact": "sanitized-aggregate-only",
+    "answerExportsChecked": 9,
+    "redactionCount": 0,
+    "reviewRequiredCount": 0,
+    "rawRecordsPublished": false
+  }
+}
