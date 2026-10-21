@@ -383,6 +383,20 @@ record exact versions in validation reports.
   - [x] Obtain human review and publish its sanitized aggregate with explicit
     scoring provenance.
 
+  - [x] Select `low-power-wake-clock` for the next cross-family pilot to add
+    sleep/wake sequencing, source filtering, exact IRQ restoration, and clock
+    transition coverage.
+  - [x] Audit its self-contained contract and calibrate the reference, valid
+    implementation variants, and controlled mutations before freezing generation.
+  - [x] Run its three-family, three-attempt pilot and freeze blinded criterion
+    scores before unblinding.
+    - [x] Preserve the first nine-attempt cohort as unscored diagnostics after
+      provider authentication failures; retain all original outcomes and sealed
+      scoring artifacts. Complete a fresh cohort after restored provider access,
+      keeping the diagnostic attempts separate and unscored.
+  - [x] Obtain human review and publish its sanitized aggregate with explicit
+    scoring provenance.
+
 ## Repository Operations
 
 - [x] Confirm GitHub Actions passes after the first push.

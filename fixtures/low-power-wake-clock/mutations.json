@@ -49,6 +49,210 @@
       "description": "Report RTC before the specified higher-priority GPIO wake source.",
       "find": "  if ((observed & PWRCLK0_WAKE_GPIO) != 0u) return POWER_WAKE_GPIO;\n  if ((observed & PWRCLK0_WAKE_RTC) != 0u) return POWER_WAKE_RTC;",
       "replace": "  if ((observed & PWRCLK0_WAKE_RTC) != 0u) return POWER_WAKE_RTC;\n  if ((observed & PWRCLK0_WAKE_GPIO) != 0u) return POWER_WAKE_GPIO;"
+    },
+    {
+      "id": "accept-count-mode",
+      "description": "Accept the sentinel enum as a sleep mode.",
+      "find": "return mode == POWER_SLEEP_MODE_IDLE || mode == POWER_SLEEP_MODE_DEEP;",
+      "replace": "return mode <= POWER_SLEEP_MODE_COUNT;"
+    },
+    {
+      "id": "accept-zero-mask",
+      "description": "Arm sleep with no wake source.",
+      "find": "return wake_mask != 0u && (wake_mask & ~PWRCLK0_WAKE_ALL) == 0u;",
+      "replace": "return (wake_mask & ~PWRCLK0_WAKE_ALL) == 0u;"
+    },
+    {
+      "id": "accept-unknown-mask-bits",
+      "description": "Ignore reserved wake-source bits.",
+      "find": "return wake_mask != 0u && (wake_mask & ~PWRCLK0_WAKE_ALL) == 0u;",
+      "replace": "return wake_mask != 0u;"
+    },
+    {
+      "id": "accept-null-register-binding",
+      "description": "Treat initialized state with a null register handle as usable.",
+      "find": "return manager != NULL && manager->initialized && manager->registers != NULL;",
+      "replace": "return manager != NULL && manager->initialized;"
+    },
+    {
+      "id": "ignore-initialized-flag",
+      "description": "Treat a bound but uninitialized manager as usable.",
+      "find": "return manager != NULL && manager->initialized && manager->registers != NULL;",
+      "replace": "return manager != NULL && manager->registers != NULL;"
+    },
+    {
+      "id": "allow-duplicate-prepare",
+      "description": "Replace an outstanding sleep configuration.",
+      "find": "if (!manager_is_usable(manager) || manager->sleeping ||",
+      "replace": "if (!manager_is_usable(manager) ||"
+    },
+    {
+      "id": "resume-while-awake",
+      "description": "Read hardware and mask interrupts on an awake resume.",
+      "find": "if (!manager_is_usable(manager) || !manager->sleeping) {",
+      "replace": "if (!manager_is_usable(manager)) {"
+    },
+    {
+      "id": "alter-rejected-prepare",
+      "description": "Change caller state on a rejected prepare.",
+      "find": "!wake_mask_supported(mode, wake_mask)) {\n    return false;",
+      "replace": "!wake_mask_supported(mode, wake_mask)) {\n    if (manager != NULL) manager->wake_mask = 0u;\n    return false;"
+    },
+    {
+      "id": "publish-init-before-hardware",
+      "description": "Publish replacement state before boot programming finishes.",
+      "find": "  pwrclk0_write_wake_enable(registers, 0u);\n  pwrclk0_write_wake_clear(registers, PWRCLK0_WAKE_ALL);\n  pwrclk0_write_clock(registers, PWRCLK0_CLOCK_RUN);\n  pwrclk0_write_sleep_mode(registers, PWRCLK0_SLEEP_NONE);\n  *manager = (power_manager_t) {\n    .registers = registers,\n    .wake_mask = 0u,\n    .sleep_mode = POWER_SLEEP_MODE_IDLE,\n    .sleeping = false,\n    .initialized = true,\n  };\n",
+      "replace": "  *manager = (power_manager_t) {\n    .registers = registers,\n    .wake_mask = 0u,\n    .sleep_mode = POWER_SLEEP_MODE_IDLE,\n    .sleeping = false,\n    .initialized = true,\n  };\n  pwrclk0_write_wake_enable(registers, 0u);\n  pwrclk0_write_wake_clear(registers, PWRCLK0_WAKE_ALL);\n  pwrclk0_write_clock(registers, PWRCLK0_CLOCK_RUN);\n  pwrclk0_write_sleep_mode(registers, PWRCLK0_SLEEP_NONE);\n"
+    },
+    {
+      "id": "retain-init-latches",
+      "description": "Leave stale wake status at initialization.",
+      "find": "pwrclk0_write_wake_clear(registers, PWRCLK0_WAKE_ALL);",
+      "replace": "pwrclk0_write_wake_clear(registers, 0u);"
+    },
+    {
+      "id": "retain-init-sleep-mode",
+      "description": "Leave the manager mode stale after reinitialization.",
+      "find": ".sleep_mode = POWER_SLEEP_MODE_IDLE,",
+      "replace": ".sleep_mode = manager->sleep_mode,"
+    },
+    {
+      "id": "retain-init-sleeping",
+      "description": "Fail to mark the manager awake on initialization.",
+      "find": ".sleeping = false,",
+      "replace": ".sleeping = manager->sleeping,"
+    },
+    {
+      "id": "skip-init-validation",
+      "description": "Accept a null register handle at boot.",
+      "find": "if (manager == NULL || registers == NULL) return false;",
+      "replace": "if (manager == NULL) return false;"
+    },
+    {
+      "id": "publish-prepare-before-hardware",
+      "description": "Publish sleeping state before the hardware sequence finishes.",
+      "find": "  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_wake_clear(manager->registers, PWRCLK0_WAKE_ALL);\n  pwrclk0_write_clock(manager->registers, clock);\n  pwrclk0_write_wake_enable(manager->registers, wake_mask);\n  pwrclk0_write_sleep_mode(manager->registers, hardware_sleep_mode(mode));\n  manager->wake_mask = wake_mask;\n  manager->sleep_mode = mode;\n  manager->sleeping = true;\n",
+      "replace": "  manager->wake_mask = wake_mask;\n  manager->sleep_mode = mode;\n  manager->sleeping = true;\n  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_wake_clear(manager->registers, PWRCLK0_WAKE_ALL);\n  pwrclk0_write_clock(manager->registers, clock);\n  pwrclk0_write_wake_enable(manager->registers, wake_mask);\n  pwrclk0_write_sleep_mode(manager->registers, hardware_sleep_mode(mode));\n"
+    },
+    {
+      "id": "publish-prepare-after-restore",
+      "description": "Restore interrupts before committing the sleep configuration.",
+      "find": "  manager->wake_mask = wake_mask;\n  manager->sleep_mode = mode;\n  manager->sleeping = true;\n  pwrclk0_irq_restore(irq_state);",
+      "replace": "  pwrclk0_irq_restore(irq_state);\n  manager->wake_mask = wake_mask;\n  manager->sleep_mode = mode;\n  manager->sleeping = true;\n"
+    },
+    {
+      "id": "normalize-prepare-irq-state",
+      "description": "Collapse the saved opaque IRQ state to Boolean.",
+      "find": "  manager->sleeping = true;\n  pwrclk0_irq_restore(irq_state);",
+      "replace": "  manager->sleeping = true;\n  pwrclk0_irq_restore(irq_state != 0u);"
+    },
+    {
+      "id": "enable-masked-prepare-irq",
+      "description": "Enable IRQs even if the prepare caller had them masked.",
+      "find": "  manager->sleeping = true;\n  pwrclk0_irq_restore(irq_state);",
+      "replace": "  manager->sleeping = true;\n  pwrclk0_irq_restore(irq_state | 1u);"
+    },
+    {
+      "id": "store-all-wake-sources",
+      "description": "Store every wake source instead of the requested mask.",
+      "find": "  manager->wake_mask = wake_mask;",
+      "replace": "  manager->wake_mask = PWRCLK0_WAKE_ALL;"
+    },
+    {
+      "id": "lose-deep-mode",
+      "description": "Record idle mode after programming deep sleep.",
+      "find": "  manager->sleep_mode = mode;",
+      "replace": "  manager->sleep_mode = POWER_SLEEP_MODE_IDLE;"
+    },
+    {
+      "id": "forget-sleeping-state",
+      "description": "Leave the manager awake after arming hardware sleep.",
+      "find": "  manager->sleeping = true;",
+      "replace": "  manager->sleeping = false;"
+    },
+    {
+      "id": "clear-unobserved-wake-sources",
+      "description": "Clear the whole configured mask instead of the observed subset.",
+      "find": "  pwrclk0_write_wake_clear(manager->registers, observed);",
+      "replace": "  pwrclk0_write_wake_clear(manager->registers, manager->wake_mask);"
+    },
+    {
+      "id": "clear-only-selected-source",
+      "description": "Leave lower-priority observed wake bits latched.",
+      "find": "  pwrclk0_write_wake_clear(manager->registers, observed);",
+      "replace": "  pwrclk0_write_wake_clear(manager->registers, reason == POWER_WAKE_GPIO ? PWRCLK0_WAKE_GPIO : reason == POWER_WAKE_RTC ? PWRCLK0_WAKE_RTC : PWRCLK0_WAKE_UART);"
+    },
+    {
+      "id": "prefer-uart-over-rtc",
+      "description": "Give UART priority over an observed RTC wake.",
+      "find": "  if ((observed & PWRCLK0_WAKE_RTC) != 0u) return POWER_WAKE_RTC;\n  if ((observed & PWRCLK0_WAKE_UART) != 0u) return POWER_WAKE_UART;",
+      "replace": "  if ((observed & PWRCLK0_WAKE_UART) != 0u) return POWER_WAKE_UART;\n  if ((observed & PWRCLK0_WAKE_RTC) != 0u) return POWER_WAKE_RTC;"
+    },
+    {
+      "id": "read-status-twice",
+      "description": "Consume a second status snapshot during resume.",
+      "find": "  observed = pwrclk0_read_wake_status(manager->registers) & manager->wake_mask;",
+      "replace": "  observed = pwrclk0_read_wake_status(manager->registers) & manager->wake_mask;\n  observed |= pwrclk0_read_wake_status(manager->registers) & manager->wake_mask;"
+    },
+    {
+      "id": "no-source-clears-state",
+      "description": "Drop the outstanding wake mask when no configured source is latched.",
+      "find": "  if (reason == POWER_WAKE_NONE) {\n    pwrclk0_irq_restore(irq_state);",
+      "replace": "  if (reason == POWER_WAKE_NONE) {\n    manager->wake_mask = 0u;\n    pwrclk0_irq_restore(irq_state);"
+    },
+    {
+      "id": "no-source-normalizes-irq",
+      "description": "Lose the opaque saved IRQ state on the no-source branch.",
+      "find": "  if (reason == POWER_WAKE_NONE) {\n    pwrclk0_irq_restore(irq_state);",
+      "replace": "  if (reason == POWER_WAKE_NONE) {\n    pwrclk0_irq_restore(irq_state != 0u);"
+    },
+    {
+      "id": "publish-resume-before-hardware",
+      "description": "Publish awake state before completing the hardware wake.",
+      "find": "  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_clock(manager->registers, PWRCLK0_CLOCK_RUN);\n  pwrclk0_write_wake_clear(manager->registers, observed);\n  pwrclk0_write_sleep_mode(manager->registers, PWRCLK0_SLEEP_NONE);\n  manager->wake_mask = 0u;\n  manager->sleeping = false;\n",
+      "replace": "  manager->wake_mask = 0u;\n  manager->sleeping = false;\n  pwrclk0_write_wake_enable(manager->registers, 0u);\n  pwrclk0_write_clock(manager->registers, PWRCLK0_CLOCK_RUN);\n  pwrclk0_write_wake_clear(manager->registers, observed);\n  pwrclk0_write_sleep_mode(manager->registers, PWRCLK0_SLEEP_NONE);\n"
+    },
+    {
+      "id": "publish-resume-after-restore",
+      "description": "Restore interrupts before publishing awake state.",
+      "find": "  manager->wake_mask = 0u;\n  manager->sleeping = false;\n  pwrclk0_irq_restore(irq_state);",
+      "replace": "  pwrclk0_irq_restore(irq_state);\n  manager->wake_mask = 0u;\n  manager->sleeping = false;\n"
+    },
+    {
+      "id": "normalize-resume-irq-state",
+      "description": "Normalize the saved opaque IRQ state after a valid wake.",
+      "find": "  manager->sleeping = false;\n  pwrclk0_irq_restore(irq_state);",
+      "replace": "  manager->sleeping = false;\n  pwrclk0_irq_restore(irq_state != 0u);"
+    },
+    {
+      "id": "retain-mask-on-resume",
+      "description": "Keep a stale configured mask after wake.",
+      "find": "  manager->wake_mask = 0u;\n  manager->sleeping = false;\n",
+      "replace": "  manager->sleeping = false;\n"
+    },
+    {
+      "id": "change-mode-on-resume",
+      "description": "Reset the saved mode even though resume must preserve it.",
+      "find": "  manager->wake_mask = 0u;\n  manager->sleeping = false;\n",
+      "replace": "  manager->wake_mask = 0u;\n  manager->sleeping = false;\n  manager->sleep_mode = POWER_SLEEP_MODE_IDLE;\n"
+    },
+    {
+      "id": "invalidate-on-resume",
+      "description": "Invalidate the manager after a successful wake.",
+      "find": "  manager->wake_mask = 0u;\n  manager->sleeping = false;\n",
+      "replace": "  manager->wake_mask = 0u;\n  manager->sleeping = false;\n  manager->initialized = false;\n"
+    },
+    {
+      "id": "report-sleep-clock-while-awake",
+      "description": "Report the deep clock after wake based only on saved mode.",
+      "find": "return manager->sleeping && manager->sleep_mode == POWER_SLEEP_MODE_DEEP",
+      "replace": "return manager->sleep_mode == POWER_SLEEP_MODE_DEEP"
+    },
+    {
+      "id": "clock-query-reads-hardware",
+      "description": "Make a supposedly pure query perform a hardware read.",
+      "find": "  if (!manager_is_usable(manager)) return 0u;\n  return manager->sleeping",
+      "replace": "  if (!manager_is_usable(manager)) return 0u;\n  (void)pwrclk0_read_wake_status(manager->registers);\n  return manager->sleeping"
     }
   ]
 }

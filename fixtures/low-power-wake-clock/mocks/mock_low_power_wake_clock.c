@@ -9,6 +9,8 @@ struct pwrclk0_registers {
 typedef struct {
   mock_pwrclk_event_t event;
   uint32_t value;
+  power_manager_t manager;
+  uint32_t irq_state;
 } mock_pwrclk_event_record_t;
 
 typedef struct {
@@ -18,6 +20,8 @@ typedef struct {
   uint32_t wake_enable;
   uint32_t wake_status;
   uint32_t irq_state;
+  const power_manager_t *watched_manager;
+  uint32_t latch_after_read;
   mock_pwrclk_event_record_t events[MOCK_PWRCLK_HISTORY_CAPACITY];
   size_t event_count;
   bool invalid_access;
@@ -34,6 +38,9 @@ static void record_event(mock_pwrclk_event_t event, uint32_t value) {
     state.events[state.event_count] = (mock_pwrclk_event_record_t) {
       .event = event,
       .value = value,
+      .manager = state.watched_manager != NULL
+        ? *state.watched_manager : (power_manager_t) { 0 },
+      .irq_state = state.irq_state,
     };
   } else {
     state.invalid_access = true;
@@ -68,6 +75,24 @@ void mock_pwrclk_raise_wake(uint32_t value) {
 
 void mock_pwrclk_set_irq_state(uint32_t value) {
   state.irq_state = value;
+}
+
+void mock_pwrclk_watch(const power_manager_t *manager) {
+  state.watched_manager = manager;
+}
+
+const power_manager_t *mock_pwrclk_manager_at(size_t index) {
+  return index < state.event_count && index < MOCK_PWRCLK_HISTORY_CAPACITY
+    ? &state.events[index].manager : NULL;
+}
+
+uint32_t mock_pwrclk_irq_at(size_t index) {
+  return index < state.event_count && index < MOCK_PWRCLK_HISTORY_CAPACITY
+    ? state.events[index].irq_state : UINT32_MAX;
+}
+
+void mock_pwrclk_latch_after_read(uint32_t value) {
+  state.latch_after_read = wake_masked(value);
 }
 
 pwrclk0_clock_t mock_pwrclk_clock(void) {
@@ -137,12 +162,16 @@ void pwrclk0_write_wake_enable(
 uint32_t pwrclk0_read_wake_status(
   const volatile pwrclk0_registers_t *registers
 ) {
+  uint32_t snapshot;
   if (!is_registers(registers)) {
     state.invalid_access = true;
     return 0u;
   }
-  record_event(MOCK_PWRCLK_EVENT_WAKE_STATUS_READ, state.wake_status);
-  return state.wake_status;
+  snapshot = state.wake_status;
+  record_event(MOCK_PWRCLK_EVENT_WAKE_STATUS_READ, snapshot);
+  state.wake_status |= state.latch_after_read;
+  state.latch_after_read = 0u;
+  return snapshot;
 }
 
 void pwrclk0_write_wake_clear(

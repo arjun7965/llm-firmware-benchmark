@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "fixture_low_power_wake_clock.h"
+#include "low_power_wake_clock.h"
 
 typedef enum {
   MOCK_PWRCLK_EVENT_CLOCK_WRITE,
@@ -23,6 +24,10 @@ volatile pwrclk0_registers_t *mock_pwrclk0(void);
 void mock_pwrclk_set_wake_status(uint32_t value);
 void mock_pwrclk_raise_wake(uint32_t value);
 void mock_pwrclk_set_irq_state(uint32_t value);
+void mock_pwrclk_watch(const power_manager_t *manager);
+const power_manager_t *mock_pwrclk_manager_at(size_t index);
+uint32_t mock_pwrclk_irq_at(size_t index);
+void mock_pwrclk_latch_after_read(uint32_t value);
 
 pwrclk0_clock_t mock_pwrclk_clock(void);
 pwrclk0_sleep_t mock_pwrclk_sleep_mode(void);

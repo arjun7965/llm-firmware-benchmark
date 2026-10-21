@@ -152,6 +152,76 @@ Existing version 1.0 packets and summaries remain readable. Invoking
 `calibration:blind` without `--cohort` retains the legacy successful-answer-only
 workflow and cannot establish a generation denominator.
 
+## Completed Low-Power Wake and Clock Pilot — `low-power-wake-clock`
+
+The `low-power-wake-clock-cross-family-20261020-02` cohort records all nine
+planned attempts across GPT-5.6 Luna, GLM-5.3, and Kimi K3. All returned
+extractable single-C-fence answers. Six pass the eleven deterministic test
+groups; two fail compilation and one fails a duplicate-prepare check. Runs use
+concurrency one, no retries, and no candidate repairs.
+
+Before generation, the audited prompt supplied both exact headers, usable-state
+rules, all accepted/rejected traces, state publication boundaries, one-snapshot
+wake semantics, exact IRQ restoration, and explicit model limits. The reference
+and two valid implementation variants pass eleven groups, including 240 legal
+mode/mask/status/IRQ cases; all 42 compile-valid mutations are rejected under
+C11 profile revision 4, Debian 13 x86-64, GCC 14.2.0, and Bubblewrap 0.11.0.
+
+| Model | Run 1 / 10 | Run 2 / 10 | Run 3 / 10 | Mean / 10 | Validation passes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GPT-5.6 Luna | 10 | 10 | 9.5 | 9.833 | 2/3 |
+| GLM-5.3 | 7 | 9.5 | 7.5 | 8.000 | 1/3 |
+| Kimi K3 | 9.5 | 9.5 | 10 | 9.667 | 3/3 |
+
+Luna run 3 accepts a duplicate sleep request because prepare omits the sleeping
+check; the deduction belongs only to fault recovery. GLM runs 1 and 3 omit the
+standard header defining NULL and receive zero functional credit. Static review
+also finds GLM run 1 missing the sleeping check and run 3 initializing through
+the old manager register handle instead of the supplied argument. The latter
+binding defect remains in its already-zero functional dimension. Other criteria
+receive only supported static credit, with no repaired execution or repeated
+penalty for the missing header in portability. Explanation deductions address
+incorrect lifecycle/test expectations or guarantees that exceed the model.
+Executable outcomes and rubric partial credit remain separate.
+
+Calls are serialized; accessors complete their modeled non-failing operations
+on return. Initialization is quiescent boot-stage work. The model does not
+establish actual IRQ preemption, WFI behavior, clock settling, energy, latency,
+or delivery guarantees for repeated arrivals of an already-observed latch bit.
+
+The original `low-power-wake-clock-cross-family-20261020-01` cohort remains
+unscored diagnostic evidence: all six OpenCode attempts failed on an expired API
+key, while three Luna answers yielded two passes and one runtime failure.
+After the user replaced the key, the fresh nine-attempt cohort retained the same
+prompt and model settings. No attempts were overwritten, substituted, or pooled;
+the diagnostic answers remain unread and their identity key unopened.
+
+Current criterion scores were frozen before unblinding. The coordinating AI knew
+settings and per-model progress, but read current candidate content only under
+anonymous sample IDs. These scores are AI-assisted and human-reviewed: the
+conversation user approved the proposed scores and evidence without changes on
+2026-10-21 (America/Los_Angeles). This is not independent human scoring.
+
+Luna used medium effort and a 600-second timeout; GLM used low variant,
+900 seconds, and a configured 32,000-token output ceiling; Kimi used max variant,
+1,200 seconds, and a configured 64,000-token output ceiling. Effective provider
+limits are unknown; no parity claim is made. Generation used Node v22.21.0,
+codex-cli 0.163.0, and OpenCode 1.19.3. This small single-task cohort with unequal
+budgets does not establish a broad model ranking.
+
+Prompt SHA-256:
+`16f6d00fcda1b6e1efb13eb566139fea6c54de62ef6aa0652a0dd92f6bd20ba4`.
+Packet SHA-256:
+`077ce7cbbcec976bcc09162be835793abea36bfc39628bb863e7c702c9eac9fa`.
+Frozen score-sheet SHA-256:
+`95a767c3bcdd8a30ddccda90a3657d8d192dd52bdd148452319fa69a93405861`.
+Generation used an audited working-tree snapshot based on
+`e3d3b08e52d89a59cfe27a9a8cfd83b96365adba`; snapshot and patch digests are in
+the [sanitized aggregate](calibration/low-power-wake-clock-2026-10-20.json).
+All nine private public-export projections passed without redactions or review
+flags. Raw records, generated answers, scoring packets, and identity keys remain
+private. Only the reviewed sanitized aggregate is published.
+
 ## Completed Idempotent Initialization Pilot — `idempotent-system-init`
 
 The `idempotent-system-init-cross-family-20261009-01` cohort records all nine
