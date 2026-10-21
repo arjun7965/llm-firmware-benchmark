@@ -3,7 +3,11 @@
 #include "low_power_wake_clock.h"
 
 static bool mode_is_valid(power_sleep_mode_t mode) {
-  return mode < POWER_SLEEP_MODE_COUNT;
+  return mode == POWER_SLEEP_MODE_IDLE || mode == POWER_SLEEP_MODE_DEEP;
+}
+
+static bool manager_is_usable(const power_manager_t *manager) {
+  return manager != NULL && manager->initialized && manager->registers != NULL;
 }
 
 static bool wake_mask_is_valid(uint32_t wake_mask) {
@@ -59,7 +63,7 @@ bool power_manager_prepare_sleep(
   uint32_t irq_state;
   pwrclk0_clock_t clock;
 
-  if (manager == NULL || !manager->initialized || manager->sleeping ||
+  if (!manager_is_usable(manager) || manager->sleeping ||
       !mode_is_valid(mode) || !wake_mask_is_valid(wake_mask) ||
       !wake_mask_supported(mode, wake_mask)) {
     return false;
@@ -86,7 +90,7 @@ power_wake_reason_t power_manager_resume(power_manager_t *manager) {
   uint32_t observed;
   power_wake_reason_t reason;
 
-  if (manager == NULL || !manager->initialized || !manager->sleeping) {
+  if (!manager_is_usable(manager) || !manager->sleeping) {
     return POWER_WAKE_NONE;
   }
 
@@ -109,7 +113,7 @@ power_wake_reason_t power_manager_resume(power_manager_t *manager) {
 }
 
 uint32_t power_manager_clock_hz(const power_manager_t *manager) {
-  if (manager == NULL || !manager->initialized) return 0u;
+  if (!manager_is_usable(manager)) return 0u;
   return manager->sleeping && manager->sleep_mode == POWER_SLEEP_MODE_DEEP
     ? POWER_SLEEP_CLOCK_HZ
     : POWER_RUN_CLOCK_HZ;

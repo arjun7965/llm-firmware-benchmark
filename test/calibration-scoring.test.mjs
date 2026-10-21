@@ -21,6 +21,18 @@ import {
 } from "../src/calibration-scoring.mjs";
 import { loadTasks, promptSha256 } from "../src/harness.mjs";
 
+test("low-power calibration supplies both exact participant headers", () => {
+  const tasks = loadTasks(new URL("../tasks.json", import.meta.url));
+  const selected = tasks.find((entry) => entry.id === "low-power-wake-clock");
+  for (const name of ["low_power_wake_clock.h", "fixture_low_power_wake_clock.h"]) {
+    const header = readFileSync(new URL(
+      `../fixtures/low-power-wake-clock/starter/${name}`,
+      import.meta.url,
+    ), "utf8");
+    assert.ok(selected.prompt.includes(header), `missing exact header: ${name}`);
+  }
+});
+
 const task = {
   category: "embedded",
   id: "example-task",
@@ -1005,6 +1017,109 @@ test("published idempotent-init scores retain approval and the repair audit", ()
     assert.ok(task.prompt.includes(`${name}:\n\x60\x60\x60c\n${header}\x60\x60\x60`));
   }
   assert.ok(rubric.includes("../calibration/idempotent-system-init-2026-10-09.json"));
+});
+
+test("published low-power scores retain approval and separate authentication diagnostics", () => {
+  const summary = JSON.parse(readFileSync(new URL(
+    "../docs/calibration/low-power-wake-clock-2026-10-20.json",
+    import.meta.url,
+  ), "utf8"));
+  const rubric = readFileSync(new URL(
+    "../docs/benchmarks/low-power-wake-clock.md",
+    import.meta.url,
+  ), "utf8");
+  const criteria = parseCalibrationRubric(rubric);
+  assert.equal(summary.review.status, "complete");
+  assert.equal(summary.review.provenance, "ai-assisted-human-reviewed");
+  assert.equal(summary.review.decision, "approved-without-changes");
+  assert.equal(summary.review.aiScoresFrozenBeforeUnblinding, true);
+  assert.equal(summary.review.independentHumanScoring, false);
+  assert.equal(summary.review.reviewDate, "2026-10-21");
+  assert.equal(summary.review.dateTimezone, "America/Los_Angeles");
+  assert.equal(summary.scoreSheetSha256,
+    "95a767c3bcdd8a30ddccda90a3657d8d192dd52bdd148452319fa69a93405861");
+  assert.equal(summary.review.scoreSheetSha256, summary.scoreSheetSha256);
+  assert.equal(summary.generation.scheduled, 9);
+  assert.equal(summary.generation.recorded, 9);
+  assert.equal(summary.generation.answers, 9);
+  assert.equal(summary.generation.answerRate, 1);
+  assert.equal(summary.generation.outcomes["provider-error"], 0);
+  assert.equal(summary.methodology.concurrency, 1);
+  assert.equal(summary.methodology.automaticRetries, 0);
+  assert.equal(summary.methodology.candidateRepairs, false);
+  assert.deepEqual(summary.models.map((model) => ({
+    model: model.model,
+    scores: model.runs.map(({ score }) => score),
+    passes: model.fullValidationPasses,
+  })), [
+    { model: "gpt-5.6-luna", scores: [10, 10, 9.5], passes: 2 },
+    { model: "glm53", scores: [7, 9.5, 7.5], passes: 1 },
+    { model: "kimi-k3", scores: [9.5, 9.5, 10], passes: 3 },
+  ]);
+  const outcomes = {};
+  for (const model of summary.models) {
+    assert.deepEqual(model.runs.map(({ run }) => run), [1, 2, 3]);
+    const scores = model.runs.map(({ score }) => score);
+    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = scores.reduce((sum, score) =>
+      sum + (score - mean) ** 2, 0) / scores.length;
+    assert.equal(model.mean, mean);
+    assert.equal(model.sd, Math.sqrt(variance));
+    assert.equal(model.range, Math.max(...scores) - Math.min(...scores));
+    assert.equal(model.fullValidationPasses,
+      model.runs.filter(({ validationOutcome }) => validationOutcome === "passed").length);
+    for (const run of model.runs) {
+      assert.equal(run.generationOutcome, "answer");
+      outcomes[run.validationOutcome] = (outcomes[run.validationOutcome] ?? 0) + 1;
+      assert.deepEqual(Object.keys(run.criteria).sort(),
+        criteria.map(({ id }) => id).sort());
+      assert.equal(run.score,
+        Object.values(run.criteria).reduce((sum, value) => sum + value, 0));
+      for (const criterion of criteria) {
+        assert.ok(run.criteria[criterion.id] >= 0);
+        assert.ok(run.criteria[criterion.id] <= criterion.maximum);
+      }
+      if (run.validationOutcome === "compile-failure") {
+        assert.equal(run.criteria["functional-correctness"], 0);
+        // Missing NULL is charged once; supported static portability credit remains.
+        assert.equal(run.criteria.portability, 1);
+      } else if (run.validationOutcome === "runtime-failure") {
+        assert.equal(run.criteria["fault-recovery"], 0.5);
+        for (const criterion of criteria.filter(({ id }) => id !== "fault-recovery")) {
+          assert.equal(run.criteria[criterion.id], criterion.maximum);
+        }
+      }
+    }
+  }
+  assert.deepEqual(outcomes, { passed: 6, "runtime-failure": 1, "compile-failure": 2 });
+  assert.equal(summary.validation.passes, outcomes.passed);
+  assert.equal(summary.validation.compileFailures, outcomes["compile-failure"]);
+  assert.equal(summary.validation.runtimeFailures, outcomes["runtime-failure"]);
+  assert.equal(summary.validation.extracted, 9);
+  assert.equal(summary.validation.referencePassed, true);
+  assert.equal(summary.validation.validVariantPasses, 2);
+  assert.equal(summary.validation.compileValidMutationsRejected, 42);
+  assert.equal(summary.validation.publicTestGroups, 11);
+  assert.equal(summary.validation.exhaustiveTransitionCases, 240);
+  assert.equal(summary.diagnosticCohorts.length, 1);
+  const diagnostic = summary.diagnosticCohorts[0];
+  assert.notEqual(diagnostic.cohortId, summary.cohortId);
+  assert.equal(diagnostic.scheduled, 9);
+  assert.equal(diagnostic.recorded, 9);
+  assert.equal(diagnostic.answers, 3);
+  assert.equal(diagnostic.authenticationFailures, 6);
+  assert.equal(diagnostic.scoresAssigned, false);
+  assert.equal(diagnostic.promptUnchanged, true);
+  assert.equal(diagnostic.modelSettingsUnchanged, true);
+  assert.equal(summary.publication.artifact, "sanitized-aggregate-only");
+  assert.equal(summary.publication.answerExportsChecked, 9);
+  assert.equal(summary.publication.reviewRequiredCount, 0);
+  assert.equal(summary.publication.redactionCount, 0);
+  assert.equal(summary.publication.rawRecordsPublished, false);
+  const task = loadTasks(new URL("../tasks.json", import.meta.url))
+    .find(({ id }) => id === summary.taskId);
+  assert.equal(summary.promptSha256, promptSha256(task.prompt));
+  assert.ok(rubric.includes("../calibration/low-power-wake-clock-2026-10-20.json"));
 });
 
 test("brownout prompt supplies exact fixture-owned headers and accessor traces", () => {

@@ -1,0 +1,356 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "low-power-wake-clock",
+  "cohortId": "low-power-wake-clock-cross-family-20261020-02",
+  "startedDate": "2026-10-20",
+  "dateTimezone": "America/Los_Angeles",
+  "harnessCommit": "e3d3b08e52d89a59cfe27a9a8cfd83b96365adba",
+  "promptSha256": "16f6d00fcda1b6e1efb13eb566139fea6c54de62ef6aa0652a0dd92f6bd20ba4",
+  "cohortSha256": "947cc9f79e9b5232693795f42b92db30fa4f6aee524969764be660282699b5a0",
+  "packetSha256": "077ce7cbbcec976bcc09162be835793abea36bfc39628bb863e7c702c9eac9fa",
+  "scoreSheetSha256": "95a767c3bcdd8a30ddccda90a3657d8d192dd52bdd148452319fa69a93405861",
+  "review": {
+    "status": "complete",
+    "provenance": "ai-assisted-human-reviewed",
+    "aiScorer": "Codex (GPT-6 Astra)",
+    "aiScoresFrozenBeforeUnblinding": true,
+    "independentHumanScoring": false,
+    "priorExposure": "The coordinating AI knew model settings and per-model generation/validation progress for both cohorts. Diagnostic candidate content was not read. Current candidate content was reviewed only under anonymous sample IDs, and complete criterion scores were frozen before opening the current identity key. This is AI-assisted scoring requiring human review, not independent human scoring.",
+    "decision": "approved-without-changes",
+    "reviewDate": "2026-10-21",
+    "dateTimezone": "America/Los_Angeles",
+    "recordedAt": "2026-10-21T07:11:45.704Z",
+    "humanReviewer": "Conversation user",
+    "reviewScope": "Approved the proposed criterion scores and linked evidence for publication without changes. Deterministic outcomes remain separate from rubric partial credit; the earlier authentication-failure cohort remains unscored diagnostic evidence.",
+    "scoreSheetSha256": "95a767c3bcdd8a30ddccda90a3657d8d192dd52bdd148452319fa69a93405861"
+  },
+  "methodology": {
+    "concurrency": 1,
+    "automaticRetries": 0,
+    "scheduledRunsPerModel": 3,
+    "order": "Run-major: Luna, GLM, Kimi for each of runs 1, 2, 3",
+    "scorePopulation": "available-answers-only",
+    "generationFailuresHaveNoRubricScore": true,
+    "candidateRepairs": false,
+    "cliVersions": {
+      "node": "v22.21.0",
+      "codex": "codex-cli 0.163.0",
+      "opencode": "1.19.3"
+    },
+    "providerDifferences": "Luna medium/600s; GLM low/900s/32000 configured output ceiling; Kimi max/1200s/64000 configured output ceiling. Effective provider limits unknown; no parity claim.",
+    "preGenerationAudit": "Pre-generation audit supplies exact headers, usable-state rules, all accepted/rejected accessor traces, state publication boundaries, exact IRQ semantics, and one-snapshot/later-latch behavior; eleven test groups including 240 legal mask/status/IRQ combinations and 42 controlled mutations; scoring ownership frozen before generation",
+    "snapshotSha256": "867d8e4af270b8fd781483ecfa8db3603efe4bf0b6200e327fdb4d3d736599ad",
+    "workingTreePatchSha256": "d1b2eff9322c7f71433ec0fd994bdd21da83b2793de222020a5f64c845fd39c0",
+    "auditedWorkingTreeSnapshot": true,
+    "scoringPolicySha256": "0d8a29cb70512b77d99475d5b10c7e75370478a54077dcf08a893ad2c5fb9999"
+  },
+  "validation": {
+    "profile": "c11-host",
+    "profileRevision": 4,
+    "profileSha256": "366cfeebdef4d1b1144c4a4cc60184a02fed782c22e51e14209f55bc860ddcf3",
+    "environmentId": "debian-13-x86-64-c11-host",
+    "environmentRevision": 1,
+    "environmentSha256": "3fa38109eeeef8b8bb87936ea357907e2b561c5b305b8dea54ea35ecb70401e7",
+    "sandbox": "bubblewrap 0.11.0",
+    "compiler": "GCC 14.2.0",
+    "referencePassed": true,
+    "compileValidMutationsRejected": 42,
+    "validVariantPasses": 2,
+    "publicTestGroups": 11,
+    "exhaustiveTransitionCases": 240,
+    "answers": 9,
+    "extracted": 9,
+    "extractionFailures": 0,
+    "compileFailures": 2,
+    "runtimeFailures": 1,
+    "passes": 6
+  },
+  "diagnosticCohorts": [
+    {
+      "cohortId": "low-power-wake-clock-cross-family-20261020-01",
+      "dispositionSha256": "811abbc8baf4124606603cdb6effe0393f0ed2b7162eaeb6ffd382e80c493165",
+      "scheduled": 9,
+      "recorded": 9,
+      "answers": 3,
+      "authenticationFailures": 6,
+      "extracted": 3,
+      "validationPasses": 2,
+      "runtimeFailures": 1,
+      "scoresAssigned": false,
+      "promptUnchanged": true,
+      "modelSettingsUnchanged": true,
+      "explanation": "All six OpenCode attempts failed with an expired API key. After the user replaced it, a fresh nine-attempt cohort was frozen. The diagnostic answers remain unread and unscored; no attempts were replaced or pooled."
+    }
+  ],
+  "generation": {
+    "scheduled": 9,
+    "recorded": 9,
+    "answers": 9,
+    "answerRate": 1,
+    "outcomes": {
+      "answer": 9,
+      "timeout": 0,
+      "generation-limit": 0,
+      "provider-error": 0,
+      "no-answer": 0,
+      "missing": 0
+    }
+  },
+  "models": [
+    {
+      "model": "gpt-5.6-luna",
+      "modelId": "gpt-5.6-luna",
+      "provider": "codex",
+      "family": "OpenAI GPT",
+      "controls": {
+        "effort": "medium",
+        "timeoutMs": 600000
+      },
+      "providerConfigSha256": null,
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 10,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "passed",
+          "durationMs": 12027,
+          "rationale": "Passes all eleven groups and the 240-case matrix. Source review confirms correct boot binding and replacement, exact mode/mask validation, unusable and duplicate-call rejection, state preservation, clock queries, five-write prepare and four-write resume ordering, one status read, configured-source filtering and GPIO/RTC/UART priority, all-observed-bit clearing, exact IRQ restoration including zero, and state updates between the final hardware accessor and restore. No dynamic storage, mutable globals, unbounded work, direct MMIO, or nonstandard dependencies appear. The concise explanation accurately describes state publication, host-model exclusions including preemption/settling/repeated-latch behavior, and concrete deterministic cases. Full credit is supported by both code review and execution, not inferred from the pass alone."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 10,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "passed",
+          "durationMs": 12145,
+          "rationale": "Passes all eleven groups and the 240-case matrix. Static review verifies short-circuit null/usability handling, rejection of duplicate sleep and invalid mode/mask/deep-UART requests, initialization through the supplied register handle, exact prepare/resume writes and state fields, one filtered status snapshot, priority and observed-only clearing, unchanged no-source state, exact opaque IRQ restoration, and correct pure clock queries. All storage/work are bounded and no forbidden APIs or nonstandard dependencies are used. The concise explanation accurately covers the principal sequencing, filtering, priority, IRQ, host-model, and deterministic-test requirements without a separate material explanatory error. Full credit rests on both source inspection and validation."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 0.5,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "runtime-failure",
+          "durationMs": 11462,
+          "rationale": "Compiles but fails the existing duplicate-prepare check: prepare validates usability, mode, and mask but never rejects an already-sleeping manager. Fault recovery is 0.5/1 for allowing reconfiguration of an outstanding sleep request. The defect is not deducted again in functional correctness or concurrency. Static review supports the remaining state/result handling, correct initialization binding, clock queries, exact accessor order, stale-latch clearing, source priority/filtering, one-snapshot behavior, no-source preservation, and exact IRQ/state publication. Work and storage are fixed and bounded; the answer includes stddef.h and uses only standard C11 and supplied accessors. Its concise explanation covers the ordering, filtering, IRQ token semantics, host-model limits, and concrete validation checks without a separate material explanatory defect. No candidate changes or repaired reruns were used."
+        }
+      ],
+      "mean": 9.833333333333334,
+      "sd": 0.23570226039551584,
+      "range": 0.5,
+      "fullValidationPasses": 2
+    },
+    {
+      "model": "glm53",
+      "modelId": "opencode-go/glm-5.3",
+      "provider": "opencode",
+      "family": "Z.ai GLM",
+      "controls": {
+        "variant": "low",
+        "timeoutMs": 900000,
+        "maxOutputTokens": 32000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 7,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 0.5,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "durationMs": 28952,
+          "rationale": "Compilation fails because NULL is used without a defining standard header, despite the supplied-header warning; functional correctness is 0/2 under the frozen policy. Static review also finds no already-sleeping guard in prepare, so it would replace an outstanding sleep configuration; fault recovery is 0.5/1. Other rejection predicates, configured-source filtering, no-source preservation, and exact observed-bit clearing are supported by the source. Accepted-path accessor order, clock changes, one status snapshot, post-hardware/pre-restore state publication, and exact opaque IRQ restoration are correct by static inspection. Storage/work are bounded and only standard C11 constructs and the declared opaque accessors are used. Clarity is 0.5/1: the explanation calls IRQ restore the only interrupt-related effect despite save/disable, and its late-bit scenario promises that the next resume reports a bit even after a successful wake has made the manager awake. No candidate repairs or repaired execution were used; the missing NULL definition is not deducted again in portability, and the missing guard is not deducted again in clarity."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 61974,
+          "rationale": "Passes all eleven groups, including the 240-case matrix. Static review independently confirms null/usable/awake checks, exact mode and mask validation, supplied-register initialization, all state fields, ordered clock/wake transitions, one status snapshot, exact observed-bit clearing and priority, late-distinct-bit preservation, pure queries, and state publication before exact IRQ restoration. Work/storage are bounded and the implementation is valid freestanding C11 using only declared accessors. Clarity is 0.5/1: the prose overstates disabling wake sources as guaranteeing that the clear cannot race a live source and as quiescing latching. The contract permits disabled-source status and later distinct latch arrivals; it requires snapshot-based preservation and does not establish that general no-relatching guarantee. The code implements the required preservation correctly, so no timing or recovery deduction is applied. The answer otherwise supplies detailed tests and modeled limits."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 7.5,
+          "criteria": {
+            "functional-correctness": 0,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "compile-failure",
+          "durationMs": 29416,
+          "rationale": "Compilation fails on undefined NULL because no defining header is included; functional correctness is 0/2 under the frozen policy. Independent static review also finds initialization using manager->registers for all four writes instead of the supplied registers argument, so zeroed or stale prior state would target the wrong handle. This binding defect remains within the already-zero functional dimension. The remaining source supports bounded resources, the prescribed accessor value/order and clock transitions, exact one-read/IRQ/state-publication structure, usable/awake and mode/mask rejection, configured filtering, and observed-only clearing. Portability receives supported static credit without duplicating the missing-header penalty. Clarity is 0.5/1: prose incorrectly gives initialization the prepare sequence with a requested-mask arming step; it also says every accessor-boundary snapshot sees pre-call state, although IRQ restore must observe committed state. These explanation defects are separate from the implementation failures. No candidate repairs or repaired execution were used."
+        }
+      ],
+      "mean": 8,
+      "sd": 1.0801234497346435,
+      "range": 2.5,
+      "fullValidationPasses": 1
+    },
+    {
+      "model": "kimi-k3",
+      "modelId": "opencode-go/kimi-k3",
+      "provider": "opencode",
+      "family": "Moonshot Kimi",
+      "controls": {
+        "variant": "max",
+        "timeoutMs": 1200000,
+        "maxOutputTokens": 64000
+      },
+      "providerConfigSha256": "c156300a0f1e0364818a42da877b2a283cda2e8676ec7ff7fc20fe3d8cabc9a0",
+      "generation": {
+        "scheduled": 3,
+        "recorded": 3,
+        "answers": 3,
+        "answerRate": 1,
+        "outcomes": {
+          "answer": 3,
+          "timeout": 0,
+          "generation-limit": 0,
+          "provider-error": 0,
+          "no-answer": 0,
+          "missing": 0
+        }
+      },
+      "runs": [
+        {
+          "run": 1,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 55208,
+          "rationale": "Passes all eleven groups and the 240-case matrix. Static inspection confirms the exact validity predicates, supplied-register initialization, accepted/rejected state behavior, bounded storage/work, clock sequencing and queries, single status snapshot, priority/filtering, all-observed-bit clearing, and state publication before exact IRQ restoration. The implementation uses only standard C11 and declared accessors. Clarity is 0.5/1 for concrete incorrect test expectations: after a no-source resume the manager remains sleeping, so the suggested immediate re-prepare is rejected; after a successful resume a later prepare clears ALL stale latches, so the proposed next prepare/resume cycle cannot report the old late UART latch without a new arrival. The prose also overstates all accessor snapshots as pre-call state despite restore observing committed state. These are explanation errors; the implementation follows the contract, so no additional recovery or concurrency deduction is made."
+        },
+        {
+          "run": 2,
+          "generationOutcome": "answer",
+          "score": 9.5,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 0.5
+          },
+          "validationOutcome": "passed",
+          "durationMs": 50958,
+          "rationale": "Passes all eleven groups and the 240-case matrix. Source review confirms boot initialization through the supplied handle, exact prepare/resume gating, mode and mask checks, field preservation, one status snapshot, GPIO/RTC/UART priority, observed-only clearing, correct clocks, pure queries, bounded work/storage, and exact state/IRQ publication. The supplied standard header and opaque-accessor-only implementation satisfy portability. Clarity is 0.5/1: the opening explanation claims every public entry point first requires an initialized usable manager, which would incorrectly exclude initialization of zeroed or stale state; the actual init correctly checks only the two input pointers. The answer also attributes a general no-relatching guarantee to disabling sources that the model does not establish. Its detailed traces and modeled limits otherwise earn partial explanation credit. These prose errors do not reduce implementation dimensions."
+        },
+        {
+          "run": 3,
+          "generationOutcome": "answer",
+          "score": 10,
+          "criteria": {
+            "functional-correctness": 2,
+            "bounded-resource-use": 1,
+            "timing-behavior": 2,
+            "concurrency-safety": 2,
+            "fault-recovery": 1,
+            "portability": 1,
+            "clarity-and-validation": 1
+          },
+          "validationOutcome": "passed",
+          "durationMs": 182689,
+          "rationale": "Passes all eleven groups and the 240-case matrix. Static review confirms every pointer/usability/mode/mask guard, boot initialization through the supplied handle, preserved fields on rejection, exact state and clock-query behavior, ordered hardware operations, one-snapshot priority/filtering, no-source preservation, clearing only the observed set, and publication before exact IRQ restore. Fixed local/caller-owned state and straight-line bounded work meet the resource contract; the code is freestanding C11 with the necessary header and only opaque accessors. The explanation correctly limits later-bit preservation to bits absent from the observed set, explains DEEP mode retention with RUN clock after wake, identifies model limits, and supplies specific masks, traces, and expected results."
+        }
+      ],
+      "mean": 9.666666666666666,
+      "sd": 0.23570226039551584,
+      "range": 0.5,
+      "fullValidationPasses": 3
+    }
+  ],
+  "publication": {
+    "artifact": "sanitized-aggregate-only",
+    "answerExportsChecked": 9,
+    "redactionCount": 0,
+    "reviewRequiredCount": 0,
+    "rawRecordsPublished": false
+  }
+}
